@@ -21,12 +21,18 @@
     <ClCompile Include="window.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Keyboard.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="window.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="CommonDefine.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Keyboard.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

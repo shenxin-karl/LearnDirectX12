@@ -1,6 +1,7 @@
 #include <iostream>
 #include <format>
 #include "window.h"
+#include <errhandlingapi.h>
 
 Window::Window(int width, int height, const std::string &title)
 : hwnd_(nullptr), width_(width), height_(height)
@@ -45,6 +46,10 @@ bool Window::shouldClose() const {
 	return shouldClose_;
 }
 
+void Window::setShouldClose(bool flag) {
+	shouldClose_ = flag;
+}
+
 int Window::getReturnCode() const {
 	return result;
 }
@@ -81,26 +86,7 @@ LRESULT Window::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		shouldClose_ = true;
 		break;
 	}
-	case WM_KEYDOWN:
-	{
-		if (wParam == VK_ESCAPE)
-			title.clear();
-		break;
-	}
-	case WM_CHAR:
-	{
-		title.push_back(static_cast<char>(wParam));
-		SetWindowText(hwnd, title.c_str());
-		break;
-	}
-	case WM_LBUTTONDOWN:
-	{
-		POINTS pt = MAKEPOINTS(lParam);
-		std::string location = std::format("({}, {})", pt.x, pt.y);
-		SetWindowText(hwnd, location.c_str());
-		title.clear();
-		break;
-	}
+	
 	}
 	return DefWindowProc(hwnd, msg, wParam, lParam);
 }
@@ -129,4 +115,19 @@ const char *Window::WindowClass::getClassName() {
 
 HINSTANCE Window::WindowClass::getInstance() {
 	return singletonPtr_->hInstance_;
+}
+
+void CheckWindowErrorImpl(HRESULT hr, const char *file, int line) {
+	if (hr != S_OK) {
+		char *pMsgBuf = nullptr;
+		DWORD nMsgLen = FormatMessage(
+			FORMAT_MESSAGE_ALLOCATE_BUFFER |
+			FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+			nullptr, hr, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+			reinterpret_cast<LPSTR>(&pMsgBuf), 0, nullptr);
+
+		std::string errMsg = std::format("[{}]: {}", hr, (nMsgLen == 0 ? "unidentifyied error code" : pMsgBuf));
+		LocalFree(pMsgBuf);
+		SAssertImpl(false, errMsg, file, line);
+	}
 }

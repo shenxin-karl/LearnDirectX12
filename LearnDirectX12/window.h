@@ -13,6 +13,7 @@ public:
 	Window &operator=(const Window &) = delete;
 	void pollEvent();
 	bool shouldClose() const;
+	void setShouldClose(bool flag);
 	int getReturnCode() const;
 	~Window();
 private:
@@ -36,3 +37,7 @@ public:
 	static HINSTANCE getInstance();
 	static const char *getClassName();
 };
+
+void CheckWindowErrorImpl(HRESULT hr, const char *file, int line);
+#define CheckWindowError(hr) CheckWindowErrorImpl(hr, __FILE__, __LINE__)
+#define CheckWindowLastError() CheckWindowError(GetLastError())
