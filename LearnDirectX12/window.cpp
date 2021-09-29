@@ -5,7 +5,7 @@
 
 Window::Window(int width, int height, const std::string &title)
 : hwnd_(nullptr), width_(width), height_(height)
-, shouldClose_(false), result(-1) {
+, shouldClose_(false), result(-1), keyboard_(this) {
 	
 	RECT wr;
 	wr.left = 100;
@@ -29,16 +29,14 @@ Window::Window(int width, int height, const std::string &title)
 void Window::pollEvent() {
 	MSG msg;
 	BOOL getResult = 0;
-	while ((getResult = GetMessage(&msg, nullptr, 0, 0)) > 0) {
+	while (PeekMessage(&msg, nullptr, 0, 0, true)) {
+		if (msg.message == WM_QUIT) {
+			shouldClose_ = true;
+			result = msg.wParam;
+			return;
+		}
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
-	}
-
-	if (getResult == -1) {
-		result = -1;
-		shouldClose_ = true;
-	} else {
-		result = static_cast<int>(msg.wParam);
 	}
 }
 
@@ -78,16 +76,13 @@ LRESULT CALLBACK Window::handleMsgThunk(HWND hwnd, UINT msg, WPARAM wParam, LPAR
 
 // set virtual code https://docs.microsoft.com/zh-cn/windows/win32/inputdev/virtual-key-codes
 LRESULT Window::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-	static std::string title;
 	switch (msg) {
 	case WM_CLOSE:
-	{
 		PostQuitMessage(69);		// set exit application code
 		shouldClose_ = true;
 		break;
 	}
-	
-	}
+	keyboard_.handleMsg(hwnd, msg, wParam, lParam);
 	return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 

@@ -1,48 +1,72 @@
 #pragma once
-#include "CommonDefine.h"
 #define NOMINMAX
 #include <Windows.h>
-
-struct KeyCode {
-	enum KeyCodeEnum;
-	friend KeyCode operator+(char charCode, KeyCodeEnum sysCode);
-	friend bool operator&(KeyCode code, char charCode);
-	friend bool operator&(KeyCode code, KeyCodeEnum sysCode);
-public:
-	union {
-		struct {
-			char	charCode;	// char code
-			char	sysCode;	// system code
-		};
-		int16_t	code;
-	};
-};
-
-enum KeyCode::KeyCodeEnum {
-	KEYCODE_UNKNOW = (0x1 << 16),
-	KEYCODE_ESC,
-	KEYCODE_SPACE,
-	KEYCODE_ENTER,
-	KEYCODE_TABLE,
-	KEYCODE_BACKSPACE,
-	KEYCODE_INSERT,
-	KEYCODE_DELETE,
-	KEYCODE_F1,
-	KEYCDOE_F2,
-	KEYCODE_F3,
-	KEYCDOE_F4,
-	KEYCODE_F5,
-	KEYCODE_F6,
-	KEYCODE_F7,
-	KEYCODE_F8,
-	KEYCODE_F9,
-	KEYCODE_F10,
-};
+#include <bitset>
+#include <queue>
+#include "CommonDefine.h"
 
 class Window;
 class Keyboard {
-	Window	*window;
+	friend class Window;
+	struct CharEvent {
+		enum State {
+			Pressed,
+			Invalid,
+		};
+		CharEvent() = default;
+		CharEvent(State state, unsigned char character);
+		unsigned char getCharacter() const;
+		State getState() const;
+		bool isPressed() const;
+		bool isInvalid() const;
+	private:
+		State			state_;
+		unsigned char	character_;
+	};
+	struct KeyEvent {
+		enum State {
+			Pressed,
+			Released,
+			Invalid,
+		};
+		KeyEvent() = default;
+		KeyEvent(State state, unsigned char key);
+		unsigned char getKey() const;
+		State getState() const;
+		bool isPressed() const;
+		bool isReleased() const;
+		bool isInvalid() const;
+	private:
+		State		  state_ = Invalid;
+		unsigned char key_ = 0;
+	};
 public:
-	
+	static constexpr int MaxKeyCodeSize_ = 0xff;
+	static constexpr int MaxQueueSize_ = 0xff;
+	Window	*window_;
+	std::bitset<MaxKeyCodeSize_>	keyState_;
+	std::bitset<MaxKeyCodeSize_>	characterState_;
+	std::queue<KeyEvent>			keyQueue_;
+	std::queue<CharEvent>			charQueue_;
+public:
+	Keyboard(Window *window);
+	Keyboard(const Keyboard &) = delete;
+	Keyboard &operator=(const Keyboard &) = delete;
+	bool isKeyPressed(unsigned char key) const;
+	bool isCharPressed(unsigned char key) const;
+	KeyEvent readKey();
+	CharEvent readChar();
+
+	template<typename T>
+	static void tryDiscardEvent(std::queue<T> &queue);
+private:
+	void handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+	void tick();
 };
 
+
+template<typename T>
+void Keyboard::tryDiscardEvent(std::queue<T> &queue) {
+	while (queue.size() > Keyboard::MaxQueueSize_)
+		queue.pop();
+}

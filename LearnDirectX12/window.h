@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include "CommonDefine.h"
+#include "Keyboard.h"
 
 class Window {
 	class WindowClass;
@@ -20,6 +21,8 @@ private:
 	static LRESULT CALLBACK handleMsgSetup(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 	static LRESULT CALLBACK handleMsgThunk(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 	LRESULT handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+public:
+	Keyboard	keyboard_;
 private:
 	HWND hwnd_;
 	int	 width_;
