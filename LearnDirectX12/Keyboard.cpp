@@ -1,6 +1,6 @@
 #include "Keyboard.h"
 
-Keyboard::Keyboard(Window *window) : window_(window) {
+Keyboard::Keyboard() {
 }
 
 bool Keyboard::isKeyPressed(unsigned char key) const {
@@ -12,19 +12,19 @@ bool Keyboard::isCharPressed(unsigned char key) const {
 }
 
 Keyboard::KeyEvent Keyboard::readKey() {
-	if (keyQueue_.empty())
+	if (keycodeQueue_.empty())
 		return KeyEvent{};
 
-	auto res = keyQueue_.front();
-	keyQueue_.pop();
+	auto res = keycodeQueue_.front();
+	keycodeQueue_.pop();
 	return res;
 }
 
 Keyboard::CharEvent Keyboard::readChar() {
-	if (charQueue_.empty())
+	if (characterQueue_.empty())
 		return CharEvent{};
-	auto res = charQueue_.front();
-	charQueue_.pop();
+	auto res = characterQueue_.front();
+	characterQueue_.pop();
 	return res;
 }
 
@@ -33,23 +33,30 @@ void Keyboard::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
 	case WM_KEYDOWN:
 		keyState_.set(wParam);
-		keyQueue_.emplace(KeyEvent::Pressed, static_cast<char>(wParam));
+		keycodeQueue_.emplace(KeyEvent::Pressed, static_cast<char>(wParam));
 		break;
 	case WM_KEYUP:
 		keyState_.set(wParam, false);
-		keyQueue_.emplace(KeyEvent::Released, static_cast<char>(wParam));
+		keycodeQueue_.emplace(KeyEvent::Released, static_cast<char>(wParam));
 		break;
 	case WM_CHAR:
 		characterState_.set(wParam);
-		charQueue_.emplace(CharEvent::Pressed, static_cast<char>(wParam));
+		characterQueue_.emplace(CharEvent::Pressed, static_cast<char>(wParam));
 		break;
 	}
 }
 
-void Keyboard::tick() {
+void Keyboard::beginTick() {
 	characterState_.reset();
-	tryDiscardEvent(keyQueue_);
-	tryDiscardEvent(charQueue_);
+}
+
+void Keyboard::tick() {
+
+}
+
+void Keyboard::endTick() {
+	tryDiscardEvent(keycodeQueue_);
+	tryDiscardEvent(characterQueue_);
 }
 
 unsigned char Keyboard::KeyEvent::getKey() const {

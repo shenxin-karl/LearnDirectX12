@@ -18,7 +18,7 @@
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="window.cpp">
+    <ClCompile Include="Window.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Keyboard.cpp">
@@ -30,9 +30,21 @@
     <ClCompile Include="GameTimer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="D3DApp.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ExceptionBase.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="D3Dx12.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="window.h">
+    <ClInclude Include="Window.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="CommonDefine.h">
@@ -45,6 +57,24 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="GameTimer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="D3DApp.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Singleton.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ExceptionBase.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ITick.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="D3Dx12.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

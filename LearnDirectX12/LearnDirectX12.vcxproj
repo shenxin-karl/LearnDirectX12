@@ -140,18 +140,28 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="D3DApp.cpp" />
+    <ClCompile Include="D3Dx12.cpp" />
+    <ClCompile Include="ExceptionBase.cpp" />
     <ClCompile Include="GameTimer.cpp" />
+    <ClCompile Include="Graphics.cpp" />
     <ClCompile Include="Keyboard.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Mouse.cpp" />
-    <ClCompile Include="window.cpp" />
+    <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CommonDefine.h" />
+    <ClInclude Include="D3DApp.h" />
+    <ClInclude Include="D3Dx12.h" />
+    <ClInclude Include="ExceptionBase.h" />
     <ClInclude Include="GameTimer.h" />
+    <ClInclude Include="Graphics.h" />
+    <ClInclude Include="ITick.h" />
     <ClInclude Include="Keyboard.h" />
     <ClInclude Include="Mouse.h" />
-    <ClInclude Include="window.h" />
+    <ClInclude Include="Singleton.hpp" />
+    <ClInclude Include="Window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

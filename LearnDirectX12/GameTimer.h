@@ -3,6 +3,7 @@
 
 namespace chrono = std::chrono;
 class GameTimer {
+public:
 	GameTimer();
 	void reset();
 	void start();

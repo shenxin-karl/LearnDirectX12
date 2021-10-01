@@ -1,13 +1,12 @@
 #pragma once
 #define NOMINMAX
-#include <Windows.h>
+#include <windows.h>
 #include <bitset>
 #include <queue>
 #include "CommonDefine.h"
+#include "ITick.h"
 
-class Window;
-class Keyboard {
-	friend class Window;
+class Keyboard : public ITick {
 	struct CharEvent {
 		enum State {
 			Pressed,
@@ -43,13 +42,12 @@ class Keyboard {
 public:
 	static constexpr int MaxKeyCodeSize_ = 0xff;
 	static constexpr int MaxQueueSize_ = 0xff;
-	Window	*window_;
 	std::bitset<MaxKeyCodeSize_>	keyState_;
 	std::bitset<MaxKeyCodeSize_>	characterState_;
-	std::queue<KeyEvent>			keyQueue_;
-	std::queue<CharEvent>			charQueue_;
+	std::queue<KeyEvent>			keycodeQueue_;
+	std::queue<CharEvent>			characterQueue_;
 public:
-	Keyboard(Window *window);
+	Keyboard();
 	Keyboard(const Keyboard &) = delete;
 	Keyboard &operator=(const Keyboard &) = delete;
 	bool isKeyPressed(unsigned char key) const;
@@ -59,9 +57,11 @@ public:
 
 	template<typename T>
 	static void tryDiscardEvent(std::queue<T> &queue);
-private:
+
 	void handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-	void tick();
+	virtual void beginTick() override;
+	virtual void tick() override;
+	virtual void endTick() override;
 };
 
 

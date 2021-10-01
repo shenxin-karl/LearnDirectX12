@@ -1,12 +1,15 @@
 #include <iostream>
 #include <format>
-#include "window.h"
+#include <windows.h>
 #include <errhandlingapi.h>
+#include "Window.h"
 
 Window::Window(int width, int height, const std::string &title)
 : hwnd_(nullptr), width_(width), height_(height)
-, shouldClose_(false), result(-1), keyboard_(this) {
-	
+, shouldClose_(false), result(-1) {
+	resizeCallback_ = [](int, int) {};
+	messageCallback_ = [](HWND, UINT, WPARAM, LPARAM) {};
+
 	RECT wr;
 	wr.left = 100;
 	wr.right = wr.left + width;
@@ -32,7 +35,7 @@ void Window::pollEvent() {
 	while (PeekMessage(&msg, nullptr, 0, 0, true)) {
 		if (msg.message == WM_QUIT) {
 			shouldClose_ = true;
-			result = msg.wParam;
+			result = static_cast<int>(msg.wParam);
 			return;
 		}
 		TranslateMessage(&msg);
@@ -50,6 +53,14 @@ void Window::setShouldClose(bool flag) {
 
 int Window::getReturnCode() const {
 	return result;
+}
+
+void Window::setMessageCallback(const std::function<void(HWND, UINT, WPARAM, LPARAM)> &callback) {
+	messageCallback_ = callback;
+}
+
+void Window::setResizeCallback(const std::function<void(int x, int y)> &callback) {
+	resizeCallback_ = callback;
 }
 
 Window::~Window() {
@@ -77,12 +88,24 @@ LRESULT CALLBACK Window::handleMsgThunk(HWND hwnd, UINT msg, WPARAM wParam, LPAR
 // set virtual code https://docs.microsoft.com/zh-cn/windows/win32/inputdev/virtual-key-codes
 LRESULT Window::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
+	case WM_DESTROY:
 	case WM_CLOSE:
-		PostQuitMessage(69);		// set exit application code
+	{
+		PostQuitMessage(1);		// set exit application code
 		shouldClose_ = true;
 		break;
 	}
-	keyboard_.handleMsg(hwnd, msg, wParam, lParam);
+	case WM_PAINT:	
+	{
+		RECT rect;
+		GetWindowRect(hwnd, &rect);
+		width_ = rect.right - rect.left;
+		height_ = rect.bottom - rect.top;
+		resizeCallback_(width_, height_);
+		break;
+	}
+	}
+	messageCallback_(hwnd, msg, wParam, lParam);
 	return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 

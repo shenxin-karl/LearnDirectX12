@@ -1,6 +1,6 @@
 #include "Mouse.h"
 
-Mouse::Mouse(Window *window) : window_(window) {
+Mouse::Mouse() {
 }
 
 void Mouse::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -40,4 +40,17 @@ void Mouse::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	}
 	if (isEvent)
 		events_.push(mouseEvent);
+}
+
+void Mouse::beginTick() {
+	state_.reset();
+}
+
+void Mouse::tick() {
+
+}
+
+void Mouse::endTick() {
+	while (events_.size() > EventMaxSize_)
+		events_.pop();
 }

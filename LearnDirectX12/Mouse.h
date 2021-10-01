@@ -1,12 +1,12 @@
 #pragma once
 #include <queue>
-#define NOMINMAX
-#include <Windows.h>
+#include <windows.h>
 #include <bitset>
+#include "ITick.h"
 
-class Window;
-class Mouse {
+class Mouse : public ITick {
 public:
+	static constexpr size_t EventMaxSize_ = 0xff;
 	enum State {
 		LPress,
 		LRelease,
@@ -19,7 +19,6 @@ public:
 		Invalid,
 		MaxCount,
 	};
-
 	struct Event {
 		bool isLPress() const { return state_ == LPress; }
 		bool isLRelease() const { return state_ == LRelease; }
@@ -36,14 +35,15 @@ public:
 		State	state_;
 		float	offset_;
 	};
-
-	Mouse(Window *window);
+	Mouse();
 	Mouse(const Mouse &) = delete;
 	Mouse &operator=(const Mouse &) = delete;
 	~Mouse() = default;
 	void handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+	virtual void beginTick() override;
+	virtual void tick() override;
+	virtual void endTick() override;
 private:
-	Window				   *window_;
 	std::queue<Event>		events_;
 	std::bitset<MaxCount>	state_;
 };
