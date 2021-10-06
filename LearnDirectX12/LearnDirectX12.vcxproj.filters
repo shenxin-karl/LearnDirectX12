@@ -74,7 +74,10 @@
     <ClInclude Include="ITick.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="D3Dx12.h">
+    <ClInclude Include="MD3Dx12.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="directx\d3dx12.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -117,6 +117,7 @@
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -153,7 +154,8 @@
   <ItemGroup>
     <ClInclude Include="CommonDefine.h" />
     <ClInclude Include="D3DApp.h" />
-    <ClInclude Include="D3Dx12.h" />
+    <ClInclude Include="directx\d3dx12.h" />
+    <ClInclude Include="MD3Dx12.h" />
     <ClInclude Include="ExceptionBase.h" />
     <ClInclude Include="GameTimer.h" />
     <ClInclude Include="Graphics.h" />

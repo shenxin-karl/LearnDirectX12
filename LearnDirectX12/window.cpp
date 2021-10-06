@@ -63,6 +63,18 @@ void Window::setResizeCallback(const std::function<void(int x, int y)> &callback
 	resizeCallback_ = callback;
 }
 
+int Window::getWidth() const {
+	return width_;
+}
+
+int Window::getHeight() const {
+	return height_;
+}
+
+HWND Window::getHWND() const {
+	return hwnd_;
+}
+
 Window::~Window() {
 	DestroyWindow(hwnd_);
 }

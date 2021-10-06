@@ -18,6 +18,9 @@ public:
 	int getReturnCode() const;
 	void setMessageCallback(const std::function<void(HWND, UINT, WPARAM, LPARAM)> &callback);
 	void setResizeCallback(const std::function<void(int x, int y)> &callback);
+	int getWidth() const;
+	int getHeight() const;
+	HWND getHWND() const;
 	~Window();
 private:
 	static LRESULT CALLBACK handleMsgSetup(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);

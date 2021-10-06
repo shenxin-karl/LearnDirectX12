@@ -5,6 +5,8 @@
 #include <dxgi.h>
 #include <d3dcompiler.h>
 #include <wrl.h>
+#include "directx/d3dx12.h"
+#include "MD3Dx12.h"
 #include "ITick.h"
 #include "ExceptionBase.h"
 
@@ -15,25 +17,41 @@
 namespace WRL = Microsoft::WRL;
 class Graphics : public ITick {
 public:
-	Graphics();
+	Graphics() = default;
+	virtual void initialize();
 	virtual void tick() override {}
 	virtual void update() {}
 	virtual void draw() {}
 	virtual void onResize() {}
 	virtual void handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {}
 	void createCommandObjects();
+	void createSwapChain();
+	void createRtvAndDsvDescriptorHeaps();
+	D3D12_CPU_DESCRIPTOR_HANDLE currentBackBufferView() const;
+	D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView() const;
 	~Graphics() = default;
-public:
-	WRL::ComPtr<ID3D12Device>	d3dDevice_;
-	WRL::ComPtr<IDXGIFactory1>	dxgiFactory_;
-	WRL::ComPtr<ID3D12Fence>	fence_;
+protected:
+	WRL::ComPtr<ID3D12Device>				d3dDevice_;
+	WRL::ComPtr<IDXGIFactory1>				dxgiFactory_;
+	WRL::ComPtr<ID3D12Fence>				fence_;
 	WRL::ComPtr<ID3D12CommandQueue>			commandQueue_;
 	WRL::ComPtr<ID3D12CommandAllocator>		directCmdListAlloc_;
 	WRL::ComPtr<ID3D12GraphicsCommandList>	commandList_;
+	WRL::ComPtr<IDXGISwapChain>				swapChain_;
+	WRL::ComPtr<ID3D12DescriptorHeap>		rtvHeap;
+	WRL::ComPtr<ID3D12DescriptorHeap>		dsvHeap;
+	WRL::ComPtr<ID3D12Resource>				depthStencilBuffer_;
 	UINT rtvDescriptorSize_;
 	UINT dsvDescriptorSize_;
 	UINT cbvUavDescriptorSize_;
 	UINT msaaQualityLevel_;
+	bool msaaState_;
+	int  currBackBuffer_ = 0;
+	static constexpr int kSwapChainCount = 2;
+protected:
+	D3D_DRIVER_TYPE	d3dDeriverType		= D3D_DRIVER_TYPE_HARDWARE;
+	DXGI_FORMAT		backBufferFormat_   = DXGI_FORMAT_R8G8B8A8_UNORM;
+	DXGI_FORMAT		depthStencilFormat_ = DXGI_FORMAT_D24_UNORM_S8_UINT;
 };
 
 class GraphicsException : public ExceptionBase {

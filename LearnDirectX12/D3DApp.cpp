@@ -13,6 +13,7 @@ void D3DApp::initialize() {
 	keyboardPtr_ = std::make_unique<Keyboard>();
 	mousePtr_ = std::make_unique<Mouse>();
 	graphicsPtr_ = std::make_unique<Graphics>();
+	graphicsPtr_->initialize();
 
 	windowPtr_->setMessageCallback([this](HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		keyboardPtr_->handleMsg(hwnd, msg, wParam, lParam);
