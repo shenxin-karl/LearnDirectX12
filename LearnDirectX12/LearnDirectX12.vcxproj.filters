@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="shader">
+      <UniqueIdentifier>{a40e4edf-5ab8-4c71-b810-7dd4a367374a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -39,7 +42,13 @@
     <ClCompile Include="ExceptionBase.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="D3Dx12.cpp">
+    <ClCompile Include="d3dulti.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="AppControl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="TestGraphics.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -74,11 +83,25 @@
     <ClInclude Include="ITick.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="MD3Dx12.h">
+    <ClInclude Include="d3dulti.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="directx\d3dx12.h">
+    <ClInclude Include="D3DX12.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="AppControl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="TestGraphics.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="UploadBuffer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="color.hlsl">
+      <Filter>shader</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

@@ -21,6 +21,10 @@ public:
 	int getWidth() const;
 	int getHeight() const;
 	HWND getHWND() const;
+	float aspectRatio() const;
+	const std::string &getTitle() const;
+	void setShowTitle(const std::string &title);
+	bool isPause() const;
 	~Window();
 private:
 	static LRESULT CALLBACK handleMsgSetup(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -32,8 +36,15 @@ private:
 	int	 height_;
 	bool shouldClose_;
 	int  result;
+	std::string title_;
 	std::function<void(HWND, UINT, WPARAM, LPARAM)> messageCallback_;
 	std::function<void(int x, int y)>				resizeCallback_;
+public:
+	bool paused_ = false;
+	bool minimized_ = false;
+	bool maximized_ = false;
+	bool resizing_ = false;
+	bool fullScreenState_ = false;
 };
 
 class Window::WindowClass {

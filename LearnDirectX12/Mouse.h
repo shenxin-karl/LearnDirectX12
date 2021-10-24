@@ -41,7 +41,7 @@ public:
 	~Mouse() = default;
 	void handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 	virtual void beginTick() override;
-	virtual void tick() override;
+	virtual void tick(GameTimer &dt) override;
 	virtual void endTick() override;
 private:
 	std::queue<Event>		events_;

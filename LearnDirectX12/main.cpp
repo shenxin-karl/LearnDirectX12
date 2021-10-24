@@ -1,6 +1,7 @@
 #include <iostream>
 #include "ExceptionBase.h"
 #include "D3DApp.h"
+#include "AppControl.h"
 
 int CALLBACK WinMain(
 	_In_ HINSTANCE hInstance,
@@ -8,6 +9,8 @@ int CALLBACK WinMain(
 	_In_ LPSTR lpCmdLine,
 	_In_ int nShowCmd
 ) {
-	D3DApp::emplace();
+
+	auto control = std::make_shared<TestAppControl>();
+	D3DApp::emplace(control);
 	return D3DApp::instance()->start();
 }

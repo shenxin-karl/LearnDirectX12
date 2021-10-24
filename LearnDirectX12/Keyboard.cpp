@@ -50,7 +50,7 @@ void Keyboard::beginTick() {
 	characterState_.reset();
 }
 
-void Keyboard::tick() {
+void Keyboard::tick(GameTimer &dt) {
 
 }
 

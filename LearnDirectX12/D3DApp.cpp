@@ -4,21 +4,27 @@
 #include "Keyboard.h"
 #include "Mouse.h"
 #include "Graphics.h"
+#include "AppControl.h"
 
-D3DApp::D3DApp() {}
+D3DApp::D3DApp(std::shared_ptr<AppControl> controlPtr) : appControlPtr_(controlPtr) {
+}
 
 void D3DApp::initialize() {
 	timerPtr_ = std::make_unique<GameTimer>();
 	windowPtr_ = std::make_unique<Window>(800, 600, "LearnDirectX");
 	keyboardPtr_ = std::make_unique<Keyboard>();
 	mousePtr_ = std::make_unique<Mouse>();
-	graphicsPtr_ = std::make_unique<Graphics>();
+	graphicsPtr_ = appControlPtr_->createGraphics();
 	graphicsPtr_->initialize();
 
 	windowPtr_->setMessageCallback([this](HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		keyboardPtr_->handleMsg(hwnd, msg, wParam, lParam);
 		mousePtr_->handleMsg(hwnd, msg, wParam, lParam);
 		graphicsPtr_->handleMsg(hwnd, msg, wParam, lParam);
+	});
+
+	windowPtr_->setResizeCallback([&](int width, int height) {
+		graphicsPtr_->onResize();
 	});
 }
 
@@ -49,10 +55,10 @@ int D3DApp::run() {
 
 		// tick
 		timerPtr_->tick();
-		windowPtr_->tick();
-		keyboardPtr_->tick();
-		mousePtr_->tick();
-		graphicsPtr_->tick();
+		windowPtr_->tick(*timerPtr_);
+		keyboardPtr_->tick(*timerPtr_);
+		mousePtr_->tick(*timerPtr_);
+		graphicsPtr_->tick(*timerPtr_);
 
 		// endTick
 		windowPtr_->endTick();

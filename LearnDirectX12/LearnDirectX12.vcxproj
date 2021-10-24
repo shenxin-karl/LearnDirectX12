@@ -118,6 +118,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
+      <EnableModules>false</EnableModules>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -141,21 +142,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AppControl.cpp" />
     <ClCompile Include="D3DApp.cpp" />
-    <ClCompile Include="D3Dx12.cpp" />
+    <ClCompile Include="d3dulti.cpp" />
     <ClCompile Include="ExceptionBase.cpp" />
     <ClCompile Include="GameTimer.cpp" />
     <ClCompile Include="Graphics.cpp" />
     <ClCompile Include="Keyboard.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Mouse.cpp" />
+    <ClCompile Include="TestGraphics.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AppControl.h" />
     <ClInclude Include="CommonDefine.h" />
     <ClInclude Include="D3DApp.h" />
-    <ClInclude Include="directx\d3dx12.h" />
-    <ClInclude Include="MD3Dx12.h" />
+    <ClInclude Include="D3DX12.h" />
+    <ClInclude Include="d3dulti.h" />
     <ClInclude Include="ExceptionBase.h" />
     <ClInclude Include="GameTimer.h" />
     <ClInclude Include="Graphics.h" />
@@ -163,7 +167,14 @@
     <ClInclude Include="Keyboard.h" />
     <ClInclude Include="Mouse.h" />
     <ClInclude Include="Singleton.hpp" />
+    <ClInclude Include="TestGraphics.h" />
+    <ClInclude Include="UploadBuffer.h" />
     <ClInclude Include="Window.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="color.hlsl">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">VS</EntryPointName>
+    </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

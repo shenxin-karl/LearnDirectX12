@@ -46,7 +46,7 @@ void Mouse::beginTick() {
 	state_.reset();
 }
 
-void Mouse::tick() {
+void Mouse::tick(GameTimer &dt) {
 
 }
 

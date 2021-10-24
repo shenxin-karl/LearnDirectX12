@@ -3,9 +3,11 @@
 #include <windows.h>
 #include <errhandlingapi.h>
 #include "Window.h"
+#include "GameTimer.h"
+#include "D3DApp.h"
 
 Window::Window(int width, int height, const std::string &title)
-: hwnd_(nullptr), width_(width), height_(height)
+: hwnd_(nullptr), width_(width), height_(height), title_(title)
 , shouldClose_(false), result(-1) {
 	resizeCallback_ = [](int, int) {};
 	messageCallback_ = [](HWND, UINT, WPARAM, LPARAM) {};
@@ -75,6 +77,22 @@ HWND Window::getHWND() const {
 	return hwnd_;
 }
 
+float Window::aspectRatio() const {
+	return float(width_) / float(height_);
+}
+
+const std::string & Window::getTitle() const {
+	return title_;
+}
+
+void Window::setShowTitle(const std::string &title) {
+	SetWindowText(hwnd_, title.c_str());
+}
+
+bool Window::isPause() const {
+	return paused_;
+}
+
 Window::~Window() {
 	DestroyWindow(hwnd_);
 }
@@ -114,6 +132,67 @@ LRESULT Window::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		width_ = rect.right - rect.left;
 		height_ = rect.bottom - rect.top;
 		resizeCallback_(width_, height_);
+		break;
+	}
+	case WM_ACTIVATE:
+	{
+		if (LOWORD(wParam) == WA_INACTIVE) {
+			paused_ = true;
+			D3DApp::instance()->getGameTimer()->stop();
+		} else {
+			paused_ = false;
+			D3DApp::instance()->getGameTimer()->start();
+		}	
+		break;
+	}
+	case WM_ENTERSIZEMOVE:
+	{
+		paused_ = true;
+		resizing_ = true;
+		D3DApp::instance()->getGameTimer()->stop();
+		break;
+	}
+	case WM_EXITSIZEMOVE:
+	{
+		paused_ = false;
+		resizing_ = false;
+		D3DApp::instance()->getGameTimer()->start();
+		break;
+	}
+	case WM_GETMINMAXINFO: 
+	{
+		((MINMAXINFO *)lParam)->ptMinTrackSize.x = 200;
+		((MINMAXINFO *)lParam)->ptMinTrackSize.y = 200;
+		break;
+	}
+	case WM_SIZE:
+	{
+		width_ = LOWORD(lParam);
+		height_ = HIWORD(lParam);
+		if (wParam == SIZE_MINIMIZED) {
+			paused_ = true;
+			minimized_ = true;
+			maximized_ = false;
+		} else if (wParam == SIZE_MAXIMIZED) {
+			paused_ = false;
+			minimized_ = false;
+			maximized_ = true;
+			resizeCallback_(width_, height_);
+		} else if (wParam == SIZE_RESTORED) {		// restore for old state
+			if (minimized_) {
+				paused_ = false;
+				minimized_ = false;
+				resizeCallback_(width_, height_);
+			} else if (maximized_) {
+				paused_ = false;
+				maximized_ = false;
+				resizeCallback_(width_, height_);
+			} else if (resizing_) {
+				break;
+			} else {
+				resizeCallback_(width_, height_);
+			}
+		}
 		break;
 	}
 	}
