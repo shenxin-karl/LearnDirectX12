@@ -16,6 +16,9 @@
     <Filter Include="shader">
       <UniqueIdentifier>{a40e4edf-5ab8-4c71-b810-7dd4a367374a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shader\box">
+      <UniqueIdentifier>{46fa8b12-176f-4bfe-bbaa-91aac94c00dc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -49,6 +52,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="TestGraphics.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="MathHelper.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -98,10 +104,13 @@
     <ClInclude Include="UploadBuffer.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="MathHelper.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="color.hlsl">
-      <Filter>shader</Filter>
+    <FxCompile Include="box.hlsl">
+      <Filter>shader\box</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

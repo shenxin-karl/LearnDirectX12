@@ -60,7 +60,7 @@ void Graphics::initialize() {
 	createRtvAndDsvDescriptorHeaps();
 
 	// first initialize on resize
-	onResize();
+	Graphics::onResize();
 }
 
 void Graphics::createCommandObjects() {
