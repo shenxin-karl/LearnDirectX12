@@ -9,6 +9,7 @@ namespace WRL = Microsoft::WRL;
 
 template<typename T>
 class UploadBuffer {
+public:
 	UploadBuffer(ID3D12Device *device, UINT elementCout, bool isConstanBuffer);
 	UploadBuffer(const UploadBuffer &) = delete;
 	UploadBuffer &operator(const UploadBuffer &) = delete;
