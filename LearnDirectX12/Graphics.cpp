@@ -140,7 +140,7 @@ void Graphics::createRtvAndDsvDescriptorHeaps() {
 	dsvHeapDesc.NodeMask = 0;
 	ThrowIfFailed(d3dDevice_->CreateDescriptorHeap(
 		&dsvHeapDesc,
-		IID_PPV_ARGS(&dsvHeap)
+		IID_PPV_ARGS(&dsvHeap_)
 	));
 }
 void Graphics::calculateFrameStats() {
@@ -168,11 +168,11 @@ void Graphics::set4xMsaaState(bool val) {
 	}
 }
 
-size_t Graphics::getSampleCount() const {
+UINT Graphics::getSampleCount() const {
 	return msaaState_ ? 4 : 1;
 }
 
-size_t Graphics::getSampleQuality() const {
+UINT Graphics::getSampleQuality() const {
 	return msaaState_ ? (msaaQualityLevel_ - 1) : 0;
 }
 
@@ -189,7 +189,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE Graphics::currentBackBufferView() const {
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE Graphics::depthStencilView() const {
-	return dsvHeap->GetCPUDescriptorHandleForHeapStart();
+	return dsvHeap_->GetCPUDescriptorHandleForHeapStart();
 }
 
 void Graphics::onResize() {

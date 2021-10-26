@@ -30,8 +30,8 @@ public:
 	void flushCommandQueue();
 	void calculateFrameStats();
 	void set4xMsaaState(bool val);
-	size_t getSampleCount() const;
-	size_t getSampleQuality() const;
+	UINT getSampleCount() const;
+	UINT getSampleQuality() const;
 	ID3D12Resource *currentBackBuffer() const;
 	D3D12_CPU_DESCRIPTOR_HANDLE currentBackBufferView() const;
 	D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView() const;
@@ -45,7 +45,7 @@ protected:
 	WRL::ComPtr<ID3D12GraphicsCommandList>	commandList_;
 	WRL::ComPtr<IDXGISwapChain>				swapChain_;
 	WRL::ComPtr<ID3D12DescriptorHeap>		rtvHeap_;
-	WRL::ComPtr<ID3D12DescriptorHeap>		dsvHeap;
+	WRL::ComPtr<ID3D12DescriptorHeap>		dsvHeap_;
 	WRL::ComPtr<ID3D12Resource>				depthStencilBuffer_;
 	WRL::ComPtr<ID3D12Resource>				swapChainBuffer_[kSwapChainCount];
 	RECT									scissiorRect_ = {};

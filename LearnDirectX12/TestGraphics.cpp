@@ -34,12 +34,11 @@ void TestGraphics::draw() {
 		directCmdListAlloc_.Get(), nullptr
 	));
 
-	auto transitionDesc = CD3DX12_RESOURCE_BARRIER::Transition(
+	commandList_->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
 		currentBackBuffer(),
 		D3D12_RESOURCE_STATE_PRESENT,
 		D3D12_RESOURCE_STATE_RENDER_TARGET
-	);
-	commandList_->ResourceBarrier(1, &transitionDesc); 
+	)));
 
 	commandList_->RSSetViewports(1, &screenViewport_);
 	commandList_->RSSetScissorRects(1, &scissiorRect_);
@@ -52,9 +51,7 @@ void TestGraphics::draw() {
 		nullptr
 	);
 	commandList_->ClearDepthStencilView(
-		depthStencilView(),
-		D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL,
-		1.0f, 0, 0, nullptr
+		depthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr
 	);
 
 	auto currentBackBufferViewObj = currentBackBufferView();
@@ -62,12 +59,11 @@ void TestGraphics::draw() {
 	commandList_->OMSetRenderTargets(1, &currentBackBufferViewObj, true, &depthStencilViewObj);
 
 	// transition resource state
-	transitionDesc = CD3DX12_RESOURCE_BARRIER::Transition(
+	commandList_->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
 		currentBackBuffer(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET,
 		D3D12_RESOURCE_STATE_PRESENT
-	);
-	commandList_->ResourceBarrier(1, &transitionDesc);
+	)));
 
 	// close command list
 	ThrowIfFailed(commandList_->Close());
@@ -103,7 +99,7 @@ void TestGraphics::buildDescriptorHeaps() {
 
 void TestGraphics::buildConstantBuffers() {
 	objectCB_ = std::make_unique<UploadBuffer<BoxObjectConstant>>(d3dDevice_.Get(), 1, true);
-	size_t objCBByteSize = calcConstantBufferByteSize(sizeof(BoxObjectConstant));
+	UINT objCBByteSize = calcConstantBufferByteSize(sizeof(BoxObjectConstant));
 	auto cbAddress = objectCB_->resource()->GetGPUVirtualAddress();
 
 	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
@@ -151,8 +147,8 @@ void TestGraphics::buildShaderAndInputLayout() {
 	std::wstring hlslPath = L"shader/box/box.hlsl";
 	vsByteCode_ = compileShader(hlslPath, nullptr, "VS", "vs_5_0");
 	psByteCode_ = compileShader(hlslPath, nullptr, "PS", "ps_5_0");
-	assert(vsByteCode_ == nullptr);
-	assert(psByteCode_ == nullptr);
+	assert(vsByteCode_ != nullptr);
+	assert(psByteCode_ != nullptr);
 
 	const auto slotClass = D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA;
 	const int instanced = 0;
@@ -240,7 +236,7 @@ void TestGraphics::buildPSO() {
 	psoDesc.SampleMask = 0xffffffff;
 	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-	psoDesc.InputLayout = { inputLayout_.data(), inputLayout_.size() };
+	psoDesc.InputLayout = { inputLayout_.data(), (UINT)inputLayout_.size() };
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	psoDesc.NumRenderTargets = 1;
 	psoDesc.RTVFormats[0] = backBufferFormat_;

@@ -109,8 +109,8 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="box.hlsl">
+    <None Include="shader\box\box.hlsl">
       <Filter>shader\box</Filter>
-    </FxCompile>
+    </None>
   </ItemGroup>
 </Project>

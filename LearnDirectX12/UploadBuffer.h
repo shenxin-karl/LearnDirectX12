@@ -12,7 +12,7 @@ class UploadBuffer {
 public:
 	UploadBuffer(ID3D12Device *device, UINT elementCout, bool isConstanBuffer);
 	UploadBuffer(const UploadBuffer &) = delete;
-	UploadBuffer &operator(const UploadBuffer &) = delete;
+	UploadBuffer &operator=(const UploadBuffer &) = delete;
 	ID3D12Resource *resource() const;
 	void copyData(int elementIndex, const T &data);
 	~UploadBuffer();
