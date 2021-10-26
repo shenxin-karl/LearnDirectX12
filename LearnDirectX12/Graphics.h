@@ -17,7 +17,7 @@ namespace WRL = Microsoft::WRL;
 class Graphics : public ITick {
 public:
 	Graphics() = default;
-	virtual void initialize();
+	virtual bool initialize();
 	virtual void tick(GameTimer &dt) override {}
 	virtual void update() {}
 	virtual void draw() {}
@@ -30,6 +30,8 @@ public:
 	void flushCommandQueue();
 	void calculateFrameStats();
 	void set4xMsaaState(bool val);
+	size_t getSampleCount() const;
+	size_t getSampleQuality() const;
 	ID3D12Resource *currentBackBuffer() const;
 	D3D12_CPU_DESCRIPTOR_HANDLE currentBackBufferView() const;
 	D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView() const;

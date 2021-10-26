@@ -6,7 +6,7 @@
 #include "Window.h"
 #include "GameTimer.h"
 
-void Graphics::initialize() {
+bool Graphics::initialize() {
 	// enabling debugging
 #if defined(DEBUG) || defined(_DEBUG)
 	{
@@ -61,6 +61,7 @@ void Graphics::initialize() {
 
 	// first initialize on resize
 	Graphics::onResize();
+	return true;
 }
 
 void Graphics::createCommandObjects() {
@@ -165,6 +166,14 @@ void Graphics::set4xMsaaState(bool val) {
 		createSwapChain();
 		onResize();
 	}
+}
+
+size_t Graphics::getSampleCount() const {
+	return msaaState_ ? 4 : 1;
+}
+
+size_t Graphics::getSampleQuality() const {
+	return msaaState_ ? (msaaQualityLevel_ - 1) : 0;
 }
 
 ID3D12Resource *Graphics::currentBackBuffer() const {

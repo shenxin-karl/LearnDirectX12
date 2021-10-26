@@ -5,8 +5,16 @@
 #include "D3DApp.h"
 #include "window.h"
 
-void TestGraphics::initialize() {
-	Base::initialize();
+bool TestGraphics::initialize() {
+	if (!Base::initialize())
+		return false;
+
+	buildDescriptorHeaps();
+	buildRootSignature();
+	buildShaderAndInputLayout();
+	buildBoxGeometry();
+	buildPSO();
+	return true;
 }
 
 void TestGraphics::tick(GameTimer &dt) {
@@ -150,6 +158,94 @@ void TestGraphics::buildShaderAndInputLayout() {
 	const int instanced = 0;
 	inputLayout_ = {
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(BoxVertex, position), slotClass, instanced },
-		{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(BoxVertex, color), slotClass, instanced }
+		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(BoxVertex, color), slotClass, instanced }
 	};
+}
+
+void TestGraphics::buildBoxGeometry() {
+	std::vector<BoxVertex> vertices = {
+		{ DX::XMFLOAT3(-1.f, -1.f, -1.f), DX::XMFLOAT4(DX::Colors::White)   },
+		{ DX::XMFLOAT3(-1.f, +1.f, -1.f), DX::XMFLOAT4(DX::Colors::Black)   },
+		{ DX::XMFLOAT3(+1.f, +1.f, -1.f), DX::XMFLOAT4(DX::Colors::Red)     },
+		{ DX::XMFLOAT3(+1.f, -1.f, -1.f), DX::XMFLOAT4(DX::Colors::Green)   },
+		{ DX::XMFLOAT3(-1.f, -1.f, +1.f), DX::XMFLOAT4(DX::Colors::Blue)    },
+		{ DX::XMFLOAT3(-1.f, +1.f, +1.f), DX::XMFLOAT4(DX::Colors::Yellow)  },
+		{ DX::XMFLOAT3(+1.f, +1.f, +1.f), DX::XMFLOAT4(DX::Colors::Cyan)    },
+		{ DX::XMFLOAT3(+1.f, -1.f, +1.f), DX::XMFLOAT4(DX::Colors::Magenta) },
+	};
+
+	std::vector<uint16_t> indices = {
+		0, 1, 2,	// front
+		0, 2, 3,
+		4, 6, 5,	// back
+		4, 7, 6,
+		4, 5, 1,	// left
+		4, 1, 0,
+		3, 2, 6,	// right
+		3, 6, 7,
+		1, 5, 6,	// top
+		1, 6, 2,
+		4, 0, 3,	// bottom
+		4, 3, 7,
+	};
+
+	size_t vbByteSize = sizeof(BoxVertex) * vertices.size();
+	size_t ibByteSize = sizeof(uint16_t) * indices.size();
+
+	objectGeometry_ = std::make_unique<MeshGeometry>();
+	objectGeometry_->name = "BoxGeometry";
+
+	ThrowIfFailed(D3DCreateBlob(vbByteSize, &objectGeometry_->vertexBufferCPU));
+	CopyMemory(objectGeometry_->vertexBufferCPU->GetBufferPointer(), vertices.data(), vbByteSize);
+
+	ThrowIfFailed(D3DCreateBlob(ibByteSize, &objectGeometry_->indexBufferCPU));
+	CopyMemory(objectGeometry_->indexBufferCPU->GetBufferPointer(), indices.data(), ibByteSize);
+
+	objectGeometry_->vertexBufferGPU = createDefaultBuffer(
+		d3dDevice_.Get(),
+		commandList_.Get(),
+		vertices.data(),
+		vbByteSize,
+		objectGeometry_->vertexBufferUploader
+	);
+
+	objectGeometry_->indexBufferGPU = createDefaultBuffer(
+		d3dDevice_.Get(),
+		commandList_.Get(),
+		indices.data(),
+		ibByteSize,
+		objectGeometry_->indexBufferUploader
+	);
+
+	objectGeometry_->vertexBufferByteSize = vbByteSize;
+	objectGeometry_->indexBufferByteSize = ibByteSize;
+	objectGeometry_->vertexByteStride = sizeof(BoxVertex);
+	objectGeometry_->indexBufferFormat = DXGI_FORMAT_R16_UINT;
+
+	SubmeshGeometry submesh;
+	submesh.indexCount = indices.size();
+	submesh.baseVertexLocation = 0;
+	submesh.startIndexLocation = 0;
+
+	objectGeometry_->drawArgs["box"] = submesh;
+}
+
+void TestGraphics::buildPSO() {
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
+	memset(&psoDesc, 0, sizeof(psoDesc));
+	psoDesc.pRootSignature = rootSignature_.Get();
+	psoDesc.VS = { vsByteCode_->GetBufferPointer(), vsByteCode_->GetBufferSize() };
+	psoDesc.PS = { psByteCode_->GetBufferPointer(), psByteCode_->GetBufferSize() };
+	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	psoDesc.SampleMask = 0xffffffff;
+	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	psoDesc.InputLayout = { inputLayout_.data(), inputLayout_.size() };
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDesc.NumRenderTargets = 1;
+	psoDesc.RTVFormats[0] = backBufferFormat_;
+	psoDesc.DSVFormat = depthStencilFormat_;
+	psoDesc.SampleDesc = { getSampleCount(), getSampleQuality() };
+
+	ThrowIfFailed(d3dDevice_->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pso_)));
 }

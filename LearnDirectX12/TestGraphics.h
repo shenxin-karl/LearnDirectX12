@@ -12,14 +12,14 @@ struct BoxObjectConstant {
 
 struct BoxVertex {
 	DX::XMFLOAT3 position;
-	DX::XMFLOAT3 color;
+	DX::XMFLOAT4 color;
 };
 
 class TestGraphics : public Graphics {
 	using Base = Graphics;
 public:
 	TestGraphics() = default;
-	virtual void initialize() override;
+	virtual bool initialize() override;
 	virtual void tick(GameTimer &dt) override;
 	virtual void update() override;
 	virtual void draw() override;
@@ -39,7 +39,7 @@ private:
 	std::unique_ptr<MeshGeometry>					objectGeometry_ = nullptr;
 	WRL::ComPtr<ID3DBlob>							vsByteCode_ = nullptr;
 	WRL::ComPtr<ID3DBlob>							psByteCode_ = nullptr;
-	WRL::ComPtr<ID3D12PipelineState>				pos_ = nullptr;
+	WRL::ComPtr<ID3D12PipelineState>				pso_ = nullptr;
 	std::vector<D3D12_INPUT_ELEMENT_DESC>			inputLayout_;
 	DX::XMFLOAT4X4 model_ = MathHelper::identity4x4();
 	DX::XMFLOAT4X4 view_ = MathHelper::identity4x4();
