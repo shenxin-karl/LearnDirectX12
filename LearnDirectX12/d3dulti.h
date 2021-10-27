@@ -29,13 +29,13 @@ Microsoft::WRL::ComPtr<ID3DBlob> compileShader(
 	const std::string		&target
 );
 
+
+
 #define USE_RVPTR_FUNC_IMPL
 #ifdef USE_RVPTR_FUNC_IMPL
 	template<typename T>
-	T *_rightValuePtr(T &&val) {
-		static thread_local T tempObj = T{};
-		tempObj = std::forward<T>(val);
-		return &tempObj;
+	const T *_rightValuePtr(const T &val) {
+		return &val;
 	}
 // use thread local static object save return value. return value ptr
 #define RVPtr(val) _rightValuePtr((val))

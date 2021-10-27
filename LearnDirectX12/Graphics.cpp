@@ -260,6 +260,9 @@ void Graphics::onResize() {
 	dsvDesc.Texture2D.MipSlice = 0;
 	d3dDevice_->CreateDepthStencilView(depthStencilBuffer_.Get(), &dsvDesc, depthStencilView());
 
+	commandList_->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(depthStencilBuffer_.Get(),
+		D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE)));
+
 	// execute the resize commands
 	ThrowIfFailed(commandList_->Close());
 	ID3D12CommandList *cmdLists[] = { commandList_.Get() };
