@@ -9,11 +9,19 @@ bool TestGraphics::initialize() {
 	if (!Base::initialize())
 		return false;
 
+	ThrowIfFailed(commandList_->Reset(directCmdListAlloc_.Get(), nullptr));
+
 	buildDescriptorHeaps();
 	buildRootSignature();
 	buildShaderAndInputLayout();
 	buildBoxGeometry();
 	buildPSO();
+
+	ThrowIfFailed(commandList_->Close());
+	ID3D12CommandList *cmdLists[] = { commandList_.Get() };
+	commandQueue_->ExecuteCommandLists(1, cmdLists);
+	flushCommandQueue();
+
 	return true;
 }
 
@@ -29,97 +37,40 @@ void TestGraphics::update() {
 }
 
 void TestGraphics::draw() {
-	//ThrowIfFailed(directCmdListAlloc_->Reset());
-	//ThrowIfFailed(commandList_->Reset(
-	//	directCmdListAlloc_.Get(), nullptr
-	//));
-
-	//commandList_->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
-	//	currentBackBuffer(),
-	//	D3D12_RESOURCE_STATE_PRESENT,
-	//	D3D12_RESOURCE_STATE_RENDER_TARGET
-	//)));
-
-	//commandList_->RSSetViewports(1, &screenViewport_);
-	//commandList_->RSSetScissorRects(1, &scissiorRect_);
-
-	//// clear back target view and depth and stencil buffer
-	//commandList_->ClearRenderTargetView(
-	//	currentBackBufferView(),
-	//	DirectX::Colors::LightSteelBlue,
-	//	0,
-	//	nullptr
-	//);
-	//commandList_->ClearDepthStencilView(
-	//	depthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr
-	//);
-
-	//auto currentBackBufferViewObj = currentBackBufferView();
-	//auto depthStencilViewObj = depthStencilView();
-	//commandList_->OMSetRenderTargets(1, &currentBackBufferViewObj, true, &depthStencilViewObj);
-
-	//// transition resource state
-	//commandList_->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
-	//	currentBackBuffer(),
-	//	D3D12_RESOURCE_STATE_RENDER_TARGET,
-	//	D3D12_RESOURCE_STATE_PRESENT
-	//)));
-
-	//// close command list
-	//ThrowIfFailed(commandList_->Close());
-
-	//// the commands to be executed added to command list
-	//ID3D12CommandList *cmdLists[] = { commandList_.Get() };
-	//commandQueue_->ExecuteCommandLists(static_cast<UINT>(std::size(cmdLists)), cmdLists);
-
-	//// swap buffers
-	//ThrowIfFailed(swapChain_->Present(0, 0));
-	//currBackBuffer_ = (currBackBuffer_ + 1) % kSwapChainCount; 
-
-	//// wait GPU render
-	//flushCommandQueue();
-
-		// Reuse the memory associated with command recording.
-	// We can only reset when the associated command lists have finished execution on the GPU.
 	ThrowIfFailed(directCmdListAlloc_->Reset());
-
-	// A command list can be reset after it has been added to the command queue via ExecuteCommandList.
-	// Reusing the command list reuses memory.
-	ThrowIfFailed(commandList_->Reset(directCmdListAlloc_.Get(), nullptr));
-
-	// Indicate a state transition on the resource usage.
-	commandList_->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(currentBackBuffer(),
-		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET)));
-
-	// Set the viewport and scissor rect.  This needs to be reset whenever the command list is reset.
+	ThrowIfFailed(commandList_->Reset(directCmdListAlloc_.Get(), pso_.Get()));
 	commandList_->RSSetViewports(1, &screenViewport_);
 	commandList_->RSSetScissorRects(1, &scissiorRect_);
-
-	// Clear the back buffer and depth buffer.
-	commandList_->ClearRenderTargetView(currentBackBufferView(), DX::Colors::LightSteelBlue, 0, nullptr);
-	commandList_->ClearDepthStencilView(depthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
-
-	// Specify the buffers we are going to render to.
+	commandList_->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
+		currentBackBuffer(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET))
+	);
+	commandList_->ClearRenderTargetView(currentBackBufferView(), DX::Colors::LightBlue, 0, nullptr);
+	commandList_->ClearDepthStencilView(depthStencilView(), 
+		D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 
+		1.f, 0, 0, nullptr);
 	commandList_->OMSetRenderTargets(1, RVPtr(currentBackBufferView()), true, RVPtr(depthStencilView()));
 
-	// Indicate a state transition on the resource usage.
-	commandList_->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(currentBackBuffer(),
-		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT)));
+	ID3D12DescriptorHeap *descriptorHeaps[] = { cbvHeap_.Get() };
+	commandList_->SetDescriptorHeaps(static_cast<UINT>(std::size(descriptorHeaps)), descriptorHeaps);
+	commandList_->IASetVertexBuffers(0, 1, RVPtr(objectGeometry_->vertexBufferView()));
+	commandList_->IASetIndexBuffer(RVPtr(objectGeometry_->indexBufferView()));
+	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	// Done recording commands.
+	commandList_->SetGraphicsRootSignature(rootSignature_.Get());
+	commandList_->SetGraphicsRootDescriptorTable(0, cbvHeap_->GetGPUDescriptorHandleForHeapStart());
+	commandList_->DrawIndexedInstanced(objectGeometry_->drawArgs["box"].indexCount, 1, 0, 0, 0);
+	
+	commandList_->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
+		currentBackBuffer(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT))
+	);
+
 	ThrowIfFailed(commandList_->Close());
+	ID3D12CommandList *cmdLists[] = { commandList_.Get() };
+	commandQueue_->ExecuteCommandLists(static_cast<UINT>(std::size(cmdLists)), cmdLists);
 
-	// Add the command list to the queue for execution.
-	ID3D12CommandList* cmdsLists[] = { commandList_.Get() };
-	commandQueue_->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
-
-	// swap the back and front buffers
 	ThrowIfFailed(swapChain_->Present(0, 0));
 	currBackBuffer_ = (currBackBuffer_ + 1) % kSwapChainCount;
-
-	// Wait until frame commands are complete.  This waiting is inefficient and is
-	// done for simplicity.  Later we will show how to organize our rendering code
-	// so we do not have to wait per frame.
+	
 	flushCommandQueue();
 }
 
