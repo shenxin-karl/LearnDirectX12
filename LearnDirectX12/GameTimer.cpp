@@ -12,7 +12,7 @@ void GameTimer::reset() {
 }
 
 void GameTimer::start() {
-	if (stopped_)
+	if (!stopped_)
 		return;
 
 	stopped_ = true;
@@ -22,7 +22,7 @@ void GameTimer::start() {
 }
 
 void GameTimer::stop() {
-	if (!stopped_)
+	if (stopped_)
 		return;
 
 	deltaTime_ = 0.f;

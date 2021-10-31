@@ -19,7 +19,7 @@ class Keyboard : public ITick {
 		bool isPressed() const;
 		bool isInvalid() const;
 	private:
-		State			state_;
+		State			state_ = Invalid;
 		unsigned char	character_;
 	};
 	struct KeyEvent {

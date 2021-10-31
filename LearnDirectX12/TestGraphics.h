@@ -26,6 +26,10 @@ public:
 	virtual void draw() override;
 	virtual void onResize() override;
 	virtual void handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) override;
+	void handleMouseMsg();
+	void onMouseMove(POINT p);
+	void onMouseLPress(POINT p);
+	void onMouseLRelese(POINT p);
 	virtual ~TestGraphics() override = default;
 	void buildDescriptorHeaps();
 	void buildConstantBuffers();
@@ -33,6 +37,8 @@ public:
 	void buildShaderAndInputLayout();
 	void buildBoxGeometry();
 	void buildPSO();
+	void updateView();
+	void updateProj();
 private:
 	WRL::ComPtr<ID3D12RootSignature>	 rootSignature_ = nullptr;
 	WRL::ComPtr<ID3D12DescriptorHeap>	 cbvHeap_ = nullptr;
@@ -48,8 +54,8 @@ private:
 
 	float theta_ = 1.5f * DX::XM_PI;
 	float phi_ = DX::XM_PIDIV4;
-	float radius_ = 5.f;
-
+	float radius_ = 15.f;
+	bool isMouseLPress_ = false;
 	POINT lastMousePos_;
 };
 

@@ -30,10 +30,10 @@ public:
 		bool isWheel() const { return state_ == Wheel; }
 		bool isInvalid() const { return state_ == Invalid; }
 	public:
-		int		x;
-		int		y;
-		State	state_;
-		float	offset_;
+		int		x = 0;
+		int		y = 0;
+		State	state_ = Invalid;
+		float	offset_ = 0;
 	};
 	Mouse();
 	Mouse(const Mouse &) = delete;
@@ -43,8 +43,8 @@ public:
 	virtual void beginTick() override;
 	virtual void tick(GameTimer &dt) override;
 	virtual void endTick() override;
+	Event getEvent();
 private:
 	std::queue<Event>		events_;
-	std::bitset<MaxCount>	state_;
 };
 

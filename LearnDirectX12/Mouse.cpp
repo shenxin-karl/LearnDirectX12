@@ -6,7 +6,7 @@ Mouse::Mouse() {
 void Mouse::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	int x = LOWORD(lParam);
 	int y = HIWORD(lParam);
-	bool isEvent = false;
+	bool isEvent = true;
 	Event mouseEvent = { x, y, Invalid, 0.f };
 	switch (msg) {
 	case WM_LBUTTONDOWN:
@@ -43,7 +43,6 @@ void Mouse::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 void Mouse::beginTick() {
-	state_.reset();
 }
 
 void Mouse::tick(GameTimer &dt) {
@@ -53,4 +52,13 @@ void Mouse::tick(GameTimer &dt) {
 void Mouse::endTick() {
 	while (events_.size() > EventMaxSize_)
 		events_.pop();
+}
+
+Mouse::Event Mouse::getEvent() {
+	if (events_.empty())
+		return {};
+
+	auto res = events_.front();
+	events_.pop();
+	return res;
 }

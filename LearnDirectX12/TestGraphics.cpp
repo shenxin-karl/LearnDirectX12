@@ -1,6 +1,8 @@
 #include <DirectXMath.h>
 #include <DirectXColors.h>
 #include <string_view>
+#include "D3DApp.h"
+#include "Mouse.h"
 #include "TestGraphics.h"
 #include "D3DApp.h"
 #include "window.h"
@@ -12,6 +14,7 @@ bool TestGraphics::initialize() {
 	ThrowIfFailed(commandList_->Reset(directCmdListAlloc_.Get(), nullptr));
 
 	buildDescriptorHeaps();
+	buildConstantBuffers();
 	buildRootSignature();
 	buildShaderAndInputLayout();
 	buildBoxGeometry();
@@ -22,6 +25,7 @@ bool TestGraphics::initialize() {
 	commandQueue_->ExecuteCommandLists(1, cmdLists);
 	flushCommandQueue();
 
+	updateProj();
 	return true;
 }
 
@@ -29,6 +33,8 @@ void TestGraphics::tick(GameTimer &dt) {
 	if (D3DApp::instance()->getWindow()->isPause())
 		return;
 	Base::tick(dt);
+	handleMouseMsg();
+	updateView();
 	draw();
 }
 
@@ -46,18 +52,26 @@ void TestGraphics::draw() {
 	);
 	commandList_->ClearRenderTargetView(currentBackBufferView(), DX::Colors::LightBlue, 0, nullptr);
 	commandList_->ClearDepthStencilView(depthStencilView(), 
-		D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 
-		1.f, 0, 0, nullptr);
+		D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 	commandList_->OMSetRenderTargets(1, RVPtr(currentBackBufferView()), true, RVPtr(depthStencilView()));
 
 	ID3D12DescriptorHeap *descriptorHeaps[] = { cbvHeap_.Get() };
 	commandList_->SetDescriptorHeaps(static_cast<UINT>(std::size(descriptorHeaps)), descriptorHeaps);
+	commandList_->SetGraphicsRootSignature(rootSignature_.Get());
 	commandList_->IASetVertexBuffers(0, 1, RVPtr(objectGeometry_->vertexBufferView()));
 	commandList_->IASetIndexBuffer(RVPtr(objectGeometry_->indexBufferView()));
 	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	commandList_->SetGraphicsRootSignature(rootSignature_.Get());
 	commandList_->SetGraphicsRootDescriptorTable(0, cbvHeap_->GetGPUDescriptorHandleForHeapStart());
+
+	// update gWorldViewProj;
+	DX::XMMATRIX modelMatrix = DX::XMLoadFloat4x4(&model_);
+	DX::XMMATRIX viewMatrix = DX::XMLoadFloat4x4(&view_);
+	DX::XMMATRIX projMatrix = DX::XMLoadFloat4x4(&project_);
+	DX::XMFLOAT4X4 mvp;
+	DX::XMStoreFloat4x4(&mvp,modelMatrix * viewMatrix * projMatrix);
+	objectCB_->copyData(0, BoxObjectConstant(mvp));
+
 	commandList_->DrawIndexedInstanced(objectGeometry_->drawArgs["box"].indexCount, 1, 0, 0, 0);
 	
 	commandList_->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
@@ -76,10 +90,60 @@ void TestGraphics::draw() {
 
 void TestGraphics::onResize() {
 	Base::onResize();
+	updateProj();
 }
 
 void TestGraphics::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	Base::handleMsg(hwnd, msg, wParam, lParam);
+}
+
+
+void TestGraphics::handleMouseMsg() {
+	auto event = D3DApp::instance()->getMouse()->getEvent();
+	if (event.isInvalid())
+		return;
+
+	POINT p = { event.x, event.y };
+	switch (event.state_) {
+	case Mouse::State::Move:
+		onMouseMove(p);
+		break;
+	case Mouse::State::LPress:
+		onMouseLPress(p);
+		break;
+	case Mouse::State::LRelease:
+		onMouseLRelese(p);
+		break;
+	default:
+		break;
+	}
+}
+
+
+void TestGraphics::onMouseMove(POINT p) {
+	if (!isMouseLPress_)
+		return;
+
+	using namespace DirectX;
+	float dx = (p.x - lastMousePos_.x) * 0.5f;
+	float dy = (p.y - lastMousePos_.y) * 0.5f;
+	lastMousePos_ = p;
+
+	phi_ = std::clamp(phi_ + dy, -89.f, 89.f);
+	theta_ += dx;
+	std::string msg = std::format("phi: {}, theta: {}\n", phi_, theta_);
+	OutputDebugStringA(msg.c_str());
+}
+
+
+void TestGraphics::onMouseLPress(POINT p) {
+	isMouseLPress_ = true;
+	lastMousePos_ = p;
+}
+
+
+void TestGraphics::onMouseLRelese(POINT p) {
+	isMouseLPress_ = false;
 }
 
 void TestGraphics::buildDescriptorHeaps() {
@@ -144,11 +208,12 @@ void TestGraphics::buildShaderAndInputLayout() {
 	assert(vsByteCode_ != nullptr);
 	assert(psByteCode_ != nullptr);
 
-	const auto slotClass = D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA;
+	const auto slotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
 	const int instanced = 0;
-	inputLayout_ = {
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(BoxVertex, position), slotClass, instanced },
-		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(BoxVertex, color), slotClass, instanced }
+	inputLayout_ =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
 }
 
@@ -178,6 +243,15 @@ void TestGraphics::buildBoxGeometry() {
 		4, 0, 3,	// bottom
 		4, 3, 7,
 	};
+	//std::vector<BoxVertex> vertices = {
+	//	{ DX::XMFLOAT3(-0.5f, -0.5f, +0.1f), DX::XMFLOAT4(DX::Colors::Red)   },
+	//	{ DX::XMFLOAT3(+0.0f, +0.5f, +0.1f), DX::XMFLOAT4(DX::Colors::Green) },
+	//	{ DX::XMFLOAT3(+0.5f, -0.5f, +0.1f), DX::XMFLOAT4(DX::Colors::Blue)  },
+	//};
+
+	//std::vector<int16_t> indices = {
+	//	0, 1, 2
+	//};
 
 	size_t vbByteSize = sizeof(BoxVertex) * vertices.size();
 	size_t ibByteSize = sizeof(uint16_t) * indices.size();
@@ -222,20 +296,61 @@ void TestGraphics::buildBoxGeometry() {
 
 void TestGraphics::buildPSO() {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
-	memset(&psoDesc, 0, sizeof(psoDesc));
-	psoDesc.pRootSignature = rootSignature_.Get();
-	psoDesc.VS = { vsByteCode_->GetBufferPointer(), vsByteCode_->GetBufferSize() };
-	psoDesc.PS = { psByteCode_->GetBufferPointer(), psByteCode_->GetBufferSize() };
-	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-	psoDesc.SampleMask = 0xffffffff;
-	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	ZeroMemory(&psoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
 	psoDesc.InputLayout = { inputLayout_.data(), (UINT)inputLayout_.size() };
+	psoDesc.pRootSignature = rootSignature_.Get();
+	psoDesc.VS =
+	{
+		reinterpret_cast<BYTE*>(vsByteCode_->GetBufferPointer()),
+		vsByteCode_->GetBufferSize()
+	};
+	psoDesc.PS =
+	{
+		reinterpret_cast<BYTE*>(psByteCode_->GetBufferPointer()),
+		psByteCode_->GetBufferSize()
+	};
+	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	psoDesc.NumRenderTargets = 1;
 	psoDesc.RTVFormats[0] = backBufferFormat_;
+	psoDesc.SampleDesc.Count = getSampleCount();
+	psoDesc.SampleDesc.Quality = getSampleQuality();
 	psoDesc.DSVFormat = depthStencilFormat_;
-	psoDesc.SampleDesc = { getSampleCount(), getSampleQuality() };
-
 	ThrowIfFailed(d3dDevice_->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pso_)));
+}
+
+void TestGraphics::updateView() {
+	float radianTheta = theta_ / 180.f * DX::XM_PI;
+	float radianPhi = phi_ / 180.f * DX::XM_PI;
+	DX::XMFLOAT3 dir = {
+		std::cos(radianPhi) * std::cos(radianTheta),
+		std::sin(radianPhi),
+		std::cos(radianPhi) * std::sin(radianTheta),
+	};
+
+	using namespace DirectX;
+	DX::XMVECTOR worldUp = DX::XMVectorSet(0.f, 1.f, 0.f, 0.f);
+	DX::XMVECTOR dirVec = DX::XMLoadFloat3(&dir);
+	DX::XMVECTOR lookFrom = radius_ * DX::XMVector3Normalize(dirVec);
+	DX::XMVECTOR lookAt = DX::XMVectorZero();
+	DX::XMFLOAT3 lk;
+	DX::XMStoreFloat3(&lk, lookFrom);
+	std::string msg = std::format("lookform({}, {}, {})\n", lk.x, lk.y, lk.z);
+	OutputDebugStringA(msg.c_str());
+	DX::XMMATRIX viewMatrix = DX::XMMatrixLookAtLH(lookFrom, lookAt, worldUp);
+	DX::XMStoreFloat4x4(&view_, viewMatrix);
+}
+
+void TestGraphics::updateProj() {
+	float width = float(D3DApp::instance()->getWindow()->getWidth());
+	float height = float(D3DApp::instance()->getWindow()->getHeight());
+	float aspect = width / height;
+	float fovAngle = 90.f / 180.f * DX::XM_PI;
+	float nearPlane = 0.1f;
+	float farPlane = 50.f;
+	auto projMatrix = DX::XMMatrixPerspectiveFovLH(fovAngle, aspect, nearPlane, farPlane);
+	DX::XMStoreFloat4x4(&project_, projMatrix);
 }
