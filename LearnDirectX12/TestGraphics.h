@@ -54,7 +54,7 @@ private:
 
 	float theta_ = 1.5f * DX::XM_PI;
 	float phi_ = DX::XM_PIDIV4;
-	float radius_ = 15.f;
+	float radius_ = 5.f;
 	bool isMouseLPress_ = false;
 	POINT lastMousePos_;
 };

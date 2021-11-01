@@ -56,7 +56,7 @@ ID3D12Resource *UploadBuffer<T>::resource() const {
 template<typename T>
 void UploadBuffer<T>::copyData(int elementIndex, const T &data) {
 	assert(mappedData_ != nullptr);
-	memcpy(&mappedData_[elementIndex], &data, sizeof(T));
+	memcpy(&mappedData_[elementIndex * elementByteSize_], &data, sizeof(T));
 }
 
 template<typename T>

@@ -68,9 +68,10 @@ void TestGraphics::draw() {
 	DX::XMMATRIX modelMatrix = DX::XMLoadFloat4x4(&model_);
 	DX::XMMATRIX viewMatrix = DX::XMLoadFloat4x4(&view_);
 	DX::XMMATRIX projMatrix = DX::XMLoadFloat4x4(&project_);
-	DX::XMFLOAT4X4 mvp;
-	DX::XMStoreFloat4x4(&mvp,modelMatrix * viewMatrix * projMatrix);
-	objectCB_->copyData(0, BoxObjectConstant(mvp));
+	DX::XMMATRIX gWorldViewProj = modelMatrix * viewMatrix * projMatrix;
+	BoxObjectConstant constant;
+	DX::XMStoreFloat4x4(&constant.gWorldViewProj, DX::XMMatrixTranspose(gWorldViewProj));
+	objectCB_->copyData(0, constant);
 
 	commandList_->DrawIndexedInstanced(objectGeometry_->drawArgs["box"].indexCount, 1, 0, 0, 0);
 	
@@ -130,7 +131,7 @@ void TestGraphics::onMouseMove(POINT p) {
 	lastMousePos_ = p;
 
 	phi_ = std::clamp(phi_ + dy, -89.f, 89.f);
-	theta_ += dx;
+	theta_ -= dx;
 	std::string msg = std::format("phi: {}, theta: {}\n", phi_, theta_);
 	OutputDebugStringA(msg.c_str());
 }
@@ -218,6 +219,7 @@ void TestGraphics::buildShaderAndInputLayout() {
 }
 
 void TestGraphics::buildBoxGeometry() {
+#if 1
 	std::vector<BoxVertex> vertices = {
 		{ DX::XMFLOAT3(-1.f, -1.f, -1.f), DX::XMFLOAT4(DX::Colors::White)   },
 		{ DX::XMFLOAT3(-1.f, +1.f, -1.f), DX::XMFLOAT4(DX::Colors::Black)   },
@@ -243,15 +245,17 @@ void TestGraphics::buildBoxGeometry() {
 		4, 0, 3,	// bottom
 		4, 3, 7,
 	};
-	//std::vector<BoxVertex> vertices = {
-	//	{ DX::XMFLOAT3(-0.5f, -0.5f, +0.1f), DX::XMFLOAT4(DX::Colors::Red)   },
-	//	{ DX::XMFLOAT3(+0.0f, +0.5f, +0.1f), DX::XMFLOAT4(DX::Colors::Green) },
-	//	{ DX::XMFLOAT3(+0.5f, -0.5f, +0.1f), DX::XMFLOAT4(DX::Colors::Blue)  },
-	//};
+#else
+	std::vector<BoxVertex> vertices = {
+		{ DX::XMFLOAT3(-0.5f, -0.5f, +0.0f), DX::XMFLOAT4(DX::Colors::Red)   },
+		{ DX::XMFLOAT3(+0.0f, +0.5f, +0.0f), DX::XMFLOAT4(DX::Colors::Green) },
+		{ DX::XMFLOAT3(+0.5f, -0.5f, +0.0f), DX::XMFLOAT4(DX::Colors::Blue)  },
+	};
 
-	//std::vector<int16_t> indices = {
-	//	0, 1, 2
-	//};
+	std::vector<int16_t> indices = {
+		0, 1, 2
+	};
+#endif
 
 	size_t vbByteSize = sizeof(BoxVertex) * vertices.size();
 	size_t ibByteSize = sizeof(uint16_t) * indices.size();
@@ -326,31 +330,28 @@ void TestGraphics::updateView() {
 	float radianTheta = theta_ / 180.f * DX::XM_PI;
 	float radianPhi = phi_ / 180.f * DX::XM_PI;
 	DX::XMFLOAT3 dir = {
-		std::cos(radianPhi) * std::cos(radianTheta),
-		std::sin(radianPhi),
-		std::cos(radianPhi) * std::sin(radianTheta),
+		radius_ * std::cos(radianPhi) * std::cos(radianTheta),
+		radius_ * std::sin(radianPhi),
+		radius_ * std::cos(radianPhi) * std::sin(radianTheta),
 	};
 
 	using namespace DirectX;
 	DX::XMVECTOR worldUp = DX::XMVectorSet(0.f, 1.f, 0.f, 0.f);
-	DX::XMVECTOR dirVec = DX::XMLoadFloat3(&dir);
-	DX::XMVECTOR lookFrom = radius_ * DX::XMVector3Normalize(dirVec);
-	DX::XMVECTOR lookAt = DX::XMVectorZero();
+	DX::XMVECTOR lookFrom = DX::XMVectorSet(dir.x, dir.y, dir.z, 1.0f);
+	DX::XMVECTOR lookAt = DX::XMVectorSet(0.f, 0.f, 0.f, 1.f);
 	DX::XMFLOAT3 lk;
 	DX::XMStoreFloat3(&lk, lookFrom);
-	std::string msg = std::format("lookform({}, {}, {})\n", lk.x, lk.y, lk.z);
-	OutputDebugStringA(msg.c_str());
+	//std::string msg = std::format("lookform({}, {}, {})\n", lk.x, lk.y, lk.z);
+	//OutputDebugStringA(msg.c_str());
 	DX::XMMATRIX viewMatrix = DX::XMMatrixLookAtLH(lookFrom, lookAt, worldUp);
 	DX::XMStoreFloat4x4(&view_, viewMatrix);
 }
 
 void TestGraphics::updateProj() {
-	float width = float(D3DApp::instance()->getWindow()->getWidth());
-	float height = float(D3DApp::instance()->getWindow()->getHeight());
-	float aspect = width / height;
-	float fovAngle = 90.f / 180.f * DX::XM_PI;
-	float nearPlane = 0.1f;
-	float farPlane = 50.f;
+	float aspect = D3DApp::instance()->getWindow()->aspectRatio();
+	float fovAngle = 45.f / 180.f * DX::XM_PI;
+	float nearPlane = 1.f;
+	float farPlane = 1000.f;
 	auto projMatrix = DX::XMMatrixPerspectiveFovLH(fovAngle, aspect, nearPlane, farPlane);
 	DX::XMStoreFloat4x4(&project_, projMatrix);
 }
