@@ -16,7 +16,6 @@ struct VertexOut {
 VertexOut VS(VertexIn vin) {
 	VertexOut vout;
 	vout.position = mul(float4(vin.position, 1.f), gWorldViewProj);
-    //vout.position = float4(vin.position, 1.f);
 	vout.color    = vin.color;
     return vout;
 }	
