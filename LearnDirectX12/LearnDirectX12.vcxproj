@@ -147,6 +147,7 @@
     <ClCompile Include="D3DApp.cpp" />
     <ClCompile Include="d3dulti.cpp" />
     <ClCompile Include="ExceptionBase.cpp" />
+    <ClCompile Include="FrameResource.cpp" />
     <ClCompile Include="GameTimer.cpp" />
     <ClCompile Include="Graphics.cpp" />
     <ClCompile Include="Keyboard.cpp" />
@@ -163,6 +164,7 @@
     <ClInclude Include="D3DX12.h" />
     <ClInclude Include="d3dulti.h" />
     <ClInclude Include="ExceptionBase.h" />
+    <ClInclude Include="FrameResource.h" />
     <ClInclude Include="GameTimer.h" />
     <ClInclude Include="Graphics.h" />
     <ClInclude Include="ITick.h" />
