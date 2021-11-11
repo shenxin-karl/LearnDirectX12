@@ -3,10 +3,9 @@
 #include <windows.h>
 #include <bitset>
 #include <queue>
-#include "CommonDefine.h"
-#include "ITick.h"
 
-class Keyboard : public ITick {
+class GameTimer;
+class Keyboard {
 	struct CharEvent {
 		enum State {
 			Pressed,
@@ -59,9 +58,7 @@ public:
 	static void tryDiscardEvent(std::queue<T> &queue);
 
 	void handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-	virtual void beginTick() override;
-	virtual void tick(GameTimer &dt) override;
-	virtual void endTick() override;
+	void tick(GameTimer &gt);
 };
 
 

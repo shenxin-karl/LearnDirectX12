@@ -18,6 +18,7 @@ void GameTimer::start() {
 
 	stopped_ = false;
 	auto currTime = chrono::steady_clock::now();
+	prevTime_ = currTime;
 	chrono::duration<float> diff = currTime - stoppedTime_;
 	pausedTime_ += diff.count();
 }

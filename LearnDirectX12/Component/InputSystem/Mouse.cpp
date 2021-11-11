@@ -42,14 +42,8 @@ void Mouse::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		events_.push(mouseEvent);
 }
 
-void Mouse::beginTick() {
-}
 
-void Mouse::tick(GameTimer &dt) {
-
-}
-
-void Mouse::endTick() {
+void Mouse::tick(GameTimer &gt) {
 	while (events_.size() > EventMaxSize_)
 		events_.pop();
 }

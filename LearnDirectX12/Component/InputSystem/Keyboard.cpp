@@ -46,15 +46,7 @@ void Keyboard::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	}
 }
 
-void Keyboard::beginTick() {
-	characterState_.reset();
-}
-
-void Keyboard::tick(GameTimer &dt) {
-
-}
-
-void Keyboard::endTick() {
+void Keyboard::tick(GameTimer &gt) {
 	tryDiscardEvent(keycodeQueue_);
 	tryDiscardEvent(characterQueue_);
 }

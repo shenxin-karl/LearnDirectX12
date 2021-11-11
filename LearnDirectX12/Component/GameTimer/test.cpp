@@ -18,8 +18,7 @@ int main() {
 		else
 			timer.start();
 
-
-		Sleep(100);
+		Sleep(1000);
 	}
 	std::cout << std::format("timer.totalTime: {}, timer.deltaTime: {}\n",
 		timer.totalTime(),

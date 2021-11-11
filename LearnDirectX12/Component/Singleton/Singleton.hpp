@@ -1,6 +1,8 @@
 #pragma once
 #include <memory>
 
+namespace com {
+
 template<typename T>
 class Singleton {
 	static inline std::unique_ptr<T> singletonPtr_;
@@ -15,3 +17,4 @@ public:
 	}
 };
 
+}

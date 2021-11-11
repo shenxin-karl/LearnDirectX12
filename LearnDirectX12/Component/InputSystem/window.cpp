@@ -2,9 +2,9 @@
 #include <format>
 #include <windows.h>
 #include <errhandlingapi.h>
+#include <cassert>
 #include "Window.h"
-#include "GameTimer.h"
-#include "D3DApp.h"
+#include "../GameTimer/GameTimer.h"
 
 Window::Window(int width, int height, const std::string &title)
 : hwnd_(nullptr), width_(width), height_(height), title_(title)
@@ -26,7 +26,7 @@ Window::Window(int width, int height, const std::string &title)
 		nullptr, nullptr, WindowClass::getInstance(), this
 	);
 
-	SAssert(hwnd_ != nullptr, "hwnd is nullptr");
+	assert(hwnd_ != nullptr, "hwnd is nullptr");
 	ShowWindow(hwnd_, SW_SHOWDEFAULT);
 	shouldClose_ = false;
 }
@@ -91,6 +91,10 @@ void Window::setShowTitle(const std::string &title) {
 
 bool Window::isPause() const {
 	return paused_;
+}
+
+void Window::tick(GameTimer &gt) {
+
 }
 
 Window::~Window() {

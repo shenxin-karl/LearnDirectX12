@@ -2,9 +2,8 @@
 #include <queue>
 #include <windows.h>
 #include <bitset>
-#include "ITick.h"
-
-class Mouse : public ITick {
+class GameTimer;
+class Mouse {
 public:
 	static constexpr size_t EventMaxSize_ = 0xff;
 	enum State {
@@ -40,9 +39,7 @@ public:
 	Mouse &operator=(const Mouse &) = delete;
 	~Mouse() = default;
 	void handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-	virtual void beginTick() override;
-	virtual void tick(GameTimer &dt) override;
-	virtual void endTick() override;
+	void tick(GameTimer &gt);
 	Event getEvent();
 private:
 	std::queue<Event>		events_;

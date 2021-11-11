@@ -3,10 +3,9 @@
 #include <memory>
 #include <string>
 #include <functional>
-#include "CommonDefine.h"
-#include "ITick.h"
 
-class Window : public ITick {
+class GameTimer;
+class Window {
 	class WindowClass;
 public:
 	Window(int width, int height, const std::string &title);
@@ -25,6 +24,7 @@ public:
 	const std::string &getTitle() const;
 	void setShowTitle(const std::string &title);
 	bool isPause() const;
+	void tick(GameTimer &gt);
 	~Window();
 private:
 	static LRESULT CALLBACK handleMsgSetup(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -39,6 +39,7 @@ private:
 	std::string title_;
 	std::function<void(HWND, UINT, WPARAM, LPARAM)> messageCallback_;
 	std::function<void(int x, int y)>				resizeCallback_;
+	GameTimer									   *pGameTimer;
 public:
 	bool paused_ = false;
 	bool minimized_ = false;
