@@ -6,6 +6,7 @@ GameTimer::GameTimer() {
 
 void GameTimer::reset() {
 	baseTime_ = chrono::steady_clock::now();
+	prevTime_ = baseTime_;
 	stopped_ = false;
 	deltaTime_ = 0.f;
 	pausedTime_ = 0.f;
@@ -15,7 +16,7 @@ void GameTimer::start() {
 	if (!stopped_)
 		return;
 
-	stopped_ = true;
+	stopped_ = false;
 	auto currTime = chrono::steady_clock::now();
 	chrono::duration<float> diff = currTime - stoppedTime_;
 	pausedTime_ += diff.count();
@@ -37,7 +38,7 @@ void GameTimer::tick() {
 	auto currTime = chrono::steady_clock::now();
 	chrono::duration<float> diff = currTime - prevTime_;
 	prevTime_ = currTime;
-	deltaTime_ = std::max(diff.count(), 0.f);
+	deltaTime_ = diff.count();
 }
 
 float GameTimer::totalTime() const {
