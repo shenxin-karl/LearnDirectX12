@@ -1,5 +1,7 @@
 #include "Keyboard.h"
 
+namespace com {
+
 Keyboard::Keyboard() {
 }
 
@@ -90,6 +92,8 @@ bool Keyboard::CharEvent::isInvalid() const {
 	return state_ == Invalid;
 }
 
-Keyboard::CharEvent::CharEvent(State state, unsigned char character) 
-: state_(state), character_(character) {
+Keyboard::CharEvent::CharEvent(State state, unsigned char character)
+	: state_(state), character_(character) {
+}
+
 }

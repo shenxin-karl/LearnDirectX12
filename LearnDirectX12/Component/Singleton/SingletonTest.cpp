@@ -2,6 +2,8 @@
 #include <format>
 #include "Singleton.hpp"
 
+namespace com {
+
 class A : public Singleton<A> {
 public:
 	int v1_ = 0;
@@ -16,4 +18,5 @@ int main() {
 		A::instance()->v1_,
 		A::instance()->v2_
 	);
+}
 }

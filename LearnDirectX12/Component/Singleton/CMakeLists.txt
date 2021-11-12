@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.8)	
 set(CMAKE_CXX_STANDARD 20)
-project(SingletonTest)
+project(Singleton)
 
-add_executable(SingletonTest "test.cpp")
+add_library(Singleton INTERFACE "Singleton.hpp")
+
+if (ENABLE_TEST))
+	enable_testing()
+endif()
+
+add_test(SingletonTest .)

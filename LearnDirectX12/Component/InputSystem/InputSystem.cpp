@@ -1,5 +1,7 @@
 #include "InputSystem.h"
 
+namespace com {
+
 InputSystem::InputSystem(const std::string &title, int width, int height) {
 	window = std::make_unique<Window>(width, height, title);
 	mouse = std::make_unique<Mouse>();
@@ -19,4 +21,6 @@ void InputSystem::tick(GameTimer &gt) {
 	window->tick(gt);
 	mouse->tick(gt);
 	keyboard->tick(gt);
+}
+
 }

@@ -6,9 +6,12 @@
 #include "Window.h"
 #include "../GameTimer/GameTimer.h"
 
+namespace com {
+
 Window::Window(int width, int height, const std::string &title)
-: hwnd_(nullptr), width_(width), height_(height), title_(title)
-, shouldClose_(false), result(-1) {
+	: hwnd_(nullptr), width_(width), height_(height), title_(title)
+	, shouldClose_(false), result(-1)
+{
 	resizeCallback_ = [](int, int) {};
 	messageCallback_ = [](HWND, UINT, WPARAM, LPARAM) {};
 
@@ -129,7 +132,7 @@ LRESULT Window::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		shouldClose_ = true;
 		break;
 	}
-	case WM_PAINT:	
+	case WM_PAINT:
 	{
 		RECT rect;
 		GetWindowRect(hwnd, &rect);
@@ -146,7 +149,7 @@ LRESULT Window::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		} else {
 			paused_ = false;
 			D3DApp::instance()->getGameTimer()->start();
-		}	
+		}
 		break;
 	}
 	case WM_ENTERSIZEMOVE:
@@ -163,7 +166,7 @@ LRESULT Window::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		D3DApp::instance()->getGameTimer()->start();
 		break;
 	}
-	case WM_GETMINMAXINFO: 
+	case WM_GETMINMAXINFO:
 	{
 		((MINMAXINFO *)lParam)->ptMinTrackSize.x = 200;
 		((MINMAXINFO *)lParam)->ptMinTrackSize.y = 200;
@@ -241,6 +244,8 @@ void CheckWindowErrorImpl(HRESULT hr, const char *file, int line) {
 
 		std::string errMsg = std::format("[{}]: {}", hr, (nMsgLen == 0 ? "unidentifyied error code" : pMsgBuf));
 		LocalFree(pMsgBuf);
-		SAssertImpl(false, errMsg, file, line);
+		assert(false, errMsg, file, line);
 	}
+}
+
 }

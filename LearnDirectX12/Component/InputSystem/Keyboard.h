@@ -4,6 +4,8 @@
 #include <bitset>
 #include <queue>
 
+namespace com {
+
 class GameTimer;
 class Keyboard {
 	struct CharEvent {
@@ -66,4 +68,6 @@ template<typename T>
 void Keyboard::tryDiscardEvent(std::queue<T> &queue) {
 	while (queue.size() > Keyboard::MaxQueueSize_)
 		queue.pop();
+}
+
 }

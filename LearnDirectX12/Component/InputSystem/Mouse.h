@@ -2,6 +2,9 @@
 #include <queue>
 #include <windows.h>
 #include <bitset>
+
+namespace com {
+
 class GameTimer;
 class Mouse {
 public:
@@ -45,3 +48,4 @@ private:
 	std::queue<Event>		events_;
 };
 
+}

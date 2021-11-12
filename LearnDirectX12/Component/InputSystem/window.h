@@ -4,6 +4,8 @@
 #include <string>
 #include <functional>
 
+namespace com {
+
 class GameTimer;
 class Window {
 	class WindowClass;
@@ -61,3 +63,5 @@ public:
 void CheckWindowErrorImpl(HRESULT hr, const char *file, int line);
 #define CheckWindowError(hr) CheckWindowErrorImpl(hr, __FILE__, __LINE__)
 #define CheckWindowLastError() CheckWindowError(GetLastError())
+
+}

@@ -1,6 +1,8 @@
 #pragma once
 #include <chrono>
 
+namespace com {
+
 namespace chrono = std::chrono;
 class GameTimer {
 public:
@@ -20,3 +22,4 @@ private:
 	bool							 stopped_;
 };
 
+}

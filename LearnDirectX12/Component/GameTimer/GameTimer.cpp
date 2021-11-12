@@ -1,5 +1,7 @@
 #include "GameTimer.h"
 
+namespace com {
+
 GameTimer::GameTimer() {
 	reset();
 }
@@ -49,4 +51,6 @@ float GameTimer::totalTime() const {
 
 float GameTimer::deltaTime() const {
 	return deltaTime_;
+}
+
 }

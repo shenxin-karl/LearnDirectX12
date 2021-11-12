@@ -1,5 +1,7 @@
 #include "Mouse.h"
 
+namespace com {
+
 Mouse::Mouse() {
 }
 
@@ -7,7 +9,7 @@ void Mouse::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	int x = LOWORD(lParam);
 	int y = HIWORD(lParam);
 	bool isEvent = true;
-	Event mouseEvent = { x, y, Invalid, 0.f };
+	Event mouseEvent ={ x, y, Invalid, 0.f };
 	switch (msg) {
 	case WM_LBUTTONDOWN:
 		mouseEvent.state_ = LPress;
@@ -55,4 +57,6 @@ Mouse::Event Mouse::getEvent() {
 	auto res = events_.front();
 	events_.pop();
 	return res;
+}
+
 }
