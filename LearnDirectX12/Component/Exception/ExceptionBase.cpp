@@ -1,6 +1,8 @@
 #include <format>
 #include "ExceptionBase.h"
 
+namespace com {
+
 ExceptionBase::ExceptionBase(const char *file, int line) : file_(file), line_(line) {
 }
 
@@ -23,4 +25,6 @@ const std::string &ExceptionBase::getFile() const noexcept {
 
 std::string ExceptionBase::getOriginString() const noexcept {
 	return std::format("[File] {}\n[Line] {}\n", file_, line_);
+}
+
 }

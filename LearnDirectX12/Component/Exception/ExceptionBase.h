@@ -2,6 +2,8 @@
 #include <exception>
 #include <string>
 
+namespace com {
+
 class ExceptionBase : public std::exception {
 public:
 	ExceptionBase(const char *file, int line);
@@ -17,3 +19,4 @@ protected:
 	mutable std::string whatBuffer_;
 };
 
+}
