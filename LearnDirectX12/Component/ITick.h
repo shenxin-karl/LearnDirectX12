@@ -1,13 +1,14 @@
 #pragma once
+#include <memory>
 
 namespace com {
 
 class GameTimer;
 class ITick {
 public:
-	virtual void beginTick(GameTimer &tick) {};
-	virtual void tick(GameTimer &tick) {}
-	virtual void endTick(GameTimer &tick) {}
+	virtual void beginTick(std::shared_ptr<GameTimer> pGameTimer) {};
+	virtual void tick(std::shared_ptr<GameTimer> pGameTimer) {}
+	virtual void endTick(std::shared_ptr<GameTimer> pGameTimer) {}
 	virtual ~ITick() = default;
 };
 

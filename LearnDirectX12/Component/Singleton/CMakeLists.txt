@@ -4,7 +4,7 @@ project(Singleton)
 
 add_library(Singleton INTERFACE "Singleton.hpp")
 
-if (ENABLE_TEST))
+if (ENABLE_TEST)
 	enable_testing()
 endif()
 

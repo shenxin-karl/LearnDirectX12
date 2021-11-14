@@ -1,4 +1,8 @@
+#include "GameTimer/GameTimer.h"
 #include "InputSystem.h"
+#include "Window.h"
+#include "Mouse.h"
+#include "Keyboard.h"
 
 namespace com {
 
@@ -16,11 +20,24 @@ bool InputSystem::shouldClose() const {
 	return window->shouldClose();
 }
 
-void InputSystem::tick(GameTimer &gt) {
-	window->pollEvent();
-	window->tick(gt);
-	mouse->tick(gt);
-	keyboard->tick(gt);
+
+void InputSystem::beginTick(std::shared_ptr<GameTimer> pGameTimer) {
+	window->beginTick(pGameTimer);
+	mouse->beginTick(pGameTimer);
+	keyboard->beginTick(pGameTimer);
+}
+
+void InputSystem::tick(std::shared_ptr<GameTimer> pGameTimer) {
+	window->tick(pGameTimer);
+	mouse->tick(pGameTimer);
+	keyboard->tick(pGameTimer);
+}
+
+
+void InputSystem::endTick(std::shared_ptr<GameTimer> pGameTimer) {
+	window->endTick(pGameTimer);
+	mouse->endTick(pGameTimer);
+	keyboard->endTick(pGameTimer);
 }
 
 }

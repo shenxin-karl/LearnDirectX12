@@ -3,26 +3,10 @@ set(CMAKE_CXX_STANDARD 20)
 project(InputSystem)
 
 
-SET(HEADER_FILE 
-	"InputSystem.h"	"Keyboard.h"	
-	"Mouse.h"		"Window.h"
-)
+file(GLOB_RECURSE HEADER_FILES *.h *.hpp *.ini)
+file(GLOB_RECURSE SOURCE_FILES *.c *.cpp)
+SET(ALL_FILE ${HEADER_FILES} ${SOURCE_FILES})
+add_library(InputSystem ${ALL_FILE})
+target_include_directories(InputSystem PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../")
+target_link_libraries(InputSystem PUBLIC GameTimer)
 
-SET(SOURCE_FILE
-	"InputSystem.cpp"	"Keyboard.cpp"
-	"Mouse.cpp"			"Window.cpp"
-)
-
-SET(ALL_FILE ${HEADER_FILE} ${SOURCE_FILE})
-add_library(InputSystemLibrary ${ALL_FILE})
-
-target_include_directories(InputSystemLibrary PUBLIC
-	${PROJECT_SOURCE_DIR}
-)
-
-if (ENABLE_TEST) 
-	enable_testing()
-endif()
-
-add_executable(InputSystemTest "InputSystemTest.cpp" ${ALL_FILE})
-add_test(InputSystemTest .)

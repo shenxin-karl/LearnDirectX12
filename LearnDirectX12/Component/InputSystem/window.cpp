@@ -1,10 +1,9 @@
 #include <iostream>
 #include <format>
-#include <windows.h>
+#include "Window.h"
 #include <errhandlingapi.h>
 #include <cassert>
-#include "Window.h"
-#include "../GameTimer/GameTimer.h"
+#include "GameTimer/GameTimer.h"
 
 namespace com {
 
@@ -29,23 +28,9 @@ Window::Window(int width, int height, const std::string &title)
 		nullptr, nullptr, WindowClass::getInstance(), this
 	);
 
-	assert(hwnd_ != nullptr, "hwnd is nullptr");
+	assert(hwnd_ != nullptr && "hwnd is nullptr");
 	ShowWindow(hwnd_, SW_SHOWDEFAULT);
 	shouldClose_ = false;
-}
-
-void Window::pollEvent() {
-	MSG msg;
-	BOOL getResult = 0;
-	while (PeekMessage(&msg, nullptr, 0, 0, true)) {
-		if (msg.message == WM_QUIT) {
-			shouldClose_ = true;
-			result = static_cast<int>(msg.wParam);
-			return;
-		}
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-	}
 }
 
 bool Window::shouldClose() const {
@@ -96,8 +81,19 @@ bool Window::isPause() const {
 	return paused_;
 }
 
-void Window::tick(GameTimer &gt) {
-
+void Window::tick(std::shared_ptr<GameTimer> pGameTimer) {
+	pGameTimer_ = pGameTimer;
+	MSG msg;
+	BOOL getResult = 0;
+	while (PeekMessage(&msg, nullptr, 0, 0, true)) {
+		if (msg.message == WM_QUIT) {
+			shouldClose_ = true;
+			result = static_cast<int>(msg.wParam);
+			return;
+		}
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
 }
 
 Window::~Window() {
@@ -143,27 +139,22 @@ LRESULT Window::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	}
 	case WM_ACTIVATE:
 	{
-		if (LOWORD(wParam) == WA_INACTIVE) {
-			paused_ = true;
-			D3DApp::instance()->getGameTimer()->stop();
-		} else {
-			paused_ = false;
-			D3DApp::instance()->getGameTimer()->start();
-		}
+		if (LOWORD(wParam) == WA_INACTIVE)
+			stop();
+		else
+			start();
 		break;
 	}
 	case WM_ENTERSIZEMOVE:
 	{
-		paused_ = true;
 		resizing_ = true;
-		D3DApp::instance()->getGameTimer()->stop();
+		stop();
 		break;
 	}
 	case WM_EXITSIZEMOVE:
 	{
-		paused_ = false;
 		resizing_ = false;
-		D3DApp::instance()->getGameTimer()->start();
+		start();
 		break;
 	}
 	case WM_GETMINMAXINFO:
@@ -207,6 +198,20 @@ LRESULT Window::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
+
+void Window::stop() {
+	paused_ = true;
+	if (pGameTimer_ != nullptr)
+		pGameTimer_->stop();
+}
+
+
+void Window::start() {
+	paused_ = false;
+	if (pGameTimer_ != nullptr)
+		pGameTimer_->start();
+}
+
 Window::WindowClass::WindowClass() : hInstance_(GetModuleHandle(nullptr)) {
 	// register class
 	WNDCLASSEX wc;
@@ -244,7 +249,7 @@ void CheckWindowErrorImpl(HRESULT hr, const char *file, int line) {
 
 		std::string errMsg = std::format("[{}]: {}", hr, (nMsgLen == 0 ? "unidentifyied error code" : pMsgBuf));
 		LocalFree(pMsgBuf);
-		assert(false, errMsg, file, line);
+		// todo throw (false, errMsg, file, line);
 	}
 }
 

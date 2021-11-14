@@ -48,7 +48,7 @@ void Keyboard::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	}
 }
 
-void Keyboard::tick(GameTimer &gt) {
+void Keyboard::tick(std::shared_ptr<GameTimer> pGameTimer) {
 	tryDiscardEvent(keycodeQueue_);
 	tryDiscardEvent(characterQueue_);
 }
@@ -73,6 +73,11 @@ bool Keyboard::KeyEvent::isInvalid() const {
 	return state_ == Invalid;
 }
 
+
+Keyboard::KeyEvent::operator bool() const {
+	return !isInvalid();
+}
+
 Keyboard::KeyEvent::KeyEvent(State state, unsigned char key) : state_(state), key_(key) {
 }
 
@@ -90,6 +95,11 @@ bool Keyboard::CharEvent::isPressed() const {
 
 bool Keyboard::CharEvent::isInvalid() const {
 	return state_ == Invalid;
+}
+
+
+Keyboard::CharEvent::operator bool() const {
+	return state_ != Invalid;
 }
 
 Keyboard::CharEvent::CharEvent(State state, unsigned char character)

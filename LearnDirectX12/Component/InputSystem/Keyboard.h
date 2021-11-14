@@ -3,11 +3,12 @@
 #include <windows.h>
 #include <bitset>
 #include <queue>
+#include "ITick.h"
 
 namespace com {
 
 class GameTimer;
-class Keyboard {
+class Keyboard : public ITick {
 	struct CharEvent {
 		enum State {
 			Pressed,
@@ -19,9 +20,10 @@ class Keyboard {
 		State getState() const;
 		bool isPressed() const;
 		bool isInvalid() const;
+		explicit operator bool() const;
 	private:
-		State			state_ = Invalid;
-		unsigned char	character_;
+		State			state_ = State::Invalid;
+		unsigned char	character_ = 0;
 	};
 	struct KeyEvent {
 		enum State {
@@ -36,9 +38,10 @@ class Keyboard {
 		bool isPressed() const;
 		bool isReleased() const;
 		bool isInvalid() const;
+		explicit operator bool() const;
 	private:
-		State		  state_ = Invalid;
-		unsigned char key_ = 0;
+		State		  state_ = State::Invalid;
+		unsigned char key_ = 0;				// Use the window's virtual button
 	};
 public:
 	static constexpr int MaxKeyCodeSize_ = 0xff;
@@ -60,7 +63,7 @@ public:
 	static void tryDiscardEvent(std::queue<T> &queue);
 
 	void handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-	void tick(GameTimer &gt);
+	virtual void tick(std::shared_ptr<GameTimer> pGameTimer) override;
 };
 
 

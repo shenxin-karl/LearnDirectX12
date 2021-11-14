@@ -1,0 +1,1 @@
+-G "Visual Studio 16 2019" -DENABLE_TEST=1

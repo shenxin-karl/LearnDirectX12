@@ -3,17 +3,17 @@
 #include <memory>
 #include <string>
 #include <functional>
+#include "ITick.h"
 
 namespace com {
 
 class GameTimer;
-class Window {
+class Window : public ITick {
 	class WindowClass;
 public:
 	Window(int width, int height, const std::string &title);
 	Window(const Window &) = delete;
 	Window &operator=(const Window &) = delete;
-	void pollEvent();
 	bool shouldClose() const;
 	void setShouldClose(bool flag);
 	int getReturnCode() const;
@@ -26,12 +26,14 @@ public:
 	const std::string &getTitle() const;
 	void setShowTitle(const std::string &title);
 	bool isPause() const;
-	void tick(GameTimer &gt);
+	void tick(std::shared_ptr<GameTimer> pGameTimer);
 	~Window();
 private:
 	static LRESULT CALLBACK handleMsgSetup(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 	static LRESULT CALLBACK handleMsgThunk(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 	LRESULT handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+	void stop();
+	void start();
 private:
 	HWND hwnd_;
 	int	 width_;
@@ -41,7 +43,7 @@ private:
 	std::string title_;
 	std::function<void(HWND, UINT, WPARAM, LPARAM)> messageCallback_;
 	std::function<void(int x, int y)>				resizeCallback_;
-	GameTimer									   *pGameTimer;
+	std::shared_ptr<GameTimer>						pGameTimer_;
 public:
 	bool paused_ = false;
 	bool minimized_ = false;

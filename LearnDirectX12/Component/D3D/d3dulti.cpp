@@ -1,14 +1,15 @@
 #include <windows.h>
+#include <cassert>
 #include <d3dcompiler.h>
 #include "d3dulti.h"
 #include "D3DX12.h"
 #include "Graphics.h"
-#include "CommonDefine.h"
+#include "D3DException.h"
 
 namespace WRL = Microsoft::WRL;
 void _ThrowIfFailedImpl(const char *file, int line, HRESULT hr) {
 	if (FAILED(hr))
-		throw GraphicsException(file, line, hr);
+		throw d3d::D3DException(hr, file, line);
 	return;
 }
 
@@ -19,8 +20,8 @@ WRL::ComPtr<ID3D12Resource> createDefaultBuffer(
 	UINT64 byteSize, 
 	WRL::ComPtr<ID3D12Resource> &uploadBuffer
 ) {
-	SAssert(device != nullptr, "createDefaultBuffer device is nullptr");
-	SAssert(cmdList != nullptr, "createDefaultBuffer cmdList is nullptr");
+	assert(device != nullptr && "createDefaultBuffer device is nullptr");
+	assert(cmdList != nullptr && "createDefaultBuffer cmdList is nullptr");
 
 	// create default heap
 	WRL::ComPtr<ID3D12Resource> defaultBuffer;

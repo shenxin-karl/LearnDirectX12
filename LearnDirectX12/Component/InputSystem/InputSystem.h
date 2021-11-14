@@ -1,12 +1,14 @@
 #pragma once
 #include <memory>
 #include <string>
-#include "Window.h"
-#include "Mouse.h"
-#include "Keyboard.h"
-#include "Component/ITick.h"
+#include "ITick.h"
 
 namespace com {
+
+class Mouse;
+class Keyboard;
+class Window;
+class GameTimer;
 
 class InputSystem : public ITick {
 public:
@@ -15,7 +17,9 @@ public:
 	InputSystem &operator=(const InputSystem &) = delete;
 	InputSystem() = default;
 	bool shouldClose() const;
-	virtual void tick(GameTimer &gt) override;
+	virtual void beginTick(std::shared_ptr<GameTimer> pGameTimer) override;
+	virtual void tick(std::shared_ptr<GameTimer> pGameTimer) override;
+	virtual void endTick(std::shared_ptr<GameTimer> pGameTimer) override;
 public:
 	std::unique_ptr<Mouse>		mouse;
 	std::unique_ptr<Keyboard>	keyboard;
