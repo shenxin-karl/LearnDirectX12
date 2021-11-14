@@ -44,7 +44,7 @@ void Mouse::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		events_.push(mouseEvent);
 }
 
-void Mouse::tick(std::shared_ptr<GameTimer> &pGameTimer) {
+void Mouse::tick(std::shared_ptr<GameTimer> pGameTimer) {
 	while (events_.size() > EventMaxSize_)
 		events_.pop();
 }

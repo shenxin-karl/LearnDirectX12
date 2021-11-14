@@ -11,6 +11,8 @@
 #include <DirectXMath.h>
 #include <string>
 #include "ITick.h"
+#include "D3D/D3Dx12.h"
+#include "InputSystem/InputSystem.h"
 
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "D3D12.lib")
@@ -24,6 +26,7 @@ class InputSystem;
 
 class BaseApp : public ITick {
 public:
+	BaseApp() = default;
 	BaseApp(const BaseApp &) = delete;
 	BaseApp &operator=(const BaseApp &) = delete;
 	virtual bool initialize();
@@ -31,13 +34,18 @@ public:
 	virtual void tick(std::shared_ptr<GameTimer> pGameTimer) override;
 	virtual void endTick(std::shared_ptr<GameTimer> pGameTimer) override;
 	virtual void onResize(int width, int height);
-	virtual ~BaseApp() = default;
+	virtual ~BaseApp();
 public:
 	constexpr static size_t kSwapChainCount = 2;
 	void creaetSwapChain();
 	UINT getSampleCount() const;
 	UINT getSampleQuality() const;
 	void flushCommandQueue();
+	D3D12_CPU_DESCRIPTOR_HANDLE  currentBackBufferView() const;
+	D3D12_CPU_DESCRIPTOR_HANDLE  depthStencilBufferView() const;
+	ID3D12Resource *getCurrentBuffer();
+	ID3D12Resource *getDepthStencilBuffer();
+	bool shouldClose() const;
 private:
 	bool initializeD3D();
 	void createCommandObjects();
@@ -66,10 +74,11 @@ protected:
 	UINT cbvSrvUavDescriptorSize_ = 0;
 	bool msaaState_ = false;
 	UINT msaaQuality_ = 0;
-	UINT currBackBuffer_ = 0;
-
+	int currBackBuffer_ = 0;
+	UINT currentFence_ = 0;
 protected:
 	DXGI_FORMAT backBufferFormat_ = DXGI_FORMAT_R8G8B8A8_UNORM;
+	DXGI_FORMAT depthStencilFormat_ = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	std::string title_  = "BaseApp";
 	int			width_  = 800;
 	int			height_ = 600;

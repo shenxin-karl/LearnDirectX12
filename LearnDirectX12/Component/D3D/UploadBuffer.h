@@ -28,7 +28,7 @@ UploadBuffer<T>::UploadBuffer(ID3D12Device *device, UINT elementCout, bool isCon
 : isConstanBuffer_(isConstanBuffer) {
 	elementByteSize_ = sizeof(T);
 	if (isConstanBuffer_)
-		elementByteSize_ = calcConstantBufferByteSize(sizeof(T));
+		elementByteSize_ = static_cast<UINT>(calcConstantBufferByteSize(sizeof(T)));
 
 	auto heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	auto buffer = CD3DX12_RESOURCE_DESC::Buffer(elementByteSize_ * elementCout);

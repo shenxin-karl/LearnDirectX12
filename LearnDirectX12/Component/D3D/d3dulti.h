@@ -38,7 +38,7 @@ Microsoft::WRL::ComPtr<ID3DBlob> compileShader(
 		return &val;
 	}
 // use thread local static object save return value. return value ptr
-#define RVPtr(val) _rightValuePtr((val))
+#define RVPtr(val) _rightValuePtr(val)
 #else
 #define RVPtr(val) (&val)
 #endif

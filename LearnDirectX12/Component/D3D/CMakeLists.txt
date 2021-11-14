@@ -14,4 +14,5 @@ target_include_directories(D3D PUBLIC
 
 target_link_libraries(D3D PUBLIC 
 	GameTimer
+	Exception
 )

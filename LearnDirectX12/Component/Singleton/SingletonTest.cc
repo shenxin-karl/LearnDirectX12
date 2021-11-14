@@ -2,9 +2,8 @@
 #include <format>
 #include "Singleton.hpp"
 
-namespace com {
 
-class A : public Singleton<A> {
+class A : public com::Singleton<A> {
 public:
 	int v1_ = 0;
 	int v2_ = 1;
@@ -18,5 +17,6 @@ int main() {
 		A::instance()->v1_,
 		A::instance()->v2_
 	);
+	return 0;
 }
-}
+
