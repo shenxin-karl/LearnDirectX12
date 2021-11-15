@@ -24,24 +24,9 @@ function(GetRelativeDir relativeDir)
 	set(${relativeDir} ${dir} PARENT_SCOPE)
 endfunction()
 
-# 文件按文件夹分类	
-macro(SourceGroup allFile)
-	foreach(fileItem ${allFile})    			 
-		get_filename_component(PARENT_DIR "${fileItem}" DIRECTORY)
-		string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}" "" GROUP "${PARENT_DIR}")
-		string(REPLACE "/" "\\" GROUP "${GROUP}")
-		if ("${fileItem}" MATCHES ".*\\.cpp")
-			set(GROUP "Source Files${GROUP}")
-		elseif("${fileItem}" MATCHES ".*\\.h")
-			set(GROUP "Header Files${GROUP}")
-		endif()
-		source_group("${GROUP}" FILES "${fileItem}")
-	endforeach()
-endmacro()
-
 
 LIST(APPEND allSubDir "Component")
-#LIST(APPEND allSubDir "BoxApp")
+LIST(APPEND allSubDir "BoxApp")
 
 foreach(dirname ${allSubDir})
 	add_subdirectory(${dirname})

@@ -6,7 +6,18 @@ file(GLOB_RECURSE HEADER_FILES *.h *.hpp *.ini)
 file(GLOB_RECURSE SOURCE_FILES *.c *.cpp)
 SET(AllFile ${HEADER_FILES} ${SOURCE_FILES})
 
-SourceGroup(${AllFile})
+foreach(fileItem ${AllFile})       
+	# Get the directory of the source file
+	get_filename_component(PARENT_DIR "${fileItem}" DIRECTORY)
+	# Remove common directory prefix to make the group
+	string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}" "" GROUP "${PARENT_DIR}")
+	# Make sure we are using windows slashes
+	string(REPLACE "/" "\\" GROUP "${GROUP}")
+	# Group into "Source Files" and "Header Files"
+	set(GROUP "${GROUP}")
+	source_group("${GROUP}" FILES "${fileItem}")
+endforeach()
+
 add_library("InputSystem" ${AllFile})
 set_target_properties("InputSystem" PROPERTIES FOLDER "Component")
 

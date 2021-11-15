@@ -12,9 +12,6 @@ LIST(APPEND ComponentAllSubDir "InputSystem")
 LIST(APPEND ComponentAllSubDir "Math")
 LIST(APPEND ComponentAllSubDir "Singleton")
 
-
-MESSAGE(STATUS "allSubDir: ${ComponentAllSubDir}")
-
 set(PROJECT_COMPONENT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(AllTestDir "")
 foreach(dirname ${ComponentAllSubDir}) 
