@@ -3,9 +3,5 @@ set(CMAKE_CXX_STANDARD 20)
 project(Singleton)
 
 add_library(Singleton INTERFACE "Singleton.hpp")
+set_target_properties("Singleton" PROPERTIES FOLDER "Component")
 
-if (ENABLE_TEST)
-	enable_testing()
-endif()
-
-add_test(SingletonTest .)
