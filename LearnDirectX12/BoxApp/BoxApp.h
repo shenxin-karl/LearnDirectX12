@@ -1,6 +1,7 @@
 #include "BaseApp/BaseApp.h"
 #include "Math/MathHelper.h"
 #include "D3D/d3dulti.h"
+#include "D3D/UploadBuffer.h"
 
 namespace DX = DirectX;
 namespace WRL = Microsoft::WRL;
@@ -36,14 +37,14 @@ private:
 	void onMouseRPress();
 	void onMouseRRelease();
 private:
-	WRL::ComPtr<ID3D12RootSignature>		pRootSignature_;
-	WRL::ComPtr<ID3D12DescriptorHeap>		pCbvHeap_;
-	WRL::ComPtr<ID3D12PipelineState>		pPSO_;
-	WRL::ComPtr<ID3DBlob>					pVsByteCode_;
-	WRL::ComPtr<ID3DBlob>					pPsByteCode_;
-	std::unique_ptr<ObjectConstants>		pObjectCB_;
-	std::unique_ptr<MeshGeometry>			pBoxGeo_;
-	std::vector<D3D12_INPUT_ELEMENT_DESC>	inputLayout_;
+	WRL::ComPtr<ID3D12RootSignature>				pRootSignature_;
+	WRL::ComPtr<ID3D12DescriptorHeap>				pCbvHeap_;
+	WRL::ComPtr<ID3D12PipelineState>				pPSO_;
+	WRL::ComPtr<ID3DBlob>							pVsByteCode_;
+	WRL::ComPtr<ID3DBlob>							pPsByteCode_;
+	std::unique_ptr<UploadBuffer<ObjectConstants>>	pObjectCB_;
+	std::unique_ptr<MeshGeometry>					pBoxGeo_;
+	std::vector<D3D12_INPUT_ELEMENT_DESC>			inputLayout_;
 	DX::XMFLOAT4X4 worldMat_ = MathHelper::identity4x4();
 	DX::XMFLOAT4X4 viewMat_ = MathHelper::identity4x4();
 	DX::XMFLOAT4X4 projMat_ = MathHelper::identity4x4();
