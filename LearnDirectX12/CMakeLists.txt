@@ -3,6 +3,8 @@ set(CMAKE_CXX_STANDARD 20)
 
 project(AllProject)
 
+#set(CMAKE_CXX_FLAGS "std:c++latest")
+
 # 获取当前文件夹的子目录
 function(GetCMakeSubDir result rootDir)
 	file(GLOB_RECURSE allItem LIST_DIRECTORIES true ${rootDir}/*)

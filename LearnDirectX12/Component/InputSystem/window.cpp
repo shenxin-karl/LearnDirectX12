@@ -247,9 +247,9 @@ void CheckWindowErrorImpl(HRESULT hr, const char *file, int line) {
 			nullptr, hr, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 			reinterpret_cast<LPSTR>(&pMsgBuf), 0, nullptr);
 
-		std::string errMsg = std::format("[{}]: {}", hr, (nMsgLen == 0 ? "unidentifyied error code" : pMsgBuf));
+		//std::string errMsg = std::format("[{}]: {}", hr, (nMsgLen == 0 ? "unidentifyied error code" : pMsgBuf));
 		LocalFree(pMsgBuf);
-		// todo throw (false, errMsg, file, line);
+		//throw (false, errMsg, file, line);
 	}
 }
 

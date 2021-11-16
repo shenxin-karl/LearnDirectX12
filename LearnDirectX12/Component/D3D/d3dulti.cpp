@@ -3,7 +3,6 @@
 #include <d3dcompiler.h>
 #include "d3dulti.h"
 #include "D3DX12.h"
-#include "Graphics.h"
 #include "D3DException.h"
 
 namespace WRL = Microsoft::WRL;

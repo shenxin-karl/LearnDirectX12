@@ -10,6 +10,10 @@ bool com::BaseApp::initialize() {
 	if (!initializeD3D())
 		return false;
 	onResize(width_, height_);
+
+	pInputSystem_->window->setResizeCallback([this](int width, int height) {
+		onResize(width, height);
+	});
 	return true;
 }
 

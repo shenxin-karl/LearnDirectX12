@@ -10,7 +10,7 @@ foreach(fileItem ${AllFile})
 	get_filename_component(PARENT_DIR "${fileItem}" DIRECTORY)
 	string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}" "" GROUP "${PARENT_DIR}")
 	string(REPLACE "/" "\\" GROUP "${GROUP}")
-	set(GROUP "Source Files${GROUP}")
+	set(GROUP "${GROUP}")
 	source_group("${GROUP}" FILES "${fileItem}")
 endforeach()
 
