@@ -21,6 +21,18 @@ bool BoxApp::initialize() {
 	return true;
 }
 
+void BoxApp::beginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
+
+}
+
+void BoxApp::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
+
+}
+
+void BoxApp::onResize(int width, int height) {
+
+}
+
 void BoxApp::buildDescriptorHeaps() {
 	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc;
 	cbvHeapDesc.NumDescriptors = 1;
@@ -38,7 +50,7 @@ void BoxApp::buildConstantsBuffers() {
 	address += boxCBufIndex * objCBByteSize;
 	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
 	cbvDesc.BufferLocation = address;
-	cbvDesc.SizeInBytes = objCBByteSize;
+	cbvDesc.SizeInBytes = static_cast<UINT>(objCBByteSize);
 	pDevice_->CreateConstantBufferView(
 		&cbvDesc,
 		pCbvHeap_->GetCPUDescriptorHandleForHeapStart()
@@ -120,8 +132,8 @@ void BoxApp::buildBoxGeometry() {
 		4, 3, 7,
 	};
 
-	size_t vbByteSize = vertices.size() * sizeof(Vertex);
-	size_t ibByteSize = indices.size() * sizeof(std::uint16_t);
+	UINT vbByteSize = static_cast<UINT>(vertices.size()) * sizeof(Vertex);
+	UINT ibByteSize = static_cast<UINT>(indices.size()) * sizeof(std::uint16_t);
 	pBoxGeo_ = std::make_unique<MeshGeometry>();
 	pBoxGeo_->name = "Box";
 	ThrowIfFailed(D3DCreateBlob(vbByteSize, &pBoxGeo_->vertexBufferCPU));
@@ -143,7 +155,7 @@ void BoxApp::buildBoxGeometry() {
 	SubmeshGeometry submesh;
 	submesh.baseVertexLocation = 0;
 	submesh.startIndexLocation = 0;
-	submesh.indexCount = indices.size();
+	submesh.indexCount = static_cast<UINT>(indices.size());
 	pBoxGeo_->drawArgs["box"] = submesh;
 }
 
@@ -164,4 +176,16 @@ void BoxApp::buildPSO() {
 	psoDesc.DSVFormat = depthStencilFormat_;
 	psoDesc.SampleDesc = { getSampleCount(), getSampleQuality() };
 	ThrowIfFailed(pDevice_->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pPSO_)));
+}
+
+void BoxApp::onMouseMove() {
+
+}
+
+void BoxApp::onMouseRPress() {
+
+}
+
+void BoxApp::onMouseRRelease() {
+
 }

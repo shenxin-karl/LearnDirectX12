@@ -1,4 +1,5 @@
-#include <format>
+//#include <format>
+#include <sstream>
 #include "ExceptionBase.h"
 
 namespace com {
@@ -7,7 +8,10 @@ ExceptionBase::ExceptionBase(const char *file, int line) : file_(file), line_(li
 }
 
 const char *ExceptionBase::what() const noexcept {
-	whatBuffer_ = std::format("{}\n{}", getType(), getOriginString());
+	std::stringstream sbuf;
+	sbuf << getType() << std::endl << getOriginString();
+	//whatBuffer_ = std::format("{}\n{}", getType(), getOriginString());
+	whatBuffer_ = sbuf.str();
 	return whatBuffer_.c_str();
 }
 
@@ -24,7 +28,10 @@ const std::string &ExceptionBase::getFile() const noexcept {
 }
 
 std::string ExceptionBase::getOriginString() const noexcept {
-	return std::format("[File] {}\n[Line] {}\n", file_, line_);
+	//return std::format("[File] {}\n[Line] {}\n", file_, line_);
+	std::stringstream sbuf;
+	sbuf << "[File] " << file_ << std::endl << "[Line] " << line_ << std::endl;
+	return sbuf.str();
 }
 
 }
