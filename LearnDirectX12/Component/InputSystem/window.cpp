@@ -81,7 +81,7 @@ bool Window::isPause() const {
 	return paused_;
 }
 
-void Window::tick(std::shared_ptr<GameTimer> pGameTimer) {
+void Window::beginTick(std::shared_ptr<GameTimer> pGameTimer) {
 	pGameTimer_ = pGameTimer;
 	MSG msg;
 	BOOL getResult = 0;

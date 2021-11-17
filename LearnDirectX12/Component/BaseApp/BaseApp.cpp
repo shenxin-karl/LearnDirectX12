@@ -26,7 +26,7 @@ void com::BaseApp::tick(std::shared_ptr<GameTimer> pGameTimer) {
 }
 
 void com::BaseApp::endTick(std::shared_ptr<GameTimer> pGameTimer) {
-	pInputSystem_->tick(pGameTimer);
+	pInputSystem_->endTick(pGameTimer);
 }
 
 void com::BaseApp::onResize(int width, int height) {

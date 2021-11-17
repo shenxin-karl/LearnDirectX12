@@ -33,9 +33,11 @@ private:
 	void buildShaderAndInputLayout();
 	void buildBoxGeometry();
 	void buildPSO();
-	void onMouseMove();
+	void processEvent();
+	void onMouseMove(POINT mousePosition);
 	void onMouseRPress();
 	void onMouseRRelease();
+	void updateConstantBuffer() const;
 private:
 	WRL::ComPtr<ID3D12RootSignature>				pRootSignature_;
 	WRL::ComPtr<ID3D12DescriptorHeap>				pCbvHeap_;
@@ -51,5 +53,6 @@ private:
 	float theta_ = 1.5f * DX::XM_PI;
 	float phi_ = DX::XM_PIDIV4;
 	float radius_ = 5.0f;
+	bool isMouseLeftPressed_ = false;
 	POINT lastMousePos_;
 };

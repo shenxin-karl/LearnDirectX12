@@ -36,7 +36,7 @@ public:
 	virtual void onResize(int width, int height);
 	virtual ~BaseApp();
 public:
-	constexpr static size_t kSwapChainCount = 2;
+	constexpr static int kSwapChainCount = 2;
 	void creaetSwapChain();
 	UINT getSampleCount() const;
 	UINT getSampleQuality() const;

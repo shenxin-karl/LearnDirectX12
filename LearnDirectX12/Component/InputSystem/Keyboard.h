@@ -63,7 +63,7 @@ public:
 	static void tryDiscardEvent(std::queue<T> &queue);
 
 	void handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-	virtual void tick(std::shared_ptr<GameTimer> pGameTimer) override;
+	virtual void endTick(std::shared_ptr<GameTimer> pGameTimer) override;
 };
 
 

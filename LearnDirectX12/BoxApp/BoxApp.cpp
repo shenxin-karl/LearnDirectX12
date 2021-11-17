@@ -1,4 +1,6 @@
 #include "BoxApp.h"
+#include "InputSystem/window.h"
+#include "InputSystem/Mouse.h"
 #include <DirectXColors.h>
 #include <array>
 
@@ -22,15 +24,58 @@ bool BoxApp::initialize() {
 }
 
 void BoxApp::beginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
-
+	BaseApp::beginTick(pGameTimer);
+	processEvent();
+	updateConstantBuffer();
 }
 
 void BoxApp::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
+	BaseApp::tick(pGameTimer);
+	ThrowIfFailed(pCommandAlloc_->Reset());
+	ThrowIfFailed(pCommandList_->Reset(pCommandAlloc_.Get(), pPSO_.Get()));
+	pCommandList_->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
+			getCurrentBuffer(), 
+			D3D12_RESOURCE_STATE_PRESENT,
+			D3D12_RESOURCE_STATE_RENDER_TARGET
+	)));
+	pCommandList_->RSSetViewports(1, &screenViewport_);
+	pCommandList_->RSSetScissorRects(1, &scissorRect_);
+	pCommandList_->ClearRenderTargetView(currentBackBufferView(), DX::Colors::Black, 0, nullptr);
+	pCommandList_->ClearDepthStencilView(depthStencilBufferView(),
+		D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.f, 0, 0, nullptr);
 
+	pCommandList_->OMSetRenderTargets(
+		1, RVPtr(currentBackBufferView()), 
+		true, RVPtr(depthStencilBufferView())
+	);
+
+	pCommandList_->IASetVertexBuffers(0, 1, RVPtr(pBoxGeo_->vertexBufferView()));
+	pCommandList_->IASetIndexBuffer(RVPtr(pBoxGeo_->indexBufferView()));
+	pCommandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	pCommandList_->SetGraphicsRootDescriptorTable(0, pCbvHeap_->GetGPUDescriptorHandleForHeapStart());
+	const auto &submesh = pBoxGeo_->drawArgs["box"];
+	pCommandList_->DrawIndexedInstanced(submesh.indexCount, 1, 
+		submesh.startIndexLocation, submesh.baseVertexLocation, 0);
+
+	ThrowIfFailed(pCommandList_->Close());
+	ID3D12CommandList *cmdLists[] = { pCommandList_.Get() };
+	pCommandQueue_->ExecuteCommandLists(1, cmdLists);
+
+	ThrowIfFailed(pSwapChain_->Present(0, 0));
+	currBackBuffer_ = (currBackBuffer_ + 1) % kSwapChainCount;
+	flushCommandQueue();
 }
 
 void BoxApp::onResize(int width, int height) {
-
+	BaseApp::onResize(width, height);
+	float aspect = pInputSystem_->window->aspectRatio();
+	DX::XMMATRIX matrix = DX::XMMatrixPerspectiveFovLH(
+		DX::XMConvertToRadians(45.f),
+		aspect,
+		0.1f,
+		100.f
+	);
+	DX::XMStoreFloat4x4(&projMat_, matrix);
 }
 
 void BoxApp::buildDescriptorHeaps() {
@@ -178,14 +223,38 @@ void BoxApp::buildPSO() {
 	ThrowIfFailed(pDevice_->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pPSO_)));
 }
 
-void BoxApp::onMouseMove() {
+void BoxApp::processEvent() {
+	while (auto eventObj = pInputSystem_->mouse->getEvent()) {
+		switch (eventObj.state_) {
+		case com::Mouse::Move:
+			onMouseMove({ eventObj.x, eventObj.y });
+			break;
+		case com::Mouse::LPress:
+			onMouseRPress();
+			break;
+		case com::Mouse::LRelease:
+			onMouseRRelease();
+			break;
+		}
+	}
+}
 
+void BoxApp::onMouseMove(POINT mousePosition) {
+	if (isMouseLeftPressed_) {
+		int dx = mousePosition.x - lastMousePos_.x;
+		int dy = mousePosition.y - lastMousePos_.y;
+	}
+	lastMousePos_ = mousePosition;
 }
 
 void BoxApp::onMouseRPress() {
-
+	isMouseLeftPressed_ = true;
 }
 
 void BoxApp::onMouseRRelease() {
+	isMouseLeftPressed_ = false;
+}
+
+void BoxApp::updateConstantBuffer() const {
 
 }

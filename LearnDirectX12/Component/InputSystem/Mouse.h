@@ -44,7 +44,7 @@ public:
 	Mouse &operator=(const Mouse &) = delete;
 	~Mouse() = default;
 	void handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-	virtual void tick(std::shared_ptr<GameTimer> pGameTimer) override;
+	virtual void endTick(std::shared_ptr<GameTimer> pGameTimer) override;
 	Event getEvent();
 private:
 	std::queue<Event>		events_;

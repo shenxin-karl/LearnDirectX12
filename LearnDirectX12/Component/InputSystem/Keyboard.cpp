@@ -48,7 +48,7 @@ void Keyboard::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	}
 }
 
-void Keyboard::tick(std::shared_ptr<GameTimer> pGameTimer) {
+void Keyboard::endTick(std::shared_ptr<GameTimer> pGameTimer) {
 	tryDiscardEvent(keycodeQueue_);
 	tryDiscardEvent(characterQueue_);
 }

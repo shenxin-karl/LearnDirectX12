@@ -5,7 +5,7 @@
 
 void changeWorkDirectory() {
 	char buffer[128];
-	GetCurrentDirectory(std::size(buffer), buffer);
+	GetCurrentDirectory(static_cast<DWORD>(std::size(buffer)), buffer);
 	std::string path = buffer;
 	std::string substr = "Build\\";
 	if (auto pos = path.find(substr); pos != std::string::npos) {
