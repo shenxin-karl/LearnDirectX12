@@ -9,8 +9,8 @@ bool com::BaseApp::initialize() {
 	pInputSystem_ = std::make_unique<InputSystem>(title_, width_, height_);
 	if (!initializeD3D())
 		return false;
-	onResize(width_, height_);
 
+	onResize(width_, height_);
 	pInputSystem_->window->setResizeCallback([this](int width, int height) {
 		onResize(width, height);
 	});

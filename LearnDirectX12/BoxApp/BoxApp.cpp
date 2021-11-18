@@ -3,20 +3,25 @@
 #include "InputSystem/Mouse.h"
 #include <DirectXColors.h>
 #include <array>
+#include <iostream>
 
+
+BoxApp::BoxApp() : BaseApp() {
+	title_ = "BoxApp";
+}
 
 bool BoxApp::initialize() {
 	if (!BaseApp::initialize())
 		return false;
 
+	ThrowIfFailed(pCommandList_->Reset(pCommandAlloc_.Get(), nullptr));
 	buildDescriptorHeaps();
 	buildConstantsBuffers();
 	buildRootSignature();
 	buildShaderAndInputLayout();
 	buildBoxGeometry();
 	buildPSO();
-
-	ThrowIfFailed(pCommandList_->Reset(pCommandAlloc_.Get(), nullptr));
+	ThrowIfFailed(pCommandList_->Close());
 	ID3D12CommandList *cmdLists[] = { pCommandList_.Get() };
 	pCommandQueue_->ExecuteCommandLists(1, cmdLists);
 	flushCommandQueue();
@@ -40,7 +45,7 @@ void BoxApp::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	)));
 	pCommandList_->RSSetViewports(1, &screenViewport_);
 	pCommandList_->RSSetScissorRects(1, &scissorRect_);
-	pCommandList_->ClearRenderTargetView(currentBackBufferView(), DX::Colors::Black, 0, nullptr);
+	pCommandList_->ClearRenderTargetView(currentBackBufferView(), DX::Colors::LightBlue, 0, nullptr);
 	pCommandList_->ClearDepthStencilView(depthStencilBufferView(),
 		D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.f, 0, 0, nullptr);
 
@@ -52,10 +57,20 @@ void BoxApp::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	pCommandList_->IASetVertexBuffers(0, 1, RVPtr(pBoxGeo_->vertexBufferView()));
 	pCommandList_->IASetIndexBuffer(RVPtr(pBoxGeo_->indexBufferView()));
 	pCommandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	ID3D12DescriptorHeap *descriptorHeaps[] = { pCbvHeap_.Get() };
+	pCommandList_->SetDescriptorHeaps(1, descriptorHeaps);
+	pCommandList_->SetGraphicsRootSignature(pRootSignature_.Get());
 	pCommandList_->SetGraphicsRootDescriptorTable(0, pCbvHeap_->GetGPUDescriptorHandleForHeapStart());
 	const auto &submesh = pBoxGeo_->drawArgs["box"];
 	pCommandList_->DrawIndexedInstanced(submesh.indexCount, 1, 
 		submesh.startIndexLocation, submesh.baseVertexLocation, 0);
+
+	pCommandList_->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
+		getCurrentBuffer(),
+		D3D12_RESOURCE_STATE_RENDER_TARGET,
+		D3D12_RESOURCE_STATE_PRESENT
+	)));
 
 	ThrowIfFailed(pCommandList_->Close());
 	ID3D12CommandList *cmdLists[] = { pCommandList_.Get() };
@@ -164,16 +179,17 @@ void BoxApp::buildBoxGeometry() {
 		Vertex { DX::XMFLOAT3(+1.f, -1.f, +1.f), DX::XMFLOAT4(DX::Colors::Magenta) },
 	};
 	std::array<std::uint16_t, 36> indices = {
-		0, 1, 2,
+		0, 1, 2,	// front
 		0, 2, 3,
-		4, 6, 5,
+		4, 6, 5,	// back
 		4, 7, 6,
-		4, 5, 1,
+		4, 5, 1,	// left
 		4, 1, 0,
-		3, 2, 6,
-		1, 5, 6,
+		3, 2, 6,	// right
+		3, 6, 7,
+		1, 5, 6,	// top
 		1, 6, 2,
-		4, 0, 3,
+		4, 0, 3,	// bottom
 		4, 3, 7,
 	};
 
@@ -235,14 +251,18 @@ void BoxApp::processEvent() {
 		case com::Mouse::LRelease:
 			onMouseRRelease();
 			break;
+		case com::Mouse::Wheel:
+			onMouseWheel(eventObj.offset_);
 		}
 	}
 }
 
 void BoxApp::onMouseMove(POINT mousePosition) {
 	if (isMouseLeftPressed_) {
-		int dx = mousePosition.x - lastMousePos_.x;
-		int dy = mousePosition.y - lastMousePos_.y;
+		float dx = static_cast<float>(mousePosition.x - lastMousePos_.x);
+		float dy = static_cast<float>(mousePosition.y - lastMousePos_.y);
+		theta_ = std::clamp(theta_+dy, -89.f, +89.f);;
+		phi_ -= dx;
 	}
 	lastMousePos_ = mousePosition;
 }
@@ -255,6 +275,32 @@ void BoxApp::onMouseRRelease() {
 	isMouseLeftPressed_ = false;
 }
 
-void BoxApp::updateConstantBuffer() const {
 
+void BoxApp::onMouseWheel(float offset) {
+	radius_ -= offset * 0.2f;
+}
+
+void BoxApp::updateConstantBuffer() const {
+	DX::XMFLOAT3 worldUp = { 0, 1, 0 };
+	DX::XMFLOAT3 lookAt = { 0, 0, 0 };
+	float cosTheta = std::cos(DX::XMConvertToRadians(theta_));
+	float sinTheta = std::sin(DX::XMConvertToRadians(theta_));
+	float cosPhi = std::cos(DX::XMConvertToRadians(phi_));
+	float sinPhi = std::sin(DX::XMConvertToRadians(phi_));
+	DX::XMFLOAT3 lookFrom = {
+		cosTheta * cosPhi * radius_,
+		sinTheta * radius_,
+		cosTheta * sinPhi * radius_
+	};
+	DX::XMMATRIX view = DX::XMMatrixLookAtLH(toVector3(lookFrom), toVector3(lookAt), toVector3(worldUp));
+	DX::XMMATRIX proj = DX::XMLoadFloat4x4(&projMat_);
+	DX::XMMATRIX world = DX::XMLoadFloat4x4(&worldMat_);
+	DX::XMMATRIX worldViewProj = world * view * proj;
+	ObjectConstants constantBuffer;
+	DX::XMStoreFloat4x4(&constantBuffer.worldViewProj, worldViewProj);
+	pObjectCB_->copyData(0, constantBuffer);
+}
+
+DX::XMVECTOR BoxApp::toVector3(const DX::XMFLOAT3 &float3) noexcept {
+	return DX::XMLoadFloat3(&float3);
 }

@@ -21,13 +21,14 @@ int main() {
 	try {
 		app.initialize();
 		while (!app.shouldClose()) {
+			pGameTimer->tick();
 			app.beginTick(pGameTimer);
 			app.tick(pGameTimer);
 			app.endTick(pGameTimer);
 		}
 	} catch (const std::exception &e) {
 		std::cerr << e.what() << std::endl;
-		OutputDebugStringA(e.what());
+		MessageBox(nullptr, e.what(), "Error", MB_OK | MB_ICONHAND);
 	}
 	return 0;
 }

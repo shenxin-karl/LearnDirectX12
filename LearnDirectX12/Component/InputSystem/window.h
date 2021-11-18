@@ -27,6 +27,7 @@ public:
 	void setShowTitle(const std::string &title);
 	bool isPause() const;
 	virtual void beginTick(std::shared_ptr<GameTimer> pGameTimer) override;
+	virtual void tick(std::shared_ptr<GameTimer> pGameTimer) override;
 	~Window();
 private:
 	static LRESULT CALLBACK handleMsgSetup(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);

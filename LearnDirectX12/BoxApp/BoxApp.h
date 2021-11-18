@@ -17,7 +17,7 @@ struct ObjectConstants {
 
 class BoxApp : public com::BaseApp {
 public:
-	BoxApp() = default;
+	BoxApp();
 	BoxApp(const BoxApp &) = delete;
 	BoxApp &operator=(const BoxApp &) = delete;
 
@@ -37,7 +37,9 @@ private:
 	void onMouseMove(POINT mousePosition);
 	void onMouseRPress();
 	void onMouseRRelease();
+	void onMouseWheel(float offset);
 	void updateConstantBuffer() const;
+	static DX::XMVECTOR toVector3(const DX::XMFLOAT3 &float3) noexcept;
 private:
 	WRL::ComPtr<ID3D12RootSignature>				pRootSignature_;
 	WRL::ComPtr<ID3D12DescriptorHeap>				pCbvHeap_;
@@ -50,9 +52,9 @@ private:
 	DX::XMFLOAT4X4 worldMat_ = MathHelper::identity4x4();
 	DX::XMFLOAT4X4 viewMat_ = MathHelper::identity4x4();
 	DX::XMFLOAT4X4 projMat_ = MathHelper::identity4x4();
-	float theta_ = 1.5f * DX::XM_PI;
-	float phi_ = DX::XM_PIDIV4;
-	float radius_ = 5.0f;
+	float theta_ = 0;
+	float phi_ = 0;
+	float radius_ = 10.0f;
 	bool isMouseLeftPressed_ = false;
-	POINT lastMousePos_;
+	POINT lastMousePos_ = { 0, 0 };
 };

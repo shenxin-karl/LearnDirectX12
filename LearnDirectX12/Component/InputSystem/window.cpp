@@ -74,7 +74,7 @@ const std::string & Window::getTitle() const {
 }
 
 void Window::setShowTitle(const std::string &title) {
-	SetWindowText(hwnd_, title.c_str());
+	title_ = title;
 }
 
 bool Window::isPause() const {
@@ -94,6 +94,12 @@ void Window::beginTick(std::shared_ptr<GameTimer> pGameTimer) {
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
+}
+
+
+void Window::tick(std::shared_ptr<GameTimer> pGameTimer) {
+	//auto fps = pGameTimer->getFps();
+	//auto frameTime = pGameTimer->getFrameTime();
 }
 
 Window::~Window() {

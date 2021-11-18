@@ -30,7 +30,7 @@ const std::string &ExceptionBase::getFile() const noexcept {
 std::string ExceptionBase::getOriginString() const noexcept {
 	//return std::format("[File] {}\n[Line] {}\n", file_, line_);
 	std::stringstream sbuf;
-	sbuf << "[File] " << file_ << std::endl << "[Line] " << line_ << std::endl;
+	sbuf << "[File]: " << file_ << std::endl << "[Line]: " << line_ << std::endl;
 	return sbuf.str();
 }
 
