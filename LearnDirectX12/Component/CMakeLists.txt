@@ -11,6 +11,7 @@ LIST(APPEND ComponentAllSubDir "GameTimer")
 LIST(APPEND ComponentAllSubDir "InputSystem")
 LIST(APPEND ComponentAllSubDir "Math")
 LIST(APPEND ComponentAllSubDir "Singleton")
+LIST(APPEND ComponentAllSubDir "Geometry")
 
 set(PROJECT_COMPONENT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(AllTestDir "")

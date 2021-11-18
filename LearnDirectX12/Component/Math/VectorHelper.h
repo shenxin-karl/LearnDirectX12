@@ -1,6 +1,7 @@
 #pragma once
 #include <DirectXMath.h>
 #include <type_traits>
+#include <ostream>
 
 namespace DX = DirectX;
 #define FORCEINLINE __forceinline
@@ -32,6 +33,12 @@ public:
 	FORCEINLINE explicit floatHelper(T v) 
 	: DX::XMFLOAT2(static_cast<float>(v), static_cast<float>(v)) {
 	
+	}
+	template<typename T1, typename T2> 
+	requires(std::is_convertible_v<T1, float> && std::is_convertible_v<T2, float>)
+	FORCEINLINE explicit floatHelper(T1 x, T2 y)
+	: DX::XMFLOAT2(float(x), float(y)) {
+
 	}
 	FORCEINLINE DX::XMVECTOR toVec() const {
 		DX::XMVECTOR v = DX::XMLoadFloat2(this);
@@ -67,7 +74,14 @@ public:
 	}
 	template<typename T> requires(std::is_convertible_v<T, float>)
 	FORCEINLINE explicit floatHelper(T v) 
-	: XMFLOAT3(static_cast<float>(v), static_cast<float>(v), static_cast<float>(v)) {
+	: XMFLOAT3(float(v), float(v), float(v)) {
+
+	}
+	template<typename T1, typename T2, typename T3>
+	requires(std::is_convertible_v<T1, float> &&std::is_convertible_v<T2, float> &&
+			 std::is_convertible_v<T3, float>)
+	FORCEINLINE explicit floatHelper(T1 x, T2 y, T3 z)
+	: DX::XMFLOAT3(float(x), float(y), float(z)) {
 
 	}
 	FORCEINLINE DX::XMVECTOR toVec() const {
@@ -84,6 +98,13 @@ public:
 	FORCEINLINE float operator[](size_t n) const {
 		assert(n < 3);
 		return reinterpret_cast<const float *>(this)[n];
+	}
+	FORCEINLINE friend floatHelper cross(const floatHelper &lhs, const floatHelper &rhs) {
+		return {
+			-1 * (lhs.y*rhs.z - lhs.z*rhs.y),
+			-1 * (lhs.z*rhs.x - lhs.x*rhs.z),
+			-1 * (lhs.x*rhs.y - lhs.y*rhs.x), 
+		};
 	}
 };
 
@@ -105,11 +126,16 @@ public:
 	}
 	template<typename T> requires(std::is_convertible_v<T, float>)
 	FORCEINLINE explicit floatHelper(T v) 
-	: DX::XMFLOAT4(
-		static_cast<float>(v), 
-		static_cast<float>(v), 
-		static_cast<float>(v), 
-		static_cast<float>(v)) {}
+	: DX::XMFLOAT4(float(v), float(v), float(v), float(v)) {
+
+	}
+	template<typename T1, typename T2, typename T3, typename T4>
+	requires(std::is_convertible_v<T1, float> && std::is_convertible_v<T2, float> &&
+			 std::is_convertible_v<T3, float> && std::is_convertible_v<T4, float>)
+	FORCEINLINE explicit floatHelper(T1 x, T2 y, T3 z, T4 w)
+	: DX::XMFLOAT4(float(x), float(y), float(z), float(w)) {
+
+	}
 	FORCEINLINE DX::XMVECTOR toVec() const {
 		DX::XMVECTOR v = DX::XMLoadFloat4(this);
 		return v;
