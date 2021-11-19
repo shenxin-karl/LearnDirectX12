@@ -12,6 +12,10 @@ void GameTimer::reset() {
 	stopped_ = false;
 	deltaTime_ = 0.f;
 	pausedTime_ = 0.f;
+	prevFrameTimes_ = 30;
+	currFameTimes_ = 0;
+	nextTime_ = std::chrono::system_clock::to_time_t(chrono::system_clock::now()) + 1;
+	newSeconds_ = false;
 }
 
 void GameTimer::start() {
@@ -42,6 +46,15 @@ void GameTimer::tick() {
 	chrono::duration<float> diff = currTime - prevTime_;
 	prevTime_ = currTime;
 	deltaTime_ = diff.count();
+	++currFameTimes_;
+	time_t sysTime = chrono::system_clock::to_time_t(chrono::system_clock::now());
+	newSeconds_ = false;
+	if (sysTime >= nextTime_) {
+		nextTime_ = sysTime + 1;
+		prevFrameTimes_ = currFameTimes_;
+		currFameTimes_ = 0;
+		newSeconds_ = true;
+	}
 }
 
 float GameTimer::totalTime() const {
@@ -51,6 +64,18 @@ float GameTimer::totalTime() const {
 
 float GameTimer::deltaTime() const {
 	return deltaTime_;
+}
+
+std::uint32_t GameTimer::FPS() const {
+	return prevFrameTimes_;
+}
+
+float GameTimer::mspf() const {
+	return 1000.f / float(FPS());
+}
+
+bool GameTimer::oneSecondTrigger() const {
+	return newSeconds_;
 }
 
 }

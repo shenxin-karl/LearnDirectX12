@@ -13,13 +13,20 @@ public:
 	void tick();
 	float totalTime() const;
 	float deltaTime() const;
+	std::uint32_t FPS() const;
+	float mspf() const;
+	bool oneSecondTrigger() const;
 private:
 	chrono::steady_clock::time_point baseTime_;
 	chrono::steady_clock::time_point prevTime_;
 	chrono::steady_clock::time_point stoppedTime_;
-	float							 deltaTime_;
-	float							 pausedTime_;
-	bool							 stopped_;
+	float	      deltaTime_;
+	float	      pausedTime_;
+	std::uint32_t prevFrameTimes_;
+	std::uint32_t currFameTimes_;
+	std::time_t	  nextTime_;
+	bool		  stopped_;
+	bool		  newSeconds_;
 };
 
 }

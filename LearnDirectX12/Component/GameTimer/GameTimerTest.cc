@@ -8,5 +8,15 @@ int main(int argc, char *argv[]) {
 		std::cout << "totalTime: " << gt.totalTime() << std::endl;
 		Sleep(100);
 	}
+
+	int second = 0;
+	while (second < 10) {
+		gt.tick();
+		if (gt.oneSecondTrigger()) {
+			std::cout << "fps: " << gt.FPS() << std::endl;
+			std::cout << "mspf: " << gt.mspf() << std::endl;
+			++second;
+		}
+	}
 	return 0;
 }

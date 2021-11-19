@@ -94,12 +94,15 @@ void Window::beginTick(std::shared_ptr<GameTimer> pGameTimer) {
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
-}
 
-
-void Window::tick(std::shared_ptr<GameTimer> pGameTimer) {
-	//auto fps = pGameTimer->getFps();
-	//auto frameTime = pGameTimer->getFrameTime();
+	if (pGameTimer->oneSecondTrigger()) {
+		std::stringstream sbuf;
+		sbuf << title_ << ' ';
+		sbuf << "fps: " << pGameTimer->FPS() << ' ';
+		sbuf << "mspf: " << pGameTimer->mspf() << "ms";
+		auto title = sbuf.str();
+		SetWindowText(hwnd_, title.c_str());
+	}
 }
 
 Window::~Window() {
@@ -242,21 +245,6 @@ const char *Window::WindowClass::getClassName() {
 
 HINSTANCE Window::WindowClass::getInstance() {
 	return singletonPtr_->hInstance_;
-}
-
-void CheckWindowErrorImpl(HRESULT hr, const char *file, int line) {
-	if (hr != S_OK) {
-		char *pMsgBuf = nullptr;
-		DWORD nMsgLen = FormatMessage(
-			FORMAT_MESSAGE_ALLOCATE_BUFFER |
-			FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-			nullptr, hr, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-			reinterpret_cast<LPSTR>(&pMsgBuf), 0, nullptr);
-
-		//std::string errMsg = std::format("[{}]: {}", hr, (nMsgLen == 0 ? "unidentifyied error code" : pMsgBuf));
-		LocalFree(pMsgBuf);
-		//throw (false, errMsg, file, line);
-	}
 }
 
 }
