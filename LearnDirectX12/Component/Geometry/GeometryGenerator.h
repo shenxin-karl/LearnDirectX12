@@ -18,21 +18,35 @@ struct Vertex {
 struct MeshData {
 	std::vector<Vertex> vertices;
 	std::vector<uint32>	indices;
+public:
+	bool save(const std::string &path) const;
 };
 
 class GometryGenerator {
 public:
-	static bool generateNormal(MeshData &mesh);
-	static bool generateTangent(MeshData &mesh);
-	static bool generateTangentAndNormal(MeshData &mesh);
+	bool generateNormal(MeshData &mesh) const;
+	bool generateTangent(MeshData &mesh) const;
+	bool generateTangentAndNormal(MeshData &mesh) const;
 
-	static MeshData createCylinkder(
+	MeshData createCylinkder(
 		float bottomRadius, 
 		float topRadius, 
 		float height, 
 		uint32 stackCount, 
 		uint32 sliceCount
-	);
+	) const;
+
+	MeshData createBox(float width, float height, float depth, uint32 numSubdivisions) const;
+
+	MeshData createSphere(float radius, uint32 numSubdivisions) const;
+
+	MeshData createGrid(float width, float depth, uint32 m, uint32 n) const;
+
+	MeshData createQuad(float x, float y, float w, float h, float depth) const;
+
+	void loopSubdivision(MeshData &mesh) const;	
+
+	void simplify(MeshData &mesh, float reserve);
 };
 
 }

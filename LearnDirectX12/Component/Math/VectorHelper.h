@@ -36,7 +36,7 @@ public:
 	}
 	template<typename T1, typename T2> 
 	requires(std::is_convertible_v<T1, float> && std::is_convertible_v<T2, float>)
-	FORCEINLINE explicit floatHelper(T1 x, T2 y)
+	FORCEINLINE floatHelper(T1 x, T2 y)
 	: DX::XMFLOAT2(float(x), float(y)) {
 
 	}
@@ -56,6 +56,8 @@ public:
 		return reinterpret_cast<const float *>(this)[n];
 	}
 };
+
+floatHelper<float, 3> cross(const floatHelper<float, 3> &lhs, const floatHelper<float, 3> &rhs);
 
 template<>
 struct floatHelper<float, 3> : public DX::XMFLOAT3 {
@@ -80,7 +82,7 @@ public:
 	template<typename T1, typename T2, typename T3>
 	requires(std::is_convertible_v<T1, float> &&std::is_convertible_v<T2, float> &&
 			 std::is_convertible_v<T3, float>)
-	FORCEINLINE explicit floatHelper(T1 x, T2 y, T3 z)
+	FORCEINLINE floatHelper(T1 x, T2 y, T3 z)
 	: DX::XMFLOAT3(float(x), float(y), float(z)) {
 
 	}
@@ -101,9 +103,9 @@ public:
 	}
 	FORCEINLINE friend floatHelper cross(const floatHelper &lhs, const floatHelper &rhs) {
 		return {
-			-1 * (lhs.y*rhs.z - lhs.z*rhs.y),
-			-1 * (lhs.z*rhs.x - lhs.x*rhs.z),
-			-1 * (lhs.x*rhs.y - lhs.y*rhs.x), 
+			(lhs.y*rhs.z - lhs.z*rhs.y),
+			(lhs.z*rhs.x - lhs.x*rhs.z),
+			(lhs.x*rhs.y - lhs.y*rhs.x), 
 		};
 	}
 };
@@ -125,7 +127,7 @@ public:
 		w = DX::XMVectorGetW(v);
 	}
 	template<typename T> requires(std::is_convertible_v<T, float>)
-	FORCEINLINE explicit floatHelper(T v) 
+	FORCEINLINE floatHelper(T v) 
 	: DX::XMFLOAT4(float(v), float(v), float(v), float(v)) {
 
 	}

@@ -47,7 +47,7 @@ void com::BaseApp::onResize(int width, int height) {
 		DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
 	));
 
-	currBackBuffer_ = 0;
+	currBackBufferIndex_ = 0;
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHeapHandle(pRtvHeap_->GetCPUDescriptorHandleForHeapStart());
 	for (UINT i = 0; i < kSwapChainCount; ++i) {
 		ThrowIfFailed(pSwapChain_->GetBuffer(i, IID_PPV_ARGS(&pSwapChainBuffer_[i])));
@@ -205,7 +205,7 @@ void com::BaseApp::flushCommandQueue() {
 D3D12_CPU_DESCRIPTOR_HANDLE com::BaseApp::currentBackBufferView() const {
 	return CD3DX12_CPU_DESCRIPTOR_HANDLE{
 		pRtvHeap_->GetCPUDescriptorHandleForHeapStart(),
-		currBackBuffer_,
+		currBackBufferIndex_,
 		rtvDescriptorSize_
 	};
 }
@@ -215,7 +215,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE com::BaseApp::depthStencilBufferView() const {
 }
 
 ID3D12Resource *com::BaseApp::getCurrentBuffer() {
-	return pSwapChainBuffer_[currBackBuffer_].Get();
+	return pSwapChainBuffer_[currBackBufferIndex_].Get();
 }
 
 ID3D12Resource *com::BaseApp::getDepthStencilBuffer() {

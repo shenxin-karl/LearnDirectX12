@@ -69,6 +69,34 @@ void float3Test() {
 	1 / f4;
 	f4 /= f1;
 	f4 / f1;
+
+
+	float3 p1(-0.5, 0, 0);
+	float3 p2(0, +0.5, 0);
+	float3 p3(+0.5, 0, 0);
+	float3 e1 = p2 - p1;
+	float3 e2 = p3 - p1;
+	float3 myCrossRes = cross(e1, e2);
+	std::cout << "myCrossRes: "	<< myCrossRes << std::endl;
+	float3 dxCrossRes = DX::XMVector3Cross(e1.toVec(), e2.toVec());
+	std::cout << "dxCrossRes: " << dxCrossRes << std::endl;
+	std::cout << "math base axis cross test" << std::endl;
+	float3 x = { 1, 0, 0 };
+	float3 y = { 0, 1, 0 };
+	float3 z = { 0, 0, 1 };
+	std::cout << "xCy" << cross(x, y) << std::endl;
+	std::cout << "yCx" << cross(y, x) << std::endl;
+	std::cout << "xCz" << cross(x, z) << std::endl;
+	std::cout << "zCx" << cross(z, x) << std::endl;
+	std::cout << "yCz" << cross(y, z) << std::endl;
+	std::cout << "zCy" << cross(z, y) << std::endl;
+	std::cout << "dx base axis cross test" << std::endl;
+	std::cout << "xCy" << float3(DX::XMVector3Cross(x.toVec(), y.toVec())) << std::endl;
+	std::cout << "yCx" << float3(DX::XMVector3Cross(y.toVec(), x.toVec())) << std::endl;
+	std::cout << "xCz" << float3(DX::XMVector3Cross(x.toVec(), z.toVec())) << std::endl;
+	std::cout << "zCx" << float3(DX::XMVector3Cross(z.toVec(), x.toVec())) << std::endl;
+	std::cout << "yCz" << float3(DX::XMVector3Cross(y.toVec(), z.toVec())) << std::endl;
+	std::cout << "zCy" << float3(DX::XMVector3Cross(z.toVec(), y.toVec())) << std::endl;
 }
 
 void float4Test() {

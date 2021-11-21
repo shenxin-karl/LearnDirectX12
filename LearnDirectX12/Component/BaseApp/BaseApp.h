@@ -74,7 +74,7 @@ protected:
 	UINT cbvSrvUavDescriptorSize_ = 0;
 	bool msaaState_ = false;
 	UINT msaaQuality_ = 0;
-	int currBackBuffer_ = 0;
+	int  currBackBufferIndex_ = 0;
 	UINT currentFence_ = 0;
 protected:
 	DXGI_FORMAT backBufferFormat_ = DXGI_FORMAT_R8G8B8A8_UNORM;
