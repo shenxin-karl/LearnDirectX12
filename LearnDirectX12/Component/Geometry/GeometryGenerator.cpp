@@ -189,6 +189,49 @@ MeshData GometryGenerator::createCylinkder(
 			indices.push_back((i+0) * ringVertexCount + j+0);
 		}
 	}
+	// generate top
+	{
+		size_t centerIdx = vertices.size();
+		float topHeight = 0.5f*height;
+		vertices.push_back(Vertex{ float3(0, topHeight, 0), float2(0.5f, 0.5f) });
+		for (uint32 i = 0; i < sliceCount+1; ++i) {
+			float radian = i * delta;
+			float x = std::sin(radian) * topRadius;
+			float z = std::sin(radian) * topRadius;
+			float y = topHeight;
+			float u = x / height + 0.5f;
+			float v = z / height + 0.5f;
+			vertices.push_back(Vertex{ float3(x, y, z), float2(u, v) });
+		}
+		uint32 baseIdx = vertices.size();
+		for (uint32 i = 0; i < sliceCount; ++i) {
+			indices.push_back(baseIdx + i);
+			indices.push_back(centerIdx);
+			indices.push_back(baseIdx + i + 1);
+		}
+	}
+	// generate bottom
+	{
+		size_t centerIdx = vertices.size();
+		float topHeight = 0.5f*height;
+		vertices.push_back(Vertex{ float3(0, topHeight, 0), float2(0.5f, 0.5f) });
+		for (uint32 i = 0; i < sliceCount+1; ++i) {
+			float radian = i * delta;
+			float x = std::sin(radian) * topRadius;
+			float z = std::sin(radian) * topRadius;
+			float y = topHeight;
+			float u = x / height + 0.5f;
+			float v = z / height + 0.5f;
+			vertices.push_back(Vertex{ float3(x, y, z), float2(u, v) });
+		}
+		uint32 baseIdx = vertices.size();
+		for (uint32 i = 0; i < sliceCount; ++i) {
+			indices.push_back(baseIdx + i + 1);
+			indices.push_back(centerIdx);
+			indices.push_back(baseIdx + i);
+		}
+	}
+
 	MeshData mesh = { std::move(vertices), std::move(indices) };
 	generateTangentAndNormal(mesh);
 	return mesh;
