@@ -56,7 +56,7 @@ void TestApp::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	pCommandQueue_->ExecuteCommandLists(1, cmdLists);
 
 	ThrowIfFailed(pSwapChain_->Present(0, 0));
-	currBackBuffer_ = (currBackBuffer_ + 1) % kSwapChainCount;
+	currBackBufferIndex_ = (currBackBufferIndex_ + 1) % kSwapChainCount;
 
 	flushCommandQueue();
 }

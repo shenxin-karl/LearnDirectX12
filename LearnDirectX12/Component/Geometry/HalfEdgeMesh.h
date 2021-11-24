@@ -10,43 +10,51 @@
 namespace HalfEdge {
 using namespace vec;
 
-struct Face;
-struct Edge;
-struct Vertex;
-struct Mesh;
+struct HEFace;
+struct HEEdge;
+struct HEVertex;
+struct HEMesh;
 
 
-struct Vertex {
+struct HEVertex {
 	float3	position;
 	float2  texcoord;
 	size_t  index;
 };
 
-struct Edge {
-	Vertex *start;
-	Vertex *last;
-	Face *face;
+struct HEEdge {
+	HEVertex *start = nullptr;
+	HEVertex *last = nullptr;
+	HEFace *face = nullptr;
 };
 
-struct Face {
-	std::array<Edge *, 3> edges;
+struct HEFace {
+	std::array<HEEdge *, 3> edges;
 };
 
 
-struct Mesh {
-	std::vector<std::unique_ptr<Vertex>> verts;
-	std::vector<std::unique_ptr<Face>> faces;
-	std::vector<std::unique_ptr<Edge>> edges;
-	std::unordered_map<Vertex *, std::vector<Edge *>> edgeMap;
+struct HEMesh {
+	std::vector<std::unique_ptr<HEVertex>> verts;
+	std::vector<std::unique_ptr<HEFace>> faces;
+	std::vector<std::unique_ptr<HEEdge>> edges;
+	std::unordered_map<HEVertex *, std::vector<HEFace *>> faceMap;
 public:
-	Mesh(const com::MeshData &mesh);
-	void foreachFace(const std::function<void(Face *)> &callback) const;
-	std::vector<Face *> getFaceFromVertex(Vertex *vert) const;
-	std::vector<Vertex *> getVertFromVertex(Vertex *vert) const;
-	std::vector<Edge *> getEdgesFromVertex(Vertex *vert) const;
+	HEMesh(const com::MeshData &mesh);
+	HEMesh(const std::vector<HEVertex> &vertices, std::vector<com::uint32> &indices);
+	HEMesh(const HEMesh &other);
+	HEMesh(HEMesh &&other) = default;
+	HEMesh &operator=(HEMesh &&other) = default;
+	void foreachFace(const std::function<void(const HEFace *)> &callback) const;
+	std::vector<HEFace *> getFaceFromVertex(HEVertex *vert) const;
+	std::vector<HEVertex *> getVertsFromVertex(HEVertex *vert) const;
+	std::vector<HEVertex *> getHalfVertsFromVertex(HEVertex *vert) const;
+	std::vector<HEEdge *> getEdgesFromVertex(HEVertex *vert) const;
+	std::vector<HEEdge *> getHalfEdgesFromVertex(HEVertex *vert) const;
+	bool hasFace() const;
 public:
-	Vertex *insertVertex(const float3 &position, const float2 &texcoord);
-	Edge *insertEdge(Vertex *v1, Vertex *v2);
+	HEVertex *insertVertex(const float3 &position, const float2 &texcoord);
+	HEEdge *insertEdge(HEVertex *v1, HEVertex *v2);
+	HEFace *insertFace(const std::array<com::uint32, 3> &indices);
 };
 
 }

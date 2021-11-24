@@ -7,12 +7,10 @@ namespace com {
 namespace HE = HalfEdge;
 
 class LoopSubdivision {
-	HE::HEMesh	mesh;
+	HE::HEMesh	hemesh_;
 public:
-	LoopSubdivision(const MeshData &mesh);
-	LoopSubdivision(const HE::HEMesh &mesh);
-	MeshData subdivide2MeshData() const;
-	HEMesh subdivide2HEMesh() const;
+	MeshData subdivide2MeshData(const MeshData &mesh) const;
+	HE::HEMesh subdivide2HEMesh() const;
 };
 
 }

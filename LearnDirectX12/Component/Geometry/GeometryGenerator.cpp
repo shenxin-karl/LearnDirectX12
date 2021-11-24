@@ -302,7 +302,7 @@ MeshData GometryGenerator::createBox(float width, float height, float depth, uin
 }
 
 MeshData GometryGenerator::createSphere(float radius, uint32 numSubdivisions) const {
-
+	return {};
 }
 
 MeshData GometryGenerator::createGrid(float width, float depth, uint32 m, uint32 n) const {
