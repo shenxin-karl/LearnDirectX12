@@ -50,6 +50,8 @@ public:
 	std::vector<HEVertex *> getHalfVertsFromVertex(HEVertex *vert) const;
 	std::vector<HEEdge *> getEdgesFromVertex(HEVertex *vert) const;
 	std::vector<HEEdge *> getHalfEdgesFromVertex(HEVertex *vert) const;
+	HEVertex *getVertex(size_t idx) const;
+	size_t getVertexFaceCount(HEVertex *pFace) const;
 	bool hasFace() const;
 public:
 	HEVertex *insertVertex(const float3 &position, const float2 &texcoord);

@@ -113,6 +113,22 @@ std::vector<HEEdge *> HEMesh::getHalfEdgesFromVertex(HEVertex *vert) const {
 	return result;
 }
 
+
+HalfEdge::HEVertex *HEMesh::getVertex(size_t idx) const {
+	assert(idx < verts.size());
+	return verts[idx].get();
+}
+
+
+size_t HEMesh::getVertexFaceCount(HEVertex *pVert) const {
+	if (pVert == nullptr)
+		return 0;
+	auto iter = faceMap.find(pVert);
+	if (iter != faceMap.end())
+		return iter->second.size();
+	return 0;
+}
+
 bool HEMesh::hasFace() const {
 	return !faceMap.empty();
 }
