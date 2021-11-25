@@ -40,9 +40,9 @@ bool MeshData::save(const std::string &path) const {
 		uint32 idx0 = indices[i + static_cast<size_t>(0)] + 1;
 		uint32 idx1 = indices[i + static_cast<size_t>(1)] + 1;
 		uint32 idx2 = indices[i + static_cast<size_t>(2)] + 1;
-		idxBuf << "f" << idx0 << "/" << idx1 << "/" << idx2 
-			   << " " << idx0 << "/" << idx1 << "/" << idx2 
-			   << " " << idx0 << "/" << idx1 << "/" << idx2 
+		idxBuf << "f " << idx0 << "/" << idx0 << "/" << idx0
+			   << " "  << idx1 << "/" << idx1 << "/" << idx1
+			   << " "  << idx2 << "/" << idx2 << "/" << idx2
 			   << "\n";
 	}
 
@@ -126,8 +126,8 @@ bool GometryGenerator::generateTangentAndNormal(MeshData &mesh) const {
 		uint32 idx1 = mesh.indices[i + static_cast<size_t>(1)];
 		uint32 idx2 = mesh.indices[i + static_cast<size_t>(2)];
 		const Vertex &v0 = mesh.vertices[idx0];
-		const Vertex &v1 = mesh.vertices[idx0];
-		const Vertex &v2 = mesh.vertices[idx0];
+		const Vertex &v1 = mesh.vertices[idx1];
+		const Vertex &v2 = mesh.vertices[idx2];
 		float3 E1 = v1.position - v0.position;
 		float3 E2 = v2.position - v0.position;
 		float3 normal = cross(E1, E2);
@@ -153,7 +153,7 @@ bool GometryGenerator::generateTangentAndNormal(MeshData &mesh) const {
 	return true;
 }
 
-MeshData GometryGenerator::createCylinkder(
+MeshData GometryGenerator::createCylinder(
 	float bottomRadius, 
 	float topRadius, 
 	float height, 
@@ -177,6 +177,7 @@ MeshData GometryGenerator::createCylinkder(
 			Vertex vertex;
 			vertex.position = float3(x, y, z);
 			vertex.texcoord = float2(u, v);
+			vertices.push_back(vertex);
 		}
 	}
 	for (uint32 i = 0; i < stackCount; ++i) {
@@ -190,20 +191,21 @@ MeshData GometryGenerator::createCylinkder(
 		}
 	}
 	// generate top
+	if (topRadius > 0.f)
 	{
-		size_t centerIdx = vertices.size();
-		float topHeight = 0.5f*height;
+		float topHeight = +0.5f * height;
+		uint32 centerIdx = static_cast<uint32>(vertices.size());
 		vertices.push_back(Vertex{ float3(0, topHeight, 0), float2(0.5f, 0.5f) });
+		uint32 baseIdx = static_cast<uint32>(vertices.size());
 		for (uint32 i = 0; i < sliceCount+1; ++i) {
 			float radian = i * delta;
-			float x = std::sin(radian) * topRadius;
+			float x = std::cos(radian) * topRadius;
 			float z = std::sin(radian) * topRadius;
 			float y = topHeight;
 			float u = x / height + 0.5f;
 			float v = z / height + 0.5f;
 			vertices.push_back(Vertex{ float3(x, y, z), float2(u, v) });
 		}
-		uint32 baseIdx = vertices.size();
 		for (uint32 i = 0; i < sliceCount; ++i) {
 			indices.push_back(baseIdx + i);
 			indices.push_back(centerIdx);
@@ -211,27 +213,26 @@ MeshData GometryGenerator::createCylinkder(
 		}
 	}
 	// generate bottom
-	{
-		size_t centerIdx = vertices.size();
-		float topHeight = 0.5f*height;
-		vertices.push_back(Vertex{ float3(0, topHeight, 0), float2(0.5f, 0.5f) });
+	if (bottomRadius > 0.f) {
+		float bottomHeight = -0.5f * height;
+		uint32 centerIdx = static_cast<uint32>(vertices.size());
+		vertices.push_back(Vertex{ float3(0, bottomHeight, 0), float2(0.5f, 0.5f) });
+		uint32 baseIdx = static_cast<uint32>(vertices.size());
 		for (uint32 i = 0; i < sliceCount+1; ++i) {
 			float radian = i * delta;
-			float x = std::sin(radian) * topRadius;
-			float z = std::sin(radian) * topRadius;
-			float y = topHeight;
+			float x = std::cos(radian) * bottomRadius;
+			float z = std::sin(radian) * bottomRadius;
+			float y = bottomHeight;
 			float u = x / height + 0.5f;
 			float v = z / height + 0.5f;
 			vertices.push_back(Vertex{ float3(x, y, z), float2(u, v) });
 		}
-		uint32 baseIdx = vertices.size();
 		for (uint32 i = 0; i < sliceCount; ++i) {
 			indices.push_back(baseIdx + i + 1);
 			indices.push_back(centerIdx);
 			indices.push_back(baseIdx + i);
 		}
 	}
-
 	MeshData mesh = { std::move(vertices), std::move(indices) };
 	generateTangentAndNormal(mesh);
 	return mesh;
@@ -302,7 +303,40 @@ MeshData GometryGenerator::createBox(float width, float height, float depth, uin
 }
 
 MeshData GometryGenerator::createSphere(float radius, uint32 numSubdivisions) const {
-	return {};
+	constexpr float x = 0.525731f;
+	constexpr float y = 0.f;
+	constexpr float z = 0.850651f;
+
+	float3 pos[12] = {
+		float3(-x, +y, +z), float3(+x, +y, +z),
+		float3(-x, +y, -z), float3(+x, +y, -z),
+		float3(+y, +z, +x), float3(+y, +z, -x),
+		float3(+y, -z, +x), float3(+y, -z, -x),
+		float3(+z, +x, +y), float3(-z, +x, +y),
+		float3(+z, -x, +y), float3(-z, -x, +y),
+	};
+
+	uint32 k[60] = {
+		1,4,0,  4,9,0,  4,5,9,  8,5,4,  1,8,4,
+		1,10,8, 10,3,8, 8,3,5,  3,2,5,  3,7,2,
+		3,10,7, 10,6,7, 6,11,7, 6,0,11, 6,1,0,
+		10,1,6, 11,0,9, 2,11,9, 5,2,9,  11,2,7,
+	};
+
+	std::vector<Vertex> vertices;
+	std::vector<uint32> indices(std::begin(k), std::end(k));
+	vertices.reserve(12);
+	
+	for (const auto &position : pos) {
+		float3 n = normalize(position);
+		float3 point = n * radius;
+		float u = std::atan2(n.z, n.x);
+		float v = std::asin(n.y);
+		vertices.push_back(Vertex{ point, float2(u, v) });
+	}
+
+	MeshData mesh = { std::move(vertices), std::move(indices) };
+	return mesh;
 }
 
 MeshData GometryGenerator::createGrid(float width, float depth, uint32 m, uint32 n) const {

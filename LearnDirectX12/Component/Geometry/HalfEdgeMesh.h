@@ -14,12 +14,12 @@ struct HEFace;
 struct HEEdge;
 struct HEVertex;
 struct HEMesh;
-
+using com::uint32;
 
 struct HEVertex {
 	float3	position;
 	float2  texcoord;
-	size_t  index;
+	uint32  index;
 };
 
 struct HEEdge {
@@ -51,7 +51,7 @@ public:
 	std::vector<HEEdge *> getEdgesFromVertex(HEVertex *vert) const;
 	std::vector<HEEdge *> getHalfEdgesFromVertex(HEVertex *vert) const;
 	HEVertex *getVertex(size_t idx) const;
-	size_t getVertexFaceCount(HEVertex *pFace) const;
+	size_t getVertexFaceCount(HEVertex *pVert) const;
 	bool hasFace() const;
 public:
 	HEVertex *insertVertex(const float3 &position, const float2 &texcoord);

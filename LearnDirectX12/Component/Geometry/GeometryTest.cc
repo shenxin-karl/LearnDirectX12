@@ -50,7 +50,45 @@ void halfEdgeTest() {
 	});
 }
 
+void saveObjTest() {
+	std::vector<Vertex> vertice = {
+		Vertex { float3(0, 0, 0), float2(0, 0), float3(0, 0, 1), float3(1, 0, 0) },
+		Vertex { float3(0, 1, 0), float2(0, 1), float3(0, 0, 1), float3(1, 0, 0) },
+		Vertex { float3(1, 1, 0), float2(1, 1), float3(0, 0, 1), float3(1, 0, 0) },
+		Vertex { float3(1, 0, 0), float2(1, 0), float3(0, 0, 1), float3(1, 0, 0) },
+	};
+
+	std::vector<uint32> indices = {
+		0, 1, 2,
+		0, 2, 3,
+	};
+
+	MeshData mesh = { std::move(vertice), std::move(indices) };
+	mesh.save("SaveObjTest.obj");
+}
+
+void createBoxTest() {
+	com::GometryGenerator gen;
+	MeshData mesh = gen.createBox(10, 10, 100, 1);
+	mesh.save("CreateBoxTest.obj");
+}
+
+void createCylinderTest() {
+	com::GometryGenerator gen;
+	MeshData mesh = gen.createCylinder(10, 10, 10, 10, 10);
+	mesh.save("CreateBoxTest1.obj");
+	mesh = gen.createCylinder(0, 10, 10, 10, 10);
+	mesh.save("CreateBoxTest2.obj");
+	mesh = gen.createCylinder(10, 0, 10, 10, 10);
+	mesh.save("CreateBoxTest3.obj");
+	mesh = gen.createCylinder(10, 0, 10, 100, 100);
+	mesh.save("CreateBoxTest4.obj");
+}
+
 int main() {
 	halfEdgeTest();
+	saveObjTest();
+	createBoxTest();
+	createCylinderTest();
 	return 0;
 }

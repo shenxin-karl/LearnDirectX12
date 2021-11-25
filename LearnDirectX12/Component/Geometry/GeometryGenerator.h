@@ -28,7 +28,7 @@ public:
 	bool generateTangent(MeshData &mesh) const;
 	bool generateTangentAndNormal(MeshData &mesh) const;
 
-	MeshData createCylinkder(
+	MeshData createCylinder(
 		float bottomRadius, 
 		float topRadius, 
 		float height, 

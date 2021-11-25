@@ -138,7 +138,7 @@ HEVertex *HEMesh::insertVertex(const float3 &position, const float2 &texcoord) {
 	auto *ptr = verts.back().get();
 	ptr->position = position;
 	ptr->texcoord = texcoord;
-	ptr->index = verts.size() - 1u;
+	ptr->index = static_cast<uint32>(verts.size()) - 1u;
 	return ptr;
 }
 

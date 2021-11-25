@@ -62,11 +62,11 @@ floatHelper<float, 3> cross(const floatHelper<float, 3> &lhs, const floatHelper<
 template<>
 struct floatHelper<float, 3> : public DX::XMFLOAT3 {
 public:
-	floatHelper() = default;
-	floatHelper(const floatHelper &) = default;
-	floatHelper(floatHelper &&) = default;
-	floatHelper &operator=(const floatHelper &) = default;
-	floatHelper &operator=(floatHelper &&) = default;
+	FORCEINLINE floatHelper() = default;
+	FORCEINLINE floatHelper(const floatHelper &) = default;
+	FORCEINLINE floatHelper(floatHelper &&) = default;
+	FORCEINLINE floatHelper &operator=(const floatHelper &) = default;
+	FORCEINLINE floatHelper &operator=(floatHelper &&) = default;
 	using DX::XMFLOAT3::XMFLOAT3;
 	using DX::XMFLOAT3::operator=;
 	FORCEINLINE floatHelper(DX::FXMVECTOR v) {
@@ -113,11 +113,11 @@ public:
 template<>
 struct floatHelper<float, 4> : public DX::XMFLOAT4 {
 public:
-	floatHelper() = default;
-	floatHelper(const floatHelper &) = default;
-	floatHelper(floatHelper &&) = default;
-	floatHelper &operator=(const floatHelper &) = default;
-	floatHelper &operator=(floatHelper &&) = default;
+	FORCEINLINE floatHelper() = default;
+	FORCEINLINE floatHelper(const floatHelper &) = default;
+	FORCEINLINE floatHelper(floatHelper &&) = default;
+	FORCEINLINE floatHelper &operator=(const floatHelper &) = default;
+	FORCEINLINE floatHelper &operator=(floatHelper &&) = default;
 	using DX::XMFLOAT4::XMFLOAT4;
 	using DX::XMFLOAT4::operator=;
 	FORCEINLINE floatHelper(DX::FXMVECTOR v) {
