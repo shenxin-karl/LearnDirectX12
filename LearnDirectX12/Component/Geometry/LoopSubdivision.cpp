@@ -93,7 +93,17 @@ void LoopSubdivision::adjustNewVertex(std::vector<Vertex> &vertices, size_t firs
 		if (hemesh_.getVertexFaceCount(pVert1) != 1 || hemesh_.getVertexFaceCount(pVert2) != 1)	
 			continue;
 	 
-
+		std::unordered_set<HE::HEVertex *> unionVerts = hemesh_.getUnionVert(pVert1, pVert2);
+		assert(unionVerts.size() == 2);
+		constexpr float ratio = 3.f / 8.f;
+		float3 pos = pVert1->position * ratio + pVert2->position * ratio;
+		float2 tex = pVert1->texcoord * ratio + pVert2->texcoord * ratio;
+		for (auto *pOtherVert : unionVerts) {
+			pos += pOtherVert->position * (1.f / 8.f);
+			tex += pOtherVert->texcoord * (1.f / 8.f);
+		}
+		vertices[i].position = pos;
+		vertices[i].texcoord = tex;
 	}
 }
 
