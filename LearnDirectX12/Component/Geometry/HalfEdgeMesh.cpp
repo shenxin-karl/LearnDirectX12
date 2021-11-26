@@ -7,7 +7,7 @@ HEMesh::HEMesh(const com::MeshData &mesh) {
 	for (auto &vert : mesh.vertices)
 		insertVertex(vert.position, vert.texcoord);
 
-	for (com::uint32 i = 0; i < mesh.indices.size() - 2; i += 2) {
+	for (com::uint32 i = 0; i < mesh.indices.size()-2; i += 3) {
 		com::uint32 idx0 = mesh.indices[i + static_cast<std::size_t>(0)];
 		com::uint32 idx1 = mesh.indices[i + static_cast<std::size_t>(1)];
 		com::uint32	idx2 = mesh.indices[i + static_cast<std::size_t>(2)];
@@ -19,7 +19,7 @@ HEMesh::HEMesh(const std::vector<HEVertex> &vertices, std::vector<com::uint32> &
 	for (auto &vert : vertices)
 		insertVertex(vert.position, vert.texcoord);
 
-	for (com::uint32 i = 0; i < indices.size() - 2; i += 2) {
+	for (com::uint32 i = 0; i < indices.size()-2; i += 3) {
 		com::uint32 idx0 = indices[i + static_cast<std::size_t>(0)];
 		com::uint32 idx1 = indices[i + static_cast<std::size_t>(1)];
 		com::uint32	idx2 = indices[i + static_cast<std::size_t>(2)];
@@ -31,7 +31,7 @@ HEMesh::HEMesh(const HEMesh &other) {
 	for (auto &vert : other.verts)
 		insertVertex(vert->position, vert->texcoord);
 
-	other.foreachFace([this](const HEFace *pFace) {
+	other.foreachFace([](const HEMesh *pMesh, const HEFace *pFace) {
 		std::vector<int> indices;
 		indices.reserve(3);
 		for (auto *pEdge : pFace->edges)
@@ -39,20 +39,20 @@ HEMesh::HEMesh(const HEMesh &other) {
 	});
 }
 
-void HEMesh::foreachFace(const std::function<void(const HEFace *)> &callback) const {
+void HEMesh::foreachFace(const std::function<void(const HEMesh *, const HEFace *)> &callback) const {
 	for (auto &face : faces)
-		callback(face.get());
+		callback(this, face.get());
 }
 
-std::vector<HEFace *> HEMesh::getFaceFromVertex(HEVertex *vert) const {
-	std::vector<HEFace *> result;
+std::vector<HEFace *> HEMesh::getFaceFromVertex(const HEVertex *vert) const {
+	std::unordered_set<HEFace *> result;
 	if (auto iter = faceMap.find(vert); iter != faceMap.end())
 		return iter->second;
 	return {};
 }
 
-std::vector<HEVertex *> HEMesh::getVertsFromVertex(HEVertex *vert) const {
-	std::vector<HEVertex *> result;
+std::unordered_set<HEVertex *> HEMesh::getVertsFromVertex(const HEVertex *vert) const {
+	std::unordered_set<HEVertex *> result;
 	auto iter = faceMap.find(vert);
 	if (iter == faceMap.end())
 		return {};
@@ -60,16 +60,16 @@ std::vector<HEVertex *> HEMesh::getVertsFromVertex(HEVertex *vert) const {
 	for (auto *pFace : iter->second) {
 		for (auto *pEdge : pFace->edges) {
 			if (pEdge->start == vert)
-				result.push_back(pEdge->last);
+				result.insert(pEdge->last);
 			else if (pEdge->last == vert)
-				result.push_back(pEdge->start);
+				result.insert(pEdge->start);
 		}
 	}
 	return result;
 }
 
-std::vector<HEVertex *> HEMesh::getHalfVertsFromVertex(HEVertex *vert) const {
-	std::vector<HEVertex *> result;
+std::unordered_set<HEVertex *> HEMesh::getHalfVertsFromVertex(const HEVertex *vert) const {
+	std::unordered_set<HEVertex *> result;
 	auto iter = faceMap.find(vert);
 	if (iter == faceMap.end())
 		return {};
@@ -77,14 +77,14 @@ std::vector<HEVertex *> HEMesh::getHalfVertsFromVertex(HEVertex *vert) const {
 	for (auto *pFace : iter->second) {
 		for (auto *pEdge : pFace->edges) {
 			if (pEdge->start == vert)
-				result.push_back(pEdge->last);
+				result.insert(pEdge->last);
 		}
 	}
 	return result;
 }
 
-std::vector<HEEdge *> HEMesh::getEdgesFromVertex(HEVertex *vert) const {
-	std::vector<HEEdge *> result;
+std::unordered_set<HEEdge *> HEMesh::getEdgesFromVertex(const HEVertex *vert) const {
+	std::unordered_set<HEEdge *> result;
 	auto iter = faceMap.find(vert);
 	if (iter == faceMap.end())
 		return result;
@@ -92,14 +92,14 @@ std::vector<HEEdge *> HEMesh::getEdgesFromVertex(HEVertex *vert) const {
 	for (const auto &pFace : iter->second) {
 		for (auto *pEdge : pFace->edges) {
 			if (pEdge->start == vert || pEdge->last == vert)
-				result.push_back(pEdge);
+				result.insert(pEdge);
 		}
 	}
 	return result;
 }
 
-std::vector<HEEdge *> HEMesh::getHalfEdgesFromVertex(HEVertex *vert) const {
-	std::vector<HEEdge *> result;
+std::unordered_set<HEEdge *> HEMesh::getHalfEdgesFromVertex(const HEVertex *vert) const {
+	std::unordered_set<HEEdge *> result;
 	auto iter = faceMap.find(vert);
 	if (iter == faceMap.end())
 		return result;
@@ -107,12 +107,41 @@ std::vector<HEEdge *> HEMesh::getHalfEdgesFromVertex(HEVertex *vert) const {
 	for (const auto &pFace : iter->second) {
 		for (auto *pEdge : pFace->edges) {
 			if (pEdge->start == vert)
-				result.push_back(pEdge);
+				result.insert(pEdge);
 		}
 	}
 	return result;
 }
 
+
+std::unordered_set<HEVertex *> HEMesh::getUnionVert(const HEVertex *pVert1, const HEVertex *pVert2) const {
+	auto iter1 = faceMap.find(pVert1);
+	auto iter2 = faceMap.find(pVert2);
+	if (iter1 == faceMap.end() || iter2 == faceMap.end())
+		return {};
+	
+	std::unordered_map<HEFace *, int> faceHashmap;
+	std::unordered_set<HEVertex *> result;
+	for (auto *pFace : iter1->second)
+		faceHashmap[pFace]++;
+	for (auto *pFace : iter2->second)
+		faceHashmap[pFace]++;
+
+	for (auto &&[pFace, num] : faceHashmap) {
+		if (num <= 1)
+			continue;
+		for (auto *pEdge : pFace->edges) {
+			HEVertex *pVert = nullptr;
+			if (pEdge->start == pVert1 || pEdge->start == pVert2)
+				pVert = pEdge->last;
+			else if (pEdge->last == pVert1 || pEdge->last == pVert2)
+				pVert = pEdge->start;
+			if (pVert != pVert1 && pVert != pVert2)
+				result.insert(pVert);
+		}
+	}
+	return result;
+}
 
 HalfEdge::HEVertex *HEMesh::getVertex(size_t idx) const {
 	assert(idx < verts.size());

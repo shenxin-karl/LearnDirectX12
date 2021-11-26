@@ -7,30 +7,40 @@ using namespace vec;
 using namespace HalfEdge;
 
 void halfEdgeTest() {
+	/*
+	*	1--------2
+	*	| 	  *  |
+	*	|  *	 |
+	*	0--------3
+	* 0->1->2
+	*/
+
 	std::vector<Vertex> vertices = {
-		Vertex{ float3(-1, 0, 0), float2(0, 0) },
-		Vertex{ float3(0, 1, 0), float2(0.5, 1) },
-		Vertex{ float3(1, 0, 0), float2(1, 0) },
+		Vertex{ float3(0, 0, 0), float2(0) },
+		Vertex{ float3(0, 1, 0), float2(0) },
+		Vertex{ float3(1, 1, 0), float2(0) },
+		Vertex{ float3(1, 0, 0), float2(0) },
 	};
 	std::vector<uint32> indices = {
 		0, 1, 2,
+		0, 2, 3,
 	};
 	MeshData mesh = { std::move(vertices), std::move(indices) };
 	HEMesh hemesh(mesh);
-	hemesh.foreachFace([&](const HEFace *face) {
+	hemesh.foreachFace([&](const HEMesh *pMesh, const HEFace *face) {
 		for (auto *pEdge : face->edges) {
 			std::cout << "current vertex: " << pEdge->start->index << std::endl;
-			std::vector<HEVertex *> nearHalfVertex = hemesh.getHalfVertsFromVertex(pEdge->start);
+			std::unordered_set<HEVertex *> nearHalfVertex = hemesh.getHalfVertsFromVertex(pEdge->start);
 			std::cout << "----------------------- halfVerts begin -----------------------" << std::endl;
 			for (HEVertex *pVert : nearHalfVertex)
 				std::cout << "index: " << pVert->index << std::endl;
 			std::cout << "----------------------- halfVerts end -----------------------" << std::endl;
-			std::vector<HEVertex *> nearVertex = hemesh.getVertsFromVertex(pEdge->start);
+			std::unordered_set<HEVertex *> nearVertex = hemesh.getVertsFromVertex(pEdge->start);
 			std::cout << "----------------------- Verts begin -----------------------" << std::endl;
 			for (HEVertex *pVert : nearVertex)
 				std::cout << "index: " << pVert->index << std::endl;
 			std::cout << "----------------------- Verts end -----------------------" << std::endl;
-			std::vector<HEEdge *> nearHalfEdge = hemesh.getHalfEdgesFromVertex(pEdge->start);
+			std::unordered_set<HEEdge *> nearHalfEdge = hemesh.getHalfEdgesFromVertex(pEdge->start);
 			std::cout << "----------------------- HalfEdge begin -----------------------" << std::endl;
 			for (HEEdge *pEdge : nearHalfEdge) {
 				std::cout << "start: " << pEdge->start->index << ", " 
@@ -38,7 +48,7 @@ void halfEdgeTest() {
 			}
 			std::cout << "----------------------- HalfEdge end -----------------------" << std::endl;
 
-			std::vector<HEEdge *> nearEdge = hemesh.getEdgesFromVertex(pEdge->start);
+			std::unordered_set<HEEdge *> nearEdge = hemesh.getEdgesFromVertex(pEdge->start);
 			std::cout << "----------------------- Edge begin -----------------------" << std::endl;
 			for (HEEdge *pEdge : nearEdge) {
 				std::cout << "start: " << pEdge->start->index << ", " 
@@ -48,6 +58,23 @@ void halfEdgeTest() {
 			std::cout << std::endl << std::endl;
 		}
 	});
+
+	std::cout << "union vert 0 2" << std::endl;
+	auto unionVert = hemesh.getUnionVert(hemesh.getVertex(0), hemesh.getVertex(2));
+	for (auto *pVert : unionVert)
+		std::cout << "index: " << pVert->index << std::endl;
+	std::cout << "union vert 0 2 end" << std::endl;
+
+	std::cout << "union vert 0 3" << std::endl;
+	unionVert = hemesh.getUnionVert(hemesh.getVertex(0), hemesh.getVertex(3));
+	for (auto *pVert : unionVert)
+		std::cout << "index: " << pVert->index << std::endl;
+	std::cout << "union vert 0 3 end" << std::endl;
+	std::cout << "union vert 2 1" << std::endl;
+	unionVert = hemesh.getUnionVert(hemesh.getVertex(2), hemesh.getVertex(1));
+	for (auto *pVert : unionVert)
+		std::cout << "index: " << pVert->index << std::endl;
+	std::cout << "union vert 2 1 end" << std::endl;
 }
 
 void saveObjTest() {
@@ -87,8 +114,8 @@ void createCylinderTest() {
 
 int main() {
 	halfEdgeTest();
-	saveObjTest();
-	createBoxTest();
-	createCylinderTest();
+	//saveObjTest();
+	//createBoxTest();
+	//createCylinderTest();
 	return 0;
 }

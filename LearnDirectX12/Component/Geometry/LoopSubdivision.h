@@ -14,7 +14,8 @@ public:
 	static Vertex middle(const Vertex &lhs, const Vertex &rhs);
 private:
 	void adjustOriginVertex(std::vector<Vertex> &vertices, size_t num) const;
-	void adjustNewVertex(std::vector<Vertex> &vertices, size_t first) const;
+	void adjustNewVertex(std::vector<Vertex> &vertices, size_t first, 
+		const std::unordered_map<uint32, std::pair<uint32, uint32>> &deriedIndex) const;
 };
 
 }

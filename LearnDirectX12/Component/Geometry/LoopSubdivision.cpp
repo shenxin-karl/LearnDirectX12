@@ -7,7 +7,7 @@ com::MeshData LoopSubdivision::subdivide2MeshData(const MeshData &mesh) {
 	std::vector<Vertex> vertices;
 	std::vector<uint32> indices;
 	indices.reserve(mesh.indices.size() * 4);
-	vertices.resize(mesh.vertices.size() * 2);
+	vertices.reserve(mesh.vertices.size() * 2);
 
 	for (const auto &vert : mesh.vertices) {
 		hemesh_.insertVertex(vert.position, vert.texcoord);
@@ -21,6 +21,9 @@ com::MeshData LoopSubdivision::subdivide2MeshData(const MeshData &mesh) {
 		uint32 idx2 = mesh.indices[i+2];
 		hemesh_.insertFace({ idx0, idx1, idx2 });
 		uint32 baseIdx = static_cast<uint32>(vertices.size());
+		vertices.emplace_back(middle(vertices[idx0], vertices[idx0]));
+		vertices.emplace_back(middle(vertices[idx1], vertices[idx2]));
+		vertices.emplace_back(middle(vertices[idx2], vertices[idx0]));
 		deriveIndex[baseIdx+0] = { idx0, idx1 };
 		deriveIndex[baseIdx+1] = { idx1, idx2 };
 		deriveIndex[baseIdx+2] = { idx2, idx0 };
@@ -31,7 +34,7 @@ com::MeshData LoopSubdivision::subdivide2MeshData(const MeshData &mesh) {
 	}
 	 
 	adjustOriginVertex(vertices, mesh.vertices.size());
-	adjustNewVertex(vertices, mesh.vertices.size());
+	adjustNewVertex(vertices, mesh.vertices.size(), deriveIndex);
 	return { std::move(vertices), std::move(indices) };
 }
 
@@ -50,7 +53,7 @@ void LoopSubdivision::adjustOriginVertex(std::vector<Vertex> &vertices, size_t n
 	float Beta = (5.f / 8.f - std::pow(3.f / 8.f + std::cos(DX::XM_2PI / 4.f), 2.f));
 	for (uint32 i = 0; i < num; ++i) {
 		HE::HEVertex *pHeVert = hemesh_.getVertex(i);
-		std::vector<HE::HEVertex *> halfEdgeVert = hemesh_.getHalfVertsFromVertex(pHeVert);
+		std::unordered_set<HE::HEVertex *> halfEdgeVert = hemesh_.getHalfVertsFromVertex(pHeVert);
 		if (hemesh_.getVertexFaceCount(pHeVert) <= 1) {		// boundary
 			assert(halfEdgeVert.size() != 2);
 			float3 position = pHeVert->position * (6.f / 8.f);
@@ -75,8 +78,23 @@ void LoopSubdivision::adjustOriginVertex(std::vector<Vertex> &vertices, size_t n
 	}
 }
 
-void LoopSubdivision::adjustNewVertex(std::vector<Vertex> &vertices, size_t first) const {
+void LoopSubdivision::adjustNewVertex(std::vector<Vertex> &vertices, size_t first,
+	const std::unordered_map<uint32, std::pair<uint32, uint32>> &deriedIndex) const 
+{
+	for (uint32 i = static_cast<uint32>(first); i < vertices.size(); ++i) {
+		auto iter = deriedIndex.find(i);
+		assert(iter != deriedIndex.end());
+		const auto &parentIndex = iter->second;
+		uint32 vertIdx1 = parentIndex.first;
+		uint32 vertIdx2 = parentIndex.second;
+		HE::HEVertex *pVert1 = hemesh_.getVertex(vertIdx1);
+		HE::HEVertex *pVert2 = hemesh_.getVertex(vertIdx2);
+		// Not boundary points
+		if (hemesh_.getVertexFaceCount(pVert1) != 1 || hemesh_.getVertexFaceCount(pVert2) != 1)	
+			continue;
 	 
+
+	}
 }
 
 }
