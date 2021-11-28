@@ -29,6 +29,7 @@ endfunction()
 
 LIST(APPEND allSubDir "Component")
 LIST(APPEND allSubDir "BoxApp")
+LIST(APPEND allSubDir "Shape")
 
 foreach(dirname ${allSubDir})
 	add_subdirectory(${dirname})
