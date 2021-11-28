@@ -99,7 +99,7 @@ void saveObjTest() {
 
 void createBoxTest() {
 	com::GometryGenerator gen;
-	MeshData mesh = gen.createBox(10, 10, 100, 1);
+	MeshData mesh = gen.createBox(100, 100, 100, 3);
 	mesh.save("CreateBoxTest.obj");
 }
 
@@ -127,7 +127,7 @@ void loopSubdivisionTest() {
 		0, 2, 3,
 	};
 	MeshData mesh = { std::move(vertices), std::move(indices) };
-	com::GometryGenerator gen;
+	//com::GometryGenerator gen;
 	//MeshData mesh = gen.createCylinder(10, 10, 10, 10, 10);
 	com::LoopSubdivision subdivision;
 	for (int i = 0; i < 3; ++i)
@@ -148,12 +148,19 @@ void loopBetaTest() {
 	}
 }
 
+void createShapeTest() {
+	com::GometryGenerator gen;
+	auto mesh = gen.createSphere(10, 7);
+	mesh.save("createShapeTest.obj");
+}
+
 int main() {
-	halfEdgeTest();
+	//halfEdgeTest();
 	//saveObjTest();
 	//createBoxTest();
 	//createCylinderTest();
-	loopSubdivisionTest();
+	//loopSubdivisionTest();
 	//loopBetaTest();
+	//createShapeTest();
 	return 0;
 }

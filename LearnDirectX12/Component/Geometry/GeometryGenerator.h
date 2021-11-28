@@ -47,6 +47,9 @@ public:
 	void loopSubdivision(MeshData &mesh) const;	
 
 	void simplify(MeshData &mesh, float reserve);
+private:
+	static Vertex middlePoint(const Vertex &lhs, const Vertex &rhs);
+	static Vertex middleVertex(const Vertex &lhs, const Vertex &rhs);
 };
 
 }

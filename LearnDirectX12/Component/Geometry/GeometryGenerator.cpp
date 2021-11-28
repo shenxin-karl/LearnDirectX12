@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <algorithm>
 
 namespace com {
 
@@ -294,10 +295,26 @@ MeshData GometryGenerator::createBox(float width, float height, float depth, uin
 		20, 21, 22,
 		20, 22, 23,
 	};
+	for (uint32 i = 0; i < numSubdivisions; ++i) {
+		std::vector<uint32> newIndices;
+		newIndices.swap(indices);
+		indices.reserve(newIndices.size() * 4);
+		for (size_t j = 0; j < newIndices.size()-2; j += 3) {
+			uint32 idx0 = newIndices[j + 0];
+			uint32 idx1 = newIndices[j + 1];
+			uint32 idx2 = newIndices[j + 2];
+			uint32 baseIdx = static_cast<uint32>(vertices.size());
+			vertices.push_back(middleVertex(vertices[idx0], vertices[idx1]));
+			vertices.push_back(middleVertex(vertices[idx1], vertices[idx2]));
+			vertices.push_back(middleVertex(vertices[idx2], vertices[idx0]));
+			indices.insert(indices.end(), { idx0, baseIdx+0, baseIdx+2 });
+			indices.insert(indices.end(), { baseIdx+0, idx1, baseIdx+1 });
+			indices.insert(indices.end(), { baseIdx+1, idx2, baseIdx+2 });
+			indices.insert(indices.end(), { baseIdx+0, baseIdx+1, baseIdx+2 });
+		}
+	}
+
 	MeshData mesh = { std::move(vertices), std::move(indices) };
-	// todo 
-	//for (uint32 i = 0; i < numSubdivisions-1; ++i)
-	//	loopSubdivision(mesh);
 	generateTangentAndNormal(mesh);
 	return mesh;
 }
@@ -324,18 +341,40 @@ MeshData GometryGenerator::createSphere(float radius, uint32 numSubdivisions) co
 	};
 
 	std::vector<Vertex> vertices;
-	std::vector<uint32> indices(std::begin(k), std::end(k));
 	vertices.reserve(12);
+	std::transform(std::begin(pos), std::end(pos), std::back_inserter(vertices), [](const float3 &position) {
+		return Vertex{ position };
+	});
+	std::vector<uint32> indices(std::begin(k), std::end(k));
 	
-	for (const auto &position : pos) {
-		float3 n = normalize(position);
+	for (uint32 i = 0; i < numSubdivisions; ++i) {
+		std::vector<uint32> newIndices;
+		newIndices.swap(indices);
+		indices.reserve(newIndices.size() * 4);
+		for (size_t j = 0; j < newIndices.size()-2; j += 3) {
+			uint32 idx0 = newIndices[j + 0];
+			uint32 idx1 = newIndices[j + 1];
+			uint32 idx2 = newIndices[j + 2];
+			uint32 baseIdx = static_cast<uint32>(vertices.size());
+			vertices.push_back(middlePoint(vertices[idx0], vertices[idx1]));
+			vertices.push_back(middlePoint(vertices[idx1], vertices[idx2]));
+			vertices.push_back(middlePoint(vertices[idx2], vertices[idx0]));
+			indices.insert(indices.end(), { idx0, baseIdx+0, baseIdx+2 });
+			indices.insert(indices.end(), { baseIdx+0, idx1, baseIdx+1 });
+			indices.insert(indices.end(), { baseIdx+1, idx2, baseIdx+2 });
+			indices.insert(indices.end(), { baseIdx+0, baseIdx+1, baseIdx+2 });
+		}
+	}
+	for (auto &vert : vertices) {
+		float3 n = normalize(vert.position);
 		float3 point = n * radius;
 		float u = std::atan2(n.z, n.x);
 		float v = std::asin(n.y);
-		vertices.push_back(Vertex{ point, float2(u, v) });
+		vert.position = point;
+		vert.texcoord = float2(u, v);
 	}
-
 	MeshData mesh = { std::move(vertices), std::move(indices) };
+	generateTangentAndNormal(mesh);
 	return mesh;
 }
 
@@ -394,6 +433,21 @@ void GometryGenerator::loopSubdivision(MeshData &mesh) const {
 
 void GometryGenerator::simplify(MeshData &mesh, float reserve) {
 
+}
+
+
+com::Vertex GometryGenerator::middlePoint(const Vertex &lhs, const Vertex &rhs) {
+	return {
+		MathHelper::lerp(lhs.position, rhs.position, 0.5f)
+	};
+}
+
+
+com::Vertex GometryGenerator::middleVertex(const Vertex &lhs, const Vertex &rhs) {
+	return {
+		MathHelper::lerp(lhs.position, rhs.position, 0.5f),
+		MathHelper::lerp(lhs.texcoord, rhs.texcoord, 0.5f),
+	};
 }
 
 }
