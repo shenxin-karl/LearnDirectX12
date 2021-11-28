@@ -172,7 +172,7 @@ MeshData GometryGenerator::createCylinder(
 			float x = std::cos(radian) * radius;
 			float y = MathHelper::lerp(-0.5f*height, +0.5f*height, ratio);;
 			float z = std::sin(radian) * radius;
-			float u = ratio; 
+			float u = ratio;
 			float v = float(j) / float(sliceCount);
 			Vertex vertex;
 			vertex.position = float3(x, y, z);
