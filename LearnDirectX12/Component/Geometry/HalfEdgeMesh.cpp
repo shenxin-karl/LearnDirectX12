@@ -1,7 +1,14 @@
 #include "HalfEdgeMesh.h"
 #include <unordered_set>
+#include <iostream>
 
 namespace HalfEdge {
+
+std::size_t HEEdgeKeyHasher::operator()(const HEEdgeKey &key) const noexcept {
+	using PointerType = decltype(key.first);
+	return std::hash<PointerType>()(key.first) ^ (std::hash<PointerType>()(key.second) << 1);
+}
+
 
 HEMesh::HEMesh(const com::MeshData &mesh) {
 	for (auto &vert : mesh.vertices)
@@ -38,6 +45,7 @@ HEMesh::HEMesh(const HEMesh &other) {
 			indices.push_back(pEdge->start->index);
 	});
 }
+
 
 void HEMesh::foreachFace(const std::function<void(const HEMesh *, const HEFace *)> &callback) const {
 	for (auto &face : faces)
@@ -143,13 +151,37 @@ std::unordered_set<HEVertex *> HEMesh::getUnionVert(const HEVertex *pVert1, cons
 	return result;
 }
 
+
+std::unordered_set<HEVertex *> HEMesh::getNeighborsVertFromVert(const HEVertex *pVert) const {
+	if (!isBoundaryVert(pVert))
+		return {};
+
+	auto iter = faceMap.find(pVert);
+	if (iter == faceMap.end())
+		return {};
+
+
+	std::unordered_set<HEVertex *> result;
+	for (auto *pFace : iter->second) {
+		for (auto *pEdge : pFace->edges) {
+			if (isBoundaryEdge(pEdge)) {
+				if (pEdge->start == pVert && !isPairEdge(pEdge))
+					result.insert(pEdge->last);
+				else if (pEdge->last == pVert && !isPairEdge(pEdge))
+					result.insert(pEdge->start);
+			}
+		}
+	}
+	return result;
+}
+
 HalfEdge::HEVertex *HEMesh::getVertex(size_t idx) const {
 	assert(idx < verts.size());
 	return verts[idx].get();
 }
 
 
-size_t HEMesh::getVertexFaceCount(HEVertex *pVert) const {
+size_t HEMesh::getVertexFaceCount(const HEVertex *pVert) const {
 	if (pVert == nullptr)
 		return 0;
 	auto iter = faceMap.find(pVert);
@@ -160,6 +192,52 @@ size_t HEMesh::getVertexFaceCount(HEVertex *pVert) const {
 
 bool HEMesh::hasFace() const {
 	return !faceMap.empty();
+}
+
+
+bool HEMesh::isBoundaryVert(const HEVertex *pVert) const {
+	return pVert->isBoundary;
+}
+
+
+bool HEMesh::isBoundaryEdge(const HEVertex *pVert1, const HEVertex *pVert2) const {
+	return pVert1->isBoundary && pVert2->isBoundary;
+}
+
+
+bool HEMesh::isBoundaryEdge(const HEEdge *pEdge) const {
+	return isBoundaryEdge(pEdge->start, pEdge->last);
+}
+
+
+bool HEMesh::isPairEdge(const HEVertex *pVert1, const HEVertex *pVert2) const {
+	int flag = 0;
+	if (auto iter = edges.find(HEEdgeKey(pVert1, pVert2)); iter != edges.end())
+		++flag;
+	if (auto iter = edges.find(HEEdgeKey(pVert2, pVert1)); iter != edges.end())
+		++flag;
+	return flag == 2;
+}
+
+
+bool HEMesh::isPairEdge(const HEEdge *pEdge) const {
+	return isPairEdge(pEdge->start, pEdge->last);
+}
+
+void HEMesh::updateVertBoundaryInfo() {
+	for (auto &&[key, pEdge] : edges) {
+		if (pEdge->refNum == 1) {
+			auto *pStart = pEdge->start;
+			auto *pLast = pEdge->last;
+			auto iter = edges.find(HEEdgeKey(pLast, pStart));
+			bool isUniqueEdge = iter == edges.end();
+			std::cout << "pStart->index: " << pStart->index << " pLast->index: " << pLast->index << std::endl;
+			if (isUniqueEdge) {
+				pStart->isBoundary = true;
+				pLast->isBoundary = true;
+			}
+		}
+	}
 }
 
 HEVertex *HEMesh::insertVertex(const float3 &position, const float2 &texcoord) {
@@ -173,8 +251,13 @@ HEVertex *HEMesh::insertVertex(const float3 &position, const float2 &texcoord) {
 
 
 HEEdge *HEMesh::insertEdge(HEVertex *v1, HEVertex *v2) {
-	edges.emplace_back(std::make_unique<HEEdge>(v1, v2, nullptr));
-	return edges.back().get();
+	auto key = HEEdgeKey(v1, v2);
+	if (auto iter = edges.find(key); iter != edges.end()) {
+		iter->second->refNum++;
+		return iter->second.get();
+	}
+	auto pair = edges.emplace(std::make_pair(key, std::make_unique<HEEdge>(v1, v2, nullptr, 1)));
+	return pair.first->second.get();
 }
 
 HEFace *HEMesh::insertFace(const std::array<com::uint32, 3> &indices) {
@@ -194,4 +277,14 @@ HEFace *HEMesh::insertFace(const std::array<com::uint32, 3> &indices) {
 	return pFace;
 }
 
+void swap(HEMesh &lhs, HEMesh &rhs) {
+	using std::swap;
+	swap(lhs.verts, rhs.verts);
+	swap(lhs.faces, rhs.faces);
+	swap(lhs.edges, rhs.edges);
+	swap(lhs.faceMap, rhs.faceMap);
 }
+
+}
+
+

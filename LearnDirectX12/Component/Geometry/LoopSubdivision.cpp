@@ -1,5 +1,6 @@
 #include "LoopSubdivision.h"
 #include "Math/MathHelper.h"
+#include <iostream>
 
 namespace com {
 
@@ -19,23 +20,20 @@ com::MeshData LoopSubdivision::subdivide2MeshData(const MeshData &mesh) {
 		uint32 idx0 = mesh.indices[i+0];
 		uint32 idx1 = mesh.indices[i+1];
 		uint32 idx2 = mesh.indices[i+2];
-		hemesh_.insertFace({ idx0, idx1, idx2 });
 		uint32 baseIdx = static_cast<uint32>(vertices.size());
-		vertices.emplace_back(middle(vertices[idx0], vertices[idx0]));
-		vertices.emplace_back(middle(vertices[idx1], vertices[idx2]));
-		vertices.emplace_back(middle(vertices[idx2], vertices[idx0]));
 		deriveIndex[baseIdx+0] = { idx0, idx1 };
 		deriveIndex[baseIdx+1] = { idx1, idx2 };
 		deriveIndex[baseIdx+2] = { idx2, idx0 };
-		indices.insert(indices.end(), { idx0, baseIdx+0, baseIdx+2 });
-		indices.insert(indices.end(), { baseIdx+0, idx1, baseIdx+1 });
-		indices.insert(indices.end(), { baseIdx+1, idx2, baseIdx+2 });
-		indices.insert(indices.end(), { baseIdx+0, baseIdx+1, baseIdx+2 });
+		generateNewVertex(vertices, indices, idx0, idx1, idx2);
 	}
-	 
+
+	hemesh_.updateVertBoundaryInfo();
 	adjustOriginVertex(vertices, mesh.vertices.size());
 	adjustNewVertex(vertices, mesh.vertices.size(), deriveIndex);
-	return { std::move(vertices), std::move(indices) };
+	MeshData result = { std::move(vertices), std::move(indices) };
+	GometryGenerator gen;
+	gen.generateTangentAndNormal(result);
+	return result;
 }
 
 
@@ -50,30 +48,41 @@ com::Vertex LoopSubdivision::middle(const Vertex &lhs, const Vertex &rhs) {
 
 
 void LoopSubdivision::adjustOriginVertex(std::vector<Vertex> &vertices, size_t num) const {
-	float Beta = (5.f / 8.f - std::pow(3.f / 8.f + std::cos(DX::XM_2PI / 4.f), 2.f));
 	for (uint32 i = 0; i < num; ++i) {
 		HE::HEVertex *pHeVert = hemesh_.getVertex(i);
-		std::unordered_set<HE::HEVertex *> halfEdgeVert = hemesh_.getHalfVertsFromVertex(pHeVert);
-		if (hemesh_.getVertexFaceCount(pHeVert) <= 1) {		// boundary
-			assert(halfEdgeVert.size() != 2);
-			float3 position = pHeVert->position * (6.f / 8.f);
-			float2 texcoord = pHeVert->texcoord * (6.f / 8.f);
-			for (const auto *pVert : halfEdgeVert) {
-				position += pVert->position * (1.f / 8.f);
-				texcoord += pVert->texcoord * (1.f / 8.f);
+		if (hemesh_.isBoundaryVert(pHeVert)) {
+			auto neighborsBoundaryVerts = hemesh_.getNeighborsVertFromVert(pHeVert);
+			if (neighborsBoundaryVerts.size() != 2) {
+				std::cerr << "adjustOriginVertex error: " << i << std::endl;
+				continue;
 			}
-			vertices[i].position = position;
-			vertices[i].texcoord = texcoord;
+			constexpr float _6_div_8 = 6.f / 8.f;
+			constexpr float _1_div_8 = 1.f / 8.f;
+			float3 pos = pHeVert->position * _6_div_8;
+			float2 tex = pHeVert->texcoord * _6_div_8;
+			for (auto *pOtherVert : neighborsBoundaryVerts) {
+				pos += pOtherVert->position * _1_div_8;
+				tex += pOtherVert->texcoord * _1_div_8;
+			}
+			vertices[i].position = pos;
+			vertices[i].texcoord = tex;
 		} else {
-			float beta = Beta / halfEdgeVert.size();
-			float3 otherPos = float3(0);
-			float2 otherTex = float2(0);
-			for (const auto *pVert : halfEdgeVert) {
-				otherPos += pVert->position;
-				otherTex += pVert->texcoord;
+			constexpr float _5_div_8 = 5.f / 8.f;
+			constexpr float _3_div_8 = 3.f / 8.f;
+			constexpr float _1_div_4 = 1.f / 4.f;
+			auto verts = hemesh_.getVertsFromVertex(pHeVert);
+			float n = static_cast<float>(verts.size());
+			float _1_div_n = 1.f / n;
+			float alpha = _3_div_8 + _1_div_4 * std::cos(DX::XM_2PI / n);
+			float beta = _1_div_n * (_5_div_8 - alpha * alpha);
+			float3 pos = float3(0);
+			float2 tex = float2(0);
+			for (auto *pOtherVert : verts) {
+				pos += pOtherVert->position;
+				tex += pOtherVert->texcoord;
 			}
-			vertices[i].position = pHeVert->position * (1.f - beta) + beta * otherPos;
-			vertices[i].texcoord = pHeVert->texcoord * (1.f - beta) + beta * otherTex;
+			vertices[i].position = pHeVert->position * (1.f - n * beta) + beta * pos;
+			vertices[i].texcoord = pHeVert->texcoord * (1.f - n * beta) + beta * tex;
 		}
 	}
 }
@@ -89,22 +98,46 @@ void LoopSubdivision::adjustNewVertex(std::vector<Vertex> &vertices, size_t firs
 		uint32 vertIdx2 = parentIndex.second;
 		HE::HEVertex *pVert1 = hemesh_.getVertex(vertIdx1);
 		HE::HEVertex *pVert2 = hemesh_.getVertex(vertIdx2);
-		// Not boundary points
-		if (hemesh_.getVertexFaceCount(pVert1) != 1 || hemesh_.getVertexFaceCount(pVert2) != 1)	
+		if (hemesh_.isBoundaryEdge(pVert1, pVert2))
 			continue;
-	 
-		std::unordered_set<HE::HEVertex *> unionVerts = hemesh_.getUnionVert(pVert1, pVert2);
-		assert(unionVerts.size() == 2);
-		constexpr float ratio = 3.f / 8.f;
-		float3 pos = pVert1->position * ratio + pVert2->position * ratio;
-		float2 tex = pVert1->texcoord * ratio + pVert2->texcoord * ratio;
-		for (auto *pOtherVert : unionVerts) {
-			pos += pOtherVert->position * (1.f / 8.f);
-			tex += pOtherVert->texcoord * (1.f / 8.f);
+
+		auto unionVert = hemesh_.getUnionVert(pVert1, pVert2);
+		assert(unionVert.size() == 2);
+		constexpr float _3_div_8 = 3.f / 8.f;
+		constexpr float _1_div_8 = 1.f / 8.f;
+		float3 pos = (pVert1->position + pVert2->position) * _3_div_8;
+		float2 tex = (pVert1->texcoord + pVert2->texcoord) * _3_div_8;
+		for (auto *pOtherVert : unionVert) {
+			pos += pOtherVert->position * _1_div_8;
+			tex += pOtherVert->texcoord * _1_div_8;
 		}
 		vertices[i].position = pos;
 		vertices[i].texcoord = tex;
 	}
+}
+
+void LoopSubdivision::generateNewVertex(std::vector<Vertex> &vertices, std::vector<uint32> &indices, 
+	uint32 idx0, uint32 idx1, uint32 idx2) 
+{
+	uint32 baseIdx = static_cast<uint32>(vertices.size());
+	const Vertex &v0 = middle(vertices[idx0], vertices[idx1]);
+	const Vertex &v1 = middle(vertices[idx1], vertices[idx2]);
+	const Vertex &v2 = middle(vertices[idx2], vertices[idx0]);
+	hemesh_.insertFace({ idx0, idx1, idx2 });
+	//hemesh_.insertVertex(v0.position, v0.texcoord);
+	//hemesh_.insertVertex(v1.position, v1.texcoord);
+	//hemesh_.insertVertex(v2.position, v2.texcoord);
+	vertices.emplace_back(v0);
+	vertices.emplace_back(v1);
+	vertices.emplace_back(v2);
+	indices.insert(indices.end(), { idx0, baseIdx+0, baseIdx+2 });
+	indices.insert(indices.end(), { baseIdx+0, idx1, baseIdx+1 });
+	indices.insert(indices.end(), { baseIdx+1, idx2, baseIdx+2 });
+	indices.insert(indices.end(), { baseIdx+0, baseIdx+1, baseIdx+2 });
+	//hemesh_.insertFace({ idx0, baseIdx+0, baseIdx+2 });
+	//hemesh_.insertFace({ baseIdx+0, idx1, baseIdx+1 });
+	//hemesh_.insertFace({ baseIdx+1, idx2, baseIdx+2 });
+	//hemesh_.insertFace({ baseIdx+0, baseIdx+1, baseIdx+2 });
 }
 
 }
