@@ -7,7 +7,7 @@ namespace DX = DirectX;
 #define FORCEINLINE __forceinline
 
 namespace vec {
-
+using size_t = std::size_t;
 template<typename T, size_t N>
 struct VectorHelper;
 
@@ -69,7 +69,7 @@ public:
 	FORCEINLINE VectorHelper &operator=(VectorHelper &&) = default;
 	using DX::XMFLOAT3::XMFLOAT3;
 	using DX::XMFLOAT3::operator=;
-	FORCEINLINE VectorHelper(DX::FXMVECTOR v) {
+	FORCEINLINE explicit VectorHelper(DX::FXMVECTOR v) {
 		x = DX::XMVectorGetX(v);
 		y = DX::XMVectorGetY(v);
 		z = DX::XMVectorGetZ(v);
@@ -107,6 +107,9 @@ public:
 			(lhs.z*rhs.x - lhs.x*rhs.z),
 			(lhs.x*rhs.y - lhs.y*rhs.x), 
 		};
+	}
+	FORCEINLINE explicit VectorHelper(const DX::XMVECTORF32 &color) 
+		: VectorHelper(color.operator DirectX::XMVECTOR()){
 	}
 };
 
@@ -153,6 +156,9 @@ public:
 		assert(n < 4);
 		return reinterpret_cast<const float *>(this)[n];
 	}
+	FORCEINLINE explicit VectorHelper(const DX::XMVECTORF32 &color)
+		: VectorHelper(color.operator DirectX::XMVECTOR())
+	{}
 };
 
 

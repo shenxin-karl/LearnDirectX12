@@ -11,6 +11,14 @@
 
 namespace DX = DirectX;
 namespace WRL = Microsoft::WRL;
+
+using namespace vec;
+
+struct ShapeVertex {
+	float3	position;
+	float4	color;
+};
+
 class Shape : public com::BaseApp {
 public:
 	virtual bool initialize();
@@ -21,6 +29,7 @@ public:
 	virtual ~Shape() override;
 private:
 	void buildShapeGeometry();
+	void buildRenderItems();
 private:
 	std::unordered_map<std::string, std::unique_ptr<MeshGeometry>> geometrice_;
 	std::unordered_map<std::string, WRL::ComPtr<ID3DBlob>> shaders_;
