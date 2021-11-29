@@ -47,16 +47,98 @@ void Shape::buildShapeGeometry() {
 
 	std::vector<ShapeVertex> vertices;
 	vertices.reserve(totalVertexCount);
-	auto iter = std::back_inserter(vertices);
-	std::transform(box.vertices.begin(), box.vertices.end(), iter, [](const com::Vertex &vert) {
+	auto vertIter = std::back_inserter(vertices);
+	std::transform(box.vertices.begin(), box.vertices.end(), vertIter, [](const com::Vertex &vert) {
 		return ShapeVertex{ vert.position, float4(DX::Colors::DarkGreen) };
 	});
-	std::transform(grid.vertices.begin(), grid.vertices.end(), iter, [](const com::Vertex &vert) {
+	std::transform(grid.vertices.begin(), grid.vertices.end(), vertIter, [](const com::Vertex &vert) {
 		return ShapeVertex{ vert.position, float4(DX::Colors::ForestGreen) };
 	});
-	std::transform(sphere.vertices.begin(), sphere.vertices.end(), iter, [](const com::Vertex &vert) {
-		// todo
+	std::transform(sphere.vertices.begin(), sphere.vertices.end(), vertIter, [](const com::Vertex &vert) {
+		return ShapeVertex{ vert.position, float4(DX::Colors::Crimson) };
 	});
+	std::transform(cylinder.vertices.begin(), cylinder.vertices.end(), vertIter, [](const com::Vertex &vert) {
+		return ShapeVertex{ vert.position, float4(DX::Colors::SteelBlue) };
+	});
+	
+	auto totalIndexCount =
+		box.indices.size() +
+		grid.indices.size() +
+		sphere.indices.size() +
+		cylinder.indices.size();
+
+	std::vector<com::uint16> indices;
+	indices.reserve(totalIndexCount);
+	auto idxIter = std::back_inserter(indices);
+	std::transform(box.indices.begin(), box.indices.end(), idxIter, [](com::uint32 idx) {
+		return static_cast<com::uint16>(idx);
+	});
+	std::transform(grid.indices.begin(), grid.indices.end(), idxIter, [](com::uint32 idx) {
+		return static_cast<com::uint16>(idx);
+	});
+	std::transform(sphere.indices.begin(), sphere.indices.end(), idxIter, [](com::uint32 idx) {
+		return static_cast<com::uint16>(idx);
+	});
+	std::transform(cylinder.indices.begin(), cylinder.indices.end(), idxIter, [](com::uint32 idx) {
+		return static_cast<com::uint16>(idx);
+	});
+
+	const UINT vbByteSize = static_cast<UINT>(vertices.size() * sizeof(ShapeVertex));
+	const UINT ibByteSize = static_cast<UINT>(indices.size() * sizeof(com::uint16));
+	auto pMeshGeo = std::make_unique<MeshGeometry>();
+	pMeshGeo->name = "shapeGeo";
+
+	ThrowIfFailed(D3DCreateBlob(vbByteSize, &pMeshGeo->vertexBufferCPU));
+	CopyMemory(pMeshGeo->vertexBufferCPU->GetBufferPointer(), vertices.data(), vbByteSize);
+	ThrowIfFailed(D3DCreateBlob(ibByteSize, &pMeshGeo->indexBufferCPU));
+	CopyMemory(pMeshGeo->indexBufferCPU->GetBufferPointer(), indices.data(), ibByteSize);
+
+	pMeshGeo->vertexBufferGPU = createDefaultBuffer(
+		pDevice_.Get(), 
+		pCommandList_.Get(), 
+		vertices.data(), 
+		vbByteSize, 
+		pMeshGeo->vertexBufferUploader
+	);
+
+	pMeshGeo->indexBufferGPU = createDefaultBuffer(
+		pDevice_.Get(),
+		pCommandList_.Get(),
+		indices.data(),
+		ibByteSize,
+		pMeshGeo->indexBufferUploader
+	);
+
+	pMeshGeo->vertexBufferByteSize = sizeof(ShapeVertex);
+	pMeshGeo->vertexBufferByteSize = vbByteSize;
+	pMeshGeo->indexBufferByteSize = DXGI_FORMAT_R16_UINT;
+	pMeshGeo->indexBufferByteSize = ibByteSize;
+
+	pMeshGeo->drawArgs["box"] = boxSubmesh;
+	pMeshGeo->drawArgs["grid"] = gridSubmesh;
+	pMeshGeo->drawArgs["sphere"] = sphereSubmesh;
+	pMeshGeo->drawArgs["cylinder"] = cylinderSubmesh;
+
+	geometrice_[pMeshGeo->name] = std::move(pMeshGeo);
+}
+
+
+void Shape::buildRenderItems() {
+	using namespace DX;
+	auto boxRItem = std::make_unique<d3dUlti::RenderItem>();
+	XMStoreFloat4x4(&boxRItem->world, 
+		DX::XMMatrixScaling(2.f, 2.f, 2.f) * DX::XMMatrixTranslation(0.f, 0.5f, 0.f));
+	boxRItem->objCBIndex_ = 0;
+	boxRItem->geometry_ = geometrice_["shapeGeo"].get();
+	boxRItem->primitiveType_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	boxRItem->indexCount_ = boxRItem->geometry_->drawArgs["box"].indexCount;
+	boxRItem->startIndexLocation_ = boxRItem->geometry_->drawArgs["box"].startIndexLocation;
+	boxRItem->baseVertexLocation_ = boxRItem->geometry_->drawArgs["box"].baseVertexLocation;
+	allRenderItems_.push_back(std::move(boxRItem));
+
+	auto gridRItem = std::make_unique<d3dUlti::RenderItem>();
+	gridRItem->world = MathHelper::identity4x4();
+	gridRItem->objCBIndex_ = 1;
 }
 
 int main() {
