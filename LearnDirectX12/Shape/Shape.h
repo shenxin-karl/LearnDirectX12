@@ -13,6 +13,7 @@ namespace DX = DirectX;
 namespace WRL = Microsoft::WRL;
 
 using namespace vec;
+using namespace matrix;
 
 struct ShapeVertex {
 	float3	position;
@@ -30,12 +31,31 @@ public:
 private:
 	void buildShapeGeometry();
 	void buildRenderItems();
+	void buildDescriptorHeaps();
+	void buldConstantBufferViews();
 private:
 	std::unordered_map<std::string, std::unique_ptr<MeshGeometry>> geometrice_;
 	std::unordered_map<std::string, WRL::ComPtr<ID3DBlob>> shaders_;
 	std::unordered_map<std::string, WRL::ComPtr<ID3D12PipelineState>> PSOs_;
 	std::vector<std::unique_ptr<d3dUlti::RenderItem>> allRenderItems_;
-	std::vector<std::unique_ptr<d3dUlti::RenderItem>> opaqueRItems_;
+	std::vector<d3dUlti::RenderItem *> opaqueRItems_;
 	std::unique_ptr<UploadBuffer<PassConstants>> passCB_;
 	std::unique_ptr<UploadBuffer<ObjectConstants>> objCB_;
+	WRL::ComPtr<ID3D12DescriptorHeap> pCbvHeaps_;
+	UINT passCbvOffset_ = 0;
+	bool isWireframe_ = false;
+	POINT lastMousePos_;
+	PassConstants mainPassCB;
+
+	float theta_ = 0.f;
+	float phi_ = 0.f;
+	float radius_ = 15.f;
+
+	float3	eyePos_;
+	float4x4 view_;
+	float4x4 proj_;
+
+	std::vector<std::unique_ptr<FrameResource>> frameResources;
+	UINT currentFrameIndex_ = 0;
+	FrameResource *currentFrameResource_ = nullptr;
 };

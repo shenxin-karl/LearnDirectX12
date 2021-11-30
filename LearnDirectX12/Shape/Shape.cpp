@@ -125,11 +125,13 @@ void Shape::buildShapeGeometry() {
 
 void Shape::buildRenderItems() {
 	using namespace DX;
+	auto *pGeometry = geometrice_["shapeGeo"].get();
+
 	auto boxRItem = std::make_unique<d3dUlti::RenderItem>();
 	XMStoreFloat4x4(&boxRItem->world, 
 		DX::XMMatrixScaling(2.f, 2.f, 2.f) * DX::XMMatrixTranslation(0.f, 0.5f, 0.f));
 	boxRItem->objCBIndex_ = 0;
-	boxRItem->geometry_ = geometrice_["shapeGeo"].get();
+	boxRItem->geometry_ = pGeometry;
 	boxRItem->primitiveType_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 	boxRItem->indexCount_ = boxRItem->geometry_->drawArgs["box"].indexCount;
 	boxRItem->startIndexLocation_ = boxRItem->geometry_->drawArgs["box"].startIndexLocation;
@@ -139,6 +141,71 @@ void Shape::buildRenderItems() {
 	auto gridRItem = std::make_unique<d3dUlti::RenderItem>();
 	gridRItem->world = MathHelper::identity4x4();
 	gridRItem->objCBIndex_ = 1;
+	gridRItem->geometry_ = pGeometry;
+	gridRItem->primitiveType_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	gridRItem->indexCount_ = pGeometry->drawArgs["grid"].indexCount;
+	gridRItem->startIndexLocation_ = pGeometry->drawArgs["grid"].startIndexLocation;
+	gridRItem->baseVertexLocation_ = pGeometry->drawArgs["grid"].baseVertexLocation;
+	allRenderItems_.push_back(std::move(gridRItem));
+
+	UINT objCBIndex = 2;
+	for (int i = 0; i < 5; ++i) {
+		auto leftCylRItem = std::make_unique<d3dUlti::RenderItem>();
+		auto rightCylRItem = std::make_unique<d3dUlti::RenderItem>();
+		auto leftSphereRItem = std::make_unique<d3dUlti::RenderItem>();
+		auto rightSphereRItem = std::make_unique<d3dUlti::RenderItem>();
+
+		DX::XMMATRIX leftCylWorld = DX::XMMatrixTranslation(-5.f, 1.5f, -10.f + i * 5.f);
+		DX::XMMATRIX rightCylWorld = DX::XMMatrixTranslation(+5.f, 1.5f, -10.f + i * 5.f);
+		DX::XMMATRIX leftSphereWorld = DX::XMMatrixTranslation(-5.f, 3.5f, -10.f + i * 5.f);
+		DX::XMMATRIX rightSphereWorld = DX::XMMatrixTranslation(+5.f, 3.5f, -10.f + i * 5.f);
+
+		DX::XMStoreFloat4x4(&leftCylRItem->world, leftCylWorld);
+		leftCylRItem->objCBIndex_ = objCBIndex++;
+		leftCylRItem->geometry_ = pGeometry;
+		leftCylRItem->primitiveType_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+		leftCylRItem->indexCount_ = pGeometry->drawArgs["cylinder"].indexCount;
+		leftCylRItem->startIndexLocation_ = pGeometry->drawArgs["cylinder"].startIndexLocation;
+		leftCylRItem->baseVertexLocation_ = pGeometry->drawArgs["cylinder"].baseVertexLocation;
+		
+		DX::XMStoreFloat4x4(&rightCylRItem->world, rightCylWorld);
+		rightCylRItem->objCBIndex_ = objCBIndex++;
+		rightCylRItem->geometry_ = pGeometry;
+
+		rightCylRItem->primitiveType_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+		rightCylRItem->indexCount_ = pGeometry->drawArgs["cylinder"].indexCount;
+		rightCylRItem->startIndexLocation_ = pGeometry->drawArgs["cylinder"].startIndexLocation;
+		rightCylRItem->baseVertexLocation_ = pGeometry->drawArgs["cylinder"].baseVertexLocation;
+
+		DX::XMStoreFloat4x4(&leftSphereRItem->world, leftSphereWorld);
+		leftSphereRItem->objCBIndex_ = objCBIndex++;
+		leftSphereRItem->geometry_ = pGeometry;
+		leftSphereRItem->primitiveType_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+		leftSphereRItem->indexCount_ = pGeometry->drawArgs["sphere"].indexCount;
+		leftSphereRItem->startIndexLocation_ = pGeometry->drawArgs["sphere"].startIndexLocation;
+		leftSphereRItem->baseVertexLocation_ = pGeometry->drawArgs["sphere"].baseVertexLocation;
+
+		DX::XMStoreFloat4x4(&rightSphereRItem->world, rightSphereWorld);
+		rightSphereRItem->objCBIndex_ = objCBIndex++;
+		rightSphereRItem->geometry_ = pGeometry;
+		rightSphereRItem->primitiveType_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+		rightSphereRItem->indexCount_ = pGeometry->drawArgs["sphere"].indexCount;
+		rightSphereRItem->startIndexLocation_ = pGeometry->drawArgs["sphere"].startIndexLocation;
+		rightSphereRItem->baseVertexLocation_ = pGeometry->drawArgs["sphere"].baseVertexLocation;
+
+		allRenderItems_.push_back(std::move(leftCylRItem));
+		allRenderItems_.push_back(std::move(rightCylRItem));
+		allRenderItems_.push_back(std::move(leftSphereRItem));
+		allRenderItems_.push_back(std::move(rightSphereRItem));
+	}
+	for (auto &pRenderItem : allRenderItems_)
+		opaqueRItems_.push_back(pRenderItem.get());
+}
+
+void Shape::buildDescriptorHeaps() {
+	UINT objCount = static_cast<UINT>(opaqueRItems_.size());
+	UINT numDescriptors = (objCount + 1) * d3dUlti::kNumFrameResources;
+	//passCbvOffset = objCount * 
 }
 
 int main() {

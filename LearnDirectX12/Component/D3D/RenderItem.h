@@ -7,7 +7,7 @@
 namespace d3dUlti {
 
 using namespace matrix;
-constexpr int kNumFrameResources = 3;
+inline static int kNumFrameResources = 3;
 
 struct RenderItem {
 	RenderItem() = default;
@@ -20,7 +20,7 @@ struct RenderItem {
 	// DrawInstance param
 	UINT indexCount_ = 0;
 	UINT startIndexLocation_ = 0;
-	int BaseVertexLocation_ = 0;
+	int baseVertexLocation_ = 0;
 };
 
 }
