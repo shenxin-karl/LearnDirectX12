@@ -205,7 +205,52 @@ void Shape::buildRenderItems() {
 void Shape::buildDescriptorHeaps() {
 	UINT objCount = static_cast<UINT>(opaqueRItems_.size());
 	UINT numDescriptors = (objCount + 1) * d3dUlti::kNumFrameResources;
-	//passCbvOffset = objCount * 
+
+	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc;
+	cbvHeapDesc.NumDescriptors = numDescriptors;
+	cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	cbvHeapDesc.NodeMask = 0;
+	passCbvOffset_ = objCount * d3dUlti::kNumFrameResources;
+	pDevice_->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&pCbvHeaps_));
+}
+
+
+void Shape::buldConstantBufferViews() {
+	UINT objCBByteSize = calcConstantBufferByteSize(sizeof(ObjectConstants));
+	UINT passCBByteSize = calcConstantBufferByteSize(sizeof(PassConstants));
+	UINT objCount = opaqueRItems_.size();
+
+	for (int frameIdx = 0; frameIdx < d3dUlti::kNumFrameResources; ++frameIdx) {
+		auto *pObjCb = frameResources_[frameIdx]->objectCB_->resource();
+		for (UINT i = 0; i < objCount; ++i) {
+			auto address = pObjCb->GetGPUVirtualAddress();
+			address += static_cast<UINT64>(i * objCBByteSize);
+			int heapIndex = frameIdx * objCount + i;
+			CD3DX12_CPU_DESCRIPTOR_HANDLE handle(pCbvHeaps_->GetCPUDescriptorHandleForHeapStart());
+			handle.Offset(heapIndex, cbvSrvUavDescriptorSize_);
+
+			D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
+			cbvDesc.BufferLocation = address;
+			cbvDesc.SizeInBytes = objCBByteSize;
+			pDevice_->CreateConstantBufferView(&cbvDesc, handle);
+		}
+	}
+
+	for (int frameIdx = 0; frameIdx < d3dUlti::kNumFrameResources; ++frameIdx) {
+		auto *pPassCb = frameResources_[frameIdx]->passCB_->resource();
+		auto address = pPassCb->GetGPUVirtualAddress();
+		address += static_cast<UINT64>(frameIdx * passCBByteSize);
+
+		auto heapIndex = passCbvOffset_ + frameIdx;
+		CD3DX12_CPU_DESCRIPTOR_HANDLE handle(pCbvHeaps_->GetCPUDescriptorHandleForHeapStart());
+		handle.Offset(heapIndex, cbvSrvUavDescriptorSize_);
+
+		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
+		cbvDesc.BufferLocation = address;
+		cbvDesc.SizeInBytes = passCBByteSize;
+		pDevice_->CreateConstantBufferView(&cbvDesc, handle);
+	}
 }
 
 int main() {

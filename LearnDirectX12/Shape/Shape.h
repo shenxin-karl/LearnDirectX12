@@ -55,7 +55,7 @@ private:
 	float4x4 view_;
 	float4x4 proj_;
 
-	std::vector<std::unique_ptr<FrameResource>> frameResources;
+	std::vector<std::unique_ptr<FrameResource>> frameResources_;
 	UINT currentFrameIndex_ = 0;
 	FrameResource *currentFrameResource_ = nullptr;
 };
