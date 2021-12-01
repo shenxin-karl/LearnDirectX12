@@ -1,6 +1,21 @@
 #include "Shape.h"
 #include <DirectXColors.h>
 
+D3D12_SHADER_BYTECODE ShaderByteCode::getVsByteCode() const {
+	return { pVsByteCode->GetBufferPointer(), pVsByteCode->GetBufferSize() };
+}
+
+D3D12_SHADER_BYTECODE ShaderByteCode::getPsByteCode() const {
+	return { pPsByteCode->GetBufferPointer(), pPsByteCode->GetBufferSize() };
+}
+
+void Shape::onResize(int width, int height) {
+	constexpr float fov = 90.f;
+	float aspect = static_cast<float>(width) / static_cast<float>(height);
+	DX::XMMATRIX projMat = DX::XMMatrixPerspectiveFovLH(fov, aspect, 0.1f, 100.f);
+	DX::XMStoreFloat4x4(&proj_, projMat);
+}
+
 void Shape::buildShapeGeometry() {
 	com::GometryGenerator gen;
 	com::MeshData box = gen.createBox(1.5f, 0.5f, 1.5f, 3);
@@ -251,6 +266,63 @@ void Shape::buldConstantBufferViews() {
 		cbvDesc.SizeInBytes = passCBByteSize;
 		pDevice_->CreateConstantBufferView(&cbvDesc, handle);
 	}
+}
+
+void Shape::buildShaderAndInputLayout() {
+	inputLayout_ = {
+		{ 
+			"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(ShapeVertex, position),  
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 
+		},
+		{
+			"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(ShapeVertex, color),
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0,
+		}
+	};
+
+	WRL::ComPtr<ID3DBlob> pVsByteCode = compileShader(L"shader/color.hlsl", nullptr, "VS", "vs_5_0");
+	WRL::ComPtr<ID3DBlob> pPsByteCode = compileShader(L"shader/color.hlsl", nullptr, "PS", "ps_5_0");
+	shaders_["shapeGeo"] = { pVsByteCode, pPsByteCode };
+}
+
+void Shape::buildRootSignature() {
+
+}
+
+void Shape::buildPSO() {
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
+	memset(&psoDesc, 0, sizeof(psoDesc));
+	//psoDesc.pRootSignature
+	psoDesc.VS = shaders_["shapeGeo"].getVsByteCode();
+	psoDesc.PS = shaders_["shapeGeo"].getPsByteCode();
+	psoDesc.BlendState = CD3DX12_BLEND_DESC(CD3DX12_DEFAULT{});
+	psoDesc.SampleMask = 0xffffffff;
+	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(CD3DX12_DEFAULT{});
+	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(CD3DX12_DEFAULT{});
+	psoDesc.InputLayout = { inputLayout_.data(), static_cast<UINT>(inputLayout_.size()) };
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDesc.RTVFormats[0] = backBufferFormat_;
+	psoDesc.DSVFormat = depthStencilFormat_;
+	psoDesc.SampleDesc = { getSampleCount(), getSampleQuality() };
+	auto &pso = PSOs_["shapeGeo"];
+	ThrowIfFailed(pDevice_->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pso)));
+}
+
+void Shape::updateObjectConstant() {
+	auto *pCurrObjCB = currentFrameResource_->objectCB_.get();
+	for (auto &rItem : allRenderItems_) {
+		if (rItem->numFramesDirty > 0) {
+			DX::XMMATRIX world = DX::XMLoadFloat4x4(&rItem->world);
+			ObjectConstants objConstant;
+			DX::XMStoreFloat4x4(&objConstant.gWorld, world);
+			pCurrObjCB->copyData(0, objConstant);
+			--rItem->numFramesDirty;
+		}
+	}
+}
+
+void Shape::updatePassConstant() {
+
 }
 
 int main() {

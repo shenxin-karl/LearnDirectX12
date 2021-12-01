@@ -20,6 +20,14 @@ struct ShapeVertex {
 	float4	color;
 };
 
+struct ShaderByteCode {
+	WRL::ComPtr<ID3DBlob> pVsByteCode;
+	WRL::ComPtr<ID3DBlob> pPsByteCode;
+public:
+	D3D12_SHADER_BYTECODE getVsByteCode() const;
+	D3D12_SHADER_BYTECODE getPsByteCode() const;
+};
+
 class Shape : public com::BaseApp {
 public:
 	virtual bool initialize();
@@ -33,15 +41,21 @@ private:
 	void buildRenderItems();
 	void buildDescriptorHeaps();
 	void buldConstantBufferViews();
+	void buildShaderAndInputLayout();
+	void buildRootSignature();
+	void buildPSO();
+	void updateObjectConstant();
+	void updatePassConstant();
 private:
 	std::unordered_map<std::string, std::unique_ptr<MeshGeometry>> geometrice_;
-	std::unordered_map<std::string, WRL::ComPtr<ID3DBlob>> shaders_;
+	std::unordered_map<std::string, ShaderByteCode> shaders_;
 	std::unordered_map<std::string, WRL::ComPtr<ID3D12PipelineState>> PSOs_;
 	std::vector<std::unique_ptr<d3dUlti::RenderItem>> allRenderItems_;
 	std::vector<d3dUlti::RenderItem *> opaqueRItems_;
-	std::unique_ptr<UploadBuffer<PassConstants>> passCB_;
-	std::unique_ptr<UploadBuffer<ObjectConstants>> objCB_;
 	WRL::ComPtr<ID3D12DescriptorHeap> pCbvHeaps_;
+	std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout_;
+	WRL::ComPtr<ID3D12RootSignature> pRootSignature;
+
 	UINT passCbvOffset_ = 0;
 	bool isWireframe_ = false;
 	POINT lastMousePos_;
