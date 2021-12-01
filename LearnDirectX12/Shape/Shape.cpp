@@ -9,11 +9,40 @@ D3D12_SHADER_BYTECODE ShaderByteCode::getPsByteCode() const {
 	return { pPsByteCode->GetBufferPointer(), pPsByteCode->GetBufferSize() };
 }
 
+
+void Shape::beginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
+	pollEvent();
+
+	currentFrameIndex_ = (currentFrameIndex_ + 1) % d3dUlti::kNumFrameResources;
+	currentFrameResource_ = frameResources_[currentFrameIndex_].get();
+
+	int currFence = currentFrameResource_->fence_;
+	if (currentFrameResource_->fence_ != 0 && pFence_->GetCompletedValue() < currFence) {
+		HANDLE event = CreateEventEx(nullptr, false, false, EVENT_ALL_ACCESS);
+		ThrowIfFailed(pFence_->SetEventOnCompletion(currFence, event));
+		WaitForSingleObject(event, INFINITE);
+		CloseHandle(event);
+	}
+
+	updatePassConstant(pGameTimer);
+	updateObjectConstant();
+}
+
 void Shape::onResize(int width, int height) {
 	constexpr float fov = 90.f;
 	float aspect = static_cast<float>(width) / static_cast<float>(height);
 	DX::XMMATRIX projMat = DX::XMMatrixPerspectiveFovLH(fov, aspect, 0.1f, 100.f);
 	DX::XMStoreFloat4x4(&proj_, projMat);
+}
+
+void Shape::buildFrameResources() {
+	for (int i = 0; i < d3dUlti::kNumFrameResources; ++i) {
+		frameResources_.push_back(std::make_unique<FrameResource>(
+			pDevice_.Get(),
+			1,
+			allRenderItems_.size()
+		));
+	}
 }
 
 void Shape::buildShapeGeometry() {
@@ -321,8 +350,36 @@ void Shape::updateObjectConstant() {
 	}
 }
 
-void Shape::updatePassConstant() {
+void Shape::updatePassConstant(std::shared_ptr<com::GameTimer> pGameTimer) {
+	DX::XMMATRIX view = DX::XMLoadFloat4x4(&view_);
+	DX::XMMATRIX proj = DX::XMLoadFloat4x4(&proj_);
 
+	DX::XMVECTOR det;
+	det = DX::XMMatrixDeterminant(view);
+	DX::XMMATRIX invView = DX::XMMatrixInverse(&det, view);
+
+	det = DX::XMMatrixDeterminant(proj);
+	DX::XMMATRIX invProj = DX::XMMatrixInverse(&det, proj);
+
+	DX::XMMATRIX viewProj = DX::XMMatrixMultiply(view, proj);
+	det = DX::XMMatrixDeterminant(viewProj);
+	DX::XMMATRIX invViewProj = DX::XMMatrixInverse(&det, viewProj);
+	
+	DX::XMStoreFloat4x4(&mainPassCB_.gView, view);
+	DX::XMStoreFloat4x4(&mainPassCB_.gInvView, invView);
+	DX::XMStoreFloat4x4(&mainPassCB_.gProj, proj);
+	DX::XMStoreFloat4x4(&mainPassCB_.gInvProj, invProj);
+	DX::XMStoreFloat4x4(&mainPassCB_.gViewProj, viewProj);
+	DX::XMStoreFloat4x4(&mainPassCB_.gInvView, invViewProj);
+	mainPassCB_.gEyePos = eyePos_;
+	mainPassCB_.gRenderTargetSize = float2(width_, height_);
+	mainPassCB_.gInvRenderTargetSize = float2(1.f / width_, 1.f / height_);
+	mainPassCB_.gNearZ = zNear;
+	mainPassCB_.gFarZ = zFar;
+	mainPassCB_.gTotalTime = pGameTimer->totalTime();
+	mainPassCB_.gDeltaTime = pGameTimer->deltaTime();
+
+	currentFrameResource_->passCB_->copyData(0, mainPassCB_);
 }
 
 int main() {

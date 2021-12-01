@@ -33,10 +33,10 @@ public:
 	virtual bool initialize();
 	virtual void beginTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 	virtual void tick(std::shared_ptr<com::GameTimer> pGameTimer) override;
-	virtual void endTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 	virtual void onResize(int width, int height) override;
-	virtual ~Shape() override;
 private:
+	void pollEvent();
+	void buildFrameResources();
 	void buildShapeGeometry();
 	void buildRenderItems();
 	void buildDescriptorHeaps();
@@ -45,7 +45,7 @@ private:
 	void buildRootSignature();
 	void buildPSO();
 	void updateObjectConstant();
-	void updatePassConstant();
+	void updatePassConstant(std::shared_ptr<com::GameTimer> pGameTimer);
 private:
 	std::unordered_map<std::string, std::unique_ptr<MeshGeometry>> geometrice_;
 	std::unordered_map<std::string, ShaderByteCode> shaders_;
@@ -59,7 +59,7 @@ private:
 	UINT passCbvOffset_ = 0;
 	bool isWireframe_ = false;
 	POINT lastMousePos_;
-	PassConstants mainPassCB;
+	PassConstants mainPassCB_;
 
 	float theta_ = 0.f;
 	float phi_ = 0.f;
@@ -68,6 +68,9 @@ private:
 	float3	eyePos_;
 	float4x4 view_;
 	float4x4 proj_;
+
+	const float zNear = 0.1f;
+	const float zFar = 100.f;
 
 	std::vector<std::unique_ptr<FrameResource>> frameResources_;
 	UINT currentFrameIndex_ = 0;

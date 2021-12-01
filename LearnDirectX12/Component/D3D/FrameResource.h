@@ -18,7 +18,7 @@ struct PassConstants {
 	DX::XMFLOAT2	gRenderTargetSize;
 	DX::XMFLOAT2	gInvRenderTargetSize;
 	float			gNearZ;
-	float			gFrarZ;
+	float			gFarZ;
 	float			gTotalTime;
 	float			gDeltaTime;
 };
