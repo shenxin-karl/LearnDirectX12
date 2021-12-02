@@ -39,19 +39,19 @@ void BoxApp::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	ThrowIfFailed(pCommandAlloc_->Reset());
 	ThrowIfFailed(pCommandList_->Reset(pCommandAlloc_.Get(), pPSO_.Get()));
 	pCommandList_->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
-			getCurrentBuffer(), 
+			getCurrentBackBuffer(), 
 			D3D12_RESOURCE_STATE_PRESENT,
 			D3D12_RESOURCE_STATE_RENDER_TARGET
 	)));
 	pCommandList_->RSSetViewports(1, &screenViewport_);
 	pCommandList_->RSSetScissorRects(1, &scissorRect_);
-	pCommandList_->ClearRenderTargetView(currentBackBufferView(), DX::Colors::LightBlue, 0, nullptr);
-	pCommandList_->ClearDepthStencilView(depthStencilBufferView(),
+	pCommandList_->ClearRenderTargetView(getCurrentBackBufferView(), DX::Colors::LightBlue, 0, nullptr);
+	pCommandList_->ClearDepthStencilView(getDepthStencilBufferView(),
 		D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.f, 0, 0, nullptr);
 
 	pCommandList_->OMSetRenderTargets(
-		1, RVPtr(currentBackBufferView()), 
-		true, RVPtr(depthStencilBufferView())
+		1, RVPtr(getCurrentBackBufferView()), 
+		true, RVPtr(getDepthStencilBufferView())
 	);
 
 	pCommandList_->IASetVertexBuffers(0, 1, RVPtr(pBoxGeo_->vertexBufferView()));
@@ -67,7 +67,7 @@ void BoxApp::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		submesh.startIndexLocation, submesh.baseVertexLocation, 0);
 
 	pCommandList_->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
-		getCurrentBuffer(),
+		getCurrentBackBuffer(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET,
 		D3D12_RESOURCE_STATE_PRESENT
 	)));
@@ -77,7 +77,7 @@ void BoxApp::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	pCommandQueue_->ExecuteCommandLists(1, cmdLists);
 
 	ThrowIfFailed(pSwapChain_->Present(0, 0));
-	currBackBufferIndex_ = (currBackBufferIndex_ + 1) % kSwapChainCount;
+	currentBackBufferIndex_ = (currentBackBufferIndex_ + 1) % kSwapChainCount;
 	flushCommandQueue();
 }
 

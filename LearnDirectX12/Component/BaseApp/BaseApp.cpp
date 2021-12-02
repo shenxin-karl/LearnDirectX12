@@ -47,7 +47,7 @@ void com::BaseApp::onResize(int width, int height) {
 		DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
 	));
 
-	currBackBufferIndex_ = 0;
+	currentBackBufferIndex_ = 0;
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHeapHandle(pRtvHeap_->GetCPUDescriptorHandleForHeapStart());
 	for (UINT i = 0; i < kSwapChainCount; ++i) {
 		ThrowIfFailed(pSwapChain_->GetBuffer(i, IID_PPV_ARGS(&pSwapChainBuffer_[i])));
@@ -86,7 +86,7 @@ void com::BaseApp::onResize(int width, int height) {
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 	dsvDesc.Format = depthStencilFormat_;
 	dsvDesc.Texture2D.MipSlice = 0;
-	pDevice_->CreateDepthStencilView(pDepthStencilBuffer_.Get(), &dsvDesc, depthStencilBufferView());
+	pDevice_->CreateDepthStencilView(pDepthStencilBuffer_.Get(), &dsvDesc, getDepthStencilBufferView());
 
 	pCommandList_->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
 		pDepthStencilBuffer_.Get(),
@@ -202,20 +202,20 @@ void com::BaseApp::flushCommandQueue() {
 	}
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE com::BaseApp::currentBackBufferView() const {
+D3D12_CPU_DESCRIPTOR_HANDLE com::BaseApp::getCurrentBackBufferView() const {
 	return CD3DX12_CPU_DESCRIPTOR_HANDLE{
 		pRtvHeap_->GetCPUDescriptorHandleForHeapStart(),
-		currBackBufferIndex_,
+		currentBackBufferIndex_,
 		rtvDescriptorSize_
 	};
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE com::BaseApp::depthStencilBufferView() const {
+D3D12_CPU_DESCRIPTOR_HANDLE com::BaseApp::getDepthStencilBufferView() const {
 	return pDsvHeap_->GetCPUDescriptorHandleForHeapStart();
 }
 
-ID3D12Resource *com::BaseApp::getCurrentBuffer() {
-	return pSwapChainBuffer_[currBackBufferIndex_].Get();
+ID3D12Resource *com::BaseApp::getCurrentBackBuffer() {
+	return pSwapChainBuffer_[currentBackBufferIndex_].Get();
 }
 
 ID3D12Resource *com::BaseApp::getDepthStencilBuffer() {

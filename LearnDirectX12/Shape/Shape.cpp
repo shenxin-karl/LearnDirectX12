@@ -1,4 +1,5 @@
 #include "Shape.h"
+#include "InputSystem/Mouse.h"
 #include <DirectXColors.h>
 
 D3D12_SHADER_BYTECODE ShaderByteCode::getVsByteCode() const {
@@ -28,11 +29,65 @@ void Shape::beginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	updateObjectConstant();
 }
 
+void Shape::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
+	pCommandAlloc_->Reset();
+	if (isWireframe_)
+		pCommandList_->Reset(pCommandAlloc_.Get(), PSOs_["shapeGeo"].Get());
+	else
+		pCommandList_->Reset(pCommandAlloc_.Get(), PSOs_["shapeGeoWire"].Get());
+	
+	pCommandList_->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
+		getCurrentBackBuffer(),
+		D3D12_RESOURCE_STATE_PRESENT,
+		D3D12_RESOURCE_STATE_RENDER_TARGET
+	)));
+
+	pCommandList_->RSSetViewports(1, &screenViewport_);
+	pCommandList_->RSSetScissorRects(1, &scissorRect_);
+	pCommandList_->ClearRenderTargetView(getCurrentBackBufferView(), DX::Colors::LightBlue, 1, &scissorRect_);
+	pCommandList_->ClearDepthStencilView(
+		getDepthStencilBufferView(),
+		D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL,
+		1.f,
+		0,
+		1,
+		&scissorRect_
+	);
+	pCommandList_->OMSetRenderTargets(1, RVPtr(getCurrentBackBufferView()), true, RVPtr(getDepthStencilBufferView()));
+
+	drawRenderItems();
+
+	ThrowIfFailed(pCommandList_->Close());
+	ID3D12CommandList *cmdsList[] = { pCommandList_.Get() };
+	pCommandQueue_->ExecuteCommandLists(1, cmdsList);
+	ThrowIfFailed(pSwapChain_->Present(0, 0));
+	currentBackBufferIndex_ = (currentBackBufferIndex_ + 1) % kSwapChainCount;
+	currentFrameResource_->fence_ = ++currentFence_;
+	pCommandQueue_->Signal(pFence_.Get(), currentFence_);
+}
+
 void Shape::onResize(int width, int height) {
 	constexpr float fov = 90.f;
 	float aspect = static_cast<float>(width) / static_cast<float>(height);
 	DX::XMMATRIX projMat = DX::XMMatrixPerspectiveFovLH(fov, aspect, 0.1f, 100.f);
 	DX::XMStoreFloat4x4(&proj_, projMat);
+}
+
+void Shape::pollEvent() {
+	while (auto event = pInputSystem_->mouse->getEvent()) {
+		POINT point = { event.x, event.y };
+		switch (event.state_) {
+		case com::Mouse::LPress:
+			onMouseLPress(point);
+			break;
+		case com::Mouse::LRelease:
+			onMouseLRelease(point);
+			break;
+		case com::Mouse::Move:
+			onMouseMove(point);
+			break;
+		}
+	}
 }
 
 void Shape::buildFrameResources() {
@@ -261,9 +316,9 @@ void Shape::buildDescriptorHeaps() {
 
 
 void Shape::buldConstantBufferViews() {
-	UINT objCBByteSize = calcConstantBufferByteSize(sizeof(ObjectConstants));
-	UINT passCBByteSize = calcConstantBufferByteSize(sizeof(PassConstants));
-	UINT objCount = opaqueRItems_.size();
+	UINT objCBByteSize = static_cast<UINT>(calcConstantBufferByteSize(sizeof(ObjectConstants)));
+	UINT passCBByteSize = static_cast<UINT>(calcConstantBufferByteSize(sizeof(PassConstants)));
+	UINT objCount = static_cast<UINT>(opaqueRItems_.size());
 
 	for (int frameIdx = 0; frameIdx < d3dUlti::kNumFrameResources; ++frameIdx) {
 		auto *pObjCb = frameResources_[frameIdx]->objectCB_->resource();
@@ -380,6 +435,26 @@ void Shape::updatePassConstant(std::shared_ptr<com::GameTimer> pGameTimer) {
 	mainPassCB_.gDeltaTime = pGameTimer->deltaTime();
 
 	currentFrameResource_->passCB_->copyData(0, mainPassCB_);
+}
+
+void Shape::drawRenderItems() {
+	for (auto &rItem : allRenderItems_) {
+		pCommandList_->IASetVertexBuffers(0, 1, RVPtr(rItem->geometry_->getVertexBufferView()));
+		pCommandList_->IASetIndexBuffer(RVPtr(rItem->geometry_->getIndexBufferView()));
+		pCommandList_->IASetPrimitiveTopology(rItem->primitiveType_);
+		UINT cbvIndex = currentFrameIndex_ * opaqueRItems_.size() + rItem->objCBIndex_;
+		auto handle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCbvHeaps_->GetGPUDescriptorHandleForHeapStart());
+		handle.Offset(cbvIndex, cbvSrvUavDescriptorSize_);
+
+		pCommandList_->SetGraphicsRootDescriptorTable(1, handle);
+		pCommandList_->DrawIndexedInstanced(
+			rItem->indexCount_, 
+			1, 
+			rItem->startIndexLocation_, 
+			rItem->baseVertexLocation_, 
+			0
+		);
+	}
 }
 
 int main() {

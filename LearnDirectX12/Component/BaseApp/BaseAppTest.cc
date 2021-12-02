@@ -21,7 +21,7 @@ void TestApp::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	ThrowIfFailed(pCommandAlloc_->Reset());
 	ThrowIfFailed(pCommandList_->Reset(pCommandAlloc_.Get(), nullptr));
 	pCommandList_->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
-		getCurrentBuffer(),
+		getCurrentBackBuffer(),
 		D3D12_RESOURCE_STATE_PRESENT,
 		D3D12_RESOURCE_STATE_RENDER_TARGET
 	)));
@@ -35,18 +35,18 @@ void TestApp::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		(std::cos(pGameTimer->totalTime()) + 1.f) * 0.5f,
 		1.f
 	};
-	pCommandList_->ClearRenderTargetView(currentBackBufferView(), color, 0, nullptr);
-	pCommandList_->ClearDepthStencilView(depthStencilBufferView(),
+	pCommandList_->ClearRenderTargetView(getCurrentBackBufferView(), color, 0, nullptr);
+	pCommandList_->ClearDepthStencilView(getDepthStencilBufferView(),
 		D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr
 	);
 
 	pCommandList_->OMSetRenderTargets(
-		1, RVPtr(currentBackBufferView()), 
-		true, RVPtr(depthStencilBufferView())
+		1, RVPtr(getCurrentBackBufferView()), 
+		true, RVPtr(getDepthStencilBufferView())
 	);
 
 	pCommandList_->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
-		getCurrentBuffer(),
+		getCurrentBackBuffer(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET,
 		D3D12_RESOURCE_STATE_PRESENT
 	)));
@@ -56,7 +56,7 @@ void TestApp::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	pCommandQueue_->ExecuteCommandLists(1, cmdLists);
 
 	ThrowIfFailed(pSwapChain_->Present(0, 0));
-	currBackBufferIndex_ = (currBackBufferIndex_ + 1) % kSwapChainCount;
+	currentBackBufferIndex_ = (currentBackBufferIndex_ + 1) % kSwapChainCount;
 
 	flushCommandQueue();
 }

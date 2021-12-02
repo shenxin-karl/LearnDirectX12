@@ -41,9 +41,9 @@ public:
 	UINT getSampleCount() const;
 	UINT getSampleQuality() const;
 	void flushCommandQueue();
-	D3D12_CPU_DESCRIPTOR_HANDLE  currentBackBufferView() const;
-	D3D12_CPU_DESCRIPTOR_HANDLE  depthStencilBufferView() const;
-	ID3D12Resource *getCurrentBuffer();
+	D3D12_CPU_DESCRIPTOR_HANDLE  getCurrentBackBufferView() const;
+	D3D12_CPU_DESCRIPTOR_HANDLE  getDepthStencilBufferView() const;
+	ID3D12Resource *getCurrentBackBuffer();
 	ID3D12Resource *getDepthStencilBuffer();
 	bool shouldClose() const;
 private:
@@ -74,7 +74,7 @@ protected:
 	UINT cbvSrvUavDescriptorSize_ = 0;
 	bool msaaState_ = false;
 	UINT msaaQuality_ = 0;
-	int  currBackBufferIndex_ = 0;
+	int  currentBackBufferIndex_ = 0;
 	UINT currentFence_ = 0;
 protected:
 	DXGI_FORMAT backBufferFormat_ = DXGI_FORMAT_R8G8B8A8_UNORM;

@@ -46,6 +46,11 @@ private:
 	void buildPSO();
 	void updateObjectConstant();
 	void updatePassConstant(std::shared_ptr<com::GameTimer> pGameTimer);
+	void drawRenderItems();
+private:
+	void onMouseMove(POINT point);
+	void onMouseLPress(POINT point);
+	void onMouseLRelease(POINT point);
 private:
 	std::unordered_map<std::string, std::unique_ptr<MeshGeometry>> geometrice_;
 	std::unordered_map<std::string, ShaderByteCode> shaders_;

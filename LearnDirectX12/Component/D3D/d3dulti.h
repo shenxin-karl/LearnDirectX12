@@ -52,8 +52,8 @@ struct SubmeshGeometry {
 };
 
 struct MeshGeometry {
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView() const;
-	D3D12_INDEX_BUFFER_VIEW indexBufferView() const;
+	D3D12_VERTEX_BUFFER_VIEW getVertexBufferView() const;
+	D3D12_INDEX_BUFFER_VIEW getIndexBufferView() const;
 	void disposeUploaders();
 public:
 	std::string								name;

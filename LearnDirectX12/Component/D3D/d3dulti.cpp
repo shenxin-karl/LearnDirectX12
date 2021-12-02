@@ -104,7 +104,7 @@ Microsoft::WRL::ComPtr<ID3DBlob> compileShader(
 	return byteCode;
 }
 
-D3D12_VERTEX_BUFFER_VIEW MeshGeometry::vertexBufferView() const {
+D3D12_VERTEX_BUFFER_VIEW MeshGeometry::getVertexBufferView() const {
 	return {
 		vertexBufferGPU->GetGPUVirtualAddress(),
 		vertexBufferByteSize,
@@ -112,7 +112,7 @@ D3D12_VERTEX_BUFFER_VIEW MeshGeometry::vertexBufferView() const {
 	};
 }
 
-D3D12_INDEX_BUFFER_VIEW MeshGeometry::indexBufferView() const {
+D3D12_INDEX_BUFFER_VIEW MeshGeometry::getIndexBufferView() const {
 	return {
 		indexBufferGPU->GetGPUVirtualAddress(),
 		indexBufferByteSize,
