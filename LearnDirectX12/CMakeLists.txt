@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 3.8)	
 set(CMAKE_CXX_STANDARD 20)
-
 project(AllProject)
-
-#set(CMAKE_CXX_FLAGS "std:c++latest")
 
 # 获取当前文件夹的子目录
 function(GetCMakeSubDir result rootDir)
