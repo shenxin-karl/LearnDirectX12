@@ -59,7 +59,7 @@ private:
 	std::vector<d3dUlti::RenderItem *> opaqueRItems_;
 	WRL::ComPtr<ID3D12DescriptorHeap> pCbvHeaps_;
 	std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout_;
-	WRL::ComPtr<ID3D12RootSignature> pRootSignature;
+	WRL::ComPtr<ID3D12RootSignature> pRootSignature_;
 
 	UINT passCbvOffset_ = 0;
 	bool isWireframe_ = false;

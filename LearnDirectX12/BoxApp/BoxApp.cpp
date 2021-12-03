@@ -54,8 +54,8 @@ void BoxApp::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		true, RVPtr(getDepthStencilBufferView())
 	);
 
-	pCommandList_->IASetVertexBuffers(0, 1, RVPtr(pBoxGeo_->vertexBufferView()));
-	pCommandList_->IASetIndexBuffer(RVPtr(pBoxGeo_->indexBufferView()));
+	pCommandList_->IASetVertexBuffers(0, 1, RVPtr(pBoxGeo_->getVertexBufferView()));
+	pCommandList_->IASetIndexBuffer(RVPtr(pBoxGeo_->getIndexBufferView()));
 	pCommandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	ID3D12DescriptorHeap *descriptorHeaps[] = { pCbvHeap_.Get() };

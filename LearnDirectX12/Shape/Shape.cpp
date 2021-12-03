@@ -54,6 +54,12 @@ void Shape::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		&scissorRect_
 	);
 	pCommandList_->OMSetRenderTargets(1, RVPtr(getCurrentBackBufferView()), true, RVPtr(getDepthStencilBufferView()));
+	pCommandList_->SetGraphicsRootSignature(pRootSignature_.Get());
+
+	// set pass constant buffer
+	CD3DX12_GPU_DESCRIPTOR_HANDLE handle(pCbvHeaps_->GetGPUDescriptorHandleForHeapStart());
+	handle.Offset(passCbvOffset_ + currentFrameIndex_, cbvSrvUavDescriptorSize_);
+	pCommandList_->SetGraphicsRootDescriptorTable(0, handle);
 
 	drawRenderItems();
 
@@ -370,7 +376,37 @@ void Shape::buildShaderAndInputLayout() {
 }
 
 void Shape::buildRootSignature() {
+	CD3DX12_ROOT_PARAMETER slotRootParameter[1];
+	CD3DX12_DESCRIPTOR_RANGE cbvTable[2];
+	cbvTable[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+	cbvTable[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+	slotRootParameter[0].InitAsDescriptorTable(2, cbvTable);
 
+	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc = {
+		1, slotRootParameter, 0, nullptr,
+		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
+	};
+
+	WRL::ComPtr<ID3DBlob> serializedRootSig = nullptr;
+	WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
+	HRESULT hr = D3D12SerializeRootSignature(
+		&rootSigDesc,
+		D3D_ROOT_SIGNATURE_VERSION_1,
+		&serializedRootSig,
+		&errorBlob
+	);
+
+	if (FAILED(hr)) {
+		OutputDebugString(static_cast<const char *>(errorBlob->GetBufferPointer()));
+		ThrowIfFailed(hr);
+	}
+
+	ThrowIfFailed(pDevice_->CreateRootSignature(
+		0,
+		serializedRootSig->GetBufferPointer(),
+		serializedRootSig->GetBufferSize(),
+		IID_PPV_ARGS(&pRootSignature_)
+	));
 }
 
 void Shape::buildPSO() {
