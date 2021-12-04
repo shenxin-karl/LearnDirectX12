@@ -50,6 +50,7 @@ private:
 	bool initializeD3D();
 	void createCommandObjects();
 	void createRtvAndDsvDescriptorHeaps();
+	void changeWorkDirection() const;
 protected:
 	WRL::ComPtr<ID3D12Device>		pDevice_;
 	WRL::ComPtr<ID3D12Fence>		pFence_;

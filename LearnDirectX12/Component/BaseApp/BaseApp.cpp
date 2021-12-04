@@ -2,18 +2,20 @@
 #include "D3D/d3dulti.h"
 #include "InputSystem/Window.h"
 #include <DirectXColors.h>
+#include <iostream>
 
 namespace com {
 
 bool com::BaseApp::initialize() {
 	pInputSystem_ = std::make_unique<InputSystem>(title_, width_, height_);
+	pInputSystem_->window->setResizeCallback([this](int width, int height) {
+		onResize(width, height);
+	});
 	if (!initializeD3D())
 		return false;
 
 	onResize(width_, height_);
-	pInputSystem_->window->setResizeCallback([this](int width, int height) {
-		onResize(width, height);
-	});
+	changeWorkDirection();
 	return true;
 }
 
@@ -270,13 +272,22 @@ bool com::BaseApp::initializeD3D() {
 	creaetSwapChain();
 
 	createRtvAndDsvDescriptorHeaps();
-
-	BaseApp::onResize(width_, height_);
 	return true;
 }
 
 bool BaseApp::shouldClose() const {
 	return pInputSystem_->shouldClose();
+}
+
+void BaseApp::changeWorkDirection() const {
+	char buffer[128];
+	GetCurrentDirectory(static_cast<DWORD>(std::size(buffer)), buffer);
+	std::string path = buffer;
+	std::string substr = "Build\\";
+	if (auto pos = path.find(substr); pos != std::string::npos) {
+		path.replace(pos, substr.length(), "");
+		SetCurrentDirectory(path.c_str());
+	}
 }
 
 }

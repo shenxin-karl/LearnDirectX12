@@ -31,8 +31,8 @@ void TestApp::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 
 	DX::XMVECTORF32 color = {
 		0.5f,
-		(std::sin(pGameTimer->totalTime()) + 1.f) * 0.5f,
-		(std::cos(pGameTimer->totalTime()) + 1.f) * 0.5f,
+		(std::sin(pGameTimer->getTotalTime()) + 1.f) * 0.5f,
+		(std::cos(pGameTimer->getTotalTime()) + 1.f) * 0.5f,
 		1.f
 	};
 	pCommandList_->ClearRenderTargetView(getCurrentBackBufferView(), color, 0, nullptr);

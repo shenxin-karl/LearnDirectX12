@@ -97,10 +97,10 @@ Microsoft::WRL::ComPtr<ID3DBlob> compileShader(
 		&errors
 	);
 
-	if (hr != S_OK)
+	if (FAILED(hr)) {
 		OutputDebugStringA(static_cast<char *>(errors->GetBufferPointer()));
-
-	ThrowIfFailed(hr);
+		ThrowIfFailed(hr);
+	}
 	return byteCode;
 }
 

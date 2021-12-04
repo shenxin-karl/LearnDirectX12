@@ -78,7 +78,7 @@ void float3Test() {
 	float3 e2 = p3 - p1;
 	float3 myCrossRes = cross(e1, e2);
 	std::cout << "myCrossRes: "	<< myCrossRes << std::endl;
-	float3 dxCrossRes = DX::XMVector3Cross(e1.toVec(), e2.toVec());
+	float3 dxCrossRes = float3(DX::XMVector3Cross(e1.toVec(), e2.toVec()));
 	std::cout << "dxCrossRes: " << dxCrossRes << std::endl;
 	std::cout << "math base axis cross test" << std::endl;
 	float3 x = { 1, 0, 0 };

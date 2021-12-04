@@ -1,6 +1,9 @@
 #include "Shape.h"
+#include "InputSystem/window.h"
 #include "InputSystem/Mouse.h"
+#include "InputSystem/Keyboard.h"
 #include <DirectXColors.h>
+#include <iostream>
 
 D3D12_SHADER_BYTECODE ShaderByteCode::getVsByteCode() const {
 	return { pVsByteCode->GetBufferPointer(), pVsByteCode->GetBufferSize() };
@@ -11,7 +14,28 @@ D3D12_SHADER_BYTECODE ShaderByteCode::getPsByteCode() const {
 }
 
 
+bool Shape::initialize() {
+	if (!BaseApp::initialize())
+		return false;
+
+	ThrowIfFailed(pCommandList_->Reset(pCommandAlloc_.Get(), nullptr));
+	buildShapeGeometry();
+	buildRenderItems();
+	buildFrameResources();
+	buildDescriptorHeaps();
+	buldConstantBufferViews();
+	buildShaderAndInputLayout();
+	buildRootSignature();
+	buildPSO();
+	ThrowIfFailed(pCommandList_->Close());
+	ID3D12CommandList *cmdLists[] = { pCommandList_.Get() };
+	pCommandQueue_->ExecuteCommandLists(1, cmdLists);
+	flushCommandQueue();
+	return true;
+}
+
 void Shape::beginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
+	BaseApp::beginTick(pGameTimer);
 	pollEvent();
 
 	currentFrameIndex_ = (currentFrameIndex_ + 1) % d3dUlti::kNumFrameResources;
@@ -19,22 +43,25 @@ void Shape::beginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 
 	int currFence = currentFrameResource_->fence_;
 	if (currentFrameResource_->fence_ != 0 && pFence_->GetCompletedValue() < currFence) {
-		HANDLE event = CreateEventEx(nullptr, false, false, EVENT_ALL_ACCESS);
+		HANDLE event = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
 		ThrowIfFailed(pFence_->SetEventOnCompletion(currFence, event));
 		WaitForSingleObject(event, INFINITE);
 		CloseHandle(event);
 	}
 
+	updateViewMatrix();
 	updatePassConstant(pGameTimer);
 	updateObjectConstant();
 }
 
 void Shape::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
-	pCommandAlloc_->Reset();
+	BaseApp::tick(pGameTimer);
+	auto &pCmdAlloc = currentFrameResource_->cmdListAlloc_;
+	pCmdAlloc->Reset();
 	if (isWireframe_)
-		pCommandList_->Reset(pCommandAlloc_.Get(), PSOs_["shapeGeo"].Get());
+		pCommandList_->Reset(pCmdAlloc.Get(), PSOs_["shapeGeoWire"].Get());
 	else
-		pCommandList_->Reset(pCommandAlloc_.Get(), PSOs_["shapeGeoWire"].Get());
+		pCommandList_->Reset(pCmdAlloc.Get(), PSOs_["shapeGeo"].Get());
 	
 	pCommandList_->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
 		getCurrentBackBuffer(),
@@ -55,6 +82,8 @@ void Shape::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	);
 	pCommandList_->OMSetRenderTargets(1, RVPtr(getCurrentBackBufferView()), true, RVPtr(getDepthStencilBufferView()));
 	pCommandList_->SetGraphicsRootSignature(pRootSignature_.Get());
+	ID3D12DescriptorHeap *descriptorHeaps[] = { pCbvHeaps_.Get() };
+	pCommandList_->SetDescriptorHeaps(1, descriptorHeaps);
 
 	// set pass constant buffer
 	CD3DX12_GPU_DESCRIPTOR_HANDLE handle(pCbvHeaps_->GetGPUDescriptorHandleForHeapStart());
@@ -62,6 +91,12 @@ void Shape::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	pCommandList_->SetGraphicsRootDescriptorTable(0, handle);
 
 	drawRenderItems();
+
+	pCommandList_->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
+		getCurrentBackBuffer(),
+		D3D12_RESOURCE_STATE_RENDER_TARGET,
+		D3D12_RESOURCE_STATE_PRESENT
+	)));
 
 	ThrowIfFailed(pCommandList_->Close());
 	ID3D12CommandList *cmdsList[] = { pCommandList_.Get() };
@@ -73,7 +108,8 @@ void Shape::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 }
 
 void Shape::onResize(int width, int height) {
-	constexpr float fov = 90.f;
+	BaseApp::onResize(width, height);
+	constexpr float fov = DX::XMConvertToRadians(45.f);
 	float aspect = static_cast<float>(width) / static_cast<float>(height);
 	DX::XMMATRIX projMat = DX::XMMatrixPerspectiveFovLH(fov, aspect, 0.1f, 100.f);
 	DX::XMStoreFloat4x4(&proj_, projMat);
@@ -92,18 +128,21 @@ void Shape::pollEvent() {
 		case com::Mouse::Move:
 			onMouseMove(point);
 			break;
+		case com::Mouse::Wheel:
+			onMouseWhell(event.offset_);
+			break;
 		}
+	}
+	while (auto event = pInputSystem_->keyboard->readChar()) {
+		if (event.isPressed())
+			onKeyDown(event.getCharacter());
 	}
 }
 
 void Shape::buildFrameResources() {
-	for (int i = 0; i < d3dUlti::kNumFrameResources; ++i) {
-		frameResources_.push_back(std::make_unique<FrameResource>(
-			pDevice_.Get(),
-			1,
-			allRenderItems_.size()
-		));
-	}
+	UINT itemSize = static_cast<UINT>(allRenderItems_.size());
+	for (int i = 0; i < d3dUlti::kNumFrameResources; ++i) 
+		frameResources_.push_back(std::make_unique<FrameResource>(pDevice_.Get(), 1, itemSize));
 }
 
 void Shape::buildShapeGeometry() {
@@ -154,7 +193,7 @@ void Shape::buildShapeGeometry() {
 	vertices.reserve(totalVertexCount);
 	auto vertIter = std::back_inserter(vertices);
 	std::transform(box.vertices.begin(), box.vertices.end(), vertIter, [](const com::Vertex &vert) {
-		return ShapeVertex{ vert.position, float4(DX::Colors::DarkGreen) };
+		return ShapeVertex{ vert.position, float4(DX::Colors::Peru) };
 	});
 	std::transform(grid.vertices.begin(), grid.vertices.end(), vertIter, [](const com::Vertex &vert) {
 		return ShapeVertex{ vert.position, float4(DX::Colors::ForestGreen) };
@@ -214,9 +253,9 @@ void Shape::buildShapeGeometry() {
 		pMeshGeo->indexBufferUploader
 	);
 
-	pMeshGeo->vertexBufferByteSize = sizeof(ShapeVertex);
+	pMeshGeo->vertexByteStride = sizeof(ShapeVertex);
 	pMeshGeo->vertexBufferByteSize = vbByteSize;
-	pMeshGeo->indexBufferByteSize = DXGI_FORMAT_R16_UINT;
+	pMeshGeo->indexBufferFormat = DXGI_FORMAT_R16_UINT;
 	pMeshGeo->indexBufferByteSize = ibByteSize;
 
 	pMeshGeo->drawArgs["box"] = boxSubmesh;
@@ -329,8 +368,7 @@ void Shape::buldConstantBufferViews() {
 	for (int frameIdx = 0; frameIdx < d3dUlti::kNumFrameResources; ++frameIdx) {
 		auto *pObjCb = frameResources_[frameIdx]->objectCB_->resource();
 		for (UINT i = 0; i < objCount; ++i) {
-			auto address = pObjCb->GetGPUVirtualAddress();
-			address += static_cast<UINT64>(i * objCBByteSize);
+			auto address = frameResources_[frameIdx]->objectCB_->getGPUAddressByIndex(i);
 			int heapIndex = frameIdx * objCount + i;
 			CD3DX12_CPU_DESCRIPTOR_HANDLE handle(pCbvHeaps_->GetCPUDescriptorHandleForHeapStart());
 			handle.Offset(heapIndex, cbvSrvUavDescriptorSize_);
@@ -343,10 +381,7 @@ void Shape::buldConstantBufferViews() {
 	}
 
 	for (int frameIdx = 0; frameIdx < d3dUlti::kNumFrameResources; ++frameIdx) {
-		auto *pPassCb = frameResources_[frameIdx]->passCB_->resource();
-		auto address = pPassCb->GetGPUVirtualAddress();
-		address += static_cast<UINT64>(frameIdx * passCBByteSize);
-
+		auto address = frameResources_[frameIdx]->passCB_->getGPUAddressByIndex(0);
 		auto heapIndex = passCbvOffset_ + frameIdx;
 		CD3DX12_CPU_DESCRIPTOR_HANDLE handle(pCbvHeaps_->GetCPUDescriptorHandleForHeapStart());
 		handle.Offset(heapIndex, cbvSrvUavDescriptorSize_);
@@ -376,14 +411,15 @@ void Shape::buildShaderAndInputLayout() {
 }
 
 void Shape::buildRootSignature() {
-	CD3DX12_ROOT_PARAMETER slotRootParameter[1];
+	CD3DX12_ROOT_PARAMETER slotRootParameter[2];
 	CD3DX12_DESCRIPTOR_RANGE cbvTable[2];
 	cbvTable[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 	cbvTable[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
-	slotRootParameter[0].InitAsDescriptorTable(2, cbvTable);
+	slotRootParameter[0].InitAsDescriptorTable(1, &cbvTable[0]);
+	slotRootParameter[1].InitAsDescriptorTable(1, &cbvTable[1]);
 
 	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc = {
-		1, slotRootParameter, 0, nullptr,
+		2, slotRootParameter, 0, nullptr,
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
 	};
 
@@ -412,7 +448,7 @@ void Shape::buildRootSignature() {
 void Shape::buildPSO() {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
 	memset(&psoDesc, 0, sizeof(psoDesc));
-	//psoDesc.pRootSignature
+	psoDesc.pRootSignature = pRootSignature_.Get();
 	psoDesc.VS = shaders_["shapeGeo"].getVsByteCode();
 	psoDesc.PS = shaders_["shapeGeo"].getPsByteCode();
 	psoDesc.BlendState = CD3DX12_BLEND_DESC(CD3DX12_DEFAULT{});
@@ -421,11 +457,17 @@ void Shape::buildPSO() {
 	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(CD3DX12_DEFAULT{});
 	psoDesc.InputLayout = { inputLayout_.data(), static_cast<UINT>(inputLayout_.size()) };
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDesc.NumRenderTargets = 1;
 	psoDesc.RTVFormats[0] = backBufferFormat_;
 	psoDesc.DSVFormat = depthStencilFormat_;
 	psoDesc.SampleDesc = { getSampleCount(), getSampleQuality() };
 	auto &pso = PSOs_["shapeGeo"];
 	ThrowIfFailed(pDevice_->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pso)));
+
+	auto wirePsoDesc = psoDesc;
+	wirePsoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
+	auto &wirePSO = PSOs_["shapeGeoWire"];
+	ThrowIfFailed(pDevice_->CreateGraphicsPipelineState(&wirePsoDesc, IID_PPV_ARGS(&wirePSO)));
 }
 
 void Shape::updateObjectConstant() {
@@ -435,7 +477,7 @@ void Shape::updateObjectConstant() {
 			DX::XMMATRIX world = DX::XMLoadFloat4x4(&rItem->world);
 			ObjectConstants objConstant;
 			DX::XMStoreFloat4x4(&objConstant.gWorld, world);
-			pCurrObjCB->copyData(0, objConstant);
+			pCurrObjCB->copyData(rItem->objCBIndex_, objConstant);
 			--rItem->numFramesDirty;
 		}
 	}
@@ -462,13 +504,14 @@ void Shape::updatePassConstant(std::shared_ptr<com::GameTimer> pGameTimer) {
 	DX::XMStoreFloat4x4(&mainPassCB_.gInvProj, invProj);
 	DX::XMStoreFloat4x4(&mainPassCB_.gViewProj, viewProj);
 	DX::XMStoreFloat4x4(&mainPassCB_.gInvView, invViewProj);
+	mainPassCB_.cbPerObjectPad1 = 0.f;
 	mainPassCB_.gEyePos = eyePos_;
 	mainPassCB_.gRenderTargetSize = float2(width_, height_);
 	mainPassCB_.gInvRenderTargetSize = float2(1.f / width_, 1.f / height_);
 	mainPassCB_.gNearZ = zNear;
 	mainPassCB_.gFarZ = zFar;
-	mainPassCB_.gTotalTime = pGameTimer->totalTime();
-	mainPassCB_.gDeltaTime = pGameTimer->deltaTime();
+	mainPassCB_.gTotalTime = pGameTimer->getTotalTime();
+	mainPassCB_.gDeltaTime = pGameTimer->getDeltaTime();
 
 	currentFrameResource_->passCB_->copyData(0, mainPassCB_);
 }
@@ -478,7 +521,7 @@ void Shape::drawRenderItems() {
 		pCommandList_->IASetVertexBuffers(0, 1, RVPtr(rItem->geometry_->getVertexBufferView()));
 		pCommandList_->IASetIndexBuffer(RVPtr(rItem->geometry_->getIndexBufferView()));
 		pCommandList_->IASetPrimitiveTopology(rItem->primitiveType_);
-		UINT cbvIndex = currentFrameIndex_ * opaqueRItems_.size() + rItem->objCBIndex_;
+		UINT cbvIndex = currentFrameIndex_ * static_cast<UINT>(opaqueRItems_.size()) + rItem->objCBIndex_;
 		auto handle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCbvHeaps_->GetGPUDescriptorHandleForHeapStart());
 		handle.Offset(cbvIndex, cbvSrvUavDescriptorSize_);
 
@@ -493,6 +536,70 @@ void Shape::drawRenderItems() {
 	}
 }
 
-int main() {
 
+void Shape::updateViewMatrix() {
+	float cosTheta = std::cos(DX::XMConvertToRadians(theta_));
+	float sinTheta = std::sin(DX::XMConvertToRadians(theta_));
+	float cosPhi = std::cos(DX::XMConvertToRadians(phi_));
+	float sinPhi = std::sin(DX::XMConvertToRadians(phi_));
+	float3 lookfrom = {
+		cosTheta * cosPhi,
+		sinTheta,
+		cosTheta * sinPhi,
+	};
+	lookfrom *= radius_;
+	float3 lookat = float3(0);
+	float3 worldUp = float3(0, 1, 0);
+	DX::XMMATRIX view = DX::XMMatrixLookAtLH(lookfrom.toVec(), lookat.toVec(), worldUp.toVec());
+	DX::XMStoreFloat4x4(&view_, view);
+}
+
+
+void Shape::onKeyDown(char key) {
+	if (key == '1')
+		isWireframe_ = !isWireframe_;
+}
+
+
+void Shape::onMouseWhell(float offset) {
+	radius_ = std::clamp(radius_ - offset, 1.f, 100.f);
+}
+
+void Shape::onMouseMove(POINT point) {
+	if (isLeftPressd) {
+		constexpr float sensitivity = DX::XM_2PI / 360.f * 10;
+		float dx = (point.x - lastMousePos_.x) * sensitivity;
+		float dy = (point.y - lastMousePos_.y) * sensitivity;
+		theta_ = std::clamp(theta_+dy, -89.f, +89.f);;
+		phi_ -= dx;
+	}
+	lastMousePos_ = point;
+}
+
+
+void Shape::onMouseLPress(POINT point) {
+	isLeftPressd = true;
+}
+
+
+void Shape::onMouseLRelease(POINT point) {
+	isLeftPressd = false;
+}
+
+int main() {
+	std::shared_ptr<com::GameTimer> pGameTimer = std::make_shared<com::GameTimer>();
+	Shape app;
+	try {
+		app.initialize();
+		while (!app.shouldClose()) {
+			pGameTimer->newFrame();
+			app.beginTick(pGameTimer);
+			app.tick(pGameTimer);
+			app.endTick(pGameTimer);
+		}
+	} catch (const std::exception &e) {
+		std::cerr << e.what() << std::endl;
+		MessageBox(nullptr, e.what(), "Error", MB_OK | MB_ICONHAND);
+	}
+	return 0;
 }

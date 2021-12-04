@@ -10,9 +10,9 @@ public:
 	void reset();
 	void start();
 	void stop();
-	void tick();
-	float totalTime() const;
-	float deltaTime() const;
+	void newFrame();
+	float getTotalTime() const;
+	float getDeltaTime() const;
 	std::uint32_t FPS() const;
 	float mspf() const;
 	bool oneSecondTrigger() const;

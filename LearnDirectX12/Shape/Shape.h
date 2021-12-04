@@ -47,7 +47,10 @@ private:
 	void updateObjectConstant();
 	void updatePassConstant(std::shared_ptr<com::GameTimer> pGameTimer);
 	void drawRenderItems();
+	void updateViewMatrix();
 private:
+	void onKeyDown(char key);
+	void onMouseWhell(float offset);
 	void onMouseMove(POINT point);
 	void onMouseLPress(POINT point);
 	void onMouseLRelease(POINT point);
@@ -64,6 +67,7 @@ private:
 	UINT passCbvOffset_ = 0;
 	bool isWireframe_ = false;
 	POINT lastMousePos_;
+	bool isLeftPressd = false;
 	PassConstants mainPassCB_;
 
 	float theta_ = 0.f;

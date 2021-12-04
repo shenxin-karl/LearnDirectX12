@@ -14,18 +14,20 @@ public:
 	UploadBuffer(const UploadBuffer &) = delete;
 	UploadBuffer &operator=(const UploadBuffer &) = delete;
 	ID3D12Resource *resource() const;
-	void copyData(int elementIndex, const T &data);
+	void copyData(UINT elementIndex, const T &data);
+	auto getGPUAddressByIndex(UINT elementIndex) const;
 	~UploadBuffer();
 private:
 	WRL::ComPtr<ID3D12Resource>		uploadBuffer_;
 	BYTE						   *mappedData_;
 	UINT							elementByteSize_;
+	UINT							elementCout_;
 	bool							isConstanBuffer_;
 };
 
 template<typename T>
 UploadBuffer<T>::UploadBuffer(ID3D12Device *device, UINT elementCout, bool isConstanBuffer)
-: isConstanBuffer_(isConstanBuffer) {
+: isConstanBuffer_(isConstanBuffer), elementCout_(elementCout) {
 	elementByteSize_ = sizeof(T);
 	if (isConstanBuffer_)
 		elementByteSize_ = static_cast<UINT>(calcConstantBufferByteSize(sizeof(T)));
@@ -54,9 +56,19 @@ ID3D12Resource *UploadBuffer<T>::resource() const {
 
 
 template<typename T>
-void UploadBuffer<T>::copyData(int elementIndex, const T &data) {
+void UploadBuffer<T>::copyData(UINT elementIndex, const T &data) {
 	assert(mappedData_ != nullptr);
+	assert(elementIndex < elementCout_);
 	memcpy(&mappedData_[elementIndex * elementByteSize_], &data, sizeof(T));
+}
+
+template<typename T>
+auto UploadBuffer<T>::getGPUAddressByIndex(UINT elementIndex) const {
+	assert(elementIndex < elementCout_);
+	auto address = resource()->GetGPUVirtualAddress();
+	using type = decltype(address);
+	address += static_cast<type>(elementIndex) * elementByteSize_;
+	return address;
 }
 
 template<typename T>

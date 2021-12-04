@@ -244,36 +244,30 @@ MeshData GometryGenerator::createBox(float width, float height, float depth, uin
 	float y = 0.5f * height;
 	float z = 0.5f * depth;
 	std::vector<Vertex> vertices = {
-		// front
-		Vertex{ float3(-x, -y, +z), float2(0, 0), float3(+0, +0, +1), },
-		Vertex{ float3(-x, +y, +z), float2(0, 1), float3(+0, +0, +1), },
-		Vertex{ float3(+x, +y, +z), float2(1, 1), float3(+0, +0, +1), },
-		Vertex{ float3(+x, -y, +z), float2(1, 0), float3(+0, +0, +1), },
-		// right
-		Vertex{ float3(+x, -y, +z), float2(0, 0), float3(+0, +0, +1), },
-		Vertex{ float3(+x, +y, +z), float2(0, 1), float3(+0, +0, +1), },
-		Vertex{ float3(+x, +y, -z), float2(1, 1), float3(+0, +0, +1), },
-		Vertex{ float3(+x, -y, -z), float2(1, 0), float3(+0, +0, +1), },
-		// top
-		Vertex{ float3(-x, +y, +z), float2(0, 0), float3(+0, +0, +1), },
-		Vertex{ float3(+x, +y, +z), float2(0, 1), float3(+0, +0, +1), },
-		Vertex{ float3(+x, +y, -z), float2(1, 1), float3(+0, +0, +1), },
-		Vertex{ float3(-x, +y, -z), float2(1, 0), float3(+0, +0, +1), },
-		// left
-		Vertex{ float3(-x, -y, -z), float2(0, 0), float3(+0, +0, +1), },
-		Vertex{ float3(-x, +y, -z), float2(0, 1), float3(+0, +0, +1), },
-		Vertex{ float3(-x, +y, +z), float2(1, 1), float3(+0, +0, +1), },
-		Vertex{ float3(-x, -y, +z), float2(1, 0), float3(+0, +0, +1), },
-		// bottom
-		Vertex{ float3(-x, -y, -z), float2(0, 0), float3(+0, +0, +1), },
-		Vertex{ float3(+x, -y, -z), float2(0, 1), float3(+0, +0, +1), },
-		Vertex{ float3(+x, -y, +z), float2(1, 1), float3(+0, +0, +1), },
-		Vertex{ float3(-x, -y, +z), float2(1, 0), float3(+0, +0, +1), },
-		// back
-		Vertex{ float3(-x, +y, -z), float2(0, 0), float3(+0, +0, +1), },
-		Vertex{ float3(-x, -y, -z), float2(0, 1), float3(+0, +0, +1), },
-		Vertex{ float3(+x, -y, -z), float2(1, 1), float3(+0, +0, +1), },
-		Vertex{ float3(+x, +y, -z), float2(1, 0), float3(+0, +0, +1), },
+		{ Vertex{ float3(-x, -y, -z), float2(0.0f, 1.0f), } },
+		{ Vertex{ float3(-x, +y, -z), float2(0.0f, 0.0f), } },
+		{ Vertex{ float3(+x, +y, -z), float2(1.0f, 0.0f), } },
+		{ Vertex{ float3(+x, -y, -z), float2(1.0f, 1.0f), } },
+		{ Vertex{ float3(-x, -y, +z), float2(1.0f, 1.0f), } },
+		{ Vertex{ float3(+x, -y, +z), float2(0.0f, 1.0f), } },
+		{ Vertex{ float3(+x, +y, +z), float2(0.0f, 0.0f), } },
+		{ Vertex{ float3(-x, +y, +z), float2(1.0f, 0.0f), } },
+		{ Vertex{ float3(-x, +y, -z), float2(0.0f, 1.0f), } },
+		{ Vertex{ float3(-x, +y, +z), float2(0.0f, 0.0f), } },
+		{ Vertex{ float3(+x, +y, +z), float2(1.0f, 0.0f), } },
+		{ Vertex{ float3(+x, +y, -z), float2(1.0f, 1.0f), } },
+		{ Vertex{ float3(-x, -y, -z), float2(1.0f, 1.0f), } },
+		{ Vertex{ float3(+x, -y, -z), float2(0.0f, 1.0f), } },
+		{ Vertex{ float3(+x, -y, +z), float2(0.0f, 0.0f), } },
+		{ Vertex{ float3(-x, -y, +z), float2(1.0f, 0.0f), } },
+		{ Vertex{ float3(-x, -y, +z), float2(0.0f, 1.0f), } },
+		{ Vertex{ float3(-x, +y, +z), float2(0.0f, 0.0f), } },
+		{ Vertex{ float3(-x, +y, -z), float2(1.0f, 0.0f), } },
+		{ Vertex{ float3(-x, -y, -z), float2(1.0f, 1.0f), } },
+		{ Vertex{ float3(+x, -y, -z), float2(0.0f, 1.0f), } },
+		{ Vertex{ float3(+x, +y, -z), float2(0.0f, 0.0f), } },
+		{ Vertex{ float3(+x, +y, +z), float2(1.0f, 0.0f), } },
+		{ Vertex{ float3(+x, -y, +z), float2(1.0f, 1.0f), } },
 	};
 	std::vector<uint32> indices = {
 		// front
@@ -382,28 +376,28 @@ MeshData GometryGenerator::createGrid(float width, float depth, uint32 m, uint32
 	std::vector<Vertex> vertices;
 	float left = -0.5f * width;
 	float right = +0.5f * width;
-	float front = +0.5f * depth;
-	float back = -0.5f * depth;
-	for (uint32 i = 0; i < m+1; ++i) {
-		for (uint32 j = 0; j < n+1; ++j) {
-			float u = float(i) / float(m);
-			float v = float(j) / float(n);
+	float far = +0.5f * depth;
+	float near = -0.5f * depth;
+	for (uint32 zi = 0; zi < n+1; ++zi) {
+		for (uint32 xi = 0; xi < m+1; ++xi) {
+			float u = float(xi) / float(m);
+			float v = float(zi) / float(n);
 			float x = MathHelper::lerp(left, right, u);
-			float z = MathHelper::lerp(front, back, v);
+			float z = MathHelper::lerp(far, near, v);
 			vertices.push_back(Vertex{ float3(x, 0, z), float2(u, v) });
 		}
 	}
 
 	std::vector<uint32> indices;
-	uint32 sliceSize = n+1;
-	for (uint32 i = 0; i < m; ++i) {
-		for (uint32 j = 0; j < n; ++j) {
-			indices.push_back((i+0) * sliceSize + (j+0));
-			indices.push_back((i+0) * sliceSize + (j+1));
-			indices.push_back((i+1) * sliceSize + (j+0));
-			indices.push_back((i+0) * sliceSize + (j+1));
-			indices.push_back((i+1) * sliceSize + (j+0));
-			indices.push_back((i+1) * sliceSize + (j+1));
+	uint32 sliceSize = m+1;
+	for (uint32 zi = 0; zi < n; ++zi) {
+		for (uint32 xi = 0; xi < m; ++xi) {
+			indices.push_back((zi+0) * sliceSize + (xi+0));
+			indices.push_back((zi+0) * sliceSize + (xi+1));
+			indices.push_back((zi+1) * sliceSize + (xi+0));
+			indices.push_back((zi+1) * sliceSize + (xi+0));
+			indices.push_back((zi+0) * sliceSize + (xi+1));
+			indices.push_back((zi+1) * sliceSize + (xi+1));
 		}
 	}
 	MeshData mesh = { std::move(vertices), std::move(indices) };

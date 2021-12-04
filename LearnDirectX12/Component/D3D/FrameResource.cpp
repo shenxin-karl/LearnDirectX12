@@ -1,6 +1,7 @@
 #include "FrameResource.h"
 
 FrameResource::FrameResource(ID3D12Device *device, UINT passCount, UINT objectCount) {
+	assert(objectCount != 0);
 	ThrowIfFailed(device->CreateCommandAllocator(
 		D3D12_COMMAND_LIST_TYPE_DIRECT,
 		IID_PPV_ARGS(&cmdListAlloc_)

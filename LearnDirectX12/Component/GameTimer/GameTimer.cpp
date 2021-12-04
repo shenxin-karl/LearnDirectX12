@@ -38,7 +38,7 @@ void GameTimer::stop() {
 	stoppedTime_ = chrono::steady_clock::now();
 }
 
-void GameTimer::tick() {
+void GameTimer::newFrame() {
 	if (stopped_)
 		return;
 
@@ -57,12 +57,12 @@ void GameTimer::tick() {
 	}
 }
 
-float GameTimer::totalTime() const {
+float GameTimer::getTotalTime() const {
 	chrono::duration<float> diff = chrono::steady_clock::now() - baseTime_;
 	return diff.count() - pausedTime_;
 }
 
-float GameTimer::deltaTime() const {
+float GameTimer::getDeltaTime() const {
 	return deltaTime_;
 }
 

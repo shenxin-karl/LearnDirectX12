@@ -154,13 +154,20 @@ void createShapeTest() {
 	mesh.save("createShapeTest.obj");
 }
 
+void createGridTest() {
+	com::GometryGenerator gen;
+	auto mesh = gen.createGrid(20.0f, 30.0f, 60, 40);
+	mesh.save("createGridTest.obj");
+}
+
 int main() {
 	//halfEdgeTest();
 	//saveObjTest();
-	//createBoxTest();
+	createBoxTest();
 	//createCylinderTest();
 	//loopSubdivisionTest();
 	//loopBetaTest();
 	//createShapeTest();
+	//createGridTest();
 	return 0;
 }

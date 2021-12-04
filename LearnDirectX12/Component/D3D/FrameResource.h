@@ -32,9 +32,9 @@ public:
 	FrameResource(ID3D12Device *device, UINT passCount, UINT objectCount);
 	~FrameResource() = default;
 public:
-	WRL::ComPtr<ID3D12CommandAllocator>	cmdListAlloc_;
-	std::unique_ptr<UploadBuffer<PassConstants>> passCB_;
-	std::unique_ptr<UploadBuffer<ObjectConstants>> objectCB_;
-	UINT fence_;
+	WRL::ComPtr<ID3D12CommandAllocator>	cmdListAlloc_ = nullptr;
+	std::unique_ptr<UploadBuffer<PassConstants>> passCB_ = nullptr;
+	std::unique_ptr<UploadBuffer<ObjectConstants>> objectCB_ = nullptr;
+	UINT fence_ = 0;
 };
 
