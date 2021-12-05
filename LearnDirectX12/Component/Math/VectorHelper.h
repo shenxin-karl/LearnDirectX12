@@ -25,7 +25,7 @@ public:
 	FORCEINLINE VectorHelper &operator=(VectorHelper &&) = default;
 	using DX::XMFLOAT2::XMFLOAT2;
 	using DX::XMFLOAT2::operator=;
-	FORCEINLINE VectorHelper(DX::FXMVECTOR v) {
+	FORCEINLINE explicit VectorHelper(DX::FXMVECTOR v) {
 		x = DX::XMVectorGetX(v);
 		y = DX::XMVectorGetY(v);
 	}
@@ -123,21 +123,21 @@ public:
 	FORCEINLINE VectorHelper &operator=(VectorHelper &&) = default;
 	using DX::XMFLOAT4::XMFLOAT4;
 	using DX::XMFLOAT4::operator=;
-	FORCEINLINE VectorHelper(DX::FXMVECTOR v) {
+	FORCEINLINE explicit VectorHelper(DX::FXMVECTOR v) {
 		x = DX::XMVectorGetX(v);
 		y = DX::XMVectorGetY(v);
 		z = DX::XMVectorGetZ(v);
 		w = DX::XMVectorGetW(v);
 	}
 	template<typename T> requires(std::is_convertible_v<T, float>)
-	FORCEINLINE VectorHelper(T v) 
+	FORCEINLINE explicit VectorHelper(T v) 
 	: DX::XMFLOAT4(float(v), float(v), float(v), float(v)) {
 
 	}
 	template<typename T1, typename T2, typename T3, typename T4>
 	requires(std::is_convertible_v<T1, float> && std::is_convertible_v<T2, float> &&
 			 std::is_convertible_v<T3, float> && std::is_convertible_v<T4, float>)
-	FORCEINLINE explicit VectorHelper(T1 x, T2 y, T3 z, T4 w)
+	FORCEINLINE VectorHelper(T1 x, T2 y, T3 z, T4 w)
 	: DX::XMFLOAT4(float(x), float(y), float(z), float(w)) {
 
 	}
