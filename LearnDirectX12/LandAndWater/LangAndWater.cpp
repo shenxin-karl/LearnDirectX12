@@ -136,7 +136,35 @@ void LangAndWater::buildShaderAndInputLayout() {
 }
 
 void LangAndWater::buildRootSignature() {
+	CD3DX12_ROOT_PARAMETER rootParameter[2];
+	rootParameter[0].InitAsConstantBufferView(0);
+	rootParameter[1].InitAsConstantBufferView(1);
 
+	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc = {
+		2, rootParameter, 0, nullptr,
+		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
+	};
+
+	WRL::ComPtr<ID3DBlob> serializedRootSig = nullptr;
+	WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
+	HRESULT hr = D3D12SerializeRootSignature(
+		&rootSigDesc,
+		D3D_ROOT_SIGNATURE_VERSION_1,
+		&serializedRootSig,
+		&errorBlob
+	);
+
+	if (FAILED(hr)) {
+		OutputDebugString(static_cast<const char *>(errorBlob->GetBufferPointer()));
+		ThrowIfFailed(hr);
+	}
+
+	ThrowIfFailed(pDevice_->CreateRootSignature(
+		0,
+		serializedRootSig->GetBufferPointer(),
+		serializedRootSig->GetBufferSize(),
+		IID_PPV_ARGS(&pRootSignature_)
+	));
 }
 
 void LangAndWater::buildPSO() {

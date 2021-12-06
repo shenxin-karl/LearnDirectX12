@@ -5,6 +5,7 @@
 #include "Math/MathHelper.h"
 #include "D3D/RenderItem.h"
 #include "D3D/FrameResource.h"
+#include <d3d12.h>
 
 using namespace vec;
 using namespace mat;
