@@ -1,6 +1,34 @@
 #include "LangAndWater.h"
 #include "Geometry/GeometryGenerator.h"
 #include "GameTimer/GameTimer.h"
+#include "InputSystem/Mouse.h"
+#include "InputSystem/Keyboard.h"
+
+D3D12_SHADER_BYTECODE Shader::getVsByteCode() const {
+	return { pVsByteCode->GetBufferPointer(), pVsByteCode->GetBufferSize() };
+}
+
+D3D12_SHADER_BYTECODE Shader::getPsByteCode() const {
+	return { pPsByteCode->GetBufferPointer(), pPsByteCode->GetBufferSize() };
+}
+
+bool LangAndWater::initialize() {
+	if (!BaseApp::initialize())
+		return false;
+
+	pCommandAlloc_->Reset();
+	pCommandList_->Reset(pCommandAlloc_.Get(), nullptr);
+	buildLandGeometry();
+	buildRenderItems();
+	buildFrameResource();
+	buildShaderAndInputLayout();
+	buildPSO();
+	ThrowIfFailed(pCommandList_->Close());
+	ID3D12CommandList *cmdLists[] = { pCommandList_.Get() };
+	pCommandQueue_->ExecuteCommandLists(1, cmdLists);
+	flushCommandQueue();
+	return true;
+}
 
 void LangAndWater::buildFrameResource() {
 	UINT objectCount = static_cast<UINT>(allRenderItem_.size());
@@ -90,6 +118,33 @@ void LangAndWater::buildRenderItems() {
 	allRenderItem_.push_back(item);
 }
 
+void LangAndWater::buildShaderAndInputLayout() {
+	inputLayout_ = {
+		{
+			"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(Vertex, position),
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0,
+		},
+		{
+			"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(Vertex, color),
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0,
+		},
+	};
+
+	WRL::ComPtr<ID3DBlob> pVsByteCode = compileShader(L"shader/color.hlsl", nullptr, "VS", "vs_5_0");
+	WRL::ComPtr<ID3DBlob> pPsByteCode = compileShader(L"shader/color.hlsl", nullptr, "PS", "ps_5_0");
+	shaders_["landGeo"] = { pVsByteCode, pPsByteCode };
+}
+
+void LangAndWater::buildRootSignature() {
+
+}
+
+void LangAndWater::buildPSO() {
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
+	memset(&psoDesc, 0, sizeof(psoDesc));
+
+}
+
 void LangAndWater::updatePassConstantBuffer(std::shared_ptr<com::GameTimer> pGameTimer) {
 	DX::XMVECTOR det;
 	DX::XMMATRIX view = DX::XMLoadFloat4x4(&view_);
@@ -131,6 +186,61 @@ void LangAndWater::updateObjectConstantBuffer() {
 	}
 }
 
+void LangAndWater::updateViewMatrix() {
+	float sinTheta = std::sin(DX::XMConvertToRadians(theta_));
+	float cosTheta = std::cos(DX::XMConvertToRadians(theta_));
+	float sinPhi = std::sin(DX::XMConvertToRadians(phi_));
+	float cosPhi = std::cos(DX::XMConvertToRadians(phi_));
+	float3 lookat = float3(0);
+	float3 lookup = float3(0, 1, 0);
+	float3 lookfrom = {
+		cosTheta * cosPhi,
+		sinTheta,
+		cosTheta * sinPhi,
+	};
+	lookfrom *= radius_;
+	DX::XMMATRIX view = DX::XMMatrixLookAtLH(lookfrom.toVec(), lookat.toVec(), lookup.toVec());
+	DX::XMStoreFloat4x4(&view_, view);
+}
+
 float LangAndWater::getHillsHeight(float x, float z) {
 	return 0.3f * (z * std::sin(0.1f * x) + x * std::cos(0.1f * z));
+}
+
+void LangAndWater::handleEvent() {
+	while (auto event = pInputSystem_->mouse->getEvent()) {
+		switch (event.state_) {
+		case com::Mouse::LPress:
+			onMouseLPress();
+			break;
+		case com::Mouse::LRelease:
+			onMouseLRelease();
+			break;
+		case com::Mouse::Move:
+			onMouseMove({ event.x, event.y });
+			break;
+		}
+	}
+	while (auto event = pInputSystem_->keyboard->readChar())
+		onCharacter(event.getCharacter());
+	
+}
+
+void LangAndWater::onMouseMove(POINT point) {
+	if (isLeftPressed_) {
+		constexpr float sensitivity = 360.f / 20.f;
+		float dx = (point.x - lastMousePos_.x) * sensitivity;
+		float dy = (point.y - lastMousePos_.y) * sensitivity;
+		theta_ = std::clamp(theta_ + dy, -89.f, +89.f);
+		phi_ -= dx;
+	}
+	lastMousePos_ = point;
+}
+
+void LangAndWater::onMouseLPress() {
+	isLeftPressed_ = true;
+}
+
+void LangAndWater::onMouseLRelease() {
+	isLeftPressed_ = false;
 }

@@ -8,7 +8,6 @@
 
 using namespace vec;
 using namespace mat;
-
 struct Vertex {
 	float3	position;
 	float4	color;
@@ -17,6 +16,9 @@ struct Vertex {
 struct Shader {
 	WRL::ComPtr<ID3DBlob> pVsByteCode;
 	WRL::ComPtr<ID3DBlob> pPsByteCode;
+public:
+	D3D12_SHADER_BYTECODE getVsByteCode() const;
+	D3D12_SHADER_BYTECODE getPsByteCode() const;
 };
 
 namespace com {
@@ -34,14 +36,24 @@ private:
 	void buildFrameResource();
 	void buildLandGeometry();
 	void buildRenderItems();
+	void buildShaderAndInputLayout();
+	void buildRootSignature();
+	void buildPSO();
 	void updatePassConstantBuffer(std::shared_ptr<com::GameTimer> pGameTimer);
 	void updateObjectConstantBuffer();
 	void updateViewMatrix();
 	static float getHillsHeight(float x, float z);
+	void handleEvent();
+	void onMouseMove(POINT point);
+	void onMouseLPress();
+	void onMouseLRelease();
+	void onCharacter(char character);
 public:
 	std::unordered_map<std::string, WRL::ComPtr<ID3D12PipelineState>> PSOs_;
 	std::unordered_map<std::string, std::unique_ptr<MeshGeometry>> geometrices_;
 	std::unordered_map<std::string, Shader> shaders_;
+
+	WRL::ComPtr<ID3D12RootSignature> pRootSignature_;
 
 	PassConstants mainPassCB_;
 	std::vector<FrameResource> frameResources_;
@@ -50,10 +62,13 @@ public:
 
 	std::vector<std::unique_ptr<d3dUlti::RenderItem>> allRenderItem_;
 	std::vector<d3dUlti::RenderItem *> opaqueItems_;
+	std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout_;
 
 	float3 eyePos_;
 	float4x4 view_ = MathHelper::identity4x4();
 	float4x4 proj_ = MathHelper::identity4x4();
+
+	bool isWireDraw_ = false;
 
 	float zNear_ = 0.1f;
 	float zFar_ = 100.f;
