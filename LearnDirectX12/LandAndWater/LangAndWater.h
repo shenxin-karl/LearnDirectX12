@@ -37,7 +37,6 @@ public:
 	virtual bool initialize() override;
 	virtual void beginTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 	virtual void tick(std::shared_ptr<com::GameTimer> pGameTimer) override;
-	virtual void endTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 	virtual void onResize(int width, int height) override;
 private:
 	void buildFrameResource();
@@ -50,6 +49,8 @@ private:
 	void updatePassConstantBuffer(std::shared_ptr<com::GameTimer> pGameTimer);
 	void updateObjectConstantBuffer();
 	void updateViewMatrix();
+	void drawLand();
+	void drawWater();
 	static float getHillsHeight(float x, float z);
 	void handleEvent();
 	void onMouseMove(POINT point);
@@ -64,12 +65,13 @@ public:
 	WRL::ComPtr<ID3D12RootSignature> pRootSignature_;
 
 	PassConstants mainPassCB_;
-	std::vector<FrameResource> frameResources_;
+	std::vector<std::unique_ptr<FrameResource>> frameResources_;
 	UINT currentFrameResourceIndex_ = 0;
 	FrameResource *currentFrameResource_ = nullptr;
 
 	std::vector<std::unique_ptr<d3dUlti::RenderItem>> allRenderItem_;
 	std::vector<d3dUlti::RenderItem *> opaqueItems_;
+	std::vector<d3dUlti::RenderItem *> waterItems_;
 	std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout_;
 	std::vector<D3D12_INPUT_ELEMENT_DESC> waterInputLayout_;
 

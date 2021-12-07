@@ -1,6 +1,8 @@
+#ifndef _PASS_CONSTANT_BUFFER_HLSL_
+#define _PASS_CONSTANT_BUFFER_HLSL_
 
-#ifndef USE_DEF_PASS_REG
-	#define PASS_REGISTER_ID b0
+#if !defined(USE_DEF_PASS_REG) || defined(PASS_REGISTER_ID)
+	#define PASS_REGISTER_ID b1
 #endif
 
 cbuffer PassConstants : register(PASS_REGISTER_ID) {
@@ -19,3 +21,5 @@ cbuffer PassConstants : register(PASS_REGISTER_ID) {
 	float		gTotalTime;
 	float		gDeltaTime;
 };
+
+#endif

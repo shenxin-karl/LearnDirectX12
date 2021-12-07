@@ -1,7 +1,7 @@
 #include "../../Component/D3D/shader/PassConstantBuffer.hlsl"
 
 struct VertexIn {
-    float3 position : POSITIONT;
+    float3 position : POSITION;
     float4 color    : COLOR;
 };
 
@@ -10,7 +10,7 @@ struct VertexOut {
     float4 color      : COLOR;
 };
 
-cbuffer ObjCBBuffer : register(b1) {
+cbuffer ObjCBBuffer : register(b0) {
     float4x4 gWorld;
 };
 

@@ -1,19 +1,19 @@
 #include "../../Component/D3D/shader/PassConstantBuffer.hlsl"
 
 struct VertexIn {
-	float3 position : POSITIONT;
+    float3 position : POSITION;
 	float3 normal   : NORMAL;
 };
 
 struct VertexOut {
 	float4 SVPosition : SV_Position;
-	float3 wpos : POSITIONT;
-	float3 wnrm : NORMAL;
+	float3 wpos		  : POSITION;
+	float3 wnrm		  : NORMAL;
 };
 
 cbuffer ObjCBBuffer : register(b0) {
-	float4x4 gWorld;
-}
+    float4x4 gWorld;
+};
 
 void MakeWave(inout float3 wpos, inout float3 wnrm) {
 	
@@ -31,7 +31,9 @@ VertexOut VS(VertexIn vin) {
 	return vout;
 }
 
-const float3 albedo = float3(135.f / 255.f, 206.f / 255.f, 250.f / 255.f);
+//float3 albedo = float3(135.f / 255.f, 206.f / 255.f, 250.f / 255.f);
 float4 PS(VertexOut pin) : SV_Target {
-	return float4(albedo, 1.0);
+	//return float4(albedo, 1.0);
+    return float4(0, 0, 0, 0);
+
 }

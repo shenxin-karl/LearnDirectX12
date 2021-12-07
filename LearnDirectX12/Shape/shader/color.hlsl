@@ -10,7 +10,7 @@ struct VertexOut {
 	float4 color	  : COLOR;
 };
 
-cbuffer ObjectConstantBuffer : register(b1) {
+cbuffer ObjectConstantBuffer : register(b0) {
 	float4x4 gWorld;
 };
 

@@ -3,6 +3,7 @@
 #include "GameTimer/GameTimer.h"
 #include "InputSystem/Mouse.h"
 #include "InputSystem/Keyboard.h"
+#include <DirectXColors.h>
 
 D3D12_SHADER_BYTECODE Shader::getVsByteCode() const {
 	return { pVsByteCode->GetBufferPointer(), pVsByteCode->GetBufferSize() };
@@ -19,6 +20,7 @@ bool LangAndWater::initialize() {
 	pCommandAlloc_->Reset();
 	pCommandList_->Reset(pCommandAlloc_.Get(), nullptr);
 	buildLandGeometry();
+	buildWaterGeometry();
 	buildRenderItems();
 	buildFrameResource();
 	buildShaderAndInputLayout();
@@ -29,6 +31,73 @@ bool LangAndWater::initialize() {
 	pCommandQueue_->ExecuteCommandLists(1, cmdLists);
 	flushCommandQueue();
 	return true;
+}
+
+
+void LangAndWater::beginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
+	BaseApp::beginTick(pGameTimer);
+
+	currentFrameResourceIndex_ = (currentFrameResourceIndex_ + 1) % d3dUlti::kNumFrameResources;
+	currentFrameResource_ = frameResources_[currentFrameResourceIndex_].get();
+	auto fence = currentFrameResource_->fence_;
+	if (fence != 0 && pFence_->GetCompletedValue() < fence) {
+		HANDLE event = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
+		ThrowIfFailed(pFence_->SetEventOnCompletion(fence, event));
+		WaitForSingleObject(event, INFINITE);
+		CloseHandle(event);
+	}
+
+	updateViewMatrix();
+	updatePassConstantBuffer(pGameTimer);
+	updateObjectConstantBuffer();
+}
+
+void LangAndWater::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
+	// draw Land
+	auto *pCmdAlloc = currentFrameResource_->cmdListAlloc_.Get();
+	pCmdAlloc->Reset();
+	ThrowIfFailed(pCommandList_->Reset(pCmdAlloc, nullptr));
+	pCommandList_->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
+		getCurrentBackBuffer(),
+		D3D12_RESOURCE_STATE_PRESENT,
+		D3D12_RESOURCE_STATE_RENDER_TARGET
+	)));
+	pCommandList_->RSSetViewports(1, &screenViewport_);
+	pCommandList_->RSSetScissorRects(1, &scissorRect_);
+	pCommandList_->ClearRenderTargetView(getCurrentBackBufferView(), DX::Colors::Black, 1, &scissorRect_);
+	pCommandList_->ClearDepthStencilView(getDepthStencilBufferView(),
+		D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL,
+		1.f, 0, 1, &scissorRect_
+	);
+	pCommandList_->OMSetRenderTargets(
+		1, RVPtr(getCurrentBackBufferView()), 
+		true, RVPtr(getDepthStencilBufferView())
+	);
+
+	pCommandList_->SetGraphicsRootSignature(pRootSignature_.Get());
+	pCommandList_->SetGraphicsRootConstantBufferView(1, currentFrameResource_->passCB_->getGPUAddressByIndex(0));
+
+	// draw Land
+	pCommandList_->SetPipelineState(PSOs_["landGeo"].Get());
+	drawLand();
+
+	// draw water
+	pCommandList_->SetPipelineState(PSOs_["waterGeo"].Get());
+	drawWater();
+
+	pCommandList_->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
+		getCurrentBackBuffer(),
+		D3D12_RESOURCE_STATE_RENDER_TARGET,
+		D3D12_RESOURCE_STATE_PRESENT
+	)));
+	ThrowIfFailed(pCommandList_->Close());
+	ID3D12CommandList *cmdLists[] = { pCommandList_.Get() };
+	pCommandQueue_->ExecuteCommandLists(1, cmdLists);
+
+	ThrowIfFailed(pSwapChain_->Present(0, 0));
+	currentBackBufferIndex_ = (currentBackBufferIndex_ + 1) % kSwapChainCount;
+	currentFrameResource_->fence_ = ++currentFence_;
+	pCommandQueue_->Signal(pFence_.Get(), currentFence_);
 }
 
 void LangAndWater::onResize(int width, int height) {
@@ -42,11 +111,12 @@ void LangAndWater::onResize(int width, int height) {
 void LangAndWater::buildFrameResource() {
 	UINT objectCount = static_cast<UINT>(allRenderItem_.size());
 	for (size_t i = 0; i < d3dUlti::kNumFrameResources; ++i) {
-		auto frameResource = std::make_unique<FrameResource>(
+		auto pFrameResource = std::make_unique<FrameResource>(
 			pDevice_.Get(),
 			1, 
 			objectCount
 		);
+		frameResources_.push_back(std::move(pFrameResource));
 	}
 }
 
@@ -78,8 +148,8 @@ void LangAndWater::buildLandGeometry() {
 	for (com::uint32 i : grid.indices)
 		indices.push_back(static_cast<com::uint16>(i));
 
-	UINT vbByteSize = sizeof(LandVertex) * vertices.size();
-	UINT ibByteSize = sizeof(com::uint16) * indices.size();
+	UINT vbByteSize = sizeof(LandVertex) * static_cast<UINT>(vertices.size());
+	UINT ibByteSize = sizeof(com::uint16) * static_cast<UINT>(indices.size());
 
 	auto pGeo = std::make_unique<MeshGeometry>();
 	pGeo->name = "landGeo";
@@ -112,7 +182,7 @@ void LangAndWater::buildLandGeometry() {
 	SubmeshGeometry gridSubMesh;
 	gridSubMesh.baseVertexLocation = 0;
 	gridSubMesh.startIndexLocation = 0;
-	gridSubMesh.indexCount = indices.size();
+	gridSubMesh.indexCount = static_cast<UINT>(indices.size());
 	pGeo->drawArgs["landGrid"] = gridSubMesh;
 	geometrices_[pGeo->name] = std::move(pGeo);
 }
@@ -132,8 +202,9 @@ void LangAndWater::buildWaterGeometry() {
 
 	auto pGeo = std::make_unique<MeshGeometry>();
 	pGeo->name = "waterGeo";
-	UINT vbByteSize = vertices.size() * sizeof(LandVertex);
-	UINT ibByteSize = indices.size() * sizeof(WaterVertex);
+	UINT vbByteSize = static_cast<UINT>(vertices.size()) * sizeof(WaterVertex);
+	UINT ibByteSize = static_cast<UINT>(indices.size()) * sizeof(com::uint16);
+
 	ThrowIfFailed(D3DCreateBlob(vbByteSize, &pGeo->vertexBufferCPU));
 	memcpy(pGeo->vertexBufferCPU->GetBufferPointer(), vertices.data(), vbByteSize);
 	ThrowIfFailed(D3DCreateBlob(ibByteSize, &pGeo->indexBufferCPU));
@@ -161,19 +232,28 @@ void LangAndWater::buildWaterGeometry() {
 	SubmeshGeometry submesh;
 	submesh.baseVertexLocation = 0;
 	submesh.startIndexLocation = 0;
-	submesh.indexCount = indices.size();
+	submesh.indexCount = static_cast<UINT>(indices.size());
 	pGeo->drawArgs["waterGrid"] = submesh;
 	geometrices_[pGeo->name] = std::move(pGeo);
 }
 
 void LangAndWater::buildRenderItems() {
 	auto &pGeo = geometrices_["landGeo"];
-	auto item = std::make_unique<d3dUlti::RenderItem>();
-	item->objCBIndex_ = 0;
-	item->geometry_ = pGeo.get();
-	item->primitiveType_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-	item->indexCount_ = pGeo->drawArgs["landGrid"].indexCount;
-	allRenderItem_.push_back(item);
+	auto landItem = std::make_unique<d3dUlti::RenderItem>();
+	landItem->objCBIndex_ = 0;
+	landItem->geometry_ = pGeo.get();
+	landItem->primitiveType_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	landItem->indexCount_ = pGeo->drawArgs["landGrid"].indexCount;
+	opaqueItems_.push_back(landItem.get());
+	allRenderItem_.push_back(std::move(landItem));
+	
+	auto waterItem = std::make_unique<d3dUlti::RenderItem>();
+	waterItem->objCBIndex_ = 1;
+	waterItem->geometry_ = pGeo.get();
+	waterItem->primitiveType_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	waterItem->indexCount_ = pGeo->drawArgs["waterGrid"].indexCount;
+	waterItems_.push_back(waterItem.get());
+	allRenderItem_.push_back(std::move(waterItem));
 }
 
 void LangAndWater::buildShaderAndInputLayout() {
@@ -258,6 +338,8 @@ void LangAndWater::buildPSO() {
 	ThrowIfFailed(pDevice_->CreateGraphicsPipelineState(&landPsoDesc, IID_PPV_ARGS(&landPso)));
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC waterPsoDesc = landPsoDesc;
+	waterPsoDesc.VS = shaders_["waterGeo"].getVsByteCode();
+	waterPsoDesc.PS = shaders_["waterGeo"].getPsByteCode();
 	waterPsoDesc.InputLayout = { waterInputLayout_.data(), static_cast<UINT>(waterInputLayout_.size()) };
 	auto &waterPso = PSOs_["waterGeo"];
 	ThrowIfFailed(pDevice_->CreateGraphicsPipelineState(&waterPsoDesc, IID_PPV_ARGS(&waterPso)));
@@ -283,8 +365,8 @@ void LangAndWater::updatePassConstantBuffer(std::shared_ptr<com::GameTimer> pGam
 	DX::XMStoreFloat4x4(&mainPassCB_.gInvProj, invProj);
 	mainPassCB_.gEyePos = eyePos_;
 	mainPassCB_.cbPerObjectPad1 = 0.f;
-	mainPassCB_.gRenderTargetSize = { width_, height_ };
-	mainPassCB_.gInvRenderTargetSize = { 1.f / width_, 1.f / height_ };
+	mainPassCB_.gRenderTargetSize = float2(width_, height_);
+	mainPassCB_.gInvRenderTargetSize = float2(1.f / width_, 1.f / height_);
 	mainPassCB_.gNearZ = zNear_;
 	mainPassCB_.gFarZ = zFar_;
 	mainPassCB_.gTotalTime = pGameTimer->getTotalTime();
@@ -317,8 +399,45 @@ void LangAndWater::updateViewMatrix() {
 		cosTheta * sinPhi,
 	};
 	lookfrom *= radius_;
+	eyePos_ = lookfrom;
 	DX::XMMATRIX view = DX::XMMatrixLookAtLH(lookfrom.toVec(), lookat.toVec(), lookup.toVec());
 	DX::XMStoreFloat4x4(&view_, view);
+}
+
+
+void LangAndWater::drawLand() {
+	for (auto &rItem : opaqueItems_) {
+		pCommandList_->IASetVertexBuffers(0, 1, RVPtr(rItem->geometry_->getVertexBufferView()));
+		pCommandList_->IASetIndexBuffer(RVPtr(rItem->geometry_->getIndexBufferView()));
+		pCommandList_->IASetPrimitiveTopology(rItem->primitiveType_);
+		auto address = currentFrameResource_->objectCB_->getGPUAddressByIndex(rItem->objCBIndex_);
+		pCommandList_->SetGraphicsRootConstantBufferView(0, address);
+		pCommandList_->DrawIndexedInstanced(
+			rItem->indexCount_, 
+			1, 
+			rItem->startIndexLocation_, 
+			rItem->baseVertexLocation_, 
+			0
+		);
+	}
+}
+
+
+void LangAndWater::drawWater() {
+	for (auto &ri : waterItems_) {
+		pCommandList_->IASetVertexBuffers(0, 1, RVPtr(ri->geometry_->getVertexBufferView()));
+		pCommandList_->IASetIndexBuffer(RVPtr(ri->geometry_->getIndexBufferView()));
+		pCommandList_->IASetPrimitiveTopology(ri->primitiveType_);
+		auto address = currentFrameResource_->objectCB_->getGPUAddressByIndex(ri->objCBIndex_);
+		pCommandList_->SetGraphicsRootConstantBufferView(0, address);
+		pCommandList_->DrawIndexedInstanced(
+			ri->indexCount_,
+			1,
+			ri->startIndexLocation_,
+			ri->baseVertexLocation_,
+			0
+		);
+	}
 }
 
 float LangAndWater::getHillsHeight(float x, float z) {
@@ -361,4 +480,8 @@ void LangAndWater::onMouseLPress() {
 
 void LangAndWater::onMouseLRelease() {
 	isLeftPressed_ = false;
+}
+
+void LangAndWater::onCharacter(char character) {
+
 }

@@ -31,4 +31,5 @@ target_link_libraries(LandAndWater PUBLIC
 	BaseApp
 	Math
 	Geometry
+	GameTimer
 )

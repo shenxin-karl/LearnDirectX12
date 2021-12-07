@@ -88,7 +88,7 @@ void Shape::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	// set pass constant buffer
 	CD3DX12_GPU_DESCRIPTOR_HANDLE handle(pCbvHeaps_->GetGPUDescriptorHandleForHeapStart());
 	handle.Offset(passCbvOffset_ + currentFrameIndex_, cbvSrvUavDescriptorSize_);
-	pCommandList_->SetGraphicsRootDescriptorTable(0, handle);
+	pCommandList_->SetGraphicsRootDescriptorTable(1, handle);
 
 	drawRenderItems();
 
@@ -525,7 +525,7 @@ void Shape::drawRenderItems() {
 		auto handle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCbvHeaps_->GetGPUDescriptorHandleForHeapStart());
 		handle.Offset(cbvIndex, cbvSrvUavDescriptorSize_);
 
-		pCommandList_->SetGraphicsRootDescriptorTable(1, handle);
+		pCommandList_->SetGraphicsRootDescriptorTable(0, handle);
 		pCommandList_->DrawIndexedInstanced(
 			rItem->indexCount_, 
 			1, 
