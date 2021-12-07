@@ -22,12 +22,21 @@ bool LangAndWater::initialize() {
 	buildRenderItems();
 	buildFrameResource();
 	buildShaderAndInputLayout();
+	buildRootSignature();
 	buildPSO();
 	ThrowIfFailed(pCommandList_->Close());
 	ID3D12CommandList *cmdLists[] = { pCommandList_.Get() };
 	pCommandQueue_->ExecuteCommandLists(1, cmdLists);
 	flushCommandQueue();
 	return true;
+}
+
+void LangAndWater::onResize(int width, int height) {
+	BaseApp::onResize(width, height);
+	constexpr float fov = DX::XMConvertToRadians(45.f);
+	float aspect = static_cast<float>(width) / static_cast<float>(height);
+	DX::XMMATRIX proj = DX::XMMatrixPerspectiveFovLH(fov, aspect, zNear_, zFar_);
+	DX::XMStoreFloat4x4(&proj_, proj);
 }
 
 void LangAndWater::buildFrameResource() {
@@ -45,7 +54,7 @@ void LangAndWater::buildLandGeometry() {
 	com::GometryGenerator gen;
 	auto grid = gen.createGrid(160.f, 160.f, 50, 50);
 
-	std::vector<Vertex> vertices;
+	std::vector<LandVertex> vertices;
 	vertices.reserve(grid.vertices.size());
 	for (size_t i = 0; i < grid.vertices.size(); ++i) {
 		const float3 &p = grid.vertices[i].position;
@@ -61,7 +70,7 @@ void LangAndWater::buildLandGeometry() {
 			color = float4(0.45f, 0.39f, 0.34f, 1.f);
 		else
 			color = float4(1.f);
-		vertices.push_back(Vertex{ position, color });
+		vertices.push_back(LandVertex{ position, color });
 	}
 
 	std::vector<com::uint16> indices;
@@ -69,7 +78,7 @@ void LangAndWater::buildLandGeometry() {
 	for (com::uint32 i : grid.indices)
 		indices.push_back(static_cast<com::uint16>(i));
 
-	UINT vbByteSize = sizeof(Vertex) * vertices.size();
+	UINT vbByteSize = sizeof(LandVertex) * vertices.size();
 	UINT ibByteSize = sizeof(com::uint16) * indices.size();
 
 	auto pGeo = std::make_unique<MeshGeometry>();
@@ -95,7 +104,7 @@ void LangAndWater::buildLandGeometry() {
 		pGeo->indexBufferUploader
 	);
 
-	pGeo->vertexByteStride = sizeof(Vertex);
+	pGeo->vertexByteStride = sizeof(LandVertex);
 	pGeo->vertexBufferByteSize = vbByteSize;
 	pGeo->indexBufferFormat = DXGI_FORMAT_R16_UINT;
 	pGeo->indexBufferByteSize = ibByteSize;
@@ -104,7 +113,56 @@ void LangAndWater::buildLandGeometry() {
 	gridSubMesh.baseVertexLocation = 0;
 	gridSubMesh.startIndexLocation = 0;
 	gridSubMesh.indexCount = indices.size();
-	pGeo->drawArgs["grid"] = gridSubMesh;
+	pGeo->drawArgs["landGrid"] = gridSubMesh;
+	geometrices_[pGeo->name] = std::move(pGeo);
+}
+
+void LangAndWater::buildWaterGeometry() {
+	com::GometryGenerator gen;
+	auto grid = gen.createGrid(160.f, 160.f, 50, 50);
+	std::vector<WaterVertex> vertices;
+	std::vector<com::uint16> indices;
+	vertices.reserve(grid.vertices.size());
+	indices.reserve(grid.indices.size());
+	
+	for (auto &vert : grid.vertices)
+		vertices.emplace_back(vert.position, vert.normal);
+	for (auto index : grid.indices)
+		indices.push_back(static_cast<com::uint16>(index));
+
+	auto pGeo = std::make_unique<MeshGeometry>();
+	pGeo->name = "waterGeo";
+	UINT vbByteSize = vertices.size() * sizeof(LandVertex);
+	UINT ibByteSize = indices.size() * sizeof(WaterVertex);
+	ThrowIfFailed(D3DCreateBlob(vbByteSize, &pGeo->vertexBufferCPU));
+	memcpy(pGeo->vertexBufferCPU->GetBufferPointer(), vertices.data(), vbByteSize);
+	ThrowIfFailed(D3DCreateBlob(ibByteSize, &pGeo->indexBufferCPU));
+	memcpy(pGeo->indexBufferCPU->GetBufferPointer(), indices.data(), ibByteSize);
+	pGeo->vertexBufferGPU = createDefaultBuffer(
+		pDevice_.Get(),
+		pCommandList_.Get(),
+		vertices.data(),
+		vbByteSize,
+		pGeo->vertexBufferUploader
+	);
+	pGeo->indexBufferGPU = createDefaultBuffer(
+		pDevice_.Get(),
+		pCommandList_.Get(),
+		indices.data(),
+		ibByteSize,
+		pGeo->indexBufferUploader
+	);
+
+	pGeo->vertexByteStride = sizeof(WaterVertex);
+	pGeo->vertexBufferByteSize = vbByteSize;
+	pGeo->indexBufferFormat = DXGI_FORMAT_R16_UINT;
+	pGeo->indexBufferByteSize = ibByteSize;
+
+	SubmeshGeometry submesh;
+	submesh.baseVertexLocation = 0;
+	submesh.startIndexLocation = 0;
+	submesh.indexCount = indices.size();
+	pGeo->drawArgs["waterGrid"] = submesh;
 	geometrices_[pGeo->name] = std::move(pGeo);
 }
 
@@ -114,25 +172,38 @@ void LangAndWater::buildRenderItems() {
 	item->objCBIndex_ = 0;
 	item->geometry_ = pGeo.get();
 	item->primitiveType_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-	item->indexCount_ = pGeo->drawArgs["grid"].indexCount;
+	item->indexCount_ = pGeo->drawArgs["landGrid"].indexCount;
 	allRenderItem_.push_back(item);
 }
 
 void LangAndWater::buildShaderAndInputLayout() {
 	inputLayout_ = {
 		{
-			"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(Vertex, position),
+			"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(LandVertex, position),
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0,
 		},
 		{
-			"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(Vertex, color),
+			"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(LandVertex, color),
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0,
 		},
 	};
+	waterInputLayout_ = {
+		{
+			"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(WaterVertex, position),
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0,
+		},
+		{
+			"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(WaterVertex, normal),
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+		},
+	};
 
-	WRL::ComPtr<ID3DBlob> pVsByteCode = compileShader(L"shader/color.hlsl", nullptr, "VS", "vs_5_0");
-	WRL::ComPtr<ID3DBlob> pPsByteCode = compileShader(L"shader/color.hlsl", nullptr, "PS", "ps_5_0");
-	shaders_["landGeo"] = { pVsByteCode, pPsByteCode };
+	WRL::ComPtr<ID3DBlob> pLandVsByteCode = compileShader(L"shader/color.hlsl", nullptr, "VS", "vs_5_0");
+	WRL::ComPtr<ID3DBlob> pLandPsByteCode = compileShader(L"shader/color.hlsl", nullptr, "PS", "ps_5_0");
+	WRL::ComPtr<ID3DBlob> pWaterVsByteCode = compileShader(L"shader/water.hlsl", nullptr, "VS", "vs_5_0");
+	WRL::ComPtr<ID3DBlob> pWaterPsByteCode = compileShader(L"shader/water.hlsl", nullptr, "PS", "ps_5_0");
+	shaders_["landGeo"] = { pLandVsByteCode, pLandPsByteCode };
+	shaders_["waterGeo"] = { pWaterVsByteCode, pWaterPsByteCode };
 }
 
 void LangAndWater::buildRootSignature() {
@@ -168,9 +239,28 @@ void LangAndWater::buildRootSignature() {
 }
 
 void LangAndWater::buildPSO() {
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
-	memset(&psoDesc, 0, sizeof(psoDesc));
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC landPsoDesc;
+	memset(&landPsoDesc, 0, sizeof(landPsoDesc));
+	landPsoDesc.pRootSignature = pRootSignature_.Get();
+	landPsoDesc.VS = shaders_["landGeo"].getVsByteCode();
+	landPsoDesc.PS = shaders_["landGeo"].getPsByteCode();
+	landPsoDesc.BlendState = CD3DX12_BLEND_DESC(CD3DX12_DEFAULT{});
+	landPsoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(CD3DX12_DEFAULT{});
+	landPsoDesc.InputLayout = { inputLayout_.data(), static_cast<UINT>(inputLayout_.size()) };
+	landPsoDesc.SampleMask = 0xffffffff;
+	landPsoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(CD3DX12_DEFAULT{});
+	landPsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	landPsoDesc.NumRenderTargets = 1;
+	landPsoDesc.RTVFormats[0] = backBufferFormat_;
+	landPsoDesc.DSVFormat = depthStencilFormat_;
+	landPsoDesc.SampleDesc = { getSampleCount(), getSampleQuality() };
+	auto &landPso = PSOs_["landGeo"];
+	ThrowIfFailed(pDevice_->CreateGraphicsPipelineState(&landPsoDesc, IID_PPV_ARGS(&landPso)));
 
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC waterPsoDesc = landPsoDesc;
+	waterPsoDesc.InputLayout = { waterInputLayout_.data(), static_cast<UINT>(waterInputLayout_.size()) };
+	auto &waterPso = PSOs_["waterGeo"];
+	ThrowIfFailed(pDevice_->CreateGraphicsPipelineState(&waterPsoDesc, IID_PPV_ARGS(&waterPso)));
 }
 
 void LangAndWater::updatePassConstantBuffer(std::shared_ptr<com::GameTimer> pGameTimer) {

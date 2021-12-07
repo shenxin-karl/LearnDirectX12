@@ -9,9 +9,15 @@
 
 using namespace vec;
 using namespace mat;
-struct Vertex {
+
+struct LandVertex {
 	float3	position;
 	float4	color;
+};
+
+struct WaterVertex {
+	float3	position;
+	float3	normal;
 };
 
 struct Shader {
@@ -36,6 +42,7 @@ public:
 private:
 	void buildFrameResource();
 	void buildLandGeometry();
+	void buildWaterGeometry();
 	void buildRenderItems();
 	void buildShaderAndInputLayout();
 	void buildRootSignature();
@@ -64,6 +71,7 @@ public:
 	std::vector<std::unique_ptr<d3dUlti::RenderItem>> allRenderItem_;
 	std::vector<d3dUlti::RenderItem *> opaqueItems_;
 	std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout_;
+	std::vector<D3D12_INPUT_ELEMENT_DESC> waterInputLayout_;
 
 	float3 eyePos_;
 	float4x4 view_ = MathHelper::identity4x4();
