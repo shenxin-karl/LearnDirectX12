@@ -32,12 +32,14 @@ namespace com {
 class GameTimer;
 }
 
-class LangAndWater : public com::BaseApp {
+class LandAndWater : public com::BaseApp {
 public:
 	virtual bool initialize() override;
 	virtual void beginTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 	virtual void tick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 	virtual void onResize(int width, int height) override;
+	virtual ~LandAndWater() override;
+	void waitFrameResource();
 private:
 	void buildFrameResource();
 	void buildLandGeometry();
@@ -55,6 +57,7 @@ private:
 	void handleEvent();
 	void onMouseMove(POINT point);
 	void onMouseLPress();
+	void onMouseWheel(float offset);
 	void onMouseLRelease();
 	void onCharacter(char character);
 public:
@@ -79,14 +82,15 @@ public:
 	float4x4 view_ = MathHelper::identity4x4();
 	float4x4 proj_ = MathHelper::identity4x4();
 
-	bool isWireDraw_ = false;
+	bool isLandWireDraw_ = false;
+	bool isWaterWireDraw_ = false;
 
 	float zNear_ = 0.1f;
-	float zFar_ = 100.f;
+	float zFar_ = 300.f;
 
-	float radius_ = 15.f;
+	float radius_ = 100.f;
 	float phi_ = 0.f;
-	float theta_ = 0.f;
+	float theta_ = 40.f;
 	bool isLeftPressed_ = false;
 	POINT lastMousePos_;
 

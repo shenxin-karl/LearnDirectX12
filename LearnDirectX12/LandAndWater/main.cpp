@@ -4,7 +4,7 @@
 
 int main() {
 	std::shared_ptr<com::GameTimer> pGameTimer = std::make_shared<com::GameTimer>();
-	LangAndWater app;
+	LandAndWater app;
 	try
 	{
 		app.initialize();

@@ -13,7 +13,7 @@ D3D12_SHADER_BYTECODE Shader::getPsByteCode() const {
 	return { pPsByteCode->GetBufferPointer(), pPsByteCode->GetBufferSize() };
 }
 
-bool LangAndWater::initialize() {
+bool LandAndWater::initialize() {
 	if (!BaseApp::initialize())
 		return false;
 
@@ -34,7 +34,7 @@ bool LangAndWater::initialize() {
 }
 
 
-void LangAndWater::beginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
+void LandAndWater::beginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	BaseApp::beginTick(pGameTimer);
 
 	currentFrameResourceIndex_ = (currentFrameResourceIndex_ + 1) % d3dUlti::kNumFrameResources;
@@ -47,13 +47,13 @@ void LangAndWater::beginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		CloseHandle(event);
 	}
 
+	handleEvent();
 	updateViewMatrix();
 	updatePassConstantBuffer(pGameTimer);
 	updateObjectConstantBuffer();
 }
 
-void LangAndWater::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
-	// draw Land
+void LandAndWater::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto *pCmdAlloc = currentFrameResource_->cmdListAlloc_.Get();
 	pCmdAlloc->Reset();
 	ThrowIfFailed(pCommandList_->Reset(pCmdAlloc, nullptr));
@@ -78,11 +78,13 @@ void LangAndWater::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	pCommandList_->SetGraphicsRootConstantBufferView(1, currentFrameResource_->passCB_->getGPUAddressByIndex(0));
 
 	// draw Land
-	pCommandList_->SetPipelineState(PSOs_["landGeo"].Get());
+	auto &landPso = isLandWireDraw_ ? PSOs_["landWireGeo"] : PSOs_["landGeo"];
+	pCommandList_->SetPipelineState(landPso.Get());
 	drawLand();
 
 	// draw water
-	pCommandList_->SetPipelineState(PSOs_["waterGeo"].Get());
+	auto &waterPso = isWaterWireDraw_ ? PSOs_["waterWireGeo"] : PSOs_["waterGeo"];
+	pCommandList_->SetPipelineState(waterPso.Get());
 	drawWater();
 
 	pCommandList_->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
@@ -100,7 +102,7 @@ void LangAndWater::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	pCommandQueue_->Signal(pFence_.Get(), currentFence_);
 }
 
-void LangAndWater::onResize(int width, int height) {
+void LandAndWater::onResize(int width, int height) {
 	BaseApp::onResize(width, height);
 	constexpr float fov = DX::XMConvertToRadians(45.f);
 	float aspect = static_cast<float>(width) / static_cast<float>(height);
@@ -108,7 +110,24 @@ void LangAndWater::onResize(int width, int height) {
 	DX::XMStoreFloat4x4(&proj_, proj);
 }
 
-void LangAndWater::buildFrameResource() {
+
+LandAndWater::~LandAndWater() {
+	waitFrameResource();
+}
+
+void LandAndWater::waitFrameResource() {
+	for (auto &pFrameResource : frameResources_) {
+		auto fence = pFrameResource->fence_;
+		if (fence != 0 && pFence_->GetCompletedValue() < fence) {
+			HANDLE event = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
+			ThrowIfFailed(pFence_->SetEventOnCompletion(fence, event));
+			WaitForSingleObject(event, INFINITE);
+			CloseHandle(event);
+		}
+	}
+}
+
+void LandAndWater::buildFrameResource() {
 	UINT objectCount = static_cast<UINT>(allRenderItem_.size());
 	for (size_t i = 0; i < d3dUlti::kNumFrameResources; ++i) {
 		auto pFrameResource = std::make_unique<FrameResource>(
@@ -120,7 +139,7 @@ void LangAndWater::buildFrameResource() {
 	}
 }
 
-void LangAndWater::buildLandGeometry() {
+void LandAndWater::buildLandGeometry() {
 	com::GometryGenerator gen;
 	auto grid = gen.createGrid(160.f, 160.f, 50, 50);
 
@@ -187,7 +206,7 @@ void LangAndWater::buildLandGeometry() {
 	geometrices_[pGeo->name] = std::move(pGeo);
 }
 
-void LangAndWater::buildWaterGeometry() {
+void LandAndWater::buildWaterGeometry() {
 	com::GometryGenerator gen;
 	auto grid = gen.createGrid(160.f, 160.f, 50, 50);
 	std::vector<WaterVertex> vertices;
@@ -237,26 +256,27 @@ void LangAndWater::buildWaterGeometry() {
 	geometrices_[pGeo->name] = std::move(pGeo);
 }
 
-void LangAndWater::buildRenderItems() {
-	auto &pGeo = geometrices_["landGeo"];
+void LandAndWater::buildRenderItems() {
+	auto &pLandGeo = geometrices_["landGeo"];
 	auto landItem = std::make_unique<d3dUlti::RenderItem>();
 	landItem->objCBIndex_ = 0;
-	landItem->geometry_ = pGeo.get();
+	landItem->geometry_ = pLandGeo.get();
 	landItem->primitiveType_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-	landItem->indexCount_ = pGeo->drawArgs["landGrid"].indexCount;
+	landItem->indexCount_ = pLandGeo->drawArgs["landGrid"].indexCount;
 	opaqueItems_.push_back(landItem.get());
 	allRenderItem_.push_back(std::move(landItem));
 	
+	auto &pWaterGeo = geometrices_["waterGeo"];
 	auto waterItem = std::make_unique<d3dUlti::RenderItem>();
 	waterItem->objCBIndex_ = 1;
-	waterItem->geometry_ = pGeo.get();
+	waterItem->geometry_ = pWaterGeo.get();
 	waterItem->primitiveType_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-	waterItem->indexCount_ = pGeo->drawArgs["waterGrid"].indexCount;
+	waterItem->indexCount_ = pWaterGeo->drawArgs["waterGrid"].indexCount;
 	waterItems_.push_back(waterItem.get());
 	allRenderItem_.push_back(std::move(waterItem));
 }
 
-void LangAndWater::buildShaderAndInputLayout() {
+void LandAndWater::buildShaderAndInputLayout() {
 	inputLayout_ = {
 		{
 			"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(LandVertex, position),
@@ -286,7 +306,7 @@ void LangAndWater::buildShaderAndInputLayout() {
 	shaders_["waterGeo"] = { pWaterVsByteCode, pWaterPsByteCode };
 }
 
-void LangAndWater::buildRootSignature() {
+void LandAndWater::buildRootSignature() {
 	CD3DX12_ROOT_PARAMETER rootParameter[2];
 	rootParameter[0].InitAsConstantBufferView(0);
 	rootParameter[1].InitAsConstantBufferView(1);
@@ -318,7 +338,7 @@ void LangAndWater::buildRootSignature() {
 	));
 }
 
-void LangAndWater::buildPSO() {
+void LandAndWater::buildPSO() {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC landPsoDesc;
 	memset(&landPsoDesc, 0, sizeof(landPsoDesc));
 	landPsoDesc.pRootSignature = pRootSignature_.Get();
@@ -336,6 +356,11 @@ void LangAndWater::buildPSO() {
 	landPsoDesc.SampleDesc = { getSampleCount(), getSampleQuality() };
 	auto &landPso = PSOs_["landGeo"];
 	ThrowIfFailed(pDevice_->CreateGraphicsPipelineState(&landPsoDesc, IID_PPV_ARGS(&landPso)));
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC landWirePsoDesc = landPsoDesc;
+	landWirePsoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
+	auto &landWirePso = PSOs_["landWireGeo"];
+	ThrowIfFailed(pDevice_->CreateGraphicsPipelineState(&landWirePsoDesc, IID_PPV_ARGS(&landWirePso)));
+
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC waterPsoDesc = landPsoDesc;
 	waterPsoDesc.VS = shaders_["waterGeo"].getVsByteCode();
@@ -343,9 +368,13 @@ void LangAndWater::buildPSO() {
 	waterPsoDesc.InputLayout = { waterInputLayout_.data(), static_cast<UINT>(waterInputLayout_.size()) };
 	auto &waterPso = PSOs_["waterGeo"];
 	ThrowIfFailed(pDevice_->CreateGraphicsPipelineState(&waterPsoDesc, IID_PPV_ARGS(&waterPso)));
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC waterWirePsoDesc = waterPsoDesc;
+	waterWirePsoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
+	auto &waterWirePso = PSOs_["waterWireGeo"];
+	ThrowIfFailed(pDevice_->CreateGraphicsPipelineState(&waterWirePsoDesc, IID_PPV_ARGS(&waterWirePso)));
 }
 
-void LangAndWater::updatePassConstantBuffer(std::shared_ptr<com::GameTimer> pGameTimer) {
+void LandAndWater::updatePassConstantBuffer(std::shared_ptr<com::GameTimer> pGameTimer) {
 	DX::XMVECTOR det;
 	DX::XMMATRIX view = DX::XMLoadFloat4x4(&view_);
 	det = DX::XMMatrixDeterminant(view);
@@ -363,6 +392,8 @@ void LangAndWater::updatePassConstantBuffer(std::shared_ptr<com::GameTimer> pGam
 	DX::XMStoreFloat4x4(&mainPassCB_.gInvView, invView);
 	DX::XMStoreFloat4x4(&mainPassCB_.gProj, proj);
 	DX::XMStoreFloat4x4(&mainPassCB_.gInvProj, invProj);
+	DX::XMStoreFloat4x4(&mainPassCB_.gViewProj, viewProj);
+	DX::XMStoreFloat4x4(&mainPassCB_.gInvViewProj, invViewProj);
 	mainPassCB_.gEyePos = eyePos_;
 	mainPassCB_.cbPerObjectPad1 = 0.f;
 	mainPassCB_.gRenderTargetSize = float2(width_, height_);
@@ -374,7 +405,7 @@ void LangAndWater::updatePassConstantBuffer(std::shared_ptr<com::GameTimer> pGam
 	currentFrameResource_->passCB_->copyData(0, mainPassCB_);
 }
 
-void LangAndWater::updateObjectConstantBuffer() {
+void LandAndWater::updateObjectConstantBuffer() {
 	for (auto &item : allRenderItem_) {
 		if (item->numFramesDirty > 0) {
 			DX::XMMATRIX world = DX::XMLoadFloat4x4(&item->world);
@@ -386,7 +417,7 @@ void LangAndWater::updateObjectConstantBuffer() {
 	}
 }
 
-void LangAndWater::updateViewMatrix() {
+void LandAndWater::updateViewMatrix() {
 	float sinTheta = std::sin(DX::XMConvertToRadians(theta_));
 	float cosTheta = std::cos(DX::XMConvertToRadians(theta_));
 	float sinPhi = std::sin(DX::XMConvertToRadians(phi_));
@@ -405,7 +436,7 @@ void LangAndWater::updateViewMatrix() {
 }
 
 
-void LangAndWater::drawLand() {
+void LandAndWater::drawLand() {
 	for (auto &rItem : opaqueItems_) {
 		pCommandList_->IASetVertexBuffers(0, 1, RVPtr(rItem->geometry_->getVertexBufferView()));
 		pCommandList_->IASetIndexBuffer(RVPtr(rItem->geometry_->getIndexBufferView()));
@@ -423,7 +454,7 @@ void LangAndWater::drawLand() {
 }
 
 
-void LangAndWater::drawWater() {
+void LandAndWater::drawWater() {
 	for (auto &ri : waterItems_) {
 		pCommandList_->IASetVertexBuffers(0, 1, RVPtr(ri->geometry_->getVertexBufferView()));
 		pCommandList_->IASetIndexBuffer(RVPtr(ri->geometry_->getIndexBufferView()));
@@ -440,11 +471,11 @@ void LangAndWater::drawWater() {
 	}
 }
 
-float LangAndWater::getHillsHeight(float x, float z) {
+float LandAndWater::getHillsHeight(float x, float z) {
 	return 0.3f * (z * std::sin(0.1f * x) + x * std::cos(0.1f * z));
 }
 
-void LangAndWater::handleEvent() {
+void LandAndWater::handleEvent() {
 	while (auto event = pInputSystem_->mouse->getEvent()) {
 		switch (event.state_) {
 		case com::Mouse::LPress:
@@ -456,6 +487,9 @@ void LangAndWater::handleEvent() {
 		case com::Mouse::Move:
 			onMouseMove({ event.x, event.y });
 			break;
+		case com::Mouse::Wheel:
+			onMouseWheel(event.offset_);
+			break;
 		}
 	}
 	while (auto event = pInputSystem_->keyboard->readChar())
@@ -463,9 +497,9 @@ void LangAndWater::handleEvent() {
 	
 }
 
-void LangAndWater::onMouseMove(POINT point) {
+void LandAndWater::onMouseMove(POINT point) {
 	if (isLeftPressed_) {
-		constexpr float sensitivity = 360.f / 20.f;
+		constexpr float sensitivity = 1;
 		float dx = (point.x - lastMousePos_.x) * sensitivity;
 		float dy = (point.y - lastMousePos_.y) * sensitivity;
 		theta_ = std::clamp(theta_ + dy, -89.f, +89.f);
@@ -474,14 +508,25 @@ void LangAndWater::onMouseMove(POINT point) {
 	lastMousePos_ = point;
 }
 
-void LangAndWater::onMouseLPress() {
+void LandAndWater::onMouseLPress() {
 	isLeftPressed_ = true;
 }
 
-void LangAndWater::onMouseLRelease() {
+void LandAndWater::onMouseWheel(float offset) {
+	radius_ -= offset;
+}
+
+void LandAndWater::onMouseLRelease() {
 	isLeftPressed_ = false;
 }
 
-void LangAndWater::onCharacter(char character) {
-
+void LandAndWater::onCharacter(char character) {
+	switch (character) {
+	case '1':
+		isLandWireDraw_ = !isLandWireDraw_;
+		break;
+	case '2':
+		isWaterWireDraw_ = !isWaterWireDraw_;
+		break;
+	};
 }
