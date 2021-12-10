@@ -3,34 +3,42 @@
 #include <DirectXMath.h>
 #include <memory>
 #include "UploadBuffer.h"
+#include "Math/VectorHelper.h"
+#include "Math/MatrixHelper.h"
+#include "D3D/Material.h"
 
 namespace d3dUlti {
 
 struct Material;
 struct MaterialConstants;
 
+using namespace mat;
+using namespace vec;
 
 namespace DX = DirectX;
 namespace WRL = Microsoft::WRL;
+
 struct PassConstants {
-	DX::XMFLOAT4X4	gView;
-	DX::XMFLOAT4X4	gInvView;
-	DX::XMFLOAT4X4  gProj;
-	DX::XMFLOAT4X4	gInvProj;
-	DX::XMFLOAT4X4	gViewProj;
-	DX::XMFLOAT4X4	gInvViewProj;
-	DX::XMFLOAT3	gEyePos;
+	float4x4		gView;
+	float4x4		gInvView;
+	float4x4		gProj;
+	float4x4		gInvProj;
+	float4x4		gViewProj;
+	float4x4		gInvViewProj;
+	float3			gEyePos;
 	float			cbPerObjectPad1;
-	DX::XMFLOAT2	gRenderTargetSize;
-	DX::XMFLOAT2	gInvRenderTargetSize;
+	float2			gRenderTargetSize;
+	float2			gInvRenderTargetSize;
 	float			gNearZ;
 	float			gFarZ;
 	float			gTotalTime;
 	float			gDeltaTime;
+	float4			gAmbientLight;
+	d3dUlti::MaterialConstants gLights[kMaxLights];
 };
 
 struct ObjectConstants {
-	DX::XMFLOAT4X4	gWorld;
+	float4x4	gWorld;
 };
 
 class FrameResource {

@@ -1,5 +1,6 @@
 #ifndef _PASS_CONSTANT_BUFFER_HLSL_
 #define _PASS_CONSTANT_BUFFER_HLSL_
+#include "LightingUtil.hlsl"
 
 #if !defined(USE_DEF_PASS_REG) || defined(PASS_REGISTER_ID)
 	#define PASS_REGISTER_ID b1
@@ -20,6 +21,8 @@ cbuffer PassConstants : register(PASS_REGISTER_ID) {
 	float		gFarZ;
 	float		gTotalTime;
 	float		gDeltaTime;
+	float4		gAmbientLight;
+	Light		gLights[MAX_LIGHTS];
 };
 
 #endif
