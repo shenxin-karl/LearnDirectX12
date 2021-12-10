@@ -430,6 +430,55 @@ void GometryGenerator::simplify(MeshData &mesh, float reserve) {
 }
 
 
+std::tuple<bool, MeshData> GometryGenerator::loadObjFile(const std::string &path) {
+	std::fstream fin(path, std::ios::in);
+	std::tuple<bool, MeshData> result(false, {});
+	if (!fin.is_open())
+		return result;
+
+	struct VertexDataIndex {
+		com::uint32 posIdx = 0;
+		com::uint32 nrmIdx = 0;
+		com::uint32 texIdx = 0;
+	};
+
+	bool hasNrm = false;
+	bool hasUvs = false;
+	bool inited = false;
+	std::vector<VertexDataIndex> indices;
+	auto handleFace = [&](std::stringstream sbuf) {
+		if (inited) {
+			std::string line = sbuf.str();
+			auto count = std::count(line.begin(), line.end(), '/');
+			hasUvs = count >= 3;
+			hasNrm = count >= 6;
+			if ((count % 3) != 0)			// error
+				return result;
+		}
+		char trash;
+		VertexDataIndex data;
+		sbuf >> trash >> trash;				// "f "
+	};
+
+	std::vector<Vertex> vertices;
+	auto handleVertData = [&](std::stringstream sbuf) {
+
+	};
+
+	std::string line;
+	while (fin >> line) {
+		if (line.compare(0, 2, "f ")) {			// face
+
+		} else if (line.compare(0, 2, "v")) {	// vertex
+
+		} else if (line.compare(0, 3, "vn ")) {	// normal
+					
+		} else if (line.compare(0, 3, "vt ")) {	// texcoord
+
+		} 
+	}
+}
+
 com::Vertex GometryGenerator::middlePoint(const Vertex &lhs, const Vertex &rhs) {
 	return {
 		MathHelper::lerp(lhs.position, rhs.position, 0.5f)

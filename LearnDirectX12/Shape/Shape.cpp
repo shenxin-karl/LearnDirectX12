@@ -142,7 +142,7 @@ void Shape::pollEvent() {
 void Shape::buildFrameResources() {
 	UINT itemSize = static_cast<UINT>(allRenderItems_.size());
 	for (int i = 0; i < d3dUlti::kNumFrameResources; ++i) 
-		frameResources_.push_back(std::make_unique<FrameResource>(pDevice_.Get(), 1, itemSize));
+		frameResources_.push_back(std::make_unique<d3dUlti::FrameResource>(pDevice_.Get(), 1, itemSize));
 }
 
 void Shape::buildShapeGeometry() {
@@ -361,8 +361,8 @@ void Shape::buildDescriptorHeaps() {
 
 
 void Shape::buldConstantBufferViews() {
-	UINT objCBByteSize = static_cast<UINT>(calcConstantBufferByteSize(sizeof(ObjectConstants)));
-	UINT passCBByteSize = static_cast<UINT>(calcConstantBufferByteSize(sizeof(PassConstants)));
+	UINT objCBByteSize = static_cast<UINT>(calcConstantBufferByteSize(sizeof(d3dUlti::ObjectConstants)));
+	UINT passCBByteSize = static_cast<UINT>(calcConstantBufferByteSize(sizeof(d3dUlti::PassConstants)));
 	UINT objCount = static_cast<UINT>(opaqueRItems_.size());
 
 	for (int frameIdx = 0; frameIdx < d3dUlti::kNumFrameResources; ++frameIdx) {
@@ -475,7 +475,7 @@ void Shape::updateObjectConstant() {
 	for (auto &rItem : allRenderItems_) {
 		if (rItem->numFramesDirty > 0) {
 			DX::XMMATRIX world = DX::XMLoadFloat4x4(&rItem->world);
-			ObjectConstants objConstant;
+			d3dUlti::ObjectConstants objConstant;
 			DX::XMStoreFloat4x4(&objConstant.gWorld, world);
 			pCurrObjCB->copyData(rItem->objCBIndex_, objConstant);
 			--rItem->numFramesDirty;
@@ -548,7 +548,7 @@ void Shape::updateViewMatrix() {
 		cosTheta * sinPhi,
 	};
 	lookfrom *= radius_;
-	float3 lookat = float3(0);
+	float3 lookat = float3(0.f);
 	float3 worldUp = float3(0, 1, 0);
 	DX::XMMATRIX view = DX::XMMatrixLookAtLH(lookfrom.toVec(), lookat.toVec(), worldUp.toVec());
 	DX::XMStoreFloat4x4(&view_, view);

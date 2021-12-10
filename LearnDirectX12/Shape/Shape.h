@@ -30,7 +30,7 @@ public:
 
 class Shape : public com::BaseApp {
 public:
-	virtual bool initialize();
+	virtual bool initialize() override;
 	virtual void beginTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 	virtual void tick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 	virtual void onResize(int width, int height) override;
@@ -68,7 +68,7 @@ private:
 	bool isWireframe_ = false;
 	POINT lastMousePos_;
 	bool isLeftPressd = false;
-	PassConstants mainPassCB_;
+	d3dUlti::PassConstants mainPassCB_;
 
 	float theta_ = 0.f;
 	float phi_ = 0.f;
@@ -81,7 +81,7 @@ private:
 	const float zNear = 0.1f;
 	const float zFar = 100.f;
 
-	std::vector<std::unique_ptr<FrameResource>> frameResources_;
+	std::vector<std::unique_ptr<d3dUlti::FrameResource>> frameResources_;
 	UINT currentFrameIndex_ = 0;
-	FrameResource *currentFrameResource_ = nullptr;
+	d3dUlti::FrameResource *currentFrameResource_ = nullptr;
 };

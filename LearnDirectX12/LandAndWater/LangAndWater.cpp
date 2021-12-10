@@ -130,7 +130,7 @@ void LandAndWater::waitFrameResource() {
 void LandAndWater::buildFrameResource() {
 	UINT objectCount = static_cast<UINT>(allRenderItem_.size());
 	for (size_t i = 0; i < d3dUlti::kNumFrameResources; ++i) {
-		auto pFrameResource = std::make_unique<FrameResource>(
+		auto pFrameResource = std::make_unique<d3dUlti::FrameResource>(
 			pDevice_.Get(),
 			1, 
 			objectCount
@@ -409,7 +409,7 @@ void LandAndWater::updateObjectConstantBuffer() {
 	for (auto &item : allRenderItem_) {
 		if (item->numFramesDirty > 0) {
 			DX::XMMATRIX world = DX::XMLoadFloat4x4(&item->world);
-			ObjectConstants objCB;
+			d3dUlti::ObjectConstants objCB;
 			DX::XMStoreFloat4x4(&objCB.gWorld, world);
 			currentFrameResource_->objectCB_->copyData(item->objCBIndex_, objCB);
 			--item->numFramesDirty;

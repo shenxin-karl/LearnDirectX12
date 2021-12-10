@@ -4,6 +4,12 @@
 #include <memory>
 #include "UploadBuffer.h"
 
+namespace d3dUlti {
+
+struct Material;
+struct MaterialConstants;
+
+
 namespace DX = DirectX;
 namespace WRL = Microsoft::WRL;
 struct PassConstants {
@@ -35,6 +41,8 @@ public:
 	WRL::ComPtr<ID3D12CommandAllocator>	cmdListAlloc_ = nullptr;
 	std::unique_ptr<UploadBuffer<PassConstants>> passCB_ = nullptr;
 	std::unique_ptr<UploadBuffer<ObjectConstants>> objectCB_ = nullptr;
+	std::unique_ptr<UploadBuffer<MaterialConstants>> materialCB_ = nullptr;
 	UINT fence_ = 0;
 };
 
+};

@@ -7,7 +7,7 @@
 namespace d3dUlti {
 
 using namespace matrix;
-inline static int kNumFrameResources = 3;
+inline int kNumFrameResources = 3;
 
 struct RenderItem {
 	RenderItem() = default;

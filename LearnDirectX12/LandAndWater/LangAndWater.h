@@ -67,10 +67,10 @@ public:
 
 	WRL::ComPtr<ID3D12RootSignature> pRootSignature_;
 
-	PassConstants mainPassCB_;
-	std::vector<std::unique_ptr<FrameResource>> frameResources_;
+	d3dUlti::PassConstants mainPassCB_;
+	std::vector<std::unique_ptr<d3dUlti::FrameResource>> frameResources_;
 	UINT currentFrameResourceIndex_ = 0;
-	FrameResource *currentFrameResource_ = nullptr;
+	d3dUlti::FrameResource *currentFrameResource_ = nullptr;
 
 	std::vector<std::unique_ptr<d3dUlti::RenderItem>> allRenderItem_;
 	std::vector<d3dUlti::RenderItem *> opaqueItems_;

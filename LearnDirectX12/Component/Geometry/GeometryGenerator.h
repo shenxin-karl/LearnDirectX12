@@ -2,6 +2,7 @@
 #include "Math/VectorHelper.h"
 #include <variant>
 #include <vector>
+#include <tuple>
 
 namespace com {
 using namespace vec;
@@ -47,6 +48,8 @@ public:
 	void loopSubdivision(MeshData &mesh) const;	
 
 	void simplify(MeshData &mesh, float reserve);
+
+	std::tuple<bool, MeshData> loadObjFile(const std::string &path);
 private:
 	static Vertex middlePoint(const Vertex &lhs, const Vertex &rhs);
 	static Vertex middleVertex(const Vertex &lhs, const Vertex &rhs);
