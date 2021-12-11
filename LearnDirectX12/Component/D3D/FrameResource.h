@@ -41,7 +41,7 @@ struct PassConstants {
 	float			gTotalTime;
 	float			gDeltaTime;
 	float4			gAmbientLight;
-	d3dUtil::Light gLights[kMaxLights];
+	d3dUtil::Light	gLights[kMaxLights];
 };
 
 struct ObjectConstants {

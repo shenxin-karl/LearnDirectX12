@@ -56,6 +56,7 @@ public:
 	Keyboard &operator=(const Keyboard &) = delete;
 	bool isKeyPressed(unsigned char key) const;
 	bool isCharPressed(unsigned char key) const;
+	/// https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
 	KeyEvent readKey();
 	CharEvent readChar();
 

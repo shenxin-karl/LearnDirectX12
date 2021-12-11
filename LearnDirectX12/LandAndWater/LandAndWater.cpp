@@ -276,7 +276,7 @@ void LandAndWater::buildMaterial() {
 	pWaterMat->matCBIndex_ = matCBIndex++;
 	pWaterMat->diffuseAlbedo_ = float4(0.0f, 0.2f, 0.6f, 1.0f);
 	pWaterMat->fresnelR0 = float3(0.1f, 0.1f, 0.1f);
-	pWaterMat->roughness_ = 0.9f;
+	pWaterMat->roughness_ = 0.0f;
 	pWaterMat->metallic_ = 1.f;
 	materials_[pWaterMat->name_] = std::move(pWaterMat);
 }
@@ -440,7 +440,7 @@ void LandAndWater::updateLight(std::shared_ptr<com::GameTimer> pGameTimer) {
 		cosTheta * sinPhi,	
 	};
 	mainPassCB_.gLights[0].strength = float3(1.0f);
-	mainPassCB_.gLights[0].direction = nromalize(lightDir);
+	mainPassCB_.gLights[0].direction = normalize(lightDir);
 }
 
 void LandAndWater::updatePassConstantBuffer(std::shared_ptr<com::GameTimer> pGameTimer) {

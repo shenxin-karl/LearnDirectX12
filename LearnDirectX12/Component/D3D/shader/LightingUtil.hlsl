@@ -89,8 +89,12 @@ float3 ComputeSpotLight(Light light, Material mat, float3 wpos, float3 N, float3
     return BlinnPhong(lightStrenght, L, N, V, mat);
 }
 
+#ifndef NUM_DIR_LIGHTS 
+    #define NUM_DIR_LIGHTS 1
+#endif
+
 float4 ComputeLighting(Light gLights[MAX_LIGHTS], Material mat, 
-                       float3 wpos, float N, float V, 
+                       float3 wpos, float3 N, float3 V, 
                        float3 shadowFactor[MAX_LIGHTS]) {
 
     float3 result = 0.0f;

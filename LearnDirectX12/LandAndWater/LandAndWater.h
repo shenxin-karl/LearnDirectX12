@@ -52,7 +52,7 @@ private:
 	void buildRootSignature();
 	void buildPSO();
 
-	void updateLight();
+	void updateLight(std::shared_ptr<com::GameTimer> pGameTimer);
 	void updatePassConstantBuffer(std::shared_ptr<com::GameTimer> pGameTimer);
 	void updateObjectConstantBuffer();
 	void updateMaterialConstantBuffer();

@@ -31,16 +31,17 @@ VertexOut VS(VertexIn vin) {
 }
 
 float4 PS(VertexOut pin) : SV_Target {
-    Material material = { 
-        gDiffuseAlbedo,
+    Material mat = { 
+        pin.color,
         gFresnelR0,
         1.0f - gRoughness,
         gMetallic
     };
+    
     float3 N = normalize(pin.wnrm);
     float3 V = normalize(gEyePos - pin.wpos);
     float3 shadowFactor[16];
-    shadowFactor[0] = { 0, 0, 0 };
-    float3 result = ComputeLighting(gLights, mat, N, V, shadowFactor);
+    shadowFactor[0] = float3(1, 1, 1);
+    float3 result = ComputeLighting(gLights, mat, pin.wpos, N, V, shadowFactor);
     return float4(result, gDiffuseAlbedo.a);
 }
