@@ -1,6 +1,5 @@
-#pragma once
-#ifndef __LIGHTING_UTIL_HLSL_
-#define __LIGHTING_UTIL_HLSL_
+#ifndef __LIGHTING_UTIL_HLSL__
+#define __LIGHTING_UTIL_HLSL__
 
 #define MAX_LIGHTS 16
 struct Light {
@@ -16,33 +15,34 @@ struct Material {
     float4 diffuseAlbedo;
     float3 fresnelR0;
     float  shiness;
+    float  metallic;
 };
 
 float CalcAttenuation(float d, float falloffStart, float falloffEnd) {
     return saturate((falloffEnd - d) / ((falloffEnd - falloffStart)));
 }
 
-float CalcAttenuationSqr(float d, float falloffStart, float falloffEnd) {
-    float dis = d - falloffStart;
-    float lim = falloffEnd - falloffStart;
-    dis *= dis;
-    lim *= lim;
-    return 1.0f - (dis / lim);
+float CalcAttenuationSqr(float dis) {
+    return 1.0f / (dis * dis);
 }
 
 float3 SchilckFresnel(float3 R0, float3 N, float3 L) {
     float cosIndicentAngle = saturate(dot(N, L));
     float F0 = 1.0f - cosIndicentAngle;
-    float refectPercent = R0 + (1.0f - R0) * (F0*F0*F0*F0*F0);
+    float3 refectPercent = R0 + (1.0f - R0) * (F0*F0*F0*F0*F0);
     return refectPercent;
 }
 
 float3 BlinnPhong(float3 lightStrength, float3 L, float3 N, float3 V, Material mat) {
+    float  metallic = saturate(mat.metallic);
+    float3 diffuse  = mat.diffuseAlbedo.rgb * (1.0f - metallic);
+    float3 R0       = lerp(float3(0.04f, 0.04f, 0.04f), mat.diffuseAlbedo.rgb, metallic);
+    
     const float m = mat.shiness * 256.0f;
     float3 H = normalize(V + L);
     float normalizeFactor = (m + 8.0f) / 8.0f;
     float roughnessFactor = normalizeFactor * pow(saturate(dot(H, N)), m);
-    float3 fresnelFactor = SchilckFresnel(mat.fresnelR0, N, L);
+    float3 fresnelFactor = SchilckFresnel(R0, N, L);
     float3 specAlbedo = fresnelFactor * roughnessFactor;
     specAlbedo = specAlbedo / (specAlbedo + 1.0f);
     return (mat.diffuseAlbedo.rgb + specAlbedo) * lightStrength;

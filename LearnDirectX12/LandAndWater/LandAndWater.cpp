@@ -1,4 +1,4 @@
-#include "LangAndWater.h"
+#include "LandAndWater.h"
 #include "Geometry/GeometryGenerator.h"
 #include "GameTimer/GameTimer.h"
 #include "InputSystem/Mouse.h"
@@ -21,6 +21,7 @@ bool LandAndWater::initialize() {
 	pCommandList_->Reset(pCommandAlloc_.Get(), nullptr);
 	buildLandGeometry();
 	buildWaterGeometry();
+	buildMaterial();
 	buildRenderItems();
 	buildFrameResource();
 	buildShaderAndInputLayout();
@@ -37,7 +38,7 @@ bool LandAndWater::initialize() {
 void LandAndWater::beginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	BaseApp::beginTick(pGameTimer);
 
-	currentFrameResourceIndex_ = (currentFrameResourceIndex_ + 1) % d3dUlti::kNumFrameResources;
+	currentFrameResourceIndex_ = (currentFrameResourceIndex_ + 1) % d3dUtil::kNumFrameResources;
 	currentFrameResource_ = frameResources_[currentFrameResourceIndex_].get();
 	auto fence = currentFrameResource_->fence_;
 	if (fence != 0 && pFence_->GetCompletedValue() < fence) {
@@ -50,7 +51,9 @@ void LandAndWater::beginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	handleEvent();
 	updateViewMatrix();
 	updatePassConstantBuffer(pGameTimer);
+	updateLight(pGameTimer);
 	updateObjectConstantBuffer();
+	updateMaterialConstantBuffer();
 }
 
 void LandAndWater::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
@@ -75,7 +78,9 @@ void LandAndWater::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	);
 
 	pCommandList_->SetGraphicsRootSignature(pRootSignature_.Get());
-	pCommandList_->SetGraphicsRootConstantBufferView(1, currentFrameResource_->passCB_->getGPUAddressByIndex(0));
+	pCommandList_->SetGraphicsRootConstantBufferView(
+		d3dUtil::CB_Pass, currentFrameResource_->passCB_->getGPUAddressByIndex(0)
+	);
 
 	// draw Land
 	auto &landPso = isLandWireDraw_ ? PSOs_["landWireGeo"] : PSOs_["landGeo"];
@@ -128,13 +133,11 @@ void LandAndWater::waitFrameResource() {
 }
 
 void LandAndWater::buildFrameResource() {
-	UINT objectCount = static_cast<UINT>(allRenderItem_.size());
-	for (size_t i = 0; i < d3dUlti::kNumFrameResources; ++i) {
-		auto pFrameResource = std::make_unique<d3dUlti::FrameResource>(
-			pDevice_.Get(),
-			1, 
-			objectCount
-		);
+	UINT allItemSize = static_cast<UINT>(allRenderItem_.size());
+	UINT matSize = static_cast<UINT>(materials_.size());
+	d3dUtil::FrameResourceDesc desc(1, allItemSize, matSize);
+	for (size_t i = 0; i < d3dUtil::kNumFrameResources; ++i) {
+		auto pFrameResource = std::make_unique<d3dUtil::FrameResource>(pDevice_.Get(), desc);
 		frameResources_.push_back(std::move(pFrameResource));
 	}
 }
@@ -148,6 +151,7 @@ void LandAndWater::buildLandGeometry() {
 	for (size_t i = 0; i < grid.vertices.size(); ++i) {
 		const float3 &p = grid.vertices[i].position;
 		float3 position = { p.x, getHillsHeight(p.x, p.z), p.z };
+		float3 normal = normalize(getHillsNormal(p.x, p.z));
 		float4 color;
 		if (position.y < -10.f)
 			color = float4(0.48f, 0.96f, 0.62f, 1.f);
@@ -159,7 +163,7 @@ void LandAndWater::buildLandGeometry() {
 			color = float4(0.45f, 0.39f, 0.34f, 1.f);
 		else
 			color = float4(1.f);
-		vertices.push_back(LandVertex{ position, color });
+		vertices.push_back(LandVertex{ position, color, normal });
 	}
 
 	std::vector<com::uint16> indices;
@@ -256,22 +260,45 @@ void LandAndWater::buildWaterGeometry() {
 	geometrices_[pGeo->name] = std::move(pGeo);
 }
 
+void LandAndWater::buildMaterial() {
+	int matCBIndex = 0;
+	auto pLandMat = std::make_unique<d3dUtil::Material>();
+	pLandMat->name_ = "landMat";
+	pLandMat->matCBIndex_ = matCBIndex++;
+	pLandMat->diffuseAlbedo_ = float4(0.2f, 0.6f, 0.2f, 1.0f);
+	pLandMat->fresnelR0 = float3(0.01f, 0.01f, 0.01f);
+	pLandMat->roughness_ = 0.95f;
+	pLandMat->metallic_ = 0.1f;
+	materials_[pLandMat->name_] = std::move(pLandMat);
+
+	auto pWaterMat = std::make_unique<d3dUtil::Material>();
+	pWaterMat->name_ = "waterMat";
+	pWaterMat->matCBIndex_ = matCBIndex++;
+	pWaterMat->diffuseAlbedo_ = float4(0.0f, 0.2f, 0.6f, 1.0f);
+	pWaterMat->fresnelR0 = float3(0.1f, 0.1f, 0.1f);
+	pWaterMat->roughness_ = 0.9f;
+	pWaterMat->metallic_ = 1.f;
+	materials_[pWaterMat->name_] = std::move(pWaterMat);
+}
+
 void LandAndWater::buildRenderItems() {
 	auto &pLandGeo = geometrices_["landGeo"];
-	auto landItem = std::make_unique<d3dUlti::RenderItem>();
+	auto landItem = std::make_unique<d3dUtil::RenderItem>();
 	landItem->objCBIndex_ = 0;
 	landItem->geometry_ = pLandGeo.get();
 	landItem->primitiveType_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 	landItem->indexCount_ = pLandGeo->drawArgs["landGrid"].indexCount;
+	landItem->material_ = materials_["landMat"].get();
 	opaqueItems_.push_back(landItem.get());
 	allRenderItem_.push_back(std::move(landItem));
 	
 	auto &pWaterGeo = geometrices_["waterGeo"];
-	auto waterItem = std::make_unique<d3dUlti::RenderItem>();
+	auto waterItem = std::make_unique<d3dUtil::RenderItem>();
 	waterItem->objCBIndex_ = 1;
 	waterItem->geometry_ = pWaterGeo.get();
 	waterItem->primitiveType_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 	waterItem->indexCount_ = pWaterGeo->drawArgs["waterGrid"].indexCount;
+	waterItem->material_ = materials_["waterMat"].get();
 	waterItems_.push_back(waterItem.get());
 	allRenderItem_.push_back(std::move(waterItem));
 }
@@ -284,8 +311,12 @@ void LandAndWater::buildShaderAndInputLayout() {
 		},
 		{
 			"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(LandVertex, color),
-			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0, 
 		},
+		{
+			"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(LandVertex, normal),
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0,
+		}
 	};
 	waterInputLayout_ = {
 		{
@@ -307,12 +338,13 @@ void LandAndWater::buildShaderAndInputLayout() {
 }
 
 void LandAndWater::buildRootSignature() {
-	CD3DX12_ROOT_PARAMETER rootParameter[2];
+	CD3DX12_ROOT_PARAMETER rootParameter[3];
 	rootParameter[0].InitAsConstantBufferView(0);
 	rootParameter[1].InitAsConstantBufferView(1);
+	rootParameter[2].InitAsConstantBufferView(2);
 
 	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc = {
-		2, rootParameter, 0, nullptr,
+		3, rootParameter, 0, nullptr,
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
 	};
 
@@ -374,6 +406,43 @@ void LandAndWater::buildPSO() {
 	ThrowIfFailed(pDevice_->CreateGraphicsPipelineState(&waterWirePsoDesc, IID_PPV_ARGS(&waterWirePso)));
 }
 
+
+void LandAndWater::updateLight(std::shared_ptr<com::GameTimer> pGameTimer) {
+	float dt = pGameTimer->getDeltaTime();
+	constexpr float sensitivity = 360.f / 3;
+	if (keyFlag_.test(VK_LEFT)) {
+		lightDirty_ = true;
+		lightPhi_ += sensitivity * dt;
+	}
+	if (keyFlag_.test(VK_RIGHT)) {
+		lightDirty_ = true;
+		lightPhi_ -= sensitivity * dt;
+	}
+	if (keyFlag_.test(VK_UP)) {
+		lightDirty_ = true;
+		lightTheta_ -= sensitivity * dt;
+	}
+	if (keyFlag_.test(VK_DOWN)) {
+		lightDirty_ = true;
+		lightTheta_ += sensitivity * dt;
+	}
+	if (!lightDirty_)
+		return;
+
+	lightTheta_ = std::clamp(lightTheta_, -89.f, +89.f);
+	float cosTheta = std::cos(DX::XMConvertToRadians(lightTheta_));
+	float sinTheta = std::sin(DX::XMConvertToRadians(lightTheta_));
+	float cosPhi = std::cos(DX::XMConvertToRadians(lightPhi_));
+	float sinPhi = std::sin(DX::XMConvertToRadians(lightPhi_));
+	float3 lightDir = {
+		cosTheta * cosPhi,
+		sinTheta,
+		cosTheta * sinPhi,	
+	};
+	mainPassCB_.gLights[0].strength = float3(1.0f);
+	mainPassCB_.gLights[0].direction = nromalize(lightDir);
+}
+
 void LandAndWater::updatePassConstantBuffer(std::shared_ptr<com::GameTimer> pGameTimer) {
 	DX::XMVECTOR det;
 	DX::XMMATRIX view = DX::XMLoadFloat4x4(&view_);
@@ -402,6 +471,7 @@ void LandAndWater::updatePassConstantBuffer(std::shared_ptr<com::GameTimer> pGam
 	mainPassCB_.gFarZ = zFar_;
 	mainPassCB_.gTotalTime = pGameTimer->getTotalTime();
 	mainPassCB_.gDeltaTime = pGameTimer->getDeltaTime();
+	mainPassCB_.gAmbientLight = float4(0.1f);
 	currentFrameResource_->passCB_->copyData(0, mainPassCB_);
 }
 
@@ -409,10 +479,24 @@ void LandAndWater::updateObjectConstantBuffer() {
 	for (auto &item : allRenderItem_) {
 		if (item->numFramesDirty > 0) {
 			DX::XMMATRIX world = DX::XMLoadFloat4x4(&item->world);
-			d3dUlti::ObjectConstants objCB;
+			d3dUtil::ObjectConstants objCB;
 			DX::XMStoreFloat4x4(&objCB.gWorld, world);
 			currentFrameResource_->objectCB_->copyData(item->objCBIndex_, objCB);
 			--item->numFramesDirty;
+		}
+	}
+}
+
+void LandAndWater::updateMaterialConstantBuffer() {
+	auto &pMatCB = currentFrameResource_->materialCB_;
+	for (auto &&[key, pMat] : materials_) {
+		if (pMat->numFrameDirty_ > 0) {
+			d3dUtil::MaterialConstants materialBuffer;
+			materialBuffer.gDiffuseAlbedo = pMat->diffuseAlbedo_;
+			materialBuffer.gFresnelR0 = pMat->fresnelR0;
+			materialBuffer.gMetallic = pMat->metallic_;
+			materialBuffer.gRoughness = pMat->roughness_;
+			pMatCB->copyData(pMat->matCBIndex_, materialBuffer);
 		}
 	}
 }
@@ -422,7 +506,7 @@ void LandAndWater::updateViewMatrix() {
 	float cosTheta = std::cos(DX::XMConvertToRadians(theta_));
 	float sinPhi = std::sin(DX::XMConvertToRadians(phi_));
 	float cosPhi = std::cos(DX::XMConvertToRadians(phi_));
-	float3 lookat = float3(0);
+	float3 lookat = float3(0.f);
 	float3 lookup = float3(0, 1, 0);
 	float3 lookfrom = {
 		cosTheta * cosPhi,
@@ -441,8 +525,10 @@ void LandAndWater::drawLand() {
 		pCommandList_->IASetVertexBuffers(0, 1, RVPtr(rItem->geometry_->getVertexBufferView()));
 		pCommandList_->IASetIndexBuffer(RVPtr(rItem->geometry_->getIndexBufferView()));
 		pCommandList_->IASetPrimitiveTopology(rItem->primitiveType_);
-		auto address = currentFrameResource_->objectCB_->getGPUAddressByIndex(rItem->objCBIndex_);
-		pCommandList_->SetGraphicsRootConstantBufferView(0, address);
+		auto objAddress = currentFrameResource_->objectCB_->getGPUAddressByIndex(rItem->objCBIndex_);
+		auto matAddress = currentFrameResource_->materialCB_->getGPUAddressByIndex(rItem->material_->matCBIndex_);
+		pCommandList_->SetGraphicsRootConstantBufferView(d3dUtil::CB_Object, objAddress);
+		pCommandList_->SetGraphicsRootConstantBufferView(d3dUtil::CB_Material, matAddress);
 		pCommandList_->DrawIndexedInstanced(
 			rItem->indexCount_, 
 			1, 
@@ -459,8 +545,10 @@ void LandAndWater::drawWater() {
 		pCommandList_->IASetVertexBuffers(0, 1, RVPtr(ri->geometry_->getVertexBufferView()));
 		pCommandList_->IASetIndexBuffer(RVPtr(ri->geometry_->getIndexBufferView()));
 		pCommandList_->IASetPrimitiveTopology(ri->primitiveType_);
-		auto address = currentFrameResource_->objectCB_->getGPUAddressByIndex(ri->objCBIndex_);
-		pCommandList_->SetGraphicsRootConstantBufferView(0, address);
+		auto objAddress = currentFrameResource_->objectCB_->getGPUAddressByIndex(ri->objCBIndex_);
+		auto matAddress = currentFrameResource_->materialCB_->getGPUAddressByIndex(ri->material_->matCBIndex_);
+		pCommandList_->SetGraphicsRootConstantBufferView(d3dUtil::CB_Object, objAddress);
+		pCommandList_->SetGraphicsRootConstantBufferView(d3dUtil::CB_Material, matAddress);
 		pCommandList_->DrawIndexedInstanced(
 			ri->indexCount_,
 			1,
@@ -473,6 +561,16 @@ void LandAndWater::drawWater() {
 
 float LandAndWater::getHillsHeight(float x, float z) {
 	return 0.3f * (z * std::sin(0.1f * x) + x * std::cos(0.1f * z));
+}
+
+
+float3 LandAndWater::getHillsNormal(float x, float z) {
+	float3 n = {
+		-0.03f * z * std::cos(0.1f * x) - 0.3f * std::cos(0.1f * z),
+		1.f,
+		-0.3f * std::sin(0.1f * x) + 0.03f * x * std::sin(0.1f * z),
+	};
+	return n;
 }
 
 void LandAndWater::handleEvent() {
@@ -494,7 +592,13 @@ void LandAndWater::handleEvent() {
 	}
 	while (auto event = pInputSystem_->keyboard->readChar())
 		onCharacter(event.getCharacter());
-	
+	while (auto event = pInputSystem_->keyboard->readKey()) {
+		if (event.isPressed())
+			onKeyDown(event.getKey());
+		else if (event.isReleased())
+			onKeyUp(event.getKey());
+	}
+
 }
 
 void LandAndWater::onMouseMove(POINT point) {
@@ -502,7 +606,7 @@ void LandAndWater::onMouseMove(POINT point) {
 		constexpr float sensitivity = 1;
 		float dx = (point.x - lastMousePos_.x) * sensitivity;
 		float dy = (point.y - lastMousePos_.y) * sensitivity;
-		theta_ = std::clamp(theta_ + dy, -89.f, +89.f);
+		theta_ = std::clamp(theta_ + dy, 1.f, +89.f);
 		phi_ -= dx;
 	}
 	lastMousePos_ = point;
@@ -529,4 +633,12 @@ void LandAndWater::onCharacter(char character) {
 		isWaterWireDraw_ = !isWaterWireDraw_;
 		break;
 	};
+}
+
+void LandAndWater::onKeyDown(unsigned char key) {
+	keyFlag_.set(std::size_t(key));
+}
+
+void LandAndWater::onKeyUp(unsigned char key) {
+	keyFlag_.set(std::size_t(key), false);
 }

@@ -1,6 +1,6 @@
 #include "BaseApp/BaseApp.h"
 #include "Math/MathHelper.h"
-#include "D3D/d3dulti.h"
+#include "D3D/d3dutil.h"
 #include "D3D/UploadBuffer.h"
 
 namespace DX = DirectX;
@@ -22,8 +22,8 @@ public:
 	BoxApp &operator=(const BoxApp &) = delete;
 
 	virtual bool initialize() override;
-	virtual void beginTick(std::shared_ptr<com::GameTimer> pGameTimer);
-	virtual void tick(std::shared_ptr<com::GameTimer> pGameTimer);
+	virtual void beginTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
+	virtual void tick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 	virtual ~BoxApp() = default;
 private:
 	virtual void onResize(int width, int height) override;

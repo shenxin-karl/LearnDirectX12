@@ -28,4 +28,5 @@ target_link_libraries("Shape" PUBLIC
 	BaseApp
 	Math
 	Geometry
+	D3D
 )
