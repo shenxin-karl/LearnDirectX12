@@ -26,24 +26,24 @@ void halfEdgeTest() {
 	};
 	std::vector<uint32> indices = {
 		0, 1, 2,
-		0, 2, 3,
+		//0, 2, 3,
 	};
 	MeshData mesh = { std::move(vertices), std::move(indices) };
 	HEMesh hemesh(mesh);
 	hemesh.foreachFace([](const HEMesh *pMesh, const HEFace *face) {
 		for (auto *pEdge : face->edges) {
 			std::cout << "current vertex: " << pEdge->start->index << std::endl;
-			std::unordered_set<HEVertex *> nearHalfVertex = pMesh->getHalfVertsFromVertex(pEdge->start);
+			std::vector<HEVertex *> nearHalfVertex = pMesh->getNeighborsHalfVerts(pEdge->start);
 			std::cout << "----------------------- halfVerts begin -----------------------" << std::endl;
 			for (HEVertex *pVert : nearHalfVertex)
 				std::cout << "index: " << pVert->index << std::endl;
 			std::cout << "----------------------- halfVerts end -----------------------" << std::endl;
-			std::unordered_set<HEVertex *> nearVertex = pMesh->getVertsFromVertex(pEdge->start);
+			std::vector<HEVertex *> nearVertex = pMesh->getNeighborsVerts(pEdge->start);
 			std::cout << "----------------------- Verts begin -----------------------" << std::endl;
 			for (HEVertex *pVert : nearVertex)
 				std::cout << "index: " << pVert->index << std::endl;
 			std::cout << "----------------------- Verts end -----------------------" << std::endl;
-			std::unordered_set<HEEdge *> nearHalfEdge = pMesh->getHalfEdgesFromVertex(pEdge->start);
+			std::vector<HEEdge *> nearHalfEdge = pMesh->getNeighborsHalfEdges(pEdge->start);
 			std::cout << "----------------------- HalfEdge begin -----------------------" << std::endl;
 			for (HEEdge *pEdge : nearHalfEdge) {
 				std::cout << "start: " << pEdge->start->index << ", " 
@@ -51,7 +51,7 @@ void halfEdgeTest() {
 			}
 			std::cout << "----------------------- HalfEdge end -----------------------" << std::endl;
 
-			std::unordered_set<HEEdge *> nearEdge = pMesh->getEdgesFromVertex(pEdge->start);
+			std::vector<HEEdge *> nearEdge = pMesh->getNeighborsEdges(pEdge->start);
 			std::cout << "----------------------- Edge begin -----------------------" << std::endl;
 			for (HEEdge *pEdge : nearEdge) {
 				std::cout << "start: " << pEdge->start->index << ", " 
@@ -62,22 +62,22 @@ void halfEdgeTest() {
 		}
 	});
 
-	std::cout << "union vert 0 2" << std::endl;
-	auto unionVert = hemesh.getUnionVert(hemesh.getVertex(0), hemesh.getVertex(2));
-	for (auto *pVert : unionVert)
-		std::cout << "index: " << pVert->index << std::endl;
-	std::cout << "union vert 0 2 end" << std::endl;
+	//std::cout << "union vert 0 2" << std::endl;
+	//auto unionVert = hemesh.getUnionVert(hemesh.getVertex(0), hemesh.getVertex(2));
+	//for (auto *pVert : unionVert)
+	//	std::cout << "index: " << pVert->index << std::endl;
+	//std::cout << "union vert 0 2 end" << std::endl;
 
-	std::cout << "union vert 0 3" << std::endl;
-	unionVert = hemesh.getUnionVert(hemesh.getVertex(0), hemesh.getVertex(3));
-	for (auto *pVert : unionVert)
-		std::cout << "index: " << pVert->index << std::endl;
-	std::cout << "union vert 0 3 end" << std::endl;
-	std::cout << "union vert 2 1" << std::endl;
-	unionVert = hemesh.getUnionVert(hemesh.getVertex(2), hemesh.getVertex(1));
-	for (auto *pVert : unionVert)
-		std::cout << "index: " << pVert->index << std::endl;
-	std::cout << "union vert 2 1 end" << std::endl;
+	//std::cout << "union vert 0 3" << std::endl;
+	//unionVert = hemesh.getUnionVert(hemesh.getVertex(0), hemesh.getVertex(3));
+	//for (auto *pVert : unionVert)
+	//	std::cout << "index: " << pVert->index << std::endl;
+	//std::cout << "union vert 0 3 end" << std::endl;
+	//std::cout << "union vert 2 1" << std::endl;
+	//unionVert = hemesh.getUnionVert(hemesh.getVertex(2), hemesh.getVertex(1));
+	//for (auto *pVert : unionVert)
+	//	std::cout << "index: " << pVert->index << std::endl;
+	//std::cout << "union vert 2 1 end" << std::endl;
 }
 
 void saveObjTest() {
@@ -161,9 +161,9 @@ void createGridTest() {
 }
 
 int main() {
-	//halfEdgeTest();
+	halfEdgeTest();
 	//saveObjTest();
-	createBoxTest();
+	//createBoxTest();
 	//createCylinderTest();
 	//loopSubdivisionTest();
 	//loopBetaTest();

@@ -478,11 +478,11 @@ std::tuple<bool, MeshData> GometryGenerator::loadObjFile(const std::string &path
 	}
 	for (std::size_t i = 0; i < strNormals.size(); ++i) {
 		auto &nrm = normals[i];
-		(void)scanf(strNormals[i].c_str(), "vn %f %f %f", &nrm.x, nrm.y, &nrm.z);
+		(void)sscanf(strNormals[i].c_str(), "vn %f %f %f", &nrm.x, nrm.y, &nrm.z);
 	}
 	for (std::size_t i = 0; i < strTexcoords.size(); ++i) {
 		auto &uv = texcoords[i];
-		(void)scanf(strTexcoords[i].c_str(), "vt %f %f", &uv.x, uv.y);
+		(void)sscanf(strTexcoords[i].c_str(), "vt %f %f", &uv.x, uv.y);
 	}
 
 	strPositions.~vector();
@@ -502,6 +502,7 @@ std::tuple<bool, MeshData> GometryGenerator::loadObjFile(const std::string &path
 		case 5:
 			break;
 		case 7:
+			break;
 		}
 	}
 

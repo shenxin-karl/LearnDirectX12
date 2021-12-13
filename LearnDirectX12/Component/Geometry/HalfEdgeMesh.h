@@ -22,14 +22,13 @@ struct HEVertex {
 	float3	position;
 	float2  texcoord;
 	uint32  index;
-	bool	isBoundary = false;
 };
 
 struct HEEdge {
 	HEVertex *start = nullptr;
 	HEVertex *last = nullptr;
-	HEFace *face = nullptr;
-	uint32	refNum = 0;			// the edge reference count
+	HEFace	 *face = nullptr;
+	bool	 isBoundary = false;
 };
 
 using HEEdgeKey = std::pair<const HEVertex *, const HEVertex *>;
@@ -43,35 +42,44 @@ struct HEFace {
 
 
 struct HEMesh {
-	std::vector<std::unique_ptr<HEVertex>> verts;
-	std::vector<std::unique_ptr<HEFace>> faces;
-	std::unordered_map<HEEdgeKey, std::unique_ptr<HEEdge>, HEEdgeKeyHasher> edges;
-	std::unordered_map<const HEVertex *, std::vector<HEFace *>> faceMap;
+	std::vector<std::unique_ptr<HEVertex>>	verts;
+	std::vector<std::unique_ptr<HEFace>>	faces;
+	std::vector<std::unique_ptr<HEEdge>>	halfEdges;
+	std::unordered_map<const HEVertex *, std::vector<HEFace *>>	vert2Face;
+private:
+	struct EdgeRefInfo {
+		int		refCount = 0;
+		HEEdge *halfEdge = nullptr;
+	};
+	mutable bool dirty = true;
+	mutable std::unordered_map<HEEdgeKey, EdgeRefInfo, HEEdgeKeyHasher> edgeRefInfo;
+	void updateVertBoundaryInfo() const;
 public:
 	HEMesh() = default;
 	HEMesh(const com::MeshData &mesh);
 	HEMesh(const std::vector<HEVertex> &vertices, std::vector<com::uint32> &indices);
-	HEMesh(const HEMesh &other);
-	HEMesh(HEMesh &&other) = default;
-	HEMesh &operator=(HEMesh &&other) = default;
+	HEMesh(const HEMesh &other) = delete;
 	~HEMesh() = default;
+
 	void foreachFace(const std::function<void(const HEMesh *pSelf, const HEFace *pFace)> &callback) const;
-	std::vector<HEFace *> getFaceFromVertex(const HEVertex *vert) const;
-	std::unordered_set<HEVertex *> getVertsFromVertex(const HEVertex *vert) const;
-	std::unordered_set<HEVertex *> getHalfVertsFromVertex(const HEVertex *vert) const;
-	std::unordered_set<HEEdge *> getEdgesFromVertex(const HEVertex *vert) const;
-	std::unordered_set<HEEdge *> getHalfEdgesFromVertex(const HEVertex *vert) const;
-	std::unordered_set<HEVertex *> getUnionVert(const HEVertex *pVert1, const HEVertex *pVert2) const;
-	std::unordered_set<HEVertex *> getNeighborsVertFromVert(const HEVertex *pVert) const;
+
+	void foreachFace(const HEVertex *pVert, const std::function<void(HEFace *)> &callback) const;
+	void foreachNeighborsVerts(const HEVertex *pVert, const std::function<void(HEVertex *)> &callback) const;
+	void foreachNeighborsHalfVerts(const HEVertex *pVert, const std::function<void(HEVertex *)> &callback) const;
+	void foreachNeighborsEdges(const HEVertex *pVert, const std::function<void(HEEdge *)> &callback) const;
+	void foreachNeighborsHalfEdges(const HEVertex *pVert, const std::function<void(HEEdge *)> &callback) const;
+
+	std::vector<HEFace *>	getFace(const HEVertex *vert) const;
+	std::vector<HEVertex *> getNeighborsVerts(const HEVertex *vert) const;
+	std::vector<HEVertex *> getNeighborsHalfVerts(const HEVertex *vert) const;
+	std::vector<HEEdge *>	getNeighborsEdges(const HEVertex *vert) const;
+	std::vector<HEEdge *>	getNeighborsHalfEdges(const HEVertex *vert) const;
+
 	HEVertex *getVertex(size_t idx) const;
-	size_t getVertexFaceCount(const HEVertex *pVert) const;
-	bool hasFace() const;
+
 	bool isBoundaryVert(const HEVertex *pVert) const;
 	bool isBoundaryEdge(const HEVertex *pVert1, const HEVertex *pVert2) const;
 	bool isBoundaryEdge(const HEEdge *pEdge) const;
-	bool isPairEdge(const HEVertex *pVert1, const HEVertex *pVert2) const;
-	bool isPairEdge(const HEEdge *pEdge) const;
-	void updateVertBoundaryInfo();
 public:
 	HEVertex *insertVertex(const float3 &position, const float2 &texcoord);
 	HEEdge *insertEdge(HEVertex *v1, HEVertex *v2);
