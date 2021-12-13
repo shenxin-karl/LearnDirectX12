@@ -1,12 +1,7 @@
-#ifndef _PASS_CONSTANT_BUFFER_HLSL_
-#define _PASS_CONSTANT_BUFFER_HLSL_
-#include "LightingUtil.hlsl"
+#ifndef __PASS_CONSTANT_BUFFER_HLSL__
+#define __PASS_CONSTANT_BUFFER_HLSL__
 
-#if !defined(USE_DEF_PASS_REG) || defined(PASS_REGISTER_ID)
-	#define PASS_REGISTER_ID b1
-#endif
-
-cbuffer PassConstants : register(PASS_REGISTER_ID) {
+cbuffer PassConstants : register(CB_PASS_TYPE){
 	float4x4	gView;
 	float4x4	gInvView;
 	float4x4	gProj;

@@ -38,7 +38,7 @@ void Shape::beginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	BaseApp::beginTick(pGameTimer);
 	pollEvent();
 
-	currentFrameIndex_ = (currentFrameIndex_ + 1) % d3dUlti::kNumFrameResources;
+	currentFrameIndex_ = (currentFrameIndex_ + 1) % d3dUtil::kNumFrameResources;
 	currentFrameResource_ = frameResources_[currentFrameIndex_].get();
 
 	int currFence = currentFrameResource_->fence_;
@@ -88,7 +88,7 @@ void Shape::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	// set pass constant buffer
 	CD3DX12_GPU_DESCRIPTOR_HANDLE handle(pCbvHeaps_->GetGPUDescriptorHandleForHeapStart());
 	handle.Offset(passCbvOffset_ + currentFrameIndex_, cbvSrvUavDescriptorSize_);
-	pCommandList_->SetGraphicsRootDescriptorTable(1, handle);
+	pCommandList_->SetGraphicsRootDescriptorTable(d3dUtil::CB_Pass, handle);
 
 	drawRenderItems();
 
@@ -141,8 +141,9 @@ void Shape::pollEvent() {
 
 void Shape::buildFrameResources() {
 	UINT itemSize = static_cast<UINT>(allRenderItems_.size());
-	for (int i = 0; i < d3dUlti::kNumFrameResources; ++i) 
-		frameResources_.push_back(std::make_unique<d3dUlti::FrameResource>(pDevice_.Get(), 1, itemSize));
+	d3dUtil::FrameResourceDesc desc(1, itemSize);
+	for (int i = 0; i < d3dUtil::kNumFrameResources; ++i) 
+		frameResources_.push_back(std::make_unique<d3dUtil::FrameResource>(pDevice_.Get(), desc));
 }
 
 void Shape::buildShapeGeometry() {
@@ -271,7 +272,7 @@ void Shape::buildRenderItems() {
 	using namespace DX;
 	auto *pGeometry = geometrice_["shapeGeo"].get();
 
-	auto boxRItem = std::make_unique<d3dUlti::RenderItem>();
+	auto boxRItem = std::make_unique<d3dUtil::RenderItem>();
 	XMStoreFloat4x4(&boxRItem->world, 
 		DX::XMMatrixScaling(2.f, 2.f, 2.f) * DX::XMMatrixTranslation(0.f, 0.5f, 0.f));
 	boxRItem->objCBIndex_ = 0;
@@ -282,7 +283,7 @@ void Shape::buildRenderItems() {
 	boxRItem->baseVertexLocation_ = boxRItem->geometry_->drawArgs["box"].baseVertexLocation;
 	allRenderItems_.push_back(std::move(boxRItem));
 
-	auto gridRItem = std::make_unique<d3dUlti::RenderItem>();
+	auto gridRItem = std::make_unique<d3dUtil::RenderItem>();
 	gridRItem->world = MathHelper::identity4x4();
 	gridRItem->objCBIndex_ = 1;
 	gridRItem->geometry_ = pGeometry;
@@ -294,10 +295,10 @@ void Shape::buildRenderItems() {
 
 	UINT objCBIndex = 2;
 	for (int i = 0; i < 5; ++i) {
-		auto leftCylRItem = std::make_unique<d3dUlti::RenderItem>();
-		auto rightCylRItem = std::make_unique<d3dUlti::RenderItem>();
-		auto leftSphereRItem = std::make_unique<d3dUlti::RenderItem>();
-		auto rightSphereRItem = std::make_unique<d3dUlti::RenderItem>();
+		auto leftCylRItem = std::make_unique<d3dUtil::RenderItem>();
+		auto rightCylRItem = std::make_unique<d3dUtil::RenderItem>();
+		auto leftSphereRItem = std::make_unique<d3dUtil::RenderItem>();
+		auto rightSphereRItem = std::make_unique<d3dUtil::RenderItem>();
 
 		DX::XMMATRIX leftCylWorld = DX::XMMatrixTranslation(-5.f, 1.5f, -10.f + i * 5.f);
 		DX::XMMATRIX rightCylWorld = DX::XMMatrixTranslation(+5.f, 1.5f, -10.f + i * 5.f);
@@ -348,24 +349,24 @@ void Shape::buildRenderItems() {
 
 void Shape::buildDescriptorHeaps() {
 	UINT objCount = static_cast<UINT>(opaqueRItems_.size());
-	UINT numDescriptors = (objCount + 1) * d3dUlti::kNumFrameResources;
+	UINT numDescriptors = (objCount + 1) * d3dUtil::kNumFrameResources;
 
 	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc;
 	cbvHeapDesc.NumDescriptors = numDescriptors;
 	cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	cbvHeapDesc.NodeMask = 0;
-	passCbvOffset_ = objCount * d3dUlti::kNumFrameResources;
+	passCbvOffset_ = objCount * d3dUtil::kNumFrameResources;
 	pDevice_->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&pCbvHeaps_));
 }
 
 
 void Shape::buldConstantBufferViews() {
-	UINT objCBByteSize = static_cast<UINT>(calcConstantBufferByteSize(sizeof(d3dUlti::ObjectConstants)));
-	UINT passCBByteSize = static_cast<UINT>(calcConstantBufferByteSize(sizeof(d3dUlti::PassConstants)));
+	UINT objCBByteSize = static_cast<UINT>(calcConstantBufferByteSize(sizeof(d3dUtil::ObjectConstants)));
+	UINT passCBByteSize = static_cast<UINT>(calcConstantBufferByteSize(sizeof(d3dUtil::PassConstants)));
 	UINT objCount = static_cast<UINT>(opaqueRItems_.size());
 
-	for (int frameIdx = 0; frameIdx < d3dUlti::kNumFrameResources; ++frameIdx) {
+	for (int frameIdx = 0; frameIdx < d3dUtil::kNumFrameResources; ++frameIdx) {
 		auto *pObjCb = frameResources_[frameIdx]->objectCB_->resource();
 		for (UINT i = 0; i < objCount; ++i) {
 			auto address = frameResources_[frameIdx]->objectCB_->getGPUAddressByIndex(i);
@@ -380,7 +381,7 @@ void Shape::buldConstantBufferViews() {
 		}
 	}
 
-	for (int frameIdx = 0; frameIdx < d3dUlti::kNumFrameResources; ++frameIdx) {
+	for (int frameIdx = 0; frameIdx < d3dUtil::kNumFrameResources; ++frameIdx) {
 		auto address = frameResources_[frameIdx]->passCB_->getGPUAddressByIndex(0);
 		auto heapIndex = passCbvOffset_ + frameIdx;
 		CD3DX12_CPU_DESCRIPTOR_HANDLE handle(pCbvHeaps_->GetCPUDescriptorHandleForHeapStart());
@@ -475,7 +476,7 @@ void Shape::updateObjectConstant() {
 	for (auto &rItem : allRenderItems_) {
 		if (rItem->numFramesDirty > 0) {
 			DX::XMMATRIX world = DX::XMLoadFloat4x4(&rItem->world);
-			d3dUlti::ObjectConstants objConstant;
+			d3dUtil::ObjectConstants objConstant;
 			DX::XMStoreFloat4x4(&objConstant.gWorld, world);
 			pCurrObjCB->copyData(rItem->objCBIndex_, objConstant);
 			--rItem->numFramesDirty;
@@ -525,7 +526,7 @@ void Shape::drawRenderItems() {
 		auto handle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCbvHeaps_->GetGPUDescriptorHandleForHeapStart());
 		handle.Offset(cbvIndex, cbvSrvUavDescriptorSize_);
 
-		pCommandList_->SetGraphicsRootDescriptorTable(0, handle);
+		pCommandList_->SetGraphicsRootDescriptorTable(d3dUtil::CB_Object, handle);
 		pCommandList_->DrawIndexedInstanced(
 			rItem->indexCount_, 
 			1, 

@@ -1,6 +1,7 @@
 #include "BoxApp.h"
 #include "InputSystem/window.h"
 #include "InputSystem/Mouse.h"
+#include "D3D/FrameResource.h"
 #include <DirectXColors.h>
 #include <array>
 #include <iostream>
@@ -61,7 +62,7 @@ void BoxApp::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	ID3D12DescriptorHeap *descriptorHeaps[] = { pCbvHeap_.Get() };
 	pCommandList_->SetDescriptorHeaps(1, descriptorHeaps);
 	pCommandList_->SetGraphicsRootSignature(pRootSignature_.Get());
-	pCommandList_->SetGraphicsRootDescriptorTable(0, pCbvHeap_->GetGPUDescriptorHandleForHeapStart());
+	pCommandList_->SetGraphicsRootDescriptorTable(d3dUtil::CB_Object, pCbvHeap_->GetGPUDescriptorHandleForHeapStart());
 	const auto &submesh = pBoxGeo_->drawArgs["box"];
 	pCommandList_->DrawIndexedInstanced(submesh.indexCount, 1, 
 		submesh.startIndexLocation, submesh.baseVertexLocation, 0);

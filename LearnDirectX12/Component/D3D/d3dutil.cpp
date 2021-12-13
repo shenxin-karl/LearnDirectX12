@@ -1,7 +1,7 @@
 #include <windows.h>
 #include <cassert>
 #include <d3dcompiler.h>
-#include "d3dulti.h"
+#include "d3dutil.h"
 #include "D3DX12.h"
 #include "D3DException.h"
 
@@ -9,7 +9,6 @@ namespace WRL = Microsoft::WRL;
 void _ThrowIfFailedImpl(const char *file, int line, HRESULT hr) {
 	if (FAILED(hr))
 		throw d3d::D3DException(hr, file, line);
-	return;
 }
 
 WRL::ComPtr<ID3D12Resource> createDefaultBuffer(

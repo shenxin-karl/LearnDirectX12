@@ -1,4 +1,7 @@
+#include "../../Component/D3D/shader/CBRegisterType.hlsl"
+#include "../../Component/D3D/shader/LightingUtil.hlsl"
 #include "../../Component/D3D/shader/PassConstantBuffer.hlsl"
+#include "../../Component/D3D/shader/MaterialConstantBuffer.hlsl"
 
 struct VertexIn {
 	float3 position : POSITION;
@@ -10,7 +13,7 @@ struct VertexOut {
 	float4 color	  : COLOR;
 };
 
-cbuffer ObjectConstantBuffer : register(b0) {
+cbuffer ObjectConstantBuffer : register(CB_OBJECT_TYPE) {
 	float4x4 gWorld;
 };
 

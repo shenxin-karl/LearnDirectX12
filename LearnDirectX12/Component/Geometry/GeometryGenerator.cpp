@@ -504,6 +504,8 @@ std::tuple<bool, MeshData> GometryGenerator::loadObjFile(const std::string &path
 		case 7:
 		}
 	}
+
+	return result;
 }
 
 com::Vertex GometryGenerator::middlePoint(const Vertex &lhs, const Vertex &rhs) {

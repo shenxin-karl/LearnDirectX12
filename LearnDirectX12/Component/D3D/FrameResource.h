@@ -6,11 +6,18 @@
 #include "Math/VectorHelper.h"
 #include "Math/MatrixHelper.h"
 #include "D3D/Material.h"
+#include "D3D/Light.h"
 
-namespace d3dUlti {
+namespace d3dUtil {
 
 struct Material;
 struct MaterialConstants;
+
+enum CBRegisterType : UINT {
+	CB_Object	= 0,
+	CB_Pass		= 1,
+	CB_Material = 2,
+};
 
 using namespace mat;
 using namespace vec;
@@ -34,18 +41,23 @@ struct PassConstants {
 	float			gTotalTime;
 	float			gDeltaTime;
 	float4			gAmbientLight;
-	d3dUlti::MaterialConstants gLights[kMaxLights];
+	d3dUtil::Light	gLights[kMaxLights];
 };
 
 struct ObjectConstants {
 	float4x4	gWorld;
 };
 
+struct FrameResourceDesc {
+	UINT passCount		= 1;
+	UINT objectCount	= 0;
+	UINT materialCount	= 0;
+};
+
 class FrameResource {
 public:
-	FrameResource(ID3D12Device *device, UINT passCount, UINT objectCount);
+	FrameResource(ID3D12Device *device, const FrameResourceDesc &desc);
 	~FrameResource() = default;
-public:
 	WRL::ComPtr<ID3D12CommandAllocator>	cmdListAlloc_ = nullptr;
 	std::unique_ptr<UploadBuffer<PassConstants>> passCB_ = nullptr;
 	std::unique_ptr<UploadBuffer<ObjectConstants>> objectCB_ = nullptr;

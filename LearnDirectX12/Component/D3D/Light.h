@@ -3,7 +3,7 @@
 #include "Math/VectorHelper.h"
 //#include "Math/MatrixHelper.h"
 
-namespace d3dUlti {
+namespace d3dUtil {
 using namespace vec;
 
 struct Light {

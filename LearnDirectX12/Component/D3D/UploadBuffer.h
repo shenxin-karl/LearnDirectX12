@@ -2,7 +2,7 @@
 #include <d3d12.h>
 #include <wrl.h>
 #include <cassert>
-#include "d3dulti.h"
+#include "d3dutil.h"
 #include "D3DX12.h"
 
 namespace WRL = Microsoft::WRL;

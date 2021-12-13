@@ -2,7 +2,7 @@
 #include "BaseApp/BaseApp.h"
 #include "GameTimer/GameTimer.h"
 #include "Geometry/GeometryGenerator.h"
-#include "D3D/d3dulti.h"
+#include "D3D/d3dutil.h"
 #include "D3D/RenderItem.h"
 #include "D3D/UploadBuffer.h"
 #include "D3D/FrameResource.h"
@@ -58,8 +58,8 @@ private:
 	std::unordered_map<std::string, std::unique_ptr<MeshGeometry>> geometrice_;
 	std::unordered_map<std::string, ShaderByteCode> shaders_;
 	std::unordered_map<std::string, WRL::ComPtr<ID3D12PipelineState>> PSOs_;
-	std::vector<std::unique_ptr<d3dUlti::RenderItem>> allRenderItems_;
-	std::vector<d3dUlti::RenderItem *> opaqueRItems_;
+	std::vector<std::unique_ptr<d3dUtil::RenderItem>> allRenderItems_;
+	std::vector<d3dUtil::RenderItem *> opaqueRItems_;
 	WRL::ComPtr<ID3D12DescriptorHeap> pCbvHeaps_;
 	std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout_;
 	WRL::ComPtr<ID3D12RootSignature> pRootSignature_;
@@ -68,7 +68,7 @@ private:
 	bool isWireframe_ = false;
 	POINT lastMousePos_;
 	bool isLeftPressd = false;
-	d3dUlti::PassConstants mainPassCB_;
+	d3dUtil::PassConstants mainPassCB_;
 
 	float theta_ = 0.f;
 	float phi_ = 0.f;
@@ -81,7 +81,7 @@ private:
 	const float zNear = 0.1f;
 	const float zFar = 100.f;
 
-	std::vector<std::unique_ptr<d3dUlti::FrameResource>> frameResources_;
+	std::vector<std::unique_ptr<d3dUtil::FrameResource>> frameResources_;
 	UINT currentFrameIndex_ = 0;
-	d3dUlti::FrameResource *currentFrameResource_ = nullptr;
+	d3dUtil::FrameResource *currentFrameResource_ = nullptr;
 };
