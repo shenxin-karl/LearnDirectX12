@@ -5,6 +5,7 @@
 #include <sstream>
 #include <fstream>
 #include <algorithm>
+#include <unordered_map>
 
 namespace com {
 
@@ -430,52 +431,78 @@ void GometryGenerator::simplify(MeshData &mesh, float reserve) {
 }
 
 
+struct VertexDataIndex {
+	com::uint32 posIdx = 0;
+	com::uint32 nrmIdx = 0;
+	com::uint32 texIdx = 0;
+};
+
+struct VertexDataIndexHasher {
+	std::size_t operator()(const VertexDataIndex &vert) const noexcept {
+		return std::hash<com::uint32>{}(vert.posIdx) << 0 ^
+			std::hash<com::uint32>{}(vert.nrmIdx) << 1 ^
+			std::hash<com::uint32>{}(vert.texIdx) << 2;
+	}
+};
+
 std::tuple<bool, MeshData> GometryGenerator::loadObjFile(const std::string &path) {
 	std::fstream fin(path, std::ios::in);
 	std::tuple<bool, MeshData> result(false, {});
 	if (!fin.is_open())
 		return result;
 
-	struct VertexDataIndex {
-		com::uint32 posIdx = 0;
-		com::uint32 nrmIdx = 0;
-		com::uint32 texIdx = 0;
-	};
-
-	bool hasNrm = false;
-	bool hasUvs = false;
-	bool inited = false;
-	std::vector<VertexDataIndex> indices;
-	auto handleFace = [&](std::stringstream sbuf) {
-		if (inited) {
-			std::string line = sbuf.str();
-			auto count = std::count(line.begin(), line.end(), '/');
-			hasUvs = count >= 3;
-			hasNrm = count >= 6;
-			if ((count % 3) != 0)			// error
-				return result;
-		}
-		char trash;
-		VertexDataIndex data;
-		sbuf >> trash >> trash;				// "f "
-	};
-
-	std::vector<Vertex> vertices;
-	auto handleVertData = [&](std::stringstream sbuf) {
-
-	};
+	std::vector<std::string> strPositions;
+	std::vector<std::string> strTexcoords;
+	std::vector<std::string> strNormals;
+	std::vector<std::string> strFaces;
 
 	std::string line;
-	while (fin >> line) {
-		if (line.compare(0, 2, "f ")) {			// face
+	while (!fin.eof()) {
+		getline(fin, line);
+		if (line.compare(0, 1, "f"))
+			strFaces.push_back(std::move(line));
+		else if (line.compare(0, 1, "v"))
+			strPositions.push_back(std::move(line));
+		else if (line.compare(0, 2, "vt"))
+			strTexcoords.push_back(std::move(line));
+		else if (line.compare(0, 2, "vn"))
+			strNormals.push_back(std::move(line));
+	}
 
-		} else if (line.compare(0, 2, "v")) {	// vertex
+	std::vector<float3> positions(strPositions.size(), float3(0.f));
+	std::vector<float3> normals(strNormals.size(), float3(0.f));
+	std::vector<float2> texcoords(strTexcoords.size(), float2(0.f));
+	for (std::size_t i = 0; i < strPositions.size(); ++i) {
+		auto &pos = positions[i];
+		(void)sscanf(strPositions[i].c_str(), "v %f %f %f", &pos.x, &pos.y, &pos.z);
+	}
+	for (std::size_t i = 0; i < strNormals.size(); ++i) {
+		auto &nrm = normals[i];
+		(void)scanf(strNormals[i].c_str(), "vn %f %f %f", &nrm.x, nrm.y, &nrm.z);
+	}
+	for (std::size_t i = 0; i < strTexcoords.size(); ++i) {
+		auto &uv = texcoords[i];
+		(void)scanf(strTexcoords[i].c_str(), "vt %f %f", &uv.x, uv.y);
+	}
 
-		} else if (line.compare(0, 3, "vn ")) {	// normal
-					
-		} else if (line.compare(0, 3, "vt ")) {	// texcoord
+	strPositions.~vector();
+	strNormals.~vector();
+	strTexcoords.~vector();
+	std::vector<Vertex> vertices;
+	std::vector<com::uint32> indices;
 
-		} 
+	uint32 flag = 0x1;
+	flag |= (texcoords.empty() ? 0 : 1) << 1;
+	flag |= (normals.empty() ? 0 : 1) << 2;
+	std::unordered_map<VertexDataIndex, std::size_t, VertexDataIndexHasher> record;
+	for (const auto &line : strFaces) {
+		switch (flag) {
+		case 3:
+			break;
+		case 5:
+			break;
+		case 7:
+		}
 	}
 }
 
