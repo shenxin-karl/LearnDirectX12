@@ -162,7 +162,8 @@ void createGridTest() {
 
 void loadObject() {
 	com::GometryGenerator gen;
-	gen.loadObjFile()
+	auto &&[isOk, meshData] = gen.loadObjFile("createGridTest.obj");
+	meshData.save("loadObject.obj");
 }
 
 int main() {

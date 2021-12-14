@@ -466,14 +466,14 @@ std::tuple<bool, MeshData> GometryGenerator::loadObjFile(const std::string &path
 	std::string line;
 	while (!fin.eof()) {
 		getline(fin, line);
-		if (line.compare(0, 1, "f"))
+		if (line.compare(0, 1, "f") == 0)
 			strFaces.push_back(std::move(line));
-		else if (line.compare(0, 1, "v"))
-			strPositions.push_back(std::move(line));
-		else if (line.compare(0, 2, "vt"))
+		else if (line.compare(0, 2, "vt") == 0)
 			strTexcoords.push_back(std::move(line));
-		else if (line.compare(0, 2, "vn"))
+		else if (line.compare(0, 2, "vn") == 0)
 			strNormals.push_back(std::move(line));
+		else if (line.compare(0, 1, "v") == 0)
+			strPositions.push_back(std::move(line));
 	}
 
 	std::vector<float3> positions(strPositions.size(), float3(0.f));
@@ -481,15 +481,15 @@ std::tuple<bool, MeshData> GometryGenerator::loadObjFile(const std::string &path
 	std::vector<float2> texcoords(strTexcoords.size(), float2(0.f));
 	for (std::size_t i = 0; i < strPositions.size(); ++i) {
 		auto &pos = positions[i];
-		(void)sscanf(strPositions[i].c_str(), "v %f %f %f", &pos.x, &pos.y, &pos.z);
+		(void)sscanf_s(strPositions[i].c_str(), "v %f %f %f", &pos.x, &pos.y, &pos.z);
 	}
 	for (std::size_t i = 0; i < strNormals.size(); ++i) {
 		auto &nrm = normals[i];
-		(void)sscanf(strNormals[i].c_str(), "vn %f %f %f", &nrm.x, &nrm.y, &nrm.z);
+		(void)sscanf_s(strNormals[i].c_str(), "vn %f %f %f", &nrm.x, &nrm.y, &nrm.z);
 	}
 	for (std::size_t i = 0; i < strTexcoords.size(); ++i) {
 		auto &uv = texcoords[i];
-		(void)sscanf(strTexcoords[i].c_str(), "vt %f %f", &uv.x, &uv.y);
+		(void)sscanf_s(strTexcoords[i].c_str(), "vt %f %f", &uv.x, &uv.y);
 	}
 
 	strPositions.~vector();
@@ -501,28 +501,35 @@ std::tuple<bool, MeshData> GometryGenerator::loadObjFile(const std::string &path
 	uint32 flag = 0x1;
 	flag |= (texcoords.empty() ? 0 : 1) << 1;
 	flag |= (normals.empty() ? 0 : 1) << 2;
-	std::unordered_map<VertexDataIndex, std::size_t, VertexDataIndexHasher> record;
+	std::unordered_map<VertexDataIndex, com::uint32, VertexDataIndexHasher> record;
 	float3 vec3Zero = float3(0.f);
 	float2 vec2Zero = float2(0.f);
 	for (size_t i = 0; i < strFaces.size(); ++i) {
 		std::array<VertexDataIndex, 3> face;
 		switch (flag) {
+		case 1:
+			(void)sscanf_s(strFaces[i].c_str(), "f %d %d %d", 
+				&face[0].posIdx, 
+				&face[1].posIdx, 
+				&face[2].posIdx
+			);
+			break;
 		case 3:
-			(void)sscanf(strFaces[i].c_str(), "f %d/%d %d/%d %d/%d", 
+			(void)sscanf_s(strFaces[i].c_str(), "f %d/%d %d/%d %d/%d", 
 				&face[0].posIdx, &face[0].texIdx,
 				&face[1].posIdx, &face[1].texIdx,
 				&face[2].posIdx, &face[2].texIdx
 			);
 			break;
 		case 5:
-			(void)sscanf(strFaces[i].c_str(), "f %d/%d %d/%d %d/%d",
+			(void)sscanf_s(strFaces[i].c_str(), "f %d/%d %d/%d %d/%d",
 				&face[0].posIdx, &face[0].nrmIdx,
 				&face[1].posIdx, &face[1].nrmIdx,
 				&face[2].posIdx, &face[2].nrmIdx
 			);
 			break;
 		case 7:
-			(void)sscanf(strFaces[i].c_str(), "f %d/%d/%d %d/%d/%d %d/%d/%d",
+			(void)sscanf_s(strFaces[i].c_str(), "f %d/%d/%d %d/%d/%d %d/%d/%d",
 				&face[0].posIdx, &face[0].texIdx, &face[0].nrmIdx,
 				&face[1].posIdx, &face[1].texIdx, &face[1].nrmIdx,
 				&face[2].posIdx, &face[2].texIdx, &face[2].nrmIdx
@@ -530,17 +537,17 @@ std::tuple<bool, MeshData> GometryGenerator::loadObjFile(const std::string &path
 			break;
 		}
 		for (int j = 0; j < 3; ++j) {
-			int idx;
-			if (auto iter = record.find(face[i]); iter != record.end()) {
+			com::uint32 idx;
+			if (auto iter = record.find(face[j]); iter != record.end()) {
 				idx = iter->second;
 			} else {
-				idx = vertices.size();
+				idx = static_cast<com::uint32>(vertices.size());
 				vertices.push_back(Vertex {
-					positions[face[i].posIdx-1],
-					texcoords.empty() ? vec2Zero : texcoords[face[i].texIdx-1],
-					normals.empty()	  ? vec3Zero : normals[face[i].texIdx-1],
+					positions[face[j].posIdx-1],
+					texcoords.empty() ? vec2Zero : texcoords[face[j].texIdx-1],
+					normals.empty()	  ? vec3Zero : normals[face[j].texIdx-1],
 				});
-				record[face[i]] = idx;
+				record[face[j]] = idx;
 			}
 			indices.push_back(idx);
 		}
