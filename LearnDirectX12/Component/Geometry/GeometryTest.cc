@@ -160,14 +160,20 @@ void createGridTest() {
 	mesh.save("createGridTest.obj");
 }
 
+void loadObject() {
+	com::GometryGenerator gen;
+	gen.loadObjFile()
+}
+
 int main() {
-	halfEdgeTest();
+	//halfEdgeTest();
 	//saveObjTest();
 	//createBoxTest();
 	//createCylinderTest();
 	//loopSubdivisionTest();
 	//loopBetaTest();
 	//createShapeTest();
-	//createGridTest();
+	createGridTest();
+	loadObject();
 	return 0;
 }

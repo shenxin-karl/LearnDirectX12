@@ -6,6 +6,7 @@
 #include <fstream>
 #include <algorithm>
 #include <unordered_map>
+#include <array>
 
 namespace com {
 
@@ -435,6 +436,12 @@ struct VertexDataIndex {
 	com::uint32 posIdx = 0;
 	com::uint32 nrmIdx = 0;
 	com::uint32 texIdx = 0;
+public:
+	friend bool operator==(const VertexDataIndex &lhs, const VertexDataIndex &rhs) noexcept {
+		return lhs.posIdx == rhs.posIdx &&
+			   lhs.nrmIdx == rhs.nrmIdx &&
+			   lhs.texIdx == rhs.texIdx;
+	}
 };
 
 struct VertexDataIndexHasher {
@@ -478,11 +485,11 @@ std::tuple<bool, MeshData> GometryGenerator::loadObjFile(const std::string &path
 	}
 	for (std::size_t i = 0; i < strNormals.size(); ++i) {
 		auto &nrm = normals[i];
-		(void)sscanf(strNormals[i].c_str(), "vn %f %f %f", &nrm.x, nrm.y, &nrm.z);
+		(void)sscanf(strNormals[i].c_str(), "vn %f %f %f", &nrm.x, &nrm.y, &nrm.z);
 	}
 	for (std::size_t i = 0; i < strTexcoords.size(); ++i) {
 		auto &uv = texcoords[i];
-		(void)sscanf(strTexcoords[i].c_str(), "vt %f %f", &uv.x, uv.y);
+		(void)sscanf(strTexcoords[i].c_str(), "vt %f %f", &uv.x, &uv.y);
 	}
 
 	strPositions.~vector();
@@ -495,17 +502,53 @@ std::tuple<bool, MeshData> GometryGenerator::loadObjFile(const std::string &path
 	flag |= (texcoords.empty() ? 0 : 1) << 1;
 	flag |= (normals.empty() ? 0 : 1) << 2;
 	std::unordered_map<VertexDataIndex, std::size_t, VertexDataIndexHasher> record;
-	for (const auto &line : strFaces) {
+	float3 vec3Zero = float3(0.f);
+	float2 vec2Zero = float2(0.f);
+	for (size_t i = 0; i < strFaces.size(); ++i) {
+		std::array<VertexDataIndex, 3> face;
 		switch (flag) {
 		case 3:
+			(void)sscanf(strFaces[i].c_str(), "f %d/%d %d/%d %d/%d", 
+				&face[0].posIdx, &face[0].texIdx,
+				&face[1].posIdx, &face[1].texIdx,
+				&face[2].posIdx, &face[2].texIdx
+			);
 			break;
 		case 5:
+			(void)sscanf(strFaces[i].c_str(), "f %d/%d %d/%d %d/%d",
+				&face[0].posIdx, &face[0].nrmIdx,
+				&face[1].posIdx, &face[1].nrmIdx,
+				&face[2].posIdx, &face[2].nrmIdx
+			);
 			break;
 		case 7:
+			(void)sscanf(strFaces[i].c_str(), "f %d/%d/%d %d/%d/%d %d/%d/%d",
+				&face[0].posIdx, &face[0].texIdx, &face[0].nrmIdx,
+				&face[1].posIdx, &face[1].texIdx, &face[1].nrmIdx,
+				&face[2].posIdx, &face[2].texIdx, &face[2].nrmIdx
+			);
 			break;
 		}
+		for (int j = 0; j < 3; ++j) {
+			int idx;
+			if (auto iter = record.find(face[i]); iter != record.end()) {
+				idx = iter->second;
+			} else {
+				idx = vertices.size();
+				vertices.push_back(Vertex {
+					positions[face[i].posIdx-1],
+					texcoords.empty() ? vec2Zero : texcoords[face[i].texIdx-1],
+					normals.empty()	  ? vec3Zero : normals[face[i].texIdx-1],
+				});
+				record[face[i]] = idx;
+			}
+			indices.push_back(idx);
+		}
 	}
-
+	
+	std::get<bool>(result) = true;
+	std::get<MeshData>(result).indices = std::move(indices);
+	std::get<MeshData>(result).vertices = std::move(vertices);
 	return result;
 }
 

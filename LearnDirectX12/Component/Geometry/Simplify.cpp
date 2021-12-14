@@ -49,8 +49,8 @@ void Simplify::buildHeap() {
 		pushHeap(edge);
 }
 
-float Simplify::calcEdgeCost(const SimEdge &edge) const {
-
+sim::SimVertAdjustResult Simplify::calcAdjustEdgeResult(const SimEdge &edge) const {
+	return {};
 }
 
 float Simplify::calcEdgeLengthSqr(const SimEdge &edge) const {
@@ -62,7 +62,7 @@ float Simplify::calcEdgeLengthSqr(const SimEdge &edge) const {
 void Simplify::pushHeap(const SimEdge &edge) {
 	if (calcEdgeLengthSqr(edge) < thresholdSqr_)
 		return;
-	float cost = calcEdgeCost(edge);
+	auto &&[cost, point] = calcAdjustEdgeResult(edge);
 	heap_.insert(CostRecord(cost, edge));
 }
 

@@ -39,20 +39,25 @@ struct SimFace {
 	int v2;
 };
 
+struct SimVertAdjustResult {
+	float  cost;
+	float3 point;
+};
+
 class Simplify {
-	std::vector<SimVertex>				vertices_;
-	std::vector<unsigned char>			removed_;
-	std::vector<std::vector<SimFace>>	faces_;
-	std::unordered_set<SimEdge>			edges_;
-	std::set<CostRecord>				heap_;
-	float								thresholdSqr_ = 0.f;
+	std::vector<SimVertex>							vertices_;
+	std::vector<unsigned char>						removed_;
+	std::vector<std::vector<SimFace>>				faces_;
+	std::unordered_set<SimEdge, simEdgeHasher>		edges_;
+	std::set<CostRecord>							heap_;
+	float											thresholdSqr_ = 0.f;
 public:
 	Simplify(float threshold, const std::vector<com::Vertex> &vertices, const std::vector<com::uint32> &indices);
 	void simplify(float target);
 	com::MeshData unloadData() const;
 private:
 	void buildHeap();
-	float calcEdgeCost(const SimEdge &edge) const;
+	SimVertAdjustResult calcAdjustEdgeResult(const SimEdge &edge) const;
 	float calcEdgeLengthSqr(const SimEdge &edge) const;
 	void pushHeap(const SimEdge &edge);
 	CostRecord popHeap();
