@@ -4,6 +4,8 @@
 #include "Geometry/LoopSubdivision.h"
 #include <unordered_map>
 #include <unordered_set>
+#include <fstream>
+#include <string>
 
 using namespace com;
 using namespace vec;
@@ -166,6 +168,51 @@ void loadObject() {
 	meshData.save("loadObject.obj");
 }
 
+bool ConvertTxtModelToObjFile(const std::string &path) {
+	std::fstream fin(path, std::ios::in);
+	if (!fin.is_open()) {
+		std::cerr << "can't open the file: " << path << std::endl;
+		return false;
+	}
+
+	std::string line;
+	std::getline(fin, line);
+	uint32 vertCount = 0;
+	if (sscanf_s(line.c_str(), "VertexCount: %u", &vertCount) != 1 && vertCount <= 0)
+		return false;
+
+	std::getline(fin, line);
+	uint32 triCount = 0;
+	if (sscanf_s(line.c_str(), "TriangleCount: %u", &triCount) && triCount <= 0)
+		return false;
+
+	std::vector<Vertex> vertices(vertCount, { float3(0.f), float2(0.f), float3(0.f), float3(0.f) });
+	std::vector<uint32> indices;
+	indices.reserve(static_cast<uint32>(triCount) * 3);
+	while (!fin.eof()) {
+		std::getline(fin, line);
+		if (line.compare(0, 10, "VertexList") == 0) {
+			std::getline(fin, line);
+			for (uint32 i = 0; i < vertCount; ++i) {
+				std::getline(fin, line);
+				auto &vert = vertices[i];
+				int ret = sscanf_s(line.c_str(), "\t%f %f %f %f %f %f",
+					&vert.position.x, &vert.position.y, &vert.position.z,
+					&vert.normal.x, &vert.normal.y, &vert.normal.z
+				);
+				if (ret != 6)
+					return false;
+			}
+		} else if (line.compare(0, 12, "TriangleList") == 0) {
+			std::getline(fin, line);
+			for (uint32 i = 0; i < triCount; ++i) {
+				std::getline(fin, line);
+				
+			}
+		}
+	}
+}
+
 int main() {
 	//halfEdgeTest();
 	//saveObjTest();
@@ -174,7 +221,7 @@ int main() {
 	//loopSubdivisionTest();
 	//loopBetaTest();
 	//createShapeTest();
-	createGridTest();
-	loadObject();
+	//createGridTest();
+	//loadObject();
 	return 0;
 }
