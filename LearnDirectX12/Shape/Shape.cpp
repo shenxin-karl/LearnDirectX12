@@ -20,6 +20,7 @@ bool Shape::initialize() {
 
 	ThrowIfFailed(pCommandList_->Reset(pCommandAlloc_.Get(), nullptr));
 	buildShapeGeometry();
+	buildMaterials();
 	buildRenderItems();
 	buildFrameResources();
 	buildDescriptorHeaps();
@@ -52,6 +53,7 @@ void Shape::beginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	updateViewMatrix();
 	updatePassConstant(pGameTimer);
 	updateObjectConstant();
+	updateMaterials();
 }
 
 void Shape::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
@@ -115,6 +117,18 @@ void Shape::onResize(int width, int height) {
 	DX::XMStoreFloat4x4(&proj_, projMat);
 }
 
+Shape::~Shape() {
+	for (auto &pFrameResource : frameResources_) {
+		auto fence = pFrameResource->fence_;
+		if (fence != 0 && pFence_->GetCompletedValue() < fence) {
+			HANDLE event = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
+			ThrowIfFailed(pFence_->SetEventOnCompletion(fence, event));
+			WaitForSingleObject(event, INFINITE);
+			CloseHandle(event);
+		}
+	}
+}
+
 void Shape::pollEvent() {
 	while (auto event = pInputSystem_->mouse->getEvent()) {
 		POINT point = { event.x, event.y };
@@ -141,7 +155,8 @@ void Shape::pollEvent() {
 
 void Shape::buildFrameResources() {
 	UINT itemSize = static_cast<UINT>(allRenderItems_.size());
-	d3dUtil::FrameResourceDesc desc(1, itemSize);
+	UINT matSize = static_cast<UINT>(materials_.size());
+	d3dUtil::FrameResourceDesc desc(1, itemSize, matSize);
 	for (int i = 0; i < d3dUtil::kNumFrameResources; ++i) 
 		frameResources_.push_back(std::make_unique<d3dUtil::FrameResource>(pDevice_.Get(), desc));
 }
@@ -152,6 +167,7 @@ void Shape::buildShapeGeometry() {
 	com::MeshData grid = gen.createGrid(20.f, 30.f, 60, 40);
 	com::MeshData sphere = gen.createSphere(0.5f, 2);
 	com::MeshData cylinder = gen.createCylinder(0.5f, 0.3f, 3.f, 20, 20);
+	com::MeshData skull = gen.loadObjFile("resource/skull.obj");
 
 	UINT vertexOffset = 0;
 	UINT indexOffset = 0;
@@ -184,52 +200,49 @@ void Shape::buildShapeGeometry() {
 	indexOffset += static_cast<UINT>(cylinder.indices.size());
 	vertexOffset += static_cast<UINT>(cylinder.vertices.size());
 
-	auto totalVertexCount =
-		box.vertices.size() + 
-		grid.vertices.size() + 
-		sphere.vertices.size() + 
-		cylinder.vertices.size();
+	SubmeshGeometry skullSubmesh;
+	skullSubmesh.indexCount = static_cast<UINT>(skull.indices.size());
+	skullSubmesh.startIndexLocation = indexOffset;
+	skullSubmesh.baseVertexLocation = vertexOffset;
+	indexOffset += static_cast<UINT>(skull.indices.size());
+	vertexOffset += static_cast<UINT>(skull.vertices.size());
+
+	auto totalVertexCount = box.vertices.size() + grid.vertices.size()
+		+ sphere.vertices.size() + cylinder.vertices.size() + skull.vertices.size();
 
 	std::vector<ShapeVertex> vertices;
 	vertices.reserve(totalVertexCount);
 	auto vertIter = std::back_inserter(vertices);
 	std::transform(box.vertices.begin(), box.vertices.end(), vertIter, [](const com::Vertex &vert) {
-		return ShapeVertex{ vert.position, float4(DX::Colors::Peru) };
+		return ShapeVertex{ vert.position, vert.normal };
 	});
 	std::transform(grid.vertices.begin(), grid.vertices.end(), vertIter, [](const com::Vertex &vert) {
-		return ShapeVertex{ vert.position, float4(DX::Colors::ForestGreen) };
+		return ShapeVertex{ vert.position, vert.normal };
 	});
 	std::transform(sphere.vertices.begin(), sphere.vertices.end(), vertIter, [](const com::Vertex &vert) {
-		return ShapeVertex{ vert.position, float4(DX::Colors::Crimson) };
+		return ShapeVertex{ vert.position, vert.normal };
 	});
 	std::transform(cylinder.vertices.begin(), cylinder.vertices.end(), vertIter, [](const com::Vertex &vert) {
-		return ShapeVertex{ vert.position, float4(DX::Colors::SteelBlue) };
+		return ShapeVertex{ vert.position, vert.normal };
+	});
+	std::transform(skull.vertices.begin(), skull.vertices.end(), vertIter, [](const com::Vertex &vert) {
+		return ShapeVertex{ vert.position, vert.normal };
 	});
 	
-	auto totalIndexCount =
-		box.indices.size() +
-		grid.indices.size() +
-		sphere.indices.size() +
-		cylinder.indices.size();
+	auto totalIndexCount = box.indices.size() + grid.indices.size() 
+		+ sphere.indices.size() + cylinder.indices.size() + skull.indices.size();
 
-	std::vector<com::uint16> indices;
+	std::vector<com::uint32> indices;
 	indices.reserve(totalIndexCount);
 	auto idxIter = std::back_inserter(indices);
-	std::transform(box.indices.begin(), box.indices.end(), idxIter, [](com::uint32 idx) {
-		return static_cast<com::uint16>(idx);
-	});
-	std::transform(grid.indices.begin(), grid.indices.end(), idxIter, [](com::uint32 idx) {
-		return static_cast<com::uint16>(idx);
-	});
-	std::transform(sphere.indices.begin(), sphere.indices.end(), idxIter, [](com::uint32 idx) {
-		return static_cast<com::uint16>(idx);
-	});
-	std::transform(cylinder.indices.begin(), cylinder.indices.end(), idxIter, [](com::uint32 idx) {
-		return static_cast<com::uint16>(idx);
-	});
+	std::copy(box.indices.begin(), box.indices.end(), idxIter);
+	std::copy(grid.indices.begin(), grid.indices.end(), idxIter);
+	std::copy(sphere.indices.begin(), sphere.indices.end(), idxIter);
+	std::copy(cylinder.indices.begin(), cylinder.indices.end(), idxIter);
+	std::copy(skull.indices.begin(), skull.indices.end(), idxIter);
 
 	const UINT vbByteSize = static_cast<UINT>(vertices.size() * sizeof(ShapeVertex));
-	const UINT ibByteSize = static_cast<UINT>(indices.size() * sizeof(com::uint16));
+	const UINT ibByteSize = static_cast<UINT>(indices.size() * sizeof(com::uint32));
 	auto pMeshGeo = std::make_unique<MeshGeometry>();
 	pMeshGeo->name = "shapeGeo";
 
@@ -256,14 +269,14 @@ void Shape::buildShapeGeometry() {
 
 	pMeshGeo->vertexByteStride = sizeof(ShapeVertex);
 	pMeshGeo->vertexBufferByteSize = vbByteSize;
-	pMeshGeo->indexBufferFormat = DXGI_FORMAT_R16_UINT;
+	pMeshGeo->indexBufferFormat = DXGI_FORMAT_R32_UINT;
 	pMeshGeo->indexBufferByteSize = ibByteSize;
 
 	pMeshGeo->drawArgs["box"] = boxSubmesh;
 	pMeshGeo->drawArgs["grid"] = gridSubmesh;
 	pMeshGeo->drawArgs["sphere"] = sphereSubmesh;
 	pMeshGeo->drawArgs["cylinder"] = cylinderSubmesh;
-
+	pMeshGeo->drawArgs["skull"] = skullSubmesh;
 	geometrice_[pMeshGeo->name] = std::move(pMeshGeo);
 }
 
@@ -272,28 +285,41 @@ void Shape::buildRenderItems() {
 	using namespace DX;
 	auto *pGeometry = geometrice_["shapeGeo"].get();
 
+	UINT objCBIndex = 0;
 	auto boxRItem = std::make_unique<d3dUtil::RenderItem>();
 	XMStoreFloat4x4(&boxRItem->world, 
 		DX::XMMatrixScaling(2.f, 2.f, 2.f) * DX::XMMatrixTranslation(0.f, 0.5f, 0.f));
-	boxRItem->objCBIndex_ = 0;
+	boxRItem->objCBIndex_ = objCBIndex++;
 	boxRItem->geometry_ = pGeometry;
 	boxRItem->primitiveType_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 	boxRItem->indexCount_ = boxRItem->geometry_->drawArgs["box"].indexCount;
 	boxRItem->startIndexLocation_ = boxRItem->geometry_->drawArgs["box"].startIndexLocation;
 	boxRItem->baseVertexLocation_ = boxRItem->geometry_->drawArgs["box"].baseVertexLocation;
+	boxRItem->material_ = materials_["box"].get();
 	allRenderItems_.push_back(std::move(boxRItem));
 
 	auto gridRItem = std::make_unique<d3dUtil::RenderItem>();
 	gridRItem->world = MathHelper::identity4x4();
-	gridRItem->objCBIndex_ = 1;
+	gridRItem->objCBIndex_ = objCBIndex++;
 	gridRItem->geometry_ = pGeometry;
 	gridRItem->primitiveType_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 	gridRItem->indexCount_ = pGeometry->drawArgs["grid"].indexCount;
 	gridRItem->startIndexLocation_ = pGeometry->drawArgs["grid"].startIndexLocation;
 	gridRItem->baseVertexLocation_ = pGeometry->drawArgs["grid"].baseVertexLocation;
+	gridRItem->material_ = materials_["grid"].get();
 	allRenderItems_.push_back(std::move(gridRItem));
 
-	UINT objCBIndex = 2;
+	auto skullRItem = std::make_unique<d3dUtil::RenderItem>();
+	XMStoreFloat4x4(&skullRItem->world, DX::XMMatrixTranslation(0.f, 2.f, 0.f));
+	skullRItem->objCBIndex_ = objCBIndex++;
+	skullRItem->geometry_ = pGeometry;
+	skullRItem->primitiveType_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	skullRItem->indexCount_ = pGeometry->drawArgs["skull"].indexCount;
+	skullRItem->startIndexLocation_ = pGeometry->drawArgs["skull"].startIndexLocation;
+	skullRItem->baseVertexLocation_ = pGeometry->drawArgs["skull"].baseVertexLocation;
+	skullRItem->material_ = materials_["skull"].get();
+	allRenderItems_.push_back(std::move(skullRItem));
+
 	for (int i = 0; i < 5; ++i) {
 		auto leftCylRItem = std::make_unique<d3dUtil::RenderItem>();
 		auto rightCylRItem = std::make_unique<d3dUtil::RenderItem>();
@@ -312,15 +338,16 @@ void Shape::buildRenderItems() {
 		leftCylRItem->indexCount_ = pGeometry->drawArgs["cylinder"].indexCount;
 		leftCylRItem->startIndexLocation_ = pGeometry->drawArgs["cylinder"].startIndexLocation;
 		leftCylRItem->baseVertexLocation_ = pGeometry->drawArgs["cylinder"].baseVertexLocation;
+		leftCylRItem->material_ = materials_["cylinder"].get();
 		
 		DX::XMStoreFloat4x4(&rightCylRItem->world, rightCylWorld);
 		rightCylRItem->objCBIndex_ = objCBIndex++;
 		rightCylRItem->geometry_ = pGeometry;
-
 		rightCylRItem->primitiveType_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 		rightCylRItem->indexCount_ = pGeometry->drawArgs["cylinder"].indexCount;
 		rightCylRItem->startIndexLocation_ = pGeometry->drawArgs["cylinder"].startIndexLocation;
 		rightCylRItem->baseVertexLocation_ = pGeometry->drawArgs["cylinder"].baseVertexLocation;
+		rightCylRItem->material_ = materials_["cylinder"].get();
 
 		DX::XMStoreFloat4x4(&leftSphereRItem->world, leftSphereWorld);
 		leftSphereRItem->objCBIndex_ = objCBIndex++;
@@ -329,6 +356,7 @@ void Shape::buildRenderItems() {
 		leftSphereRItem->indexCount_ = pGeometry->drawArgs["sphere"].indexCount;
 		leftSphereRItem->startIndexLocation_ = pGeometry->drawArgs["sphere"].startIndexLocation;
 		leftSphereRItem->baseVertexLocation_ = pGeometry->drawArgs["sphere"].baseVertexLocation;
+		leftSphereRItem->material_ = materials_["sphere"].get();
 
 		DX::XMStoreFloat4x4(&rightSphereRItem->world, rightSphereWorld);
 		rightSphereRItem->objCBIndex_ = objCBIndex++;
@@ -337,6 +365,7 @@ void Shape::buildRenderItems() {
 		rightSphereRItem->indexCount_ = pGeometry->drawArgs["sphere"].indexCount;
 		rightSphereRItem->startIndexLocation_ = pGeometry->drawArgs["sphere"].startIndexLocation;
 		rightSphereRItem->baseVertexLocation_ = pGeometry->drawArgs["sphere"].baseVertexLocation;
+		rightSphereRItem->material_ = materials_["sphere"].get();
 
 		allRenderItems_.push_back(std::move(leftCylRItem));
 		allRenderItems_.push_back(std::move(rightCylRItem));
@@ -359,7 +388,6 @@ void Shape::buildDescriptorHeaps() {
 	passCbvOffset_ = objCount * d3dUtil::kNumFrameResources;
 	pDevice_->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&pCbvHeaps_));
 }
-
 
 void Shape::buldConstantBufferViews() {
 	UINT objCBByteSize = static_cast<UINT>(calcConstantBufferByteSize(sizeof(d3dUtil::ObjectConstants)));
@@ -401,7 +429,7 @@ void Shape::buildShaderAndInputLayout() {
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 
 		},
 		{
-			"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(ShapeVertex, color),
+			"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(ShapeVertex, normal),
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0,
 		}
 	};
@@ -412,15 +440,16 @@ void Shape::buildShaderAndInputLayout() {
 }
 
 void Shape::buildRootSignature() {
-	CD3DX12_ROOT_PARAMETER slotRootParameter[2];
+	CD3DX12_ROOT_PARAMETER slotRootParameter[3];
 	CD3DX12_DESCRIPTOR_RANGE cbvTable[2];
 	cbvTable[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 	cbvTable[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
 	slotRootParameter[0].InitAsDescriptorTable(1, &cbvTable[0]);
 	slotRootParameter[1].InitAsDescriptorTable(1, &cbvTable[1]);
+	slotRootParameter[2].InitAsConstantBufferView(2);
 
 	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc = {
-		2, slotRootParameter, 0, nullptr,
+		3, slotRootParameter, 0, nullptr,
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
 	};
 
@@ -444,6 +473,53 @@ void Shape::buildRootSignature() {
 		serializedRootSig->GetBufferSize(),
 		IID_PPV_ARGS(&pRootSignature_)
 	));
+}
+
+void Shape::buildMaterials() {
+	int matCBIdx = 0;
+	auto pSphereMat = std::make_unique<d3dUtil::Material>();
+	pSphereMat->name_ = "sphere";
+	pSphereMat->matCBIndex_ = matCBIdx++;
+	pSphereMat->diffuseAlbedo_ = float4(DX::Colors::Red);
+	pSphereMat->fresnelR0 = float3(0.56f, 0.57f, 0.58f);
+	pSphereMat->roughness_ = 0.5f;
+	pSphereMat->metallic_ = 0.5f;
+	materials_[pSphereMat->name_] = std::move(pSphereMat);
+
+	auto pBoxMat = std::make_unique<d3dUtil::Material>();
+	pBoxMat->name_ = "box";
+	pBoxMat->matCBIndex_ = matCBIdx++;
+	pBoxMat->diffuseAlbedo_ = float4(DX::Colors::Green);
+	pBoxMat->fresnelR0 = float3(0.56f, 0.57f, 0.58f);
+	pBoxMat->roughness_ = 0.5f;
+	pBoxMat->metallic_ = 0.5f;
+	materials_[pBoxMat->name_] = std::move(pBoxMat);
+
+	auto pGridMat = std::make_unique<d3dUtil::Material>();
+	pGridMat->name_ = "grid";
+	pGridMat->matCBIndex_ = matCBIdx++;
+	pGridMat->diffuseAlbedo_ = float4(DX::Colors::Green);
+	pGridMat->fresnelR0 = float3(0.56f, 0.57f, 0.58f);
+	pGridMat->roughness_ = 0.5f;
+	pGridMat->metallic_ = 0.5f;
+	materials_[pGridMat->name_] = std::move(pGridMat);
+
+	auto pCylinderMat = std::make_unique<d3dUtil::Material>();
+	pCylinderMat->name_ = "cylinder";
+	pCylinderMat->matCBIndex_ = matCBIdx++;
+	pCylinderMat->diffuseAlbedo_ = float4(DX::Colors::LightSkyBlue);
+	pCylinderMat->fresnelR0 = float3(0.56f, 0.57f, 0.58f);
+	pCylinderMat->roughness_ = 0.5f;
+	pCylinderMat->metallic_ = 0.5f;
+	materials_[pCylinderMat->name_] = std::move(pCylinderMat);
+
+	auto pSkullMat = std::make_unique<d3dUtil::Material>();
+	pSkullMat->name_ = "skull";
+	pSkullMat->matCBIndex_ = matCBIdx++;
+	pSkullMat->diffuseAlbedo_ = float4(DX::Colors::Goldenrod);
+	pSkullMat->roughness_ = 0.0f;
+	pSkullMat->metallic_ = 0.0f;
+	materials_[pSkullMat->name_] = std::move(pSkullMat);
 }
 
 void Shape::buildPSO() {
@@ -513,8 +589,25 @@ void Shape::updatePassConstant(std::shared_ptr<com::GameTimer> pGameTimer) {
 	mainPassCB_.gFarZ = zFar;
 	mainPassCB_.gTotalTime = pGameTimer->getTotalTime();
 	mainPassCB_.gDeltaTime = pGameTimer->getDeltaTime();
-
+	mainPassCB_.gAmbientLight = float4(0.1f, 0.1f, 0.1f, 0.0f);
+	d3dUtil::Light directLight;
+	directLight.direction = normalize(float3(0.3f, -0.7f, 0.1f));
+	directLight.strength = float3(1.f);
+	mainPassCB_.gLights[0] = directLight;
 	currentFrameResource_->passCB_->copyData(0, mainPassCB_);
+}
+
+void Shape::updateMaterials() {
+	for (auto &&[name, pMat] : materials_) {
+		if (pMat->numFrameDirty_ > 0) {
+			d3dUtil::MaterialConstants matBuffer;
+			matBuffer.gDiffuseAlbedo = pMat->diffuseAlbedo_;
+			matBuffer.gFresnelR0 = pMat->fresnelR0;
+			matBuffer.gRoughness = pMat->roughness_;
+			matBuffer.gMetallic = pMat->metallic_;
+			currentFrameResource_->materialCB_->copyData(pMat->matCBIndex_, matBuffer);
+		}
+	}
 }
 
 void Shape::drawRenderItems() {
@@ -527,6 +620,8 @@ void Shape::drawRenderItems() {
 		handle.Offset(cbvIndex, cbvSrvUavDescriptorSize_);
 
 		pCommandList_->SetGraphicsRootDescriptorTable(d3dUtil::CB_Object, handle);
+		auto matAddress = currentFrameResource_->materialCB_->getGPUAddressByIndex(rItem->material_->matCBIndex_);
+		pCommandList_->SetGraphicsRootConstantBufferView(d3dUtil::CBRegisterType::CB_Material, matAddress);
 		pCommandList_->DrawIndexedInstanced(
 			rItem->indexCount_, 
 			1, 

@@ -452,11 +452,13 @@ struct VertexDataIndexHasher {
 	}
 };
 
-std::tuple<bool, MeshData> GometryGenerator::loadObjFile(const std::string &path) {
+MeshData GometryGenerator::loadObjFile(const std::string &path) {
 	std::fstream fin(path, std::ios::in);
-	std::tuple<bool, MeshData> result(false, {});
-	if (!fin.is_open())
-		return result;
+	if (!fin.is_open()) {
+		std::cerr << "can't open the file: " << path << std::endl;
+		assert(false);
+		return {};
+	}
 
 	std::vector<std::string> strPositions;
 	std::vector<std::string> strTexcoords;
@@ -552,11 +554,7 @@ std::tuple<bool, MeshData> GometryGenerator::loadObjFile(const std::string &path
 			indices.push_back(idx);
 		}
 	}
-	
-	std::get<bool>(result) = true;
-	std::get<MeshData>(result).indices = std::move(indices);
-	std::get<MeshData>(result).vertices = std::move(vertices);
-	return result;
+	return { std::move(vertices), std::move(indices) };
 }
 
 com::Vertex GometryGenerator::middlePoint(const Vertex &lhs, const Vertex &rhs) {

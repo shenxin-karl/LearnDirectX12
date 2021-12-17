@@ -36,9 +36,9 @@ float3 SchilckFresnel(float3 R0, float3 N, float3 L) {
 float3 BlinnPhong(float3 lightStrength, float3 L, float3 N, float3 V, Material mat) {
     float  metallic = saturate(mat.metallic);
     float3 diffuse  = mat.diffuseAlbedo.rgb * (1.0f - metallic);
-    float3 R0       = lerp(float3(0.04f, 0.04f, 0.04f), mat.diffuseAlbedo.rgb, metallic);
+    float3 R0       = lerp(float3(0.04f, 0.04f, 0.04f), mat.fresnelR0, metallic);
     
-    const float m = mat.shiness * 256.0f;
+    const float m = max(mat.shiness * 256.0f, 1.0f);
     float3 H = normalize(V + L);
     float normalizeFactor = (m + 8.0f) / 8.0f;
     float roughnessFactor = normalizeFactor * pow(saturate(dot(H, N)), m);

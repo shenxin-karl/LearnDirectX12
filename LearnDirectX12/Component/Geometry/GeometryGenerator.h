@@ -49,7 +49,7 @@ public:
 
 	void simplify(MeshData &mesh, float reserve);
 
-	std::tuple<bool, MeshData> loadObjFile(const std::string &path);
+	MeshData loadObjFile(const std::string &path);
 private:
 	static Vertex middlePoint(const Vertex &lhs, const Vertex &rhs);
 	static Vertex middleVertex(const Vertex &lhs, const Vertex &rhs);

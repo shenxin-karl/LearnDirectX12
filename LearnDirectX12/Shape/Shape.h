@@ -17,7 +17,7 @@ using namespace matrix;
 
 struct ShapeVertex {
 	float3	position;
-	float4	color;
+	float3  normal;
 };
 
 struct ShaderByteCode {
@@ -34,6 +34,7 @@ public:
 	virtual void beginTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 	virtual void tick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 	virtual void onResize(int width, int height) override;
+	virtual ~Shape() override;
 private:
 	void pollEvent();
 	void buildFrameResources();
@@ -43,9 +44,11 @@ private:
 	void buldConstantBufferViews();
 	void buildShaderAndInputLayout();
 	void buildRootSignature();
+	void buildMaterials();
 	void buildPSO();
 	void updateObjectConstant();
 	void updatePassConstant(std::shared_ptr<com::GameTimer> pGameTimer);
+	void updateMaterials();
 	void drawRenderItems();
 	void updateViewMatrix();
 private:
@@ -58,6 +61,7 @@ private:
 	std::unordered_map<std::string, std::unique_ptr<MeshGeometry>> geometrice_;
 	std::unordered_map<std::string, ShaderByteCode> shaders_;
 	std::unordered_map<std::string, WRL::ComPtr<ID3D12PipelineState>> PSOs_;
+	std::unordered_map<std::string, std::unique_ptr<d3dUtil::Material>> materials_;
 	std::vector<std::unique_ptr<d3dUtil::RenderItem>> allRenderItems_;
 	std::vector<d3dUtil::RenderItem *> opaqueRItems_;
 	WRL::ComPtr<ID3D12DescriptorHeap> pCbvHeaps_;

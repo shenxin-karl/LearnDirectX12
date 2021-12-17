@@ -17,8 +17,8 @@ foreach(fileItem ${AllFile})
 endforeach()
 
 add_executable("Shape" ${AllFile})
-set(RESOURCES ${SHADER_FILES})
-set_property(SOURCE ${RESOURCES} PROPERTY VS_TOOL_OVERRIDE "shader")	# 设置 hlsl 为 shader 资源文件
+
+set_property(SOURCE ${SHADER_FILES} PROPERTY VS_TOOL_OVERRIDE "shader")	# 设置 hlsl 为 shader 资源文件
 
 target_include_directories(BoxApp PUBLIC
 	${CMAKE_CURRENT_SOURCE_DIR}/..

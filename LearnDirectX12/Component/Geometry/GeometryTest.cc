@@ -168,7 +168,7 @@ void loadObject() {
 	meshData.save("loadObject.obj");
 }
 
-bool ConvertTxtModelToObjFile(const std::string &path) {
+bool convertTxtModelToObjFile(const std::string &path, const std::string &outputPath) {
 	std::fstream fin(path, std::ios::in);
 	if (!fin.is_open()) {
 		std::cerr << "can't open the file: " << path << std::endl;
@@ -188,7 +188,7 @@ bool ConvertTxtModelToObjFile(const std::string &path) {
 
 	std::vector<Vertex> vertices(vertCount, { float3(0.f), float2(0.f), float3(0.f), float3(0.f) });
 	std::vector<uint32> indices;
-	indices.reserve(static_cast<uint32>(triCount) * 3);
+	indices.reserve(static_cast<size_t>(triCount) * 3);
 	while (!fin.eof()) {
 		std::getline(fin, line);
 		if (line.compare(0, 10, "VertexList") == 0) {
@@ -207,10 +207,19 @@ bool ConvertTxtModelToObjFile(const std::string &path) {
 			std::getline(fin, line);
 			for (uint32 i = 0; i < triCount; ++i) {
 				std::getline(fin, line);
-				
+				uint32 idx0, idx1, idx2;
+				if (sscanf_s(line.c_str(), "\t%u %u %u", &idx0, &idx1, &idx2) != 3)
+					return false;
+				indices.push_back(idx0);
+				indices.push_back(idx1);
+				indices.push_back(idx2);
 			}
 		}
 	}
+
+	MeshData meshData = { std::move(vertices), std::move(indices) };
+	meshData.save(outputPath);
+	return true;
 }
 
 int main() {
@@ -223,5 +232,6 @@ int main() {
 	//createShapeTest();
 	//createGridTest();
 	//loadObject();
+	//convertTxtModelToObjFile("skull.txt", "skull.obj");
 	return 0;
 }
