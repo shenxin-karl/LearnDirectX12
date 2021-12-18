@@ -67,7 +67,7 @@ void LandAndWater::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	)));
 	pCommandList_->RSSetViewports(1, &screenViewport_);
 	pCommandList_->RSSetScissorRects(1, &scissorRect_);
-	pCommandList_->ClearRenderTargetView(getCurrentBackBufferView(), DX::Colors::Black, 1, &scissorRect_);
+	pCommandList_->ClearRenderTargetView(getCurrentBackBufferView(), DX::Colors::LightBlue, 1, &scissorRect_);
 	pCommandList_->ClearDepthStencilView(getDepthStencilBufferView(),
 		D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL,
 		1.f, 0, 1, &scissorRect_
@@ -329,10 +329,14 @@ void LandAndWater::buildShaderAndInputLayout() {
 		},
 	};
 
-	WRL::ComPtr<ID3DBlob> pLandVsByteCode = compileShader(L"shader/color.hlsl", nullptr, "VS", "vs_5_0");
-	WRL::ComPtr<ID3DBlob> pLandPsByteCode = compileShader(L"shader/color.hlsl", nullptr, "PS", "ps_5_0");
-	WRL::ComPtr<ID3DBlob> pWaterVsByteCode = compileShader(L"shader/water.hlsl", nullptr, "VS", "vs_5_0");
-	WRL::ComPtr<ID3DBlob> pWaterPsByteCode = compileShader(L"shader/water.hlsl", nullptr, "PS", "ps_5_0");
+	D3D_SHADER_MACRO macros[] ={
+		"USE_CARTOON_SHADING", nullptr,
+		nullptr, nullptr,
+	};
+	WRL::ComPtr<ID3DBlob> pLandVsByteCode = compileShader(L"shader/color.hlsl", macros, "VS", "vs_5_0");
+	WRL::ComPtr<ID3DBlob> pLandPsByteCode = compileShader(L"shader/color.hlsl", macros, "PS", "ps_5_0");
+	WRL::ComPtr<ID3DBlob> pWaterVsByteCode = compileShader(L"shader/water.hlsl", macros, "VS", "vs_5_0");
+	WRL::ComPtr<ID3DBlob> pWaterPsByteCode = compileShader(L"shader/water.hlsl", macros, "PS", "ps_5_0");
 	shaders_["landGeo"] = { pLandVsByteCode, pLandPsByteCode };
 	shaders_["waterGeo"] = { pWaterVsByteCode, pWaterPsByteCode };
 }

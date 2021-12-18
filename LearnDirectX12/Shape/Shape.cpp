@@ -165,7 +165,7 @@ void Shape::buildShapeGeometry() {
 	com::GometryGenerator gen;
 	com::MeshData box = gen.createBox(1.5f, 0.5f, 1.5f, 3);
 	com::MeshData grid = gen.createGrid(20.f, 30.f, 60, 40);
-	com::MeshData sphere = gen.createSphere(0.5f, 2);
+	com::MeshData sphere = gen.createSphere(0.5f, 4);
 	com::MeshData cylinder = gen.createCylinder(0.5f, 0.3f, 3.f, 20, 20);
 	com::MeshData skull = gen.loadObjFile("resource/skull.obj");
 
@@ -310,7 +310,8 @@ void Shape::buildRenderItems() {
 	allRenderItems_.push_back(std::move(gridRItem));
 
 	auto skullRItem = std::make_unique<d3dUtil::RenderItem>();
-	XMStoreFloat4x4(&skullRItem->world, DX::XMMatrixTranslation(0.f, 2.f, 0.f));
+	XMStoreFloat4x4(&skullRItem->world, 
+		DX::XMMatrixMultiply(DX::XMMatrixScaling(0.5f, 0.5f, 0.5f), DX::XMMatrixTranslation(0.f, 1.0f, 0.f)));
 	skullRItem->objCBIndex_ = objCBIndex++;
 	skullRItem->geometry_ = pGeometry;
 	skullRItem->primitiveType_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
@@ -434,8 +435,14 @@ void Shape::buildShaderAndInputLayout() {
 		}
 	};
 
-	WRL::ComPtr<ID3DBlob> pVsByteCode = compileShader(L"shader/color.hlsl", nullptr, "VS", "vs_5_0");
-	WRL::ComPtr<ID3DBlob> pPsByteCode = compileShader(L"shader/color.hlsl", nullptr, "PS", "ps_5_0");
+	D3D_SHADER_MACRO macros[] = { 
+		"NUM_DIR_LIGHTS", "0",  
+		"NUM_POINT_LIGHTS", "3",
+		"USE_CARTOON_SHADING", nullptr,
+		nullptr, nullptr
+	};
+	WRL::ComPtr<ID3DBlob> pVsByteCode = compileShader(L"shader/color.hlsl", macros, "VS", "vs_5_0");
+	WRL::ComPtr<ID3DBlob> pPsByteCode = compileShader(L"shader/color.hlsl", macros, "PS", "ps_5_0");
 	shaders_["shapeGeo"] = { pVsByteCode, pPsByteCode };
 }
 
@@ -482,8 +489,8 @@ void Shape::buildMaterials() {
 	pSphereMat->matCBIndex_ = matCBIdx++;
 	pSphereMat->diffuseAlbedo_ = float4(DX::Colors::Red);
 	pSphereMat->fresnelR0 = float3(0.56f, 0.57f, 0.58f);
-	pSphereMat->roughness_ = 0.5f;
-	pSphereMat->metallic_ = 0.5f;
+	pSphereMat->roughness_ = 0.f;
+	pSphereMat->metallic_ = 1.f;
 	materials_[pSphereMat->name_] = std::move(pSphereMat);
 
 	auto pBoxMat = std::make_unique<d3dUtil::Material>();
@@ -491,17 +498,17 @@ void Shape::buildMaterials() {
 	pBoxMat->matCBIndex_ = matCBIdx++;
 	pBoxMat->diffuseAlbedo_ = float4(DX::Colors::Green);
 	pBoxMat->fresnelR0 = float3(0.56f, 0.57f, 0.58f);
-	pBoxMat->roughness_ = 0.5f;
-	pBoxMat->metallic_ = 0.5f;
+	pBoxMat->roughness_ = 0.f;
+	pBoxMat->metallic_ = 0.2f;
 	materials_[pBoxMat->name_] = std::move(pBoxMat);
 
 	auto pGridMat = std::make_unique<d3dUtil::Material>();
 	pGridMat->name_ = "grid";
 	pGridMat->matCBIndex_ = matCBIdx++;
-	pGridMat->diffuseAlbedo_ = float4(DX::Colors::Green);
+	pGridMat->diffuseAlbedo_ = float4(DX::Colors::Gray);
 	pGridMat->fresnelR0 = float3(0.56f, 0.57f, 0.58f);
-	pGridMat->roughness_ = 0.5f;
-	pGridMat->metallic_ = 0.5f;
+	pGridMat->roughness_ = 1.f;
+	pGridMat->metallic_ = 0.f;
 	materials_[pGridMat->name_] = std::move(pGridMat);
 
 	auto pCylinderMat = std::make_unique<d3dUtil::Material>();
@@ -516,9 +523,9 @@ void Shape::buildMaterials() {
 	auto pSkullMat = std::make_unique<d3dUtil::Material>();
 	pSkullMat->name_ = "skull";
 	pSkullMat->matCBIndex_ = matCBIdx++;
-	pSkullMat->diffuseAlbedo_ = float4(DX::Colors::Goldenrod);
-	pSkullMat->roughness_ = 0.0f;
-	pSkullMat->metallic_ = 0.0f;
+	pSkullMat->diffuseAlbedo_ = float4(DX::Colors::White);
+	pSkullMat->roughness_ = 0.5f;
+	pSkullMat->metallic_ = 0.5f;
 	materials_[pSkullMat->name_] = std::move(pSkullMat);
 }
 
@@ -590,10 +597,21 @@ void Shape::updatePassConstant(std::shared_ptr<com::GameTimer> pGameTimer) {
 	mainPassCB_.gTotalTime = pGameTimer->getTotalTime();
 	mainPassCB_.gDeltaTime = pGameTimer->getDeltaTime();
 	mainPassCB_.gAmbientLight = float4(0.1f, 0.1f, 0.1f, 0.0f);
-	d3dUtil::Light directLight;
-	directLight.direction = normalize(float3(0.3f, -0.7f, 0.1f));
-	directLight.strength = float3(1.f);
-	mainPassCB_.gLights[0] = directLight;
+
+	mainPassCB_.gLights[0].strength = float3(1.f);
+	mainPassCB_.gLights[0].falloffStar = 0.1f;
+	mainPassCB_.gLights[0].falloffEnd = 100.f;
+	mainPassCB_.gLights[0].position = float3(50, 30, 30);
+
+	mainPassCB_.gLights[1].strength = float3(0.8f, 0.5f, 0.2f);
+	mainPassCB_.gLights[1].falloffStar = 0.1f;
+	mainPassCB_.gLights[1].falloffEnd = 100.f;
+	mainPassCB_.gLights[1].position = float3(-50, 30, 30);
+
+	mainPassCB_.gLights[2].strength = float3(0.7f, 0.1f, 1.f);
+	mainPassCB_.gLights[2].falloffStar = 0.1f;
+	mainPassCB_.gLights[2].falloffEnd = 100.f;
+	mainPassCB_.gLights[2].position = float3(-50, 30, -30);
 	currentFrameResource_->passCB_->copyData(0, mainPassCB_);
 }
 
@@ -644,6 +662,7 @@ void Shape::updateViewMatrix() {
 		cosTheta * sinPhi,
 	};
 	lookfrom *= radius_;
+	eyePos_ = lookfrom;
 	float3 lookat = float3(0.f);
 	float3 worldUp = float3(0, 1, 0);
 	DX::XMMATRIX view = DX::XMMatrixLookAtLH(lookfrom.toVec(), lookat.toVec(), worldUp.toVec());

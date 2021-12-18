@@ -51,7 +51,7 @@ void MakeWaveImpl(in float3 wpos, in WaveParam wp, out float3 pos, out float3 nr
 static const float k_PI = 3.141592654;
 static const float k_2PI = k_PI * 2.f;
 static const float WaveLength = 50.f;
-static const float WaveAmplitude = 1;
+static const float WaveAmplitude = 1.2f;
 static const int WaveNumber = 4;
 void MakeWave(inout float3 wpos, inout float3 wnrm) {
     const float l0 = 0.5 * WaveLength; const float w0 = k_2PI / l0; const float p0 = 0.8f * w0;

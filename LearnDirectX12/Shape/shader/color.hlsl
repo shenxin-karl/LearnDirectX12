@@ -39,6 +39,8 @@ float4 PS(VertexOut pin) : SV_Target {
 	float3 N = normalize(pin.wnrm);
     float3 shadowFactor[16];
     shadowFactor[0] = float3(1, 1, 1);
+    shadowFactor[1] = float3(1, 1, 1);
+    shadowFactor[2] = float3(1, 1, 1);
     float3 result = ComputeLighting(gLights, mat, pin.wpos, N, V, shadowFactor);
 	result += gAmbientLight * gDiffuseAlbedo;
 	return float4(result, gDiffuseAlbedo.a);
