@@ -1,24 +1,49 @@
 #pragma once
 #include "GeometryGenerator.h"
-#include "HalfEdgeMesh.h"
+#include <unordered_map>
+#include <set>
+#include <functional>
 
-namespace com {
+namespace loop {
 
-namespace HE = HalfEdge;
+using namespace vec;
+using namespace com;
+
+struct LoopVert {
+	float3	position;
+	float2	texcoord;
+};
+
+struct LoopEdge {
+	uint32 v0;
+	uint32 v1;
+public:
+	friend bool operator==(const LoopEdge &lsh, const LoopEdge &rhs);
+};
+
+struct LoopEdgeHasher {
+	std::size_t operator()(const LoopEdge &edge) const;
+};
+
+struct LoopFace {
+	uint32 v1;
+	uint32 v2;
+};
 
 class LoopSubdivision {
-	HE::HEMesh	hemesh_;
+	std::vector<LoopVert> verts_;
+	std::vector<bool>	  boundarys_;
+	std::vector<std::set<uint32>> neighbors_;
+	std::unordered_map<LoopEdge, int> edgeRefCount_;
 public:
-	LoopSubdivision() = default;
-	MeshData subdivide2MeshData(const MeshData &mesh);
-	HE::HEMesh subdivide2HEMesh();
-	static Vertex middle(const Vertex &lhs, const Vertex &rhs);
+	com::MeshData subdivision(const com::MeshData &mesh, int numSubdiv = 1);
 private:
-	void adjustOriginVertex(std::vector<Vertex> &vertices, size_t num) const;
-	void adjustNewVertex(std::vector<Vertex> &vertices, size_t first, 
-		const std::unordered_map<uint32, std::pair<uint32, uint32>> &deriedIndex) const;
-	void generateNewVertex(std::vector<Vertex> &vertices, std::vector<uint32> &indices, 
-		uint32 idx0, uint32 idx1, uint32 idx2);
+	const std::set<uint32> &getNeighborsVert(uint32 vert);
+	std::vector<uint32> getNeighborsBoundaryVert(uint32 vert);
+	static Vertex middlePoint(const Vertex &lhs, const Vertex &rhs);
+	void adjustOriginVert(std::vector<Vertex> &vertices, uint32 count);
+	void adjustNewVert(std::vector<Vertex> &vertices, uint32 start);
+	std::vector<uint32> insertFace(std::vector<Vertex> &vertices, const std::vector<uint32> &indices);
 };
 
 }
