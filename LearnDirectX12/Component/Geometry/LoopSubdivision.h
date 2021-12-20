@@ -31,19 +31,32 @@ struct LoopFace {
 };
 
 class LoopSubdivision {
-	std::vector<LoopVert> verts_;
-	std::vector<bool>	  boundarys_;
+	std::vector<bool> boundarys_;
 	std::vector<std::set<uint32>> neighbors_;
-	std::unordered_map<LoopEdge, int> edgeRefCount_;
+	std::unordered_map<LoopEdge, int, LoopEdgeHasher> edgeRefCount_;
 public:
+	com::MeshData subdivision(const std::vector<Vertex>& inputVert, const std::vector<uint32>& inputIdx, int numSubdiv = 1);
 	com::MeshData subdivision(const com::MeshData &mesh, int numSubdiv = 1);
 private:
-	const std::set<uint32> &getNeighborsVert(uint32 vert);
-	std::vector<uint32> getNeighborsBoundaryVert(uint32 vert);
+	struct Input {
+		const std::vector<Vertex> &vertices;
+		const std::vector<uint32> &indices;
+	};
+	struct Output {
+		std::vector<Vertex> &vertices;
+		std::vector<uint32> &indices;
+	};
+
+	const std::set<uint32> &getNeighborsVert(uint32 vert) const;
+	std::vector<uint32> getNeighborsBoundaryVert(uint32 vert) const;
+	std::vector<uint32> getSharePoint(uint32 v1, uint32 v2) const;
 	static Vertex middlePoint(const Vertex &lhs, const Vertex &rhs);
-	void adjustOriginVert(std::vector<Vertex> &vertices, uint32 count);
-	void adjustNewVert(std::vector<Vertex> &vertices, uint32 start);
-	std::vector<uint32> insertFace(std::vector<Vertex> &vertices, const std::vector<uint32> &indices);
+
+	void adjustOriginVert(Input input, Output output);
+	void adjustNewVert(Input input, Output output, const std::unordered_map<uint32, LoopEdge> &vertSource);
+	void insertVert(Input input, Output output);
+	void updateBoundary();
+	std::unordered_map<uint32, LoopEdge> insertFace(Input input, Output output);
 };
 
 }

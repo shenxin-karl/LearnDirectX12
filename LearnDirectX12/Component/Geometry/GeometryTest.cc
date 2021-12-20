@@ -119,21 +119,20 @@ void createCylinderTest() {
 
 void loopSubdivisionTest() {
 	std::vector<Vertex> vertices = {
-	Vertex{ float3(0, 0, 0), float2(0) },
-	Vertex{ float3(0, 1, 0), float2(0) },
-	Vertex{ float3(1, 1, 0), float2(0) },
-	Vertex{ float3(1, 0, 0), float2(0) },
+		Vertex{ float3(0, 0, 0), float2(0) },
+		Vertex{ float3(0, 1, 0), float2(0) },
+		Vertex{ float3(1, 1, 0), float2(0) },
+		Vertex{ float3(1, 0, 0), float2(0) },
 	};
 	std::vector<uint32> indices = {
 		0, 1, 2,
 		0, 2, 3,
 	};
-	MeshData mesh = { std::move(vertices), std::move(indices) };
-	//com::GometryGenerator gen;
-	//MeshData mesh = gen.createCylinder(10, 10, 10, 10, 10);
-	com::LoopSubdivision subdivision;
-	for (int i = 0; i < 3; ++i)
-		mesh = subdivision.subdivide2MeshData(mesh);
+	//MeshData mesh = { std::move(vertices), std::move(indices) };
+	com::GometryGenerator gen;
+	MeshData mesh = gen.createBox(10, 10, 10, 1);
+	loop::LoopSubdivision subdivision;
+	mesh = subdivision.subdivision(mesh, 1);
 	mesh.save("loopSubdivisionTest.obj");
 }
 
@@ -164,7 +163,7 @@ void createGridTest() {
 
 void loadObject() {
 	com::GometryGenerator gen;
-	auto &&[isOk, meshData] = gen.loadObjFile("createGridTest.obj");
+	MeshData meshData = gen.loadObjFile("createGridTest.obj");
 	meshData.save("loadObject.obj");
 }
 
@@ -227,7 +226,7 @@ int main() {
 	//saveObjTest();
 	//createBoxTest();
 	//createCylinderTest();
-	//loopSubdivisionTest();
+	loopSubdivisionTest();
 	//loopBetaTest();
 	//createShapeTest();
 	//createGridTest();

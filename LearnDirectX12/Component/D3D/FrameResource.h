@@ -25,6 +25,8 @@ using namespace vec;
 namespace DX = DirectX;
 namespace WRL = Microsoft::WRL;
 
+constexpr inline int kMaxLights = 16;
+
 struct PassConstants {
 	float4x4		gView;
 	float4x4		gInvView;
@@ -45,7 +47,9 @@ struct PassConstants {
 };
 
 struct ObjectConstants {
-	float4x4	gWorld;
+	float4x4	gWorldMat;
+	float4x4	gNormalMat;
+	float4x4	gTexMat;
 };
 
 struct FrameResourceDesc {

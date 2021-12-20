@@ -57,6 +57,13 @@ bool MeshData::save(const std::string &path) const {
 	return true;
 }
 
+void swap(MeshData& lhs, MeshData& rhs) noexcept {
+	using std::swap;
+	swap(lhs.vertices, rhs.vertices);
+	swap(lhs.indices, rhs.indices);
+}
+
+
 bool GometryGenerator::generateNormal(MeshData &mesh) const {
 	if (mesh.indices.size() < 3u) {
 		std::cerr << "mesh.indices.size() < 3u" << std::endl;

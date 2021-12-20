@@ -21,6 +21,7 @@ struct MeshData {
 	std::vector<uint32>	indices;
 public:
 	bool save(const std::string &path) const;
+	friend void swap(MeshData &lhs, MeshData &rhs) noexcept;
 };
 
 class GometryGenerator {

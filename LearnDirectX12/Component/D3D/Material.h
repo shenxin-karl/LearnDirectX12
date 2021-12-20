@@ -10,7 +10,6 @@ using namespace vec;
 using namespace mat;
 
 extern inline int kNumFrameResources;
-constexpr inline int kMaxLights = 16;
 
 struct MaterialConstants {
 	float4   gDiffuseAlbedo  = float4(1.f);

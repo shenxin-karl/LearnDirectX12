@@ -560,7 +560,7 @@ void Shape::updateObjectConstant() {
 		if (rItem->numFramesDirty > 0) {
 			DX::XMMATRIX world = DX::XMLoadFloat4x4(&rItem->world);
 			d3dUtil::ObjectConstants objConstant;
-			DX::XMStoreFloat4x4(&objConstant.gWorld, world);
+			DX::XMStoreFloat4x4(&objConstant.gWorldMat, world);
 			pCurrObjCB->copyData(rItem->objCBIndex_, objConstant);
 			--rItem->numFramesDirty;
 		}

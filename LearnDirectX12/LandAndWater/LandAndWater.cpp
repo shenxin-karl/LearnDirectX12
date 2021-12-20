@@ -484,7 +484,7 @@ void LandAndWater::updateObjectConstantBuffer() {
 		if (item->numFramesDirty > 0) {
 			DX::XMMATRIX world = DX::XMLoadFloat4x4(&item->world);
 			d3dUtil::ObjectConstants objCB;
-			DX::XMStoreFloat4x4(&objCB.gWorld, world);
+			DX::XMStoreFloat4x4(&objCB.gWorldMat, world);
 			currentFrameResource_->objectCB_->copyData(item->objCBIndex_, objCB);
 			--item->numFramesDirty;
 		}
