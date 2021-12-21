@@ -119,18 +119,30 @@ void createCylinderTest() {
 
 void loopSubdivisionTest() {
 	std::vector<Vertex> vertices = {
-		Vertex{ float3(0, 0, 0), float2(0) },
-		Vertex{ float3(0, 1, 0), float2(0) },
-		Vertex{ float3(1, 1, 0), float2(0) },
-		Vertex{ float3(1, 0, 0), float2(0) },
+		Vertex{ float3(0.125, 0.125, 0), float2(0.f) },
+		Vertex{ float3(0.125, 0.875, 0), float2(0.f) },
+		Vertex{ float3(0.875, 0.875, 0), float2(0.f) },
+		Vertex{ float3(0.875, 0.125, 0), float2(0.f) },
+		Vertex{ float3(0, 0.5, 0), float2(0.f) },
+		Vertex{ float3(0.5, 1, 0), float2(0.f) },
+		Vertex{ float3(0.5, 0.5, 0), float2(0.f) },
+		Vertex{ float3(1, 0.5, 0), float2(0.f) },
+		Vertex{ float3(0.5, 0, 0), float2(0.f) },
 	};
 	std::vector<uint32> indices = {
-		0, 1, 2,
-		0, 2, 3,
+		1-1, 5-1, 7-1,
+		5-1, 2-1, 6-1,
+		6-1, 3-1, 7-1,
+		5-1, 6-1, 7-1,
+		1-1, 7-1, 9-1,
+		7-1, 3-1, 8-1,
+		8-1, 4-1, 9-1,
+		7-1, 8-1, 9-1,
 	};
 	//MeshData mesh = { std::move(vertices), std::move(indices) };
 	com::GometryGenerator gen;
-	MeshData mesh = gen.createBox(10, 10, 10, 1);
+	MeshData mesh = gen.createBox(10, 10, 10, 0);
+	//MeshData mesh = gen.loadObjFile("bunny.obj");
 	loop::LoopSubdivision subdivision;
 	mesh = subdivision.subdivision(mesh, 1);
 	mesh.save("loopSubdivisionTest.obj");

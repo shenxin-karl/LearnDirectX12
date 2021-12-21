@@ -35,8 +35,10 @@ class LoopSubdivision {
 	std::vector<std::set<uint32>> neighbors_;
 	std::unordered_map<LoopEdge, int, LoopEdgeHasher> edgeRefCount_;
 public:
-	com::MeshData subdivision(const std::vector<Vertex>& inputVert, const std::vector<uint32>& inputIdx, int numSubdiv = 1);
-	com::MeshData subdivision(const com::MeshData &mesh, int numSubdiv = 1);
+	com::MeshData subdivision(const std::vector<Vertex>& inputVert, const std::vector<uint32>& inputIdx, 
+		int numSubdiv = 1, bool genNrmTan = false);
+	com::MeshData subdivision(const com::MeshData &mesh, 
+		int numSubdiv = 1, bool genNrmTan = false);
 private:
 	struct Input {
 		const std::vector<Vertex> &vertices;

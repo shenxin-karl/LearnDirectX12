@@ -15,12 +15,12 @@ std::size_t LoopEdgeHasher::operator()(const LoopEdge &edge) const {
 	return std::hash<uint32>()(edge.v0) ^ std::hash<uint32>()(edge.v1);
 }
 
-com::MeshData LoopSubdivision::subdivision(const com::MeshData &mesh, int numSubdiv) {
+com::MeshData LoopSubdivision::subdivision(const com::MeshData &mesh, int numSubdiv, bool genNrmTan) {
 	return subdivision(mesh.vertices, mesh.indices, numSubdiv);
 }
 
 com::MeshData LoopSubdivision::subdivision(const std::vector<Vertex> &vertices, 
-	const std::vector<uint32> &indices, int numSubdiv) 
+	const std::vector<uint32> &indices, int numSubdiv, bool genNrmTan)
 {
 	using std::swap;
 	MeshData ret;
@@ -34,6 +34,11 @@ com::MeshData LoopSubdivision::subdivision(const std::vector<Vertex> &vertices,
 		adjustOriginVert(input, output);
 		adjustNewVert(input, output, vertSource);
 		swap(mesh, ret);
+	}
+
+	if (genNrmTan) {
+		com::GometryGenerator gen;
+		gen.generateTangentAndNormal(ret);
 	}
 	return ret;
 }
@@ -65,7 +70,7 @@ std::vector<uint32> LoopSubdivision::getSharePoint(uint32 v1, uint32 v2) const {
 		++counter[idx];
 	for (uint32 idx : neighbors_[v2]) {
 		auto iter = counter.find(idx);
-		if (iter != counter.end() && iter->second == 1) {
+		if (iter != counter.end()) {
 			++iter->second;
 			ret.push_back(idx);
 		}
@@ -75,8 +80,8 @@ std::vector<uint32> LoopSubdivision::getSharePoint(uint32 v1, uint32 v2) const {
 
 Vertex LoopSubdivision::middlePoint(const Vertex &lhs, const Vertex &rhs) {
 	return {
-		MathHelper::lerp(lhs.position, rhs.position, 0.5f),
-		MathHelper::lerp(lhs.texcoord, rhs.texcoord, 0.5f),
+		(lhs.position + rhs.position) * 0.5f,
+		(lhs.texcoord + rhs.texcoord) * 0.5f,
 	};
 }
 
@@ -89,16 +94,14 @@ void LoopSubdivision::adjustOriginVert(Input input, Output output) {
 			constexpr float _1_div_8 = 1.f / 8.f;
 			float3 pos = input.vertices[i].position * _6_div_8;
 			float2 tex = input.vertices[i].texcoord * _6_div_8;
-			for (uint32 idx : neiVerts) {
-				pos += input.vertices[idx].position * _1_div_8;
-				tex += input.vertices[idx].texcoord * _1_div_8;
-			}
+			pos += input.vertices[neiVerts[0]].position * _1_div_8;
+			tex += input.vertices[neiVerts[0]].texcoord * _1_div_8;
+			pos += input.vertices[neiVerts[1]].position * _1_div_8;
+			tex += input.vertices[neiVerts[1]].texcoord * _1_div_8;
 			output.vertices[i].position = pos;
 			output.vertices[i].texcoord = tex;
 		} else {
 			auto neiVerts = getNeighborsVert(i);
-			if (neiVerts.empty())
-				continue;
 			float n = static_cast<float>(neiVerts.size());
 			constexpr float _5_div_8 = 5.f / 8.f;
 			constexpr float _3_div_8 = 3.f / 8.f;
@@ -133,15 +136,21 @@ void LoopSubdivision::adjustNewVert(Input input, Output output,
 			continue;
 
 		auto sharePoints = getSharePoint(edge.v0, edge.v1);
-		assert(sharePoints.size() == 2);
+		if (sharePoints.size() != 2) {
+			std::cout << "I: " << i << std::endl;
+			continue;
+		}
+
 		constexpr float _3_div_8 = 3.f / 8.f;
 		constexpr float _1_div_8 = 1.f / 8.f;
-		float3 pos = (input.vertices[edge.v0].position + input.vertices[edge.v1].position) * _3_div_8;
-		float2 tex = (input.vertices[edge.v0].texcoord + input.vertices[edge.v1].texcoord) * _3_div_8;
-		for (uint32 idx : sharePoints) {
-			pos += input.vertices[idx].position * _1_div_8;
-			tex += input.vertices[idx].texcoord * _1_div_8;
-		}
+		float3 pos = input.vertices[edge.v0].position * _3_div_8; 
+		float2 tex = input.vertices[edge.v0].texcoord * _3_div_8; 
+		pos += input.vertices[edge.v1].position * _3_div_8;
+		tex += input.vertices[edge.v1].texcoord * _3_div_8;
+		pos += input.vertices[sharePoints[0]].position * _1_div_8;
+		tex += input.vertices[sharePoints[0]].texcoord * _1_div_8;
+		pos += input.vertices[sharePoints[1]].position * _1_div_8;
+		tex += input.vertices[sharePoints[1]].texcoord * _1_div_8;
 		output.vertices[i].position = pos;
 		output.vertices[i].texcoord = tex;
 	}
@@ -161,9 +170,20 @@ void LoopSubdivision::insertVert(Input input, Output output) {
 std::unordered_map<uint32, LoopEdge> LoopSubdivision::insertFace(Input input, Output output) {
 	edgeRefCount_.clear();
 	output.indices.reserve(input.indices.size() * 4);
-	std::unordered_map<uint32, LoopEdge> vertSource;
 
-	for (size_t i = 0; i < input.indices.size(); i += 3) {
+	std::unordered_map<LoopEdge, uint32, LoopEdgeHasher> newVert;
+	auto createNewVert = [&](LoopEdge edge) -> uint32 {
+		if (auto iter = newVert.find(edge); iter != newVert.end())
+			return iter->second;
+		
+		output.vertices.push_back(middlePoint(input.vertices[edge.v0], input.vertices[edge.v1]));
+		auto idx = static_cast<uint32>(output.vertices.size() - 1);
+		newVert.insert(std::make_pair(edge, idx));
+		return idx;
+	};
+
+	std::unordered_map<uint32, LoopEdge> vertSource;
+	for (size_t i = 0; i < input.indices.size()-2; i += 3) {
 		uint32 idx0 = input.indices[i + 0];
 		uint32 idx1 = input.indices[i + 1];
 		uint32 idx2 = input.indices[i + 2];
@@ -179,18 +199,17 @@ std::unordered_map<uint32, LoopEdge> LoopSubdivision::insertFace(Input input, Ou
 		neighbors_[idx1].insert({ idx2, idx0 });
 		neighbors_[idx2].insert({ idx0, idx1 });
 
-		uint32 baseIdx = static_cast<uint32>(output.vertices.size());
-		output.vertices.push_back(middlePoint(input.vertices[idx0], input.vertices[idx1]));
-		output.vertices.push_back(middlePoint(input.vertices[idx1], input.vertices[idx2]));
-		output.vertices.push_back(middlePoint(input.vertices[idx2], input.vertices[idx0]));
-		output.indices.insert(output.indices.end(), { idx0, baseIdx+0, baseIdx+2 });
-		output.indices.insert(output.indices.end(), { baseIdx+0, idx1, baseIdx+1 });
-		output.indices.insert(output.indices.end(), { baseIdx+1, idx2, baseIdx+2 });
-		output.indices.insert(output.indices.end(), { baseIdx+0, baseIdx+1, baseIdx+2 });
+		uint32 newIdx0 = createNewVert(e0);
+		uint32 newIdx1 = createNewVert(e1);
+		uint32 newIdx2 = createNewVert(e2);
+		output.indices.insert(output.indices.end(), { idx0, newIdx0, newIdx2 });
+		output.indices.insert(output.indices.end(), { newIdx0, idx1, newIdx1 });
+		output.indices.insert(output.indices.end(), { newIdx1, idx2, newIdx2 });
+		output.indices.insert(output.indices.end(), { newIdx0, newIdx1, newIdx2 });
 
-		vertSource[baseIdx+0] = e0;
-		vertSource[baseIdx+1] = e1;
-		vertSource[baseIdx+2] = e2;
+		vertSource[newIdx0] = e0;
+		vertSource[newIdx1] = e1;
+		vertSource[newIdx2] = e2;
 	}
 	return vertSource;
 }

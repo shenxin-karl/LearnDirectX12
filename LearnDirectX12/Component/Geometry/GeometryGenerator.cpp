@@ -1,5 +1,6 @@
 #include "GeometryGenerator.h"
 #include "Math/MathHelper.h"
+#include "LoopSubdivision.h"
 #include <cmath>
 #include <iostream>
 #include <sstream>
@@ -298,7 +299,21 @@ MeshData GometryGenerator::createBox(float width, float height, float depth, uin
 		20, 21, 22,
 		20, 22, 23,
 	};
+
+	using namespace loop;
+	std::unordered_map<LoopEdge, uint32, LoopEdgeHasher> newVert;
+	auto createNewVert = [&](LoopEdge edge) -> uint32 {
+		if (auto iter = newVert.find(edge); iter != newVert.end())
+			return iter->second;
+
+		vertices.push_back(middlePoint(vertices[edge.v0], vertices[edge.v1]));
+		auto idx = static_cast<uint32>(vertices.size() - 1);
+		newVert.insert(std::make_pair(edge, idx));
+		return idx;
+	};
+
 	for (uint32 i = 0; i < numSubdivisions; ++i) {
+		newVert.clear();
 		std::vector<uint32> newIndices;
 		newIndices.swap(indices);
 		indices.reserve(newIndices.size() * 4);
@@ -306,14 +321,13 @@ MeshData GometryGenerator::createBox(float width, float height, float depth, uin
 			uint32 idx0 = newIndices[j + 0];
 			uint32 idx1 = newIndices[j + 1];
 			uint32 idx2 = newIndices[j + 2];
-			uint32 baseIdx = static_cast<uint32>(vertices.size());
-			vertices.push_back(middleVertex(vertices[idx0], vertices[idx1]));
-			vertices.push_back(middleVertex(vertices[idx1], vertices[idx2]));
-			vertices.push_back(middleVertex(vertices[idx2], vertices[idx0]));
-			indices.insert(indices.end(), { idx0, baseIdx+0, baseIdx+2 });
-			indices.insert(indices.end(), { baseIdx+0, idx1, baseIdx+1 });
-			indices.insert(indices.end(), { baseIdx+1, idx2, baseIdx+2 });
-			indices.insert(indices.end(), { baseIdx+0, baseIdx+1, baseIdx+2 });
+			uint32 newIdx0 = createNewVert({ idx0, idx1 });
+			uint32 newIdx1 = createNewVert({ idx1, idx2 });
+			uint32 newIdx2 = createNewVert({ idx2, idx0 });
+			indices.insert(indices.end(), { idx0, newIdx0, newIdx2 });
+			indices.insert(indices.end(), { newIdx0, idx1, newIdx1 });
+			indices.insert(indices.end(), { newIdx1, idx2, newIdx2 });
+			indices.insert(indices.end(), { newIdx0, newIdx1, newIdx2 });
 		}
 	}
 
@@ -350,7 +364,20 @@ MeshData GometryGenerator::createSphere(float radius, uint32 numSubdivisions) co
 	});
 	std::vector<uint32> indices(std::begin(k), std::end(k));
 	
+	using namespace loop;
+	std::unordered_map<LoopEdge, uint32, LoopEdgeHasher> newVert;
+	auto createNewVert = [&](LoopEdge edge) -> uint32 {
+		if (auto iter = newVert.find(edge); iter != newVert.end())
+			return iter->second;
+
+		vertices.push_back(middlePoint(vertices[edge.v0], vertices[edge.v1]));
+		auto idx = static_cast<uint32>(vertices.size() - 1);
+		newVert.insert(std::make_pair(edge, idx));
+		return idx;
+	};
+
 	for (uint32 i = 0; i < numSubdivisions; ++i) {
+		newVert.clear();
 		std::vector<uint32> newIndices;
 		newIndices.swap(indices);
 		indices.reserve(newIndices.size() * 4);
@@ -358,14 +385,14 @@ MeshData GometryGenerator::createSphere(float radius, uint32 numSubdivisions) co
 			uint32 idx0 = newIndices[j + 0];
 			uint32 idx1 = newIndices[j + 1];
 			uint32 idx2 = newIndices[j + 2];
-			uint32 baseIdx = static_cast<uint32>(vertices.size());
-			vertices.push_back(middlePoint(vertices[idx0], vertices[idx1]));
-			vertices.push_back(middlePoint(vertices[idx1], vertices[idx2]));
-			vertices.push_back(middlePoint(vertices[idx2], vertices[idx0]));
-			indices.insert(indices.end(), { idx0, baseIdx+0, baseIdx+2 });
-			indices.insert(indices.end(), { baseIdx+0, idx1, baseIdx+1 });
-			indices.insert(indices.end(), { baseIdx+1, idx2, baseIdx+2 });
-			indices.insert(indices.end(), { baseIdx+0, baseIdx+1, baseIdx+2 });
+
+			uint32 newIdx0 = createNewVert({ idx0, idx1 });
+			uint32 newIdx1 = createNewVert({ idx1, idx2 });
+			uint32 newIdx2 = createNewVert({ idx2, idx0 });
+			indices.insert(indices.end(), { idx0, newIdx0, newIdx2 });
+			indices.insert(indices.end(), { newIdx0, idx1, newIdx1 });
+			indices.insert(indices.end(), { newIdx1, idx2, newIdx2 });
+			indices.insert(indices.end(), { newIdx0, newIdx1, newIdx2 });
 		}
 	}
 	for (auto &vert : vertices) {
@@ -431,7 +458,8 @@ MeshData GometryGenerator::createQuad(float x, float y, float w, float h, float 
 }
 
 void GometryGenerator::loopSubdivision(MeshData &mesh) const {
-
+	loop::LoopSubdivision subdivision;
+	mesh = subdivision.subdivision(mesh);
 }
 
 void GometryGenerator::simplify(MeshData &mesh, float reserve) {
@@ -513,36 +541,41 @@ MeshData GometryGenerator::loadObjFile(const std::string &path) {
 	std::unordered_map<VertexDataIndex, com::uint32, VertexDataIndexHasher> record;
 	float3 vec3Zero = float3(0.f);
 	float2 vec2Zero = float2(0.f);
+	int ret = 0;
 	for (size_t i = 0; i < strFaces.size(); ++i) {
 		std::array<VertexDataIndex, 3> face;
 		switch (flag) {
 		case 1:
-			(void)sscanf_s(strFaces[i].c_str(), "f %d %d %d", 
+			ret = sscanf_s(strFaces[i].c_str(), "f %d %d %d", 
 				&face[0].posIdx, 
 				&face[1].posIdx, 
 				&face[2].posIdx
 			);
+			assert(ret == 3);
 			break;
 		case 3:
-			(void)sscanf_s(strFaces[i].c_str(), "f %d/%d %d/%d %d/%d", 
+			ret = sscanf_s(strFaces[i].c_str(), "f %d/%d/ %d/%d/ %d/%d/", 
 				&face[0].posIdx, &face[0].texIdx,
 				&face[1].posIdx, &face[1].texIdx,
 				&face[2].posIdx, &face[2].texIdx
 			);
+			assert(ret == 6);
 			break;
 		case 5:
-			(void)sscanf_s(strFaces[i].c_str(), "f %d/%d %d/%d %d/%d",
+			ret = sscanf_s(strFaces[i].c_str(), "f %d//%d %d//%d %d//%d",
 				&face[0].posIdx, &face[0].nrmIdx,
 				&face[1].posIdx, &face[1].nrmIdx,
 				&face[2].posIdx, &face[2].nrmIdx
 			);
+			assert(ret == 6);
 			break;
 		case 7:
-			(void)sscanf_s(strFaces[i].c_str(), "f %d/%d/%d %d/%d/%d %d/%d/%d",
+			ret = sscanf_s(strFaces[i].c_str(), "f %d/%d/%d %d/%d/%d %d/%d/%d",
 				&face[0].posIdx, &face[0].texIdx, &face[0].nrmIdx,
 				&face[1].posIdx, &face[1].texIdx, &face[1].nrmIdx,
 				&face[2].posIdx, &face[2].texIdx, &face[2].nrmIdx
 			);
+			assert(ret == 9);
 			break;
 		}
 		for (int j = 0; j < 3; ++j) {
@@ -554,7 +587,7 @@ MeshData GometryGenerator::loadObjFile(const std::string &path) {
 				vertices.push_back(Vertex {
 					positions[face[j].posIdx-1],
 					texcoords.empty() ? vec2Zero : texcoords[face[j].texIdx-1],
-					normals.empty()	  ? vec3Zero : normals[face[j].texIdx-1],
+					normals.empty()	  ? vec3Zero : normals[face[j].nrmIdx-1],
 				});
 				record[face[j]] = idx;
 			}
