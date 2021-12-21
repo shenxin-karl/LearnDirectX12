@@ -28,28 +28,28 @@ namespace WRL = Microsoft::WRL;
 constexpr inline int kMaxLights = 16;
 
 struct PassConstants {
-	float4x4		gView;
-	float4x4		gInvView;
-	float4x4		gProj;
-	float4x4		gInvProj;
-	float4x4		gViewProj;
-	float4x4		gInvViewProj;
-	float3			gEyePos;
-	float			cbPerObjectPad1;
-	float2			gRenderTargetSize;
-	float2			gInvRenderTargetSize;
-	float			gNearZ;
-	float			gFarZ;
-	float			gTotalTime;
-	float			gDeltaTime;
-	float4			gAmbientLight;
+	float4x4		gView = MathHelper::identity4x4();
+	float4x4		gInvView = MathHelper::identity4x4();
+	float4x4		gProj = MathHelper::identity4x4();
+	float4x4		gInvProj = MathHelper::identity4x4();
+	float4x4		gViewProj = MathHelper::identity4x4();
+	float4x4		gInvViewProj = MathHelper::identity4x4();
+	float3			gEyePos = float3(0.f);
+	float			cbPerObjectPad1 = 0.f;
+	float2			gRenderTargetSize = float2(0.f);
+	float2			gInvRenderTargetSize = float2(0.f);
+	float			gNearZ = 0.f;
+	float			gFarZ = 0.f;
+	float			gTotalTime = 0.f;
+	float			gDeltaTime = 0.f;
+	float4			gAmbientLight = float4(0.f);
 	d3dUtil::Light	gLights[kMaxLights];
 };
 
 struct ObjectConstants {
 	float4x4	gWorldMat;
 	float4x4	gNormalMat;
-	float4x4	gTexMat;
+	float4x4	gTextureMat;
 };
 
 struct FrameResourceDesc {

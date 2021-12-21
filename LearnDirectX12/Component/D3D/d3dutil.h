@@ -7,6 +7,7 @@
 #include <DirectXMath.h>
 #include <directxcollision.h>
 #include <unordered_map>
+#include "D3Dx12.h"
 
 void _ThrowIfFailedImpl(const char *file, int line, HRESULT hr);
 #define ThrowIfFailed(hr) (_ThrowIfFailedImpl(__FILE__, __LINE__, hr))
@@ -28,7 +29,6 @@ Microsoft::WRL::ComPtr<ID3DBlob> compileShader(
 	const std::string		&entrypoint,
 	const std::string		&target
 );
-
 
 
 #define USE_RVPTR_FUNC_IMPL
@@ -71,3 +71,14 @@ public:
 
 	std::unordered_map<std::string, SubmeshGeometry> drawArgs;
 };
+
+namespace d3dUtil {
+
+CD3DX12_STATIC_SAMPLER_DESC getStaticSamplerPointWrap(int regId);
+CD3DX12_STATIC_SAMPLER_DESC getStaticSamplerPointClamp(int regId);
+CD3DX12_STATIC_SAMPLER_DESC getStaticSamplerLinearWrap(int regId);
+CD3DX12_STATIC_SAMPLER_DESC getStaticSamplerLinearClamp(int regId);
+CD3DX12_STATIC_SAMPLER_DESC getStaticSamplerAnisotropicWrap(int regId);
+CD3DX12_STATIC_SAMPLER_DESC getStaticSamplerAnisotropicClamp(int regId);
+
+}
