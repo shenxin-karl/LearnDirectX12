@@ -14,10 +14,6 @@ struct VertexOut {
 	float3 wnrm		  : NORMAL;
 };
 
-cbuffer ObjCBBuffer : register(b0) {
-    float4x4 gWorld;
-};
-
 struct WaveParam {
     float length;
     float omega;
@@ -86,7 +82,7 @@ void MakeWave(inout float3 wpos, inout float3 wnrm) {
 }
 
 VertexOut VS(VertexIn vin) {
-    float4 worldPosition = mul(gWorld, float4(vin.position, 1.0));
+    float4 worldPosition = mul(gWorldMat, float4(vin.position, 1.0));
 	float3 wpos = worldPosition.xyz;
 	float3 wnrm = vin.normal;
 	MakeWave(wpos, wnrm);

@@ -16,13 +16,9 @@ struct VertexOut {
     float3 wnrm       : NORMAL;
 };
 
-cbuffer ObjCBBuffer : register(CB_OBJECT_TYPE) {
-    float4x4 gWorld;
-};
-
 VertexOut VS(VertexIn vin) {
     VertexOut vout;
-    float4 wpos     = mul(gWorld, float4(vin.position, 1.0));
+    float4 wpos     = mul(gWorldMat, float4(vin.position, 1.0));
     vout.SVPosition = mul(gViewProj, wpos);
     vout.color      = vin.color;
     vout.wpos       = wpos;

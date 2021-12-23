@@ -47,10 +47,16 @@ struct PassConstants {
 };
 
 struct ObjectConstants {
-	float4x4	gWorldMat;
-	float4x4	gNormalMat;
-	float4x4	gTextureMat;
+	float4x4    gWorldMat;
+	float4x4    gInvWorldMat;
+	float4x4    gTextureMat;
+	float3x4    gNormalMat;
+	int         gObjectID = 1;		// 232
+	int         gPadding0 = 2;
+	float2		gPadding1 = float2(3.f);
 };
+
+constexpr int v = sizeof(ObjectConstants);
 
 struct FrameResourceDesc {
 	UINT passCount		= 1;

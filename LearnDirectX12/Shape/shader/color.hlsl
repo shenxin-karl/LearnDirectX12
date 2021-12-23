@@ -14,13 +14,10 @@ struct VertexOut {
 	float3 wnrm		  : NORMAL;
 };
 
-cbuffer ObjectConstantBuffer : register(CB_OBJECT_TYPE) {
-	float4x4 gWorld;
-};
 
 VertexOut VS(VertexIn vin) {
 	VertexOut vout;
-	float4 worldPos = mul(gWorld, float4(vin.position, 1.0));
+	float4 worldPos = mul(gWorldMat, float4(vin.position, 1.0));
 	vout.svPosition = mul(gViewProj, worldPos);
     vout.wpos		= worldPos.xyz;
     vout.wnrm		= vin.normal;

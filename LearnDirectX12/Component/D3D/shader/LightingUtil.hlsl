@@ -111,7 +111,7 @@ float3 ComputeSpotLight(Light light, Material mat, float3 wpos, float3 N, float3
         
     float3 L = lightVec / d;
     float NdotL = saturate(DIFF_SHADING_FACTOR(dot(N, L)));
-    float lightStrenght = light.strength * NdotL;
+    float3 lightStrenght = light.strength * NdotL;
 
     float att = CalcAttenuation(d, light.falloffStart, light.falloffEnd);
     lightStrenght *= att;
