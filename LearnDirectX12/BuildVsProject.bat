@@ -1,6 +1,6 @@
 @echo off
 mkdir Build
-cmake clean Build
+cmake.exe clean Build
 set /P OPT=<cmake_option.txt
-cmake -S %~dp0 %OPT% -B Build
+cmake.exe -S %~dp0 %OPT% -B Build
 pause

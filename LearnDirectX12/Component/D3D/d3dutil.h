@@ -74,11 +74,12 @@ public:
 
 namespace d3dUtil {
 
-CD3DX12_STATIC_SAMPLER_DESC getStaticSamplerPointWrap(int regId);
-CD3DX12_STATIC_SAMPLER_DESC getStaticSamplerPointClamp(int regId);
-CD3DX12_STATIC_SAMPLER_DESC getStaticSamplerLinearWrap(int regId);
-CD3DX12_STATIC_SAMPLER_DESC getStaticSamplerLinearClamp(int regId);
-CD3DX12_STATIC_SAMPLER_DESC getStaticSamplerAnisotropicWrap(int regId);
-CD3DX12_STATIC_SAMPLER_DESC getStaticSamplerAnisotropicClamp(int regId);
+const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerPointWrap();
+const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerPointClamp();
+const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerLinearWrap();
+const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerLinearClamp();
+const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerAnisotropicWrap();
+const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerAnisotropicClamp();
+const std::array<CD3DX12_STATIC_SAMPLER_DESC, 6> &getStaticSamplers();
 
 }

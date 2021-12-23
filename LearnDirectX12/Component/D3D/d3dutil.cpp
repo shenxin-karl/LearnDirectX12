@@ -4,6 +4,7 @@
 #include "d3dutil.h"
 #include "D3DX12.h"
 #include "D3DException.h"
+#include <array>
 
 namespace WRL = Microsoft::WRL;
 void _ThrowIfFailedImpl(const char *file, int line, HRESULT hr) {
@@ -126,9 +127,9 @@ void MeshGeometry::disposeUploaders() {
 
 namespace d3dUtil {
 
-CD3DX12_STATIC_SAMPLER_DESC getStaticSamplerPointWrap(int regId) {
-	CD3DX12_STATIC_SAMPLER_DESC sampler(
-		regId,
+const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerPointWrap() {
+	static CD3DX12_STATIC_SAMPLER_DESC sampler(
+		0,
 		D3D12_FILTER_MIN_MAG_MIP_POINT,
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
@@ -137,9 +138,9 @@ CD3DX12_STATIC_SAMPLER_DESC getStaticSamplerPointWrap(int regId) {
 	return sampler;
 }
 
-CD3DX12_STATIC_SAMPLER_DESC getStaticSamplerPointClamp(int regId) {
-	CD3DX12_STATIC_SAMPLER_DESC sampler(
-		regId,
+const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerPointClamp() {
+	static CD3DX12_STATIC_SAMPLER_DESC sampler(
+		1,
 		D3D12_FILTER_MIN_MAG_MIP_POINT,
 		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
 		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
@@ -148,9 +149,9 @@ CD3DX12_STATIC_SAMPLER_DESC getStaticSamplerPointClamp(int regId) {
 	return sampler;
 }
 
-CD3DX12_STATIC_SAMPLER_DESC getStaticSamplerLinearWrap(int regId) {
-	CD3DX12_STATIC_SAMPLER_DESC sampler(
-		regId,
+const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerLinearWrap() {
+	static CD3DX12_STATIC_SAMPLER_DESC sampler(
+		2,
 		D3D12_FILTER_MIN_MAG_MIP_LINEAR,
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
@@ -159,9 +160,9 @@ CD3DX12_STATIC_SAMPLER_DESC getStaticSamplerLinearWrap(int regId) {
 	return sampler;
 }
 
-CD3DX12_STATIC_SAMPLER_DESC getStaticSamplerLinearClamp(int regId) {
-	CD3DX12_STATIC_SAMPLER_DESC sampler(
-		regId,
+const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerLinearClamp() {
+	static CD3DX12_STATIC_SAMPLER_DESC sampler(
+		3,
 		D3D12_FILTER_MIN_MAG_MIP_LINEAR,
 		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
 		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
@@ -170,9 +171,9 @@ CD3DX12_STATIC_SAMPLER_DESC getStaticSamplerLinearClamp(int regId) {
 	return sampler;
 }
 
-CD3DX12_STATIC_SAMPLER_DESC getStaticSamplerAnisotropicWrap(int regId) {
-	CD3DX12_STATIC_SAMPLER_DESC sampler(
-		regId,
+const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerAnisotropicWrap() {
+	static CD3DX12_STATIC_SAMPLER_DESC sampler(
+		4,
 		D3D12_FILTER_ANISOTROPIC,
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
@@ -181,15 +182,28 @@ CD3DX12_STATIC_SAMPLER_DESC getStaticSamplerAnisotropicWrap(int regId) {
 	return sampler;
 }
 
-CD3DX12_STATIC_SAMPLER_DESC getStaticSamplerAnisotropicClamp(int regId) {
-	CD3DX12_STATIC_SAMPLER_DESC sampler(
-		regId,
+const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerAnisotropicClamp() {
+	static CD3DX12_STATIC_SAMPLER_DESC sampler(
+		5,
 		D3D12_FILTER_ANISOTROPIC,
 		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
 		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
 		D3D12_TEXTURE_ADDRESS_MODE_CLAMP
 	);
 	return sampler;
+}
+
+const std::array<CD3DX12_STATIC_SAMPLER_DESC, 6> &getStaticSamplers()
+{
+	static std::array<CD3DX12_STATIC_SAMPLER_DESC, 6> samplers = {
+		getStaticSamplerPointWrap(),
+		getStaticSamplerPointClamp(),
+		getStaticSamplerLinearWrap(),
+		getStaticSamplerLinearClamp(),
+		getStaticSamplerAnisotropicWrap(),
+		getStaticSamplerAnisotropicClamp(),
+	};
+	return samplers;
 }
 
 }
