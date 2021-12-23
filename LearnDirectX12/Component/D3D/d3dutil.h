@@ -8,6 +8,7 @@
 #include <directxcollision.h>
 #include <unordered_map>
 #include "D3Dx12.h"
+#include <array>
 
 void _ThrowIfFailedImpl(const char *file, int line, HRESULT hr);
 #define ThrowIfFailed(hr) (_ThrowIfFailedImpl(__FILE__, __LINE__, hr))
@@ -74,12 +75,12 @@ public:
 
 namespace d3dUtil {
 
-const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerPointWrap();
-const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerPointClamp();
-const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerLinearWrap();
-const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerLinearClamp();
-const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerAnisotropicWrap();
-const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerAnisotropicClamp();
+const CD3DX12_STATIC_SAMPLER_DESC &getPointWrapStaticSampler();
+const CD3DX12_STATIC_SAMPLER_DESC &getPointClampStaticSampler();
+const CD3DX12_STATIC_SAMPLER_DESC &getLinearWrapStaticSampler();
+const CD3DX12_STATIC_SAMPLER_DESC &getLinearClampStaticSampler();
+const CD3DX12_STATIC_SAMPLER_DESC &getAnisotropicWrapStaticSampler();
+const CD3DX12_STATIC_SAMPLER_DESC &getAnisotropicClampStaticSampler();
 const std::array<CD3DX12_STATIC_SAMPLER_DESC, 6> &getStaticSamplers();
 
 }

@@ -438,7 +438,7 @@ void Shape::buildShaderAndInputLayout() {
 	D3D_SHADER_MACRO macros[] = { 
 		"NUM_DIR_LIGHTS", "0",  
 		"NUM_POINT_LIGHTS", "3",
-		"USE_CARTOON_SHADING", nullptr,
+		//"USE_CARTOON_SHADING", nullptr,
 		nullptr, nullptr
 	};
 	WRL::ComPtr<ID3DBlob> pVsByteCode = compileShader(L"shader/color.hlsl", macros, "VS", "vs_5_0");
@@ -455,8 +455,9 @@ void Shape::buildRootSignature() {
 	slotRootParameter[1].InitAsDescriptorTable(1, &cbvTable[1]);
 	slotRootParameter[2].InitAsConstantBufferView(2);
 
+	const auto &staticSamplers = d3dUtil::getStaticSamplers();
 	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc = {
-		3, slotRootParameter, 0, nullptr,
+		3, slotRootParameter, UINT(staticSamplers.size()), staticSamplers.data(),
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
 	};
 

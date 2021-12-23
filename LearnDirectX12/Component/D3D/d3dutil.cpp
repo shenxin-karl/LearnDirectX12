@@ -4,7 +4,6 @@
 #include "d3dutil.h"
 #include "D3DX12.h"
 #include "D3DException.h"
-#include <array>
 
 namespace WRL = Microsoft::WRL;
 void _ThrowIfFailedImpl(const char *file, int line, HRESULT hr) {
@@ -127,7 +126,7 @@ void MeshGeometry::disposeUploaders() {
 
 namespace d3dUtil {
 
-const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerPointWrap() {
+const CD3DX12_STATIC_SAMPLER_DESC &getPointWrapStaticSampler() {
 	static CD3DX12_STATIC_SAMPLER_DESC sampler(
 		0,
 		D3D12_FILTER_MIN_MAG_MIP_POINT,
@@ -138,7 +137,7 @@ const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerPointWrap() {
 	return sampler;
 }
 
-const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerPointClamp() {
+const CD3DX12_STATIC_SAMPLER_DESC &getPointClampStaticSampler() {
 	static CD3DX12_STATIC_SAMPLER_DESC sampler(
 		1,
 		D3D12_FILTER_MIN_MAG_MIP_POINT,
@@ -149,7 +148,7 @@ const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerPointClamp() {
 	return sampler;
 }
 
-const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerLinearWrap() {
+const CD3DX12_STATIC_SAMPLER_DESC &getLinearWrapStaticSampler() {
 	static CD3DX12_STATIC_SAMPLER_DESC sampler(
 		2,
 		D3D12_FILTER_MIN_MAG_MIP_LINEAR,
@@ -160,7 +159,7 @@ const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerLinearWrap() {
 	return sampler;
 }
 
-const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerLinearClamp() {
+const CD3DX12_STATIC_SAMPLER_DESC &getLinearClampStaticSampler() {
 	static CD3DX12_STATIC_SAMPLER_DESC sampler(
 		3,
 		D3D12_FILTER_MIN_MAG_MIP_LINEAR,
@@ -171,7 +170,7 @@ const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerLinearClamp() {
 	return sampler;
 }
 
-const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerAnisotropicWrap() {
+const CD3DX12_STATIC_SAMPLER_DESC &getAnisotropicWrapStaticSampler() {
 	static CD3DX12_STATIC_SAMPLER_DESC sampler(
 		4,
 		D3D12_FILTER_ANISOTROPIC,
@@ -182,7 +181,7 @@ const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerAnisotropicWrap() {
 	return sampler;
 }
 
-const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerAnisotropicClamp() {
+const CD3DX12_STATIC_SAMPLER_DESC &getAnisotropicClampStaticSampler() {
 	static CD3DX12_STATIC_SAMPLER_DESC sampler(
 		5,
 		D3D12_FILTER_ANISOTROPIC,
@@ -196,12 +195,12 @@ const CD3DX12_STATIC_SAMPLER_DESC &getStaticSamplerAnisotropicClamp() {
 const std::array<CD3DX12_STATIC_SAMPLER_DESC, 6> &getStaticSamplers()
 {
 	static std::array<CD3DX12_STATIC_SAMPLER_DESC, 6> samplers = {
-		getStaticSamplerPointWrap(),
-		getStaticSamplerPointClamp(),
-		getStaticSamplerLinearWrap(),
-		getStaticSamplerLinearClamp(),
-		getStaticSamplerAnisotropicWrap(),
-		getStaticSamplerAnisotropicClamp(),
+		getPointWrapStaticSampler(),
+		getPointClampStaticSampler(),
+		getLinearWrapStaticSampler(),
+		getLinearClampStaticSampler(),
+		getAnisotropicWrapStaticSampler(),
+		getAnisotropicClampStaticSampler(),
 	};
 	return samplers;
 }
