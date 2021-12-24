@@ -6,6 +6,7 @@
 #include "D3D/RenderItem.h"
 #include "D3D/UploadBuffer.h"
 #include "D3D/FrameResource.h"
+#include "D3D/Texture.h"
 #include <unordered_map>
 #include <wrl.h>
 
@@ -46,6 +47,7 @@ private:
 	void buildRootSignature();
 	void buildMaterials();
 	void buildPSO();
+	void loadTexture();
 	void updateObjectConstant();
 	void updatePassConstant(std::shared_ptr<com::GameTimer> pGameTimer);
 	void updateMaterials();
@@ -62,6 +64,7 @@ private:
 	std::unordered_map<std::string, ShaderByteCode> shaders_;
 	std::unordered_map<std::string, WRL::ComPtr<ID3D12PipelineState>> PSOs_;
 	std::unordered_map<std::string, std::unique_ptr<d3dUtil::Material>> materials_;
+	std::unordered_map<std::string, std::unique_ptr<d3dUtil::Texture>> textures_;
 	std::vector<std::unique_ptr<d3dUtil::RenderItem>> allRenderItems_;
 	std::vector<d3dUtil::RenderItem *> opaqueRItems_;
 	WRL::ComPtr<ID3D12DescriptorHeap> pCbvHeaps_;

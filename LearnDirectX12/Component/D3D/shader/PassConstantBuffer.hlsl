@@ -24,7 +24,7 @@ cbuffer CBObjectBuffer : register(CB_OBJECT_TYPE) {
     float4x4    gWorldMat;
     float4x4    gInvWorldMat;
     float4x4    gTextureMat;
-    float3x4    gNormalMat;
+    float4x3    gNormalMat;
 	int         gObjectID;
 	int         gPadding0;
 	float2		gPadding1;

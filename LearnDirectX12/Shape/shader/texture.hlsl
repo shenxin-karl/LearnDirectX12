@@ -31,7 +31,7 @@ VertexOut VS(VertexIn vin) {
 
 Texture2D gDiffuseMap : register(TEXTURE_DIFFUSE_TYPE);
 float4 PS(VertexOut pin) : SV_Target { 
-    float4 diffuseAlbedo = gDiffuseMap.Sample(samPointClamp, pin.tex) * gDiffuseAlbedo;
+    float4 diffuseAlbedo = gDiffuseMap.Sample(gSamPointClamp, pin.tex) * gDiffuseAlbedo;
     Material mat = {
         diffuseAlbedo,
         gFresnelR0,

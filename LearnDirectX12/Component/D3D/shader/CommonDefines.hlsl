@@ -7,12 +7,12 @@
 #define CB_MATERIAL_TYPE    b2
 
 // static sampler defines
-SamplerState samPointWrap        : register(s0);
-SamplerState samPointClamp       : register(s1);
-SamplerState samLinearWrap       : register(s2);
-SamplerState samLinearClamp      : register(s3);
-SamplerState samAnisotropicWrap  : register(s4);
-SamplerState samAnisotropicClamp : register(s5);
+SamplerState gSamPointWrap        : register(s0);
+SamplerState gSamPointClamp       : register(s1);
+SamplerState gSamLinearWrap       : register(s2);
+SamplerState gSamLinearClamp      : register(s3);
+SamplerState gSamAnisotropicWrap  : register(s4);
+SamplerState gSamAnisotropicClamp : register(s5);
 
 // texture resource type defines
 #define TEXTURE_DIFFUSE_TYPE    t0

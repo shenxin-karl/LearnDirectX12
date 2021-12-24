@@ -2,6 +2,7 @@
 #include "InputSystem/window.h"
 #include "InputSystem/Mouse.h"
 #include "InputSystem/Keyboard.h"
+#include "D3D/DDSTextureLoader.h"
 #include <DirectXColors.h>
 #include <iostream>
 
@@ -21,6 +22,7 @@ bool Shape::initialize() {
 	ThrowIfFailed(pCommandList_->Reset(pCommandAlloc_.Get(), nullptr));
 	buildShapeGeometry();
 	buildMaterials();
+	loadTexture();
 	buildRenderItems();
 	buildFrameResources();
 	buildDescriptorHeaps();
@@ -553,6 +555,20 @@ void Shape::buildPSO() {
 	wirePsoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
 	auto &wirePSO = PSOs_["shapeGeoWire"];
 	ThrowIfFailed(pDevice_->CreateGraphicsPipelineState(&wirePsoDesc, IID_PPV_ARGS(&wirePSO)));
+}
+
+void Shape::loadTexture() {
+	auto pBricksTex = std::make_unique<d3dUtil::Texture>();
+	pBricksTex->name_ = "bricks";
+	pBricksTex->fileName_ = L"resource/bricks.dds";
+	ThrowIfFailed(DX::CreateDDSTextureFromFile12(
+		pDevice_.Get(),
+		pCommandList_.Get(),
+		pBricksTex->fileName_.c_str(),
+		pBricksTex->pResource_,
+		pBricksTex->pUploadHeap_
+	));
+	textures_[pBricksTex->name_] = std::move(pBricksTex);
 }
 
 void Shape::updateObjectConstant() {
