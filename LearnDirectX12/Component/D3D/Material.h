@@ -10,7 +10,7 @@ using namespace vec;
 using namespace mat;
 
 extern inline int kNumFrameResources;
-
+struct Texture;
 struct MaterialConstants {
 	float4   gDiffuseAlbedo  = float4(1.f);
 	float3   gFresnelR0		= float3(0.1f);
@@ -24,12 +24,12 @@ struct MaterialConstants {
 struct Material {
 	std::string	name_;
 	int			matCBIndex_ = -1;
-	int			diffuseSrvHeapIndex_ = -1;
 	int			numFrameDirty_ = kNumFrameResources;
 	float4		diffuseAlbedo_ = float4(1.f);
 	float3		fresnelR0 = float3(0.1f);
 	float		roughness_ = 0.25f;
 	float		metallic_  = 0.5f;
+	Texture	   *pDiffuseTex_ = nullptr;
 	float4x4	matTransfrom_ = MathHelper::identity4x4();
 };
 

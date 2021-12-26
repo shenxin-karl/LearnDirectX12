@@ -16,9 +16,15 @@ namespace WRL = Microsoft::WRL;
 using namespace vec;
 using namespace matrix;
 
-struct ShapeVertex {
+struct ColorVertex {
 	float3	position;
 	float3  normal;
+};
+
+struct TextureVertex {
+	float3 position;
+	float3 normal;
+	float2 texcoord;
 };
 
 struct ShaderByteCode {
@@ -51,7 +57,8 @@ private:
 	void updateObjectConstant();
 	void updatePassConstant(std::shared_ptr<com::GameTimer> pGameTimer);
 	void updateMaterials();
-	void drawRenderItems();
+	void drawColorRenderItem();
+	void drawTextureRenderItem();
 	void updateViewMatrix();
 private:
 	void onKeyDown(char key);
@@ -65,10 +72,12 @@ private:
 	std::unordered_map<std::string, WRL::ComPtr<ID3D12PipelineState>> PSOs_;
 	std::unordered_map<std::string, std::unique_ptr<d3dUtil::Material>> materials_;
 	std::unordered_map<std::string, std::unique_ptr<d3dUtil::Texture>> textures_;
-	std::vector<std::unique_ptr<d3dUtil::RenderItem>> allRenderItems_;
+	std::vector<std::unique_ptr<d3dUtil::RenderItem>> colorRenderItems_;
+	std::vector<std::unique_ptr<d3dUtil::RenderItem>> textureRenderItems_;
 	std::vector<d3dUtil::RenderItem *> opaqueRItems_;
 	WRL::ComPtr<ID3D12DescriptorHeap> pCbvHeaps_;
-	std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout_;
+	std::vector<D3D12_INPUT_ELEMENT_DESC> colorInputLayout_;
+	std::vector<D3D12_INPUT_ELEMENT_DESC> textureInputLayout_;
 	WRL::ComPtr<ID3D12RootSignature> pRootSignature_;
 
 	UINT passCbvOffset_ = 0;

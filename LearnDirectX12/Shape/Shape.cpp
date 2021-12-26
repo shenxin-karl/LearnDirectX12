@@ -61,12 +61,7 @@ void Shape::beginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 void Shape::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	BaseApp::tick(pGameTimer);
 	auto &pCmdAlloc = currentFrameResource_->cmdListAlloc_;
-	pCmdAlloc->Reset();
-	if (isWireframe_)
-		pCommandList_->Reset(pCmdAlloc.Get(), PSOs_["shapeGeoWire"].Get());
-	else
-		pCommandList_->Reset(pCmdAlloc.Get(), PSOs_["shapeGeo"].Get());
-	
+	pCmdAlloc->Reset();	
 	pCommandList_->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
 		getCurrentBackBuffer(),
 		D3D12_RESOURCE_STATE_PRESENT,
@@ -94,7 +89,7 @@ void Shape::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	handle.Offset(passCbvOffset_ + currentFrameIndex_, cbvSrvUavDescriptorSize_);
 	pCommandList_->SetGraphicsRootDescriptorTable(d3dUtil::CB_Pass, handle);
 
-	drawRenderItems();
+	drawColorRenderItem();
 
 	pCommandList_->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
 		getCurrentBackBuffer(),
@@ -156,7 +151,7 @@ void Shape::pollEvent() {
 }
 
 void Shape::buildFrameResources() {
-	UINT itemSize = static_cast<UINT>(allRenderItems_.size());
+	UINT itemSize = static_cast<UINT>(opaqueRItems_.size());
 	UINT matSize = static_cast<UINT>(materials_.size());
 	d3dUtil::FrameResourceDesc desc(1, itemSize, matSize);
 	for (int i = 0; i < d3dUtil::kNumFrameResources; ++i) 
@@ -212,23 +207,23 @@ void Shape::buildShapeGeometry() {
 	auto totalVertexCount = box.vertices.size() + grid.vertices.size()
 		+ sphere.vertices.size() + cylinder.vertices.size() + skull.vertices.size();
 
-	std::vector<ShapeVertex> vertices;
+	std::vector<ColorVertex> vertices;
 	vertices.reserve(totalVertexCount);
 	auto vertIter = std::back_inserter(vertices);
 	std::transform(box.vertices.begin(), box.vertices.end(), vertIter, [](const com::Vertex &vert) {
-		return ShapeVertex{ vert.position, vert.normal };
+		return ColorVertex{ vert.position, vert.normal };
 	});
 	std::transform(grid.vertices.begin(), grid.vertices.end(), vertIter, [](const com::Vertex &vert) {
-		return ShapeVertex{ vert.position, vert.normal };
+		return ColorVertex{ vert.position, vert.normal };
 	});
 	std::transform(sphere.vertices.begin(), sphere.vertices.end(), vertIter, [](const com::Vertex &vert) {
-		return ShapeVertex{ vert.position, vert.normal };
+		return ColorVertex{ vert.position, vert.normal };
 	});
 	std::transform(cylinder.vertices.begin(), cylinder.vertices.end(), vertIter, [](const com::Vertex &vert) {
-		return ShapeVertex{ vert.position, vert.normal };
+		return ColorVertex{ vert.position, vert.normal };
 	});
 	std::transform(skull.vertices.begin(), skull.vertices.end(), vertIter, [](const com::Vertex &vert) {
-		return ShapeVertex{ vert.position, vert.normal };
+		return ColorVertex{ vert.position, vert.normal };
 	});
 	
 	auto totalIndexCount = box.indices.size() + grid.indices.size() 
@@ -243,7 +238,7 @@ void Shape::buildShapeGeometry() {
 	std::copy(cylinder.indices.begin(), cylinder.indices.end(), idxIter);
 	std::copy(skull.indices.begin(), skull.indices.end(), idxIter);
 
-	const UINT vbByteSize = static_cast<UINT>(vertices.size() * sizeof(ShapeVertex));
+	const UINT vbByteSize = static_cast<UINT>(vertices.size() * sizeof(ColorVertex));
 	const UINT ibByteSize = static_cast<UINT>(indices.size() * sizeof(com::uint32));
 	auto pMeshGeo = std::make_unique<MeshGeometry>();
 	pMeshGeo->name = "shapeGeo";
@@ -269,7 +264,7 @@ void Shape::buildShapeGeometry() {
 		pMeshGeo->indexBufferUploader
 	);
 
-	pMeshGeo->vertexByteStride = sizeof(ShapeVertex);
+	pMeshGeo->vertexByteStride = sizeof(ColorVertex);
 	pMeshGeo->vertexBufferByteSize = vbByteSize;
 	pMeshGeo->indexBufferFormat = DXGI_FORMAT_R32_UINT;
 	pMeshGeo->indexBufferByteSize = ibByteSize;
@@ -298,7 +293,7 @@ void Shape::buildRenderItems() {
 	boxRItem->startIndexLocation_ = boxRItem->geometry_->drawArgs["box"].startIndexLocation;
 	boxRItem->baseVertexLocation_ = boxRItem->geometry_->drawArgs["box"].baseVertexLocation;
 	boxRItem->material_ = materials_["box"].get();
-	allRenderItems_.push_back(std::move(boxRItem));
+	textureRenderItems_.push_back(std::move(boxRItem));
 
 	auto gridRItem = std::make_unique<d3dUtil::RenderItem>();
 	gridRItem->world = MathHelper::identity4x4();
@@ -309,7 +304,7 @@ void Shape::buildRenderItems() {
 	gridRItem->startIndexLocation_ = pGeometry->drawArgs["grid"].startIndexLocation;
 	gridRItem->baseVertexLocation_ = pGeometry->drawArgs["grid"].baseVertexLocation;
 	gridRItem->material_ = materials_["grid"].get();
-	allRenderItems_.push_back(std::move(gridRItem));
+	textureRenderItems_.push_back(std::move(gridRItem));
 
 	auto skullRItem = std::make_unique<d3dUtil::RenderItem>();
 	XMStoreFloat4x4(&skullRItem->world, 
@@ -320,8 +315,8 @@ void Shape::buildRenderItems() {
 	skullRItem->indexCount_ = pGeometry->drawArgs["skull"].indexCount;
 	skullRItem->startIndexLocation_ = pGeometry->drawArgs["skull"].startIndexLocation;
 	skullRItem->baseVertexLocation_ = pGeometry->drawArgs["skull"].baseVertexLocation;
-	skullRItem->material_ = materials_["skull"].get();
-	allRenderItems_.push_back(std::move(skullRItem));
+	//skullRItem->material_ = materials_["skull"].get();
+	colorRenderItems_.push_back(std::move(skullRItem));
 
 	for (int i = 0; i < 5; ++i) {
 		auto leftCylRItem = std::make_unique<d3dUtil::RenderItem>();
@@ -370,12 +365,14 @@ void Shape::buildRenderItems() {
 		rightSphereRItem->baseVertexLocation_ = pGeometry->drawArgs["sphere"].baseVertexLocation;
 		rightSphereRItem->material_ = materials_["sphere"].get();
 
-		allRenderItems_.push_back(std::move(leftCylRItem));
-		allRenderItems_.push_back(std::move(rightCylRItem));
-		allRenderItems_.push_back(std::move(leftSphereRItem));
-		allRenderItems_.push_back(std::move(rightSphereRItem));
+		textureRenderItems_.push_back(std::move(leftCylRItem));
+		textureRenderItems_.push_back(std::move(rightCylRItem));
+		textureRenderItems_.push_back(std::move(leftSphereRItem));
+		textureRenderItems_.push_back(std::move(rightSphereRItem));
 	}
-	for (auto &pRenderItem : allRenderItems_)
+	for (auto &pRenderItem : colorRenderItems_)
+		opaqueRItems_.push_back(pRenderItem.get());
+	for (auto &pRenderItem : textureRenderItems_)
 		opaqueRItems_.push_back(pRenderItem.get());
 }
 
@@ -406,6 +403,7 @@ void Shape::buldConstantBufferViews() {
 			handle.Offset(heapIndex, cbvSrvUavDescriptorSize_);
 
 			D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
+
 			cbvDesc.BufferLocation = address;
 			cbvDesc.SizeInBytes = objCBByteSize;
 			pDevice_->CreateConstantBufferView(&cbvDesc, handle);
@@ -426,13 +424,27 @@ void Shape::buldConstantBufferViews() {
 }
 
 void Shape::buildShaderAndInputLayout() {
-	inputLayout_ = {
+	colorInputLayout_ = {
 		{ 
-			"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(ShapeVertex, position),  
+			"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(ColorVertex, position),  
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 
 		},
 		{
-			"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(ShapeVertex, normal),
+			"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(ColorVertex, normal),
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0,
+		}
+	};
+	textureInputLayout_ = {
+		{
+			"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(TextureVertex, position),
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+		},
+		{
+			"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(TextureVertex, normal),
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0,
+		},
+		{
+			"TEXCOORD", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(TextureVertex, texcoord),
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0,
 		}
 	};
@@ -443,9 +455,12 @@ void Shape::buildShaderAndInputLayout() {
 		//"USE_CARTOON_SHADING", nullptr,
 		nullptr, nullptr
 	};
-	WRL::ComPtr<ID3DBlob> pVsByteCode = compileShader(L"shader/color.hlsl", macros, "VS", "vs_5_0");
-	WRL::ComPtr<ID3DBlob> pPsByteCode = compileShader(L"shader/color.hlsl", macros, "PS", "ps_5_0");
-	shaders_["shapeGeo"] = { pVsByteCode, pPsByteCode };
+	WRL::ComPtr<ID3DBlob> pColorVsByteCode = compileShader(L"shader/color.hlsl", macros, "VS", "vs_5_0");
+	WRL::ComPtr<ID3DBlob> pColorPsByteCode = compileShader(L"shader/color.hlsl", macros, "PS", "ps_5_0");
+	WRL::ComPtr<ID3DBlob> pTexVsByteCode = compileShader(L"shader/texture.hlsl", macros, "VS", "vs_5_0");
+	WRL::ComPtr<ID3DBlob> pTexPsByteCode = compileShader(L"shader/texture.hlsl", macros, "PS", "ps_5_0");
+	shaders_["color"] = { pColorVsByteCode, pColorPsByteCode };
+	shaders_["texture"] = { pTexVsByteCode, pTexPsByteCode };
 }
 
 void Shape::buildRootSignature() {
@@ -494,6 +509,7 @@ void Shape::buildMaterials() {
 	pSphereMat->fresnelR0 = float3(0.56f, 0.57f, 0.58f);
 	pSphereMat->roughness_ = 0.f;
 	pSphereMat->metallic_ = 1.f;
+	pSphereMat->pDiffuseTex_ = textures_["bricks"].get();
 	materials_[pSphereMat->name_] = std::move(pSphereMat);
 
 	auto pBoxMat = std::make_unique<d3dUtil::Material>();
@@ -503,6 +519,7 @@ void Shape::buildMaterials() {
 	pBoxMat->fresnelR0 = float3(0.56f, 0.57f, 0.58f);
 	pBoxMat->roughness_ = 0.f;
 	pBoxMat->metallic_ = 0.2f;
+	pBoxMat->pDiffuseTex_ = textures_["bricks"].get();
 	materials_[pBoxMat->name_] = std::move(pBoxMat);
 
 	auto pGridMat = std::make_unique<d3dUtil::Material>();
@@ -512,6 +529,7 @@ void Shape::buildMaterials() {
 	pGridMat->fresnelR0 = float3(0.56f, 0.57f, 0.58f);
 	pGridMat->roughness_ = 1.f;
 	pGridMat->metallic_ = 0.f;
+	pGridMat->pDiffuseTex_ = textures_["bricks"].get();
 	materials_[pGridMat->name_] = std::move(pGridMat);
 
 	auto pCylinderMat = std::make_unique<d3dUtil::Material>();
@@ -521,6 +539,7 @@ void Shape::buildMaterials() {
 	pCylinderMat->fresnelR0 = float3(0.56f, 0.57f, 0.58f);
 	pCylinderMat->roughness_ = 0.5f;
 	pCylinderMat->metallic_ = 0.5f;
+	pCylinderMat->pDiffuseTex_ = textures_["bricks"].get();
 	materials_[pCylinderMat->name_] = std::move(pCylinderMat);
 
 	auto pSkullMat = std::make_unique<d3dUtil::Material>();
@@ -533,28 +552,40 @@ void Shape::buildMaterials() {
 }
 
 void Shape::buildPSO() {
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
-	memset(&psoDesc, 0, sizeof(psoDesc));
-	psoDesc.pRootSignature = pRootSignature_.Get();
-	psoDesc.VS = shaders_["shapeGeo"].getVsByteCode();
-	psoDesc.PS = shaders_["shapeGeo"].getPsByteCode();
-	psoDesc.BlendState = CD3DX12_BLEND_DESC(CD3DX12_DEFAULT{});
-	psoDesc.SampleMask = 0xffffffff;
-	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(CD3DX12_DEFAULT{});
-	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(CD3DX12_DEFAULT{});
-	psoDesc.InputLayout = { inputLayout_.data(), static_cast<UINT>(inputLayout_.size()) };
-	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	psoDesc.NumRenderTargets = 1;
-	psoDesc.RTVFormats[0] = backBufferFormat_;
-	psoDesc.DSVFormat = depthStencilFormat_;
-	psoDesc.SampleDesc = { getSampleCount(), getSampleQuality() };
-	auto &pso = PSOs_["shapeGeo"];
-	ThrowIfFailed(pDevice_->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pso)));
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC colorPsoDesc;
+	memset(&colorPsoDesc, 0, sizeof(colorPsoDesc));
+	colorPsoDesc.pRootSignature = pRootSignature_.Get();
+	colorPsoDesc.VS = shaders_["color"].getVsByteCode();
+	colorPsoDesc.PS = shaders_["color"].getPsByteCode();
+	colorPsoDesc.BlendState = CD3DX12_BLEND_DESC(CD3DX12_DEFAULT{});
+	colorPsoDesc.SampleMask = 0xffffffff;
+	colorPsoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(CD3DX12_DEFAULT{});
+	colorPsoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(CD3DX12_DEFAULT{});
+	colorPsoDesc.InputLayout = { colorInputLayout_.data(), static_cast<UINT>(colorInputLayout_.size()) };
+	colorPsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	colorPsoDesc.NumRenderTargets = 1;
+	colorPsoDesc.RTVFormats[0] = backBufferFormat_;
+	colorPsoDesc.DSVFormat = depthStencilFormat_;
+	colorPsoDesc.SampleDesc = { getSampleCount(), getSampleQuality() };
+	auto &colorPso = PSOs_["colorPso"];
+	ThrowIfFailed(pDevice_->CreateGraphicsPipelineState(&colorPsoDesc, IID_PPV_ARGS(&colorPso)));
 
-	auto wirePsoDesc = psoDesc;
-	wirePsoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
-	auto &wirePSO = PSOs_["shapeGeoWire"];
-	ThrowIfFailed(pDevice_->CreateGraphicsPipelineState(&wirePsoDesc, IID_PPV_ARGS(&wirePSO)));
+	auto wireColorPsoDesc = colorPsoDesc;
+	wireColorPsoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
+	auto &colorWirePSO = PSOs_["colorPsoWire"];
+	ThrowIfFailed(pDevice_->CreateGraphicsPipelineState(&wireColorPsoDesc, IID_PPV_ARGS(&colorWirePSO)));
+
+	auto texturePsoDesc = colorPsoDesc;
+	texturePsoDesc.VS = shaders_["texture"].getVsByteCode();
+	texturePsoDesc.PS = shaders_["texture"].getPsByteCode();
+	texturePsoDesc.InputLayout = { textureInputLayout_.data(), static_cast<UINT>(textureInputLayout_.size()) };
+	auto &texturePso = PSOs_["texturePso"];
+	ThrowIfFailed(pDevice_->CreateGraphicsPipelineState(&texturePsoDesc, IID_PPV_ARGS(&texturePso)));
+
+	auto wireTexturePsoDesc = texturePsoDesc;
+	wireTexturePsoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
+	auto &textureWirePso = PSOs_["texturePsoWire"];
+	ThrowIfFailed(pDevice_->CreateGraphicsPipelineState(&wireTexturePsoDesc, IID_PPV_ARGS(&textureWirePso)));
 }
 
 void Shape::loadTexture() {
@@ -573,7 +604,7 @@ void Shape::loadTexture() {
 
 void Shape::updateObjectConstant() {
 	auto *pCurrObjCB = currentFrameResource_->objectCB_.get();
-	for (auto &rItem : allRenderItems_) {
+	auto updateObjectBuffer = [&](auto &rItem) {
 		if (rItem->numFramesDirty > 0) {
 			DX::XMMATRIX world = DX::XMLoadFloat4x4(&rItem->world);
 			d3dUtil::ObjectConstants objConstant;
@@ -581,7 +612,12 @@ void Shape::updateObjectConstant() {
 			pCurrObjCB->copyData(rItem->objCBIndex_, objConstant);
 			--rItem->numFramesDirty;
 		}
-	}
+	};
+	for (auto &rItem : colorRenderItems_)
+		updateObjectBuffer(rItem);
+	for (auto &rItem : textureRenderItems_)
+		updateObjectBuffer(rItem);
+
 }
 
 void Shape::updatePassConstant(std::shared_ptr<com::GameTimer> pGameTimer) {
@@ -645,8 +681,14 @@ void Shape::updateMaterials() {
 	}
 }
 
-void Shape::drawRenderItems() {
-	for (auto &rItem : allRenderItems_) {
+void Shape::drawColorRenderItem() {
+	auto pCmdAlloc = currentFrameResource_->cmdListAlloc_;
+	if (isWireframe_)
+		pCommandList_->Reset(pCmdAlloc.Get(), PSOs_["colorPsoWire"].Get());
+	else
+		pCommandList_->Reset(pCmdAlloc.Get(), PSOs_["colorPso"].Get());
+
+	for (auto &rItem : colorRenderItems_) {
 		pCommandList_->IASetVertexBuffers(0, 1, RVPtr(rItem->geometry_->getVertexBufferView()));
 		pCommandList_->IASetIndexBuffer(RVPtr(rItem->geometry_->getIndexBufferView()));
 		pCommandList_->IASetPrimitiveTopology(rItem->primitiveType_);
@@ -667,6 +709,14 @@ void Shape::drawRenderItems() {
 	}
 }
 
+
+void Shape::drawTextureRenderItem() {
+	auto pCmdAlloc = currentFrameResource_->cmdListAlloc_;
+	if (isWireframe_)
+		pCommandList_->Reset(pCmdAlloc.Get(), PSOs_["colorPsoWire"].Get());
+	else
+		pCommandList_->Reset(pCmdAlloc.Get(), PSOs_["colorPso"].Get());
+}
 
 void Shape::updateViewMatrix() {
 	float cosTheta = std::cos(DX::XMConvertToRadians(theta_));
