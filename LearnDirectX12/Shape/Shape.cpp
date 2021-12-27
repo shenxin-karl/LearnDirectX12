@@ -28,7 +28,8 @@ bool Shape::initialize() {
 	buildDescriptorHeaps();
 	buldConstantBufferViews();
 	buildShaderAndInputLayout();
-	buildRootSignature();
+	buildColorRootSignature();
+	buildTextureRootSignature();
 	buildPSO();
 	ThrowIfFailed(pCommandList_->Close());
 	ID3D12CommandList *cmdLists[] = { pCommandList_.Get() };
@@ -80,14 +81,6 @@ void Shape::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		&scissorRect_
 	);
 	pCommandList_->OMSetRenderTargets(1, RVPtr(getCurrentBackBufferView()), true, RVPtr(getDepthStencilBufferView()));
-	pCommandList_->SetGraphicsRootSignature(pRootSignature_.Get());
-	ID3D12DescriptorHeap *descriptorHeaps[] = { pCbvHeaps_.Get() };
-	pCommandList_->SetDescriptorHeaps(1, descriptorHeaps);
-
-	// set pass constant buffer
-	CD3DX12_GPU_DESCRIPTOR_HANDLE handle(pCbvHeaps_->GetGPUDescriptorHandleForHeapStart());
-	handle.Offset(passCbvOffset_ + currentFrameIndex_, cbvSrvUavDescriptorSize_);
-	pCommandList_->SetGraphicsRootDescriptorTable(d3dUtil::CB_Pass, handle);
 
 	drawColorRenderItem();
 
@@ -387,6 +380,14 @@ void Shape::buildDescriptorHeaps() {
 	cbvHeapDesc.NodeMask = 0;
 	passCbvOffset_ = objCount * d3dUtil::kNumFrameResources;
 	pDevice_->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&pCbvHeaps_));
+
+	UINT texCount = static_cast<UINT>(textures_.size());
+	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc;
+	srvHeapDesc.NumDescriptors = texCount;
+	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	srvHeapDesc.NodeMask = 0;
+	pDevice_->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&pSrvHeaps_));
 }
 
 void Shape::buldConstantBufferViews() {
@@ -403,7 +404,6 @@ void Shape::buldConstantBufferViews() {
 			handle.Offset(heapIndex, cbvSrvUavDescriptorSize_);
 
 			D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
-
 			cbvDesc.BufferLocation = address;
 			cbvDesc.SizeInBytes = objCBByteSize;
 			pDevice_->CreateConstantBufferView(&cbvDesc, handle);
@@ -420,6 +420,24 @@ void Shape::buldConstantBufferViews() {
 		cbvDesc.BufferLocation = address;
 		cbvDesc.SizeInBytes = passCBByteSize;
 		pDevice_->CreateConstantBufferView(&cbvDesc, handle);
+	}
+
+	for (auto &&[key, pTexture] : textures_) {
+		auto address = pTexture->pResource_->GetGPUVirtualAddress();
+		auto heapIndex = pTexture->diffuseHeapIndex_;
+		CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(
+			pSrvHeaps_->GetCPUDescriptorHandleForHeapStart()
+		);
+		hDescriptor.Offset(heapIndex, cbvSrvUavDescriptorSize_);                                                                                                                             Index, cbvSrvUavDescriptorSize_);
+
+		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		srvDesc.Format = pTexture->pResource_->GetDesc().Format;
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MostDetailedMip = 0;
+		srvDesc.Texture2D.MipLevels = pTexture->pResource_->GetDesc().MipLevels;
+		srvDesc.Texture2D.ResourceMinLODClamp = 0.f;
+		pDevice_->CreateShaderResourceView(pTexture->pResource_.Get(), &srvDesc, hDescriptor);
 	}
 }
 
@@ -463,18 +481,13 @@ void Shape::buildShaderAndInputLayout() {
 	shaders_["texture"] = { pTexVsByteCode, pTexPsByteCode };
 }
 
-void Shape::buildRootSignature() {
-	CD3DX12_ROOT_PARAMETER slotRootParameter[3];
-	CD3DX12_DESCRIPTOR_RANGE cbvTable[2];
-	cbvTable[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-	cbvTable[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
-	slotRootParameter[0].InitAsDescriptorTable(1, &cbvTable[0]);
-	slotRootParameter[1].InitAsDescriptorTable(1, &cbvTable[1]);
-	slotRootParameter[2].InitAsConstantBufferView(2);
-
+void Shape::buildRootSignatureImpl(const std::vector<CD3DX12_ROOT_PARAMETER> &rootParam, 
+	WRL::ComPtr<ID3D12RootSignature> &pRootSignature) 
+{
 	const auto &staticSamplers = d3dUtil::getStaticSamplers();
+	UINT rootParamSize = static_cast<UINT>(rootParam.size());
 	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc = {
-		3, slotRootParameter, UINT(staticSamplers.size()), staticSamplers.data(),
+		rootParamSize, rootParam.data(), UINT(staticSamplers.size()), staticSamplers.data(),
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
 	};
 
@@ -496,8 +509,32 @@ void Shape::buildRootSignature() {
 		0,
 		serializedRootSig->GetBufferPointer(),
 		serializedRootSig->GetBufferSize(),
-		IID_PPV_ARGS(&pRootSignature_)
+		IID_PPV_ARGS(&pRootSignature)
 	));
+}
+
+void Shape::buildColorRootSignature() {
+	std::vector<CD3DX12_ROOT_PARAMETER> slotRootParameter(3, CD3DX12_ROOT_PARAMETER{});
+	CD3DX12_DESCRIPTOR_RANGE cbvTable[2];
+	cbvTable[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+	cbvTable[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+	slotRootParameter[0].InitAsDescriptorTable(1, &cbvTable[0]);
+	slotRootParameter[1].InitAsDescriptorTable(1, &cbvTable[1]);
+	slotRootParameter[2].InitAsConstantBufferView(2);
+	buildRootSignatureImpl(slotRootParameter, pColorRootSignature_);
+}
+
+void Shape::buildTextureRootSignature() {
+	std::vector<CD3DX12_ROOT_PARAMETER> slotRootParameter(4, CD3DX12_ROOT_PARAMETER{});
+	CD3DX12_DESCRIPTOR_RANGE cbvTable[3];
+	cbvTable[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+	cbvTable[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+	cbvTable[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+	slotRootParameter[0].InitAsDescriptorTable(1, &cbvTable[0]);
+	slotRootParameter[1].InitAsDescriptorTable(1, &cbvTable[1]);
+	slotRootParameter[2].InitAsConstantBufferView(2);
+	slotRootParameter[3].InitAsDescriptorTable(1, &cbvTable[2]);
+	buildRootSignatureImpl(slotRootParameter, pTextureRootSignature_);
 }
 
 void Shape::buildMaterials() {
@@ -554,7 +591,7 @@ void Shape::buildMaterials() {
 void Shape::buildPSO() {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC colorPsoDesc;
 	memset(&colorPsoDesc, 0, sizeof(colorPsoDesc));
-	colorPsoDesc.pRootSignature = pRootSignature_.Get();
+	colorPsoDesc.pRootSignature = pColorRootSignature_.Get();
 	colorPsoDesc.VS = shaders_["color"].getVsByteCode();
 	colorPsoDesc.PS = shaders_["color"].getPsByteCode();
 	colorPsoDesc.BlendState = CD3DX12_BLEND_DESC(CD3DX12_DEFAULT{});
@@ -589,9 +626,11 @@ void Shape::buildPSO() {
 }
 
 void Shape::loadTexture() {
+	int texIdx = 0;
 	auto pBricksTex = std::make_unique<d3dUtil::Texture>();
 	pBricksTex->name_ = "bricks";
 	pBricksTex->fileName_ = L"resource/bricks.dds";
+	pBricksTex->diffuseHeapIndex_ = texIdx++;
 	ThrowIfFailed(DX::CreateDDSTextureFromFile12(
 		pDevice_.Get(),
 		pCommandList_.Get(),
@@ -687,6 +726,15 @@ void Shape::drawColorRenderItem() {
 		pCommandList_->Reset(pCmdAlloc.Get(), PSOs_["colorPsoWire"].Get());
 	else
 		pCommandList_->Reset(pCmdAlloc.Get(), PSOs_["colorPso"].Get());
+
+	pCommandList_->SetGraphicsRootSignature(pColorRootSignature_.Get());
+	ID3D12DescriptorHeap *descriptorHeaps[] = { pCbvHeaps_.Get() };
+	pCommandList_->SetDescriptorHeaps(1, descriptorHeaps);
+
+	// set pass constant buffer
+	CD3DX12_GPU_DESCRIPTOR_HANDLE handle(pCbvHeaps_->GetGPUDescriptorHandleForHeapStart());
+	handle.Offset(passCbvOffset_ + currentFrameIndex_, cbvSrvUavDescriptorSize_);
+	pCommandList_->SetGraphicsRootDescriptorTable(d3dUtil::CB_Pass, handle);
 
 	for (auto &rItem : colorRenderItems_) {
 		pCommandList_->IASetVertexBuffers(0, 1, RVPtr(rItem->geometry_->getVertexBufferView()));

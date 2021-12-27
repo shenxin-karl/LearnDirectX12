@@ -50,7 +50,10 @@ private:
 	void buildDescriptorHeaps();
 	void buldConstantBufferViews();
 	void buildShaderAndInputLayout();
-	void buildRootSignature();
+	void buildRootSignatureImpl(const std::vector<CD3DX12_ROOT_PARAMETER> &rootParam, 
+		WRL::ComPtr<ID3D12RootSignature> &pRootSignature);
+	void buildColorRootSignature();
+	void buildTextureRootSignature();
 	void buildMaterials();
 	void buildPSO();
 	void loadTexture();
@@ -76,9 +79,11 @@ private:
 	std::vector<std::unique_ptr<d3dUtil::RenderItem>> textureRenderItems_;
 	std::vector<d3dUtil::RenderItem *> opaqueRItems_;
 	WRL::ComPtr<ID3D12DescriptorHeap> pCbvHeaps_;
+	WRL::ComPtr<ID3D12DescriptorHeap> pSrvHeaps_;
 	std::vector<D3D12_INPUT_ELEMENT_DESC> colorInputLayout_;
 	std::vector<D3D12_INPUT_ELEMENT_DESC> textureInputLayout_;
-	WRL::ComPtr<ID3D12RootSignature> pRootSignature_;
+	WRL::ComPtr<ID3D12RootSignature> pColorRootSignature_;
+	WRL::ComPtr<ID3D12RootSignature> pTextureRootSignature_;
 
 	UINT passCbvOffset_ = 0;
 	bool isWireframe_ = false;
