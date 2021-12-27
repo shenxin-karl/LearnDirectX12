@@ -48,7 +48,7 @@ private:
 	void buildShapeGeometry();
 	void buildRenderItems();
 	void buildDescriptorHeaps();
-	void buldConstantBufferViews();
+	void buildConstantBufferViews();
 	void buildShaderAndInputLayout();
 	void buildRootSignatureImpl(const std::vector<CD3DX12_ROOT_PARAMETER> &rootParam, 
 		WRL::ComPtr<ID3D12RootSignature> &pRootSignature);
