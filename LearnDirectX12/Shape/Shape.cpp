@@ -21,12 +21,12 @@ bool Shape::initialize() {
 
 	ThrowIfFailed(pCommandList_->Reset(pCommandAlloc_.Get(), nullptr));
 	buildShapeGeometry();
-	buildMaterials();
 	loadTexture();
+	buildMaterials();
 	buildRenderItems();
 	buildFrameResources();
 	buildDescriptorHeaps();
-	buldConstantBufferViews();
+	buildConstantBufferViews();
 	buildShaderAndInputLayout();
 	buildColorRootSignature();
 	buildTextureRootSignature();
@@ -63,6 +63,7 @@ void Shape::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	BaseApp::tick(pGameTimer);
 	auto &pCmdAlloc = currentFrameResource_->cmdListAlloc_;
 	pCmdAlloc->Reset();	
+	pCommandList_->Reset(pCmdAlloc.Get(), nullptr);
 	pCommandList_->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
 		getCurrentBackBuffer(),
 		D3D12_RESOURCE_STATE_PRESENT,
@@ -82,7 +83,24 @@ void Shape::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	);
 	pCommandList_->OMSetRenderTargets(1, RVPtr(getCurrentBackBufferView()), true, RVPtr(getDepthStencilBufferView()));
 
+	pCommandList_->SetGraphicsRootSignature(pColorRootSignature_.Get());
+	ID3D12DescriptorHeap *descriptorHeaps0[] = { pCbvHeaps_.Get(),/* pSrvHeaps_.Get()*/ };
+	pCommandList_->SetDescriptorHeaps(1, descriptorHeaps0);
+
+	// set pass constant buffer
+	CD3DX12_GPU_DESCRIPTOR_HANDLE handle(pCbvHeaps_->GetGPUDescriptorHandleForHeapStart());
+	handle.Offset(passCbvOffset_ + currentFrameIndex_, cbvSrvUavDescriptorSize_);
+	pCommandList_->SetGraphicsRootDescriptorTable(d3dUtil::CB_Pass, handle);
+
 	drawColorRenderItem();
+
+	pCommandList_->SetGraphicsRootSignature(pTextureRootSignature_.Get());
+	ID3D12DescriptorHeap *descriptorHeaps1[] = { pCbvHeaps_.Get(), pSrvHeaps_.Get() };
+	pCommandList_->SetDescriptorHeaps(1, descriptorHeaps1);
+
+	// set pass constant buffer
+	pCommandList_->SetGraphicsRootDescriptorTable(d3dUtil::CB_Pass, handle);
+	drawTextureRenderItem();
 
 	pCommandList_->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
 		getCurrentBackBuffer(),
@@ -308,7 +326,7 @@ void Shape::buildRenderItems() {
 	skullRItem->indexCount_ = pGeometry->drawArgs["skull"].indexCount;
 	skullRItem->startIndexLocation_ = pGeometry->drawArgs["skull"].startIndexLocation;
 	skullRItem->baseVertexLocation_ = pGeometry->drawArgs["skull"].baseVertexLocation;
-	//skullRItem->material_ = materials_["skull"].get();
+	skullRItem->material_ = materials_["skull"].get();
 	colorRenderItems_.push_back(std::move(skullRItem));
 
 	for (int i = 0; i < 5; ++i) {
@@ -390,7 +408,7 @@ void Shape::buildDescriptorHeaps() {
 	pDevice_->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&pSrvHeaps_));
 }
 
-void Shape::buldConstantBufferViews() {
+void Shape::buildConstantBufferViews() {
 	UINT objCBByteSize = static_cast<UINT>(calcConstantBufferByteSize(sizeof(d3dUtil::ObjectConstants)));
 	UINT passCBByteSize = static_cast<UINT>(calcConstantBufferByteSize(sizeof(d3dUtil::PassConstants)));
 	UINT objCount = static_cast<UINT>(opaqueRItems_.size());
@@ -423,12 +441,11 @@ void Shape::buldConstantBufferViews() {
 	}
 
 	for (auto &&[key, pTexture] : textures_) {
-		auto address = pTexture->pResource_->GetGPUVirtualAddress();
 		auto heapIndex = pTexture->diffuseHeapIndex_;
 		CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(
 			pSrvHeaps_->GetCPUDescriptorHandleForHeapStart()
 		);
-		hDescriptor.Offset(heapIndex, cbvSrvUavDescriptorSize_);                                                                                                                             Index, cbvSrvUavDescriptorSize_);
+		hDescriptor.Offset(heapIndex, cbvSrvUavDescriptorSize_);
 
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -613,6 +630,7 @@ void Shape::buildPSO() {
 	ThrowIfFailed(pDevice_->CreateGraphicsPipelineState(&wireColorPsoDesc, IID_PPV_ARGS(&colorWirePSO)));
 
 	auto texturePsoDesc = colorPsoDesc;
+	texturePsoDesc.pRootSignature = pTextureRootSignature_.Get();
 	texturePsoDesc.VS = shaders_["texture"].getVsByteCode();
 	texturePsoDesc.PS = shaders_["texture"].getPsByteCode();
 	texturePsoDesc.InputLayout = { textureInputLayout_.data(), static_cast<UINT>(textureInputLayout_.size()) };
@@ -723,18 +741,9 @@ void Shape::updateMaterials() {
 void Shape::drawColorRenderItem() {
 	auto pCmdAlloc = currentFrameResource_->cmdListAlloc_;
 	if (isWireframe_)
-		pCommandList_->Reset(pCmdAlloc.Get(), PSOs_["colorPsoWire"].Get());
+		pCommandList_->SetPipelineState(PSOs_["colorPsoWire"].Get());
 	else
-		pCommandList_->Reset(pCmdAlloc.Get(), PSOs_["colorPso"].Get());
-
-	pCommandList_->SetGraphicsRootSignature(pColorRootSignature_.Get());
-	ID3D12DescriptorHeap *descriptorHeaps[] = { pCbvHeaps_.Get() };
-	pCommandList_->SetDescriptorHeaps(1, descriptorHeaps);
-
-	// set pass constant buffer
-	CD3DX12_GPU_DESCRIPTOR_HANDLE handle(pCbvHeaps_->GetGPUDescriptorHandleForHeapStart());
-	handle.Offset(passCbvOffset_ + currentFrameIndex_, cbvSrvUavDescriptorSize_);
-	pCommandList_->SetGraphicsRootDescriptorTable(d3dUtil::CB_Pass, handle);
+		pCommandList_->SetPipelineState(PSOs_["colorPso"].Get());
 
 	for (auto &rItem : colorRenderItems_) {
 		pCommandList_->IASetVertexBuffers(0, 1, RVPtr(rItem->geometry_->getVertexBufferView()));
@@ -757,13 +766,40 @@ void Shape::drawColorRenderItem() {
 	}
 }
 
-
 void Shape::drawTextureRenderItem() {
 	auto pCmdAlloc = currentFrameResource_->cmdListAlloc_;
 	if (isWireframe_)
-		pCommandList_->Reset(pCmdAlloc.Get(), PSOs_["colorPsoWire"].Get());
+		pCommandList_->SetPipelineState(PSOs_["texturePsoWire"].Get());
 	else
-		pCommandList_->Reset(pCmdAlloc.Get(), PSOs_["colorPso"].Get());
+		pCommandList_->SetPipelineState(PSOs_["texturePso"].Get());
+
+	for (auto &rItem : textureRenderItems_) {
+		pCommandList_->IASetVertexBuffers(0, 1, RVPtr(rItem->geometry_->getVertexBufferView()));
+		pCommandList_->IASetIndexBuffer(RVPtr(rItem->geometry_->getIndexBufferView()));
+		pCommandList_->IASetPrimitiveTopology(rItem->primitiveType_);
+
+		UINT cbvIndex = currentFrameIndex_ * static_cast<UINT>(opaqueRItems_.size()) + rItem->objCBIndex_;
+		auto handle = CD3DX12_GPU_DESCRIPTOR_HANDLE(pCbvHeaps_->GetGPUDescriptorHandleForHeapStart());
+		handle.Offset(cbvIndex, cbvSrvUavDescriptorSize_);
+
+		pCommandList_->SetGraphicsRootDescriptorTable(d3dUtil::CB_Object, handle);
+		auto matAddress = currentFrameResource_->materialCB_->getGPUAddressByIndex(rItem->material_->matCBIndex_);
+		pCommandList_->SetGraphicsRootConstantBufferView(d3dUtil::CBRegisterType::CB_Material, matAddress);
+
+		CD3DX12_GPU_DESCRIPTOR_HANDLE tex(
+			pSrvHeaps_->GetGPUDescriptorHandleForHeapStart()
+		);
+		tex.Offset(rItem->material_->pDiffuseTex_->diffuseHeapIndex_, cbvSrvUavDescriptorSize_);
+		pCommandList_->SetGraphicsRootDescriptorTable(3, tex);
+
+		pCommandList_->DrawIndexedInstanced(
+			rItem->indexCount_,
+			1,
+			rItem->startIndexLocation_,
+			rItem->baseVertexLocation_,
+			0
+		);
+	}
 }
 
 void Shape::updateViewMatrix() {
