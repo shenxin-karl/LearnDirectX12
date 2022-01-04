@@ -7,8 +7,8 @@
 #include <DirectXMath.h>
 #include <directxcollision.h>
 #include <unordered_map>
-#include "D3Dx12.h"
 #include <array>
+#include "d3dx12.h"
 
 void _ThrowIfFailedImpl(const char *file, int line, HRESULT hr);
 #define ThrowIfFailed(hr) (_ThrowIfFailedImpl(__FILE__, __LINE__, hr))
@@ -74,6 +74,10 @@ public:
 };
 
 namespace d3dUtil {
+
+namespace WRL = Microsoft::WRL;
+using uint32 = std::uint32_t;
+using uint64 = std::uint64_t;
 
 const CD3DX12_STATIC_SAMPLER_DESC &getPointWrapStaticSampler();
 const CD3DX12_STATIC_SAMPLER_DESC &getPointClampStaticSampler();
