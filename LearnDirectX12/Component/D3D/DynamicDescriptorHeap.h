@@ -16,15 +16,15 @@ public:
 		uint32 numDescriptorPreHeap = 1024
 	);
 
-	virtual ~DynamicDescriptorHeap();
+	~DynamicDescriptorHeap() = default;
 
 	void stageDescriptors(uint32 rootParameterIndex, 
 		uint32 offset, 
 		uint32 numDescriptors, 
 		const D3D12_CPU_DESCRIPTOR_HANDLE srcDescriptors
 	);
-	using StageFunc = std::function<void(ID3D12GraphicsCommandList *, UINT, D3D12_CPU_DESCRIPTOR_HANDLE)>;
-	void commitStagedDescriptors(CommandList &commandList, const StageFunc &setFunc);
+
+
 	void commitStagedDescriptorsForDraw(CommandList &commandList);
 	void commitStagedDescriptorsForDispatch(CommandList &commandList);
 	auto copyDescriptor(CommandList &commandList, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptor);
@@ -34,6 +34,13 @@ private:
 	WRL::ComPtr<ID3D12DescriptorHeap> requestDescriptorHeap();
 	WRL::ComPtr<ID3D12DescriptorHeap> createDescriptorHeap();
 	uint32 computeStaleDescriptorCount() const noexcept;
+
+	// Can be the following values:
+	// ID3D12GraphicsCommandList::SetGraphicsRootDescriptorTable
+	// ID3D12GraphicsCommandList::SetComputeRootDescriptorTable
+	using StageFunc = std::function<void(ID3D12GraphicsCommandList *, UINT, D3D12_GPU_DESCRIPTOR_HANDLE)>;
+	void commitStagedDescriptors(CommandList &commandList, const StageFunc &setFunc);
+
 	static constexpr uint32 kMaxDescriptorTables = 32;
 
 	struct DescriptorTableCache {

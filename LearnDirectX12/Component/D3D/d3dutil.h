@@ -1,5 +1,5 @@
 #pragma once
-#include <winnt.h>
+//#include <winnt.h>
 #include <d3d12.h>
 #include <wrl.h>
 #include <utility>
