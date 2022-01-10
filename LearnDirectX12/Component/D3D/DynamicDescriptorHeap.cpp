@@ -19,6 +19,7 @@ void DynamicDescriptorHeap::parseRootSignature(const RootSignature &rootSignatur
 	const D3D12_ROOT_SIGNATURE_DESC &rootSinatureDesc = {};		// todo: 修改从 rootSignature 获取
 	_descriptorTableBitMask = 0;								// todo: rootSignature 获取
 
+
 }
 
 }
