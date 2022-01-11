@@ -49,7 +49,7 @@ auto DynamicDescriptorHeap::copyDescriptor(CommandList &commandList, D3D12_CPU_D
 		_currentCPUDescriptorHandle = _pCurrentDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 		_currentGPUDescriptorHandle = _pCurrentDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 		_numFreeHandles = _numDescriptorPerHeap;
-		//commandList.setDescriptorHeap();	// TODO °ó¶¨µ½ÃüÁîÁÐ±íÖÐ
+		//commandList.setDescriptorHeap();	// TODO ï¿½ó¶¨µï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð±ï¿½ï¿½ï¿½
 		_staleDescriptorTableBitMask = _descriptorTableBitMask;
 	}
 
@@ -101,8 +101,8 @@ void DynamicDescriptorHeap::commitStagedDescriptors(CommandList &commandList, co
 
 void DynamicDescriptorHeap::parseRootSignature(const RootSignature &rootSignature) {
 	_staleDescriptorTableBitMask = 0;
-	const D3D12_ROOT_SIGNATURE_DESC &rootSinatureDesc = {};		// todo: ÐÞ¸Ä´Ó rootSignature »ñÈ¡
-	_descriptorTableBitMask = 0;								// todo: rootSignature »ñÈ¡
+	const D3D12_ROOT_SIGNATURE_DESC &rootSinatureDesc = {};		// todo: ï¿½Þ¸Ä´ï¿½ rootSignature ï¿½ï¿½È¡
+	_descriptorTableBitMask = 0;								// todo: rootSignature ï¿½ï¿½È¡
 
 	uint32 currentOffset = 0;
 	for (std::size_t rootIndex = 0; rootIndex < 32; ++rootIndex) {
