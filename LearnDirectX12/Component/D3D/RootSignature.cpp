@@ -40,16 +40,17 @@ uint32 RootSignature::getNumDescriptors(uint32 rootIndex) const {
 void RootSignature::buildRootSignature(const std::vector<D3D12_ROOT_PARAMETER>& rootParam, 
 	const std::vector<D3D12_STATIC_SAMPLER_DESC> &staticSampler) 
 {
+	assert(rootParam.size() < 32);
 	reset();
 
-	// initlaize root parameter
+	// initialize root parameter
 	for (std::size_t i = 0; i < rootParam.size(); ++i) {
 		_rootParamenter.push_back(rootParam[i]);
-		if (rootParam[i].ParameterType != D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE)
-			throw std::exception("RootSignature::buildRootSignature::rootParam is not descriptor table");
+		_numDescriptorsPreTable[i] = 0;
+		if (rootParam[i].ParameterType == D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE) {
+			_numDescriptorsPreTable[i] = rootParam[i].DescriptorTable.NumDescriptorRanges;
 
-		UINT numDescriptorRanges = rootParam[i].DescriptorTable.NumDescriptorRanges;
-
+		}
 	}
 }
 

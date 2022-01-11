@@ -1,8 +1,33 @@
 #pragma once
 #include "d3dutil.h"
 #include <bitset>
+#include <variant>
+#include <memory>
 
 namespace d3dUtil {
+
+struct RootDescriptor {
+	D3D12_DESCRIPTOR_HEAP_TYPE  _heapType;
+};
+
+struct RootDescriptorTable {
+	struct Item {
+		uint32  _numDescriptors;
+		D3D12_DESCRIPTOR_HEAP_TYPE  _heapType;
+	};
+public:
+	std::vector<Item>  _items;
+};
+
+struct RootConstantValue {
+	uint32 num32BitValue;
+};
+
+struct RootParameter {
+	uint32  shaderRegister;
+	uint32  registerSpace;
+	std::variant<RootDescriptor, RootDescriptorTable, RootConstantValue>  parameter;
+};
 
 class RootSignature {
 public:

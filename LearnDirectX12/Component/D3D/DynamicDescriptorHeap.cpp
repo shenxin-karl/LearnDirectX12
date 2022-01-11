@@ -21,7 +21,7 @@ void DynamicDescriptorHeap::stageDescriptors(uint32 rootParameterIndex,
 	uint32 numDescriptors, 
 	const D3D12_CPU_DESCRIPTOR_HANDLE srcDescriptors)
 {
-	if (numDescriptors > _numDescriptorPerHeap || rootParameterIndex > kMaxDescriptorTables)
+	if (numDescriptors > _numDescriptorPerHeap || rootParameterIndex >= kMaxDescriptorTables)
 		throw std::bad_alloc();
 
 	auto &descriptorTableCache = _descriptorTableCache[rootParameterIndex];
