@@ -1,4 +1,5 @@
 #pragma once
+#define NOMINMAX
 #include <cassert>
 #include <cstdint>
 #include <wrl.h>
@@ -43,5 +44,15 @@ constexpr auto RVPtr(T &&val) {
 	return &val;
 #endif
 }
+
+enum class CommandQueueType {
+	Direct,
+	Compute,
+	Copy,
+};
+
+constexpr static std::size_t kComandQueueTypeCount = 3;
+constexpr static std::size_t kSwapChainBufferCount = 2;
+
 
 }
