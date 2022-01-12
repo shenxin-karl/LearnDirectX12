@@ -62,8 +62,25 @@ void SwapChain::resize(uint32 width, uint32 height) {
 	updateBuffer();
 }
 
+std::shared_ptr<Texture> SwapChain::getRenderTarget() const {
+	return _pSwapChainBuffer[_currentBackBufferIndex];
+}
+
+std::shared_ptr<Texture> SwapChain::getDepthStencil() const {
+	return _pDepthStencilBuffer;
+}
+
 DXGI_FORMAT SwapChain::getRenderTargetFormat() const {
 	return _renderTargetFormat;
+}
+
+DXGI_FORMAT SwapChain::getDepthStencilFormat() const {
+	return _depthStendilFormat;
+}
+
+
+UINT SwapChain::present() {
+
 }
 
 void SwapChain::updateBuffer() {
