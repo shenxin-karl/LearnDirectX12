@@ -1,5 +1,6 @@
 #include "Device.h"
 #include "Adapter.h"
+#include "SwapChain.h"
 
 namespace dx12lib {
 	
@@ -25,8 +26,25 @@ Device::Device(std::shared_ptr<Adapter> pAdapter)
 	}
 }
 
-std::shared_ptr<SwapChain> Device::createSwapChain() const {
+std::shared_ptr<SwapChain> Device::createSwapChain(
+		HWND hwnd,
+		DXGI_FORMAT backBufferFormat = DXGI_FORMAT_R10G10B10A2_UNORM,
+		DXGI_FORMAT depthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT) const 
+{
+	return std::make_shared<SwapChain>(
+		const_cast<Device *>(this),
+		hwnd, 
+		backBufferFormat, 
+		depthStencilFormat
+	);
+}
 
+UINT Device::getSampleCount() const {
+	return _4xMsaaState ? 4 : 1;
+}
+
+UINT Device::getSampleQuality() const {
+	return _4xMsaaState ? (_4xMsaaQuality-1) : 0;
 }
 
 std::shared_ptr<dx12lib::Adapter> Device::getAdapter() const {

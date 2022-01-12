@@ -6,8 +6,12 @@
 
 namespace dx12lib {
 
-SwapChain::SwapChain(Device *pDevice, HWND hwnd, DXGI_FORMAT renderTargetFormat)
-: _pDevice(pDevice), _renderTargetFormat(renderTargetFormat)
+SwapChain::SwapChain(Device *pDevice,
+		HWND hwnd,
+		DXGI_FORMAT backBufferFormat,
+		DXGI_FORMAT depthStencilFormat)
+: _pDevice(pDevice), _renderTargetFormat(backBufferFormat)
+, _depthStendilFormat(depthStencilFormat), _hwnd(hwnd)
 {
 	RECT windowRect;
 	::GetClientRect(hwnd, &windowRect);
@@ -20,7 +24,7 @@ SwapChain::SwapChain(Device *pDevice, HWND hwnd, DXGI_FORMAT renderTargetFormat)
 	sd.BufferDesc.Height = _height;
 	sd.BufferDesc.RefreshRate.Denominator = 1;
 	sd.BufferDesc.RefreshRate.Numerator = 60;
-	sd.BufferDesc.Format = renderTargetFormat;
+	sd.BufferDesc.Format = backBufferFormat;
 	sd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 	sd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
 	sd.SampleDesc.Count = pDevice->getSampleCount();
@@ -58,14 +62,22 @@ void SwapChain::resize(uint32 width, uint32 height) {
 	updateBuffer();
 }
 
+DXGI_FORMAT SwapChain::getRenderTargetFormat() const {
+	return _renderTargetFormat;
+}
+
 void SwapChain::updateBuffer() {
 	for (std::size_t i = 0; i < kSwapChainBufferCount; ++i) {
-		ThrowIfFailed(_pSwapChain->GetBuffer(i, IID_PPV_ARGS(&_pSwapChainBuffer[i])));
+		WRL::ComPtr<ID3D12Resource> pBuffer;
+		ThrowIfFailed(_pSwapChain->GetBuffer(i, IID_PPV_ARGS(&pBuffer)));
 		std::wstring name = L"BackBuffer[";
 		name.append(L"i");
 		name.append(L"]");
-		_pSwapChainBuffer[i]->SetName(name.c_str());
+		pBuffer->SetName(name.c_str());
+		// todo: 初始化 _pSwapChainBuffer
 	}
+
+	// todo: 初始化: _pDepthStencilBuffer
 }
 
 }

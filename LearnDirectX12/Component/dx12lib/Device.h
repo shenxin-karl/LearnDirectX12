@@ -17,7 +17,13 @@ public:
 	~Device() = default;
 	std::shared_ptr<VertexBuffer> createVertexBuffer() const;
 	std::shared_ptr<IndexBuffer> createIndexBuffer() const;
-	std::shared_ptr<SwapChain> createSwapChain() const;
+
+	std::shared_ptr<SwapChain> createSwapChain(
+		HWND hwnd,
+		DXGI_FORMAT backBufferFormat = DXGI_FORMAT_R10G10B10A2_UNORM,
+		DXGI_FORMAT depthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT
+	) const;
+
 	UINT getSampleCount() const;
 	UINT getSampleQuality() const;
 public:
@@ -27,6 +33,8 @@ private:
 	WRL::ComPtr<ID3D12Device>     _pDevice;
 	std::shared_ptr<Adapter>      _pAdapter;
 	std::shared_ptr<CommandQueue> _pCommandQueueList[kComandQueueTypeCount];
+	UINT _4xMsaaQuality = 0;
+	UINT _4xMsaaState = false;
 };
 
 }
