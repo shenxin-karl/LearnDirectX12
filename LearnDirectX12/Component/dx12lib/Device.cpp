@@ -1,6 +1,9 @@
 #include "Device.h"
 #include "Adapter.h"
 #include "SwapChain.h"
+#include "CommandQueue.h"
+#include "IndexBuffer.h"
+#include "VertexBuffer.h"
 
 namespace dx12lib {
 	

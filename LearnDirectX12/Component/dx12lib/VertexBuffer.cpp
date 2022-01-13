@@ -26,6 +26,24 @@ D3D12_VERTEX_BUFFER_VIEW VertexBuffer::getVertexBufferView() const noexcept {
 	};
 }
 
+
+WRL::ComPtr<ID3DBlob> VertexBuffer::getCPUBuffer() const noexcept {
+	return _pCPUBuffer;
+}
+
+
+uint32 VertexBuffer::getVertexBufferSize() const noexcept {
+	return _bufferByteSize;
+}
+
+uint32 VertexBuffer::getVertexStride() const noexcept {
+	return _vertexStride;
+}
+
+bool VertexBuffer::isEmpty() const noexcept {
+	return _pGPUBuffer == nullptr;
+}
+
 VertexBuffer &VertexBuffer::operator=(VertexBuffer &&other) noexcept {
 	VertexBuffer tmp;
 	swap(*this, tmp);

@@ -1,11 +1,11 @@
 #pragma once
 #include "dx12libCommon.h"
 #include "UploadBuffer.h"
-#include "DefaultBuffer.h"
 #include <memory>
 
 namespace dx12lib {
 
+class DefaultBuffer;
 class VertexBuffer {
 public:
 	VertexBuffer();
@@ -16,6 +16,10 @@ public:
 	~VertexBuffer() = default;
 	friend void swap(VertexBuffer &lhs, VertexBuffer &rhs) noexcept;
 	D3D12_VERTEX_BUFFER_VIEW getVertexBufferView() const noexcept;
+	WRL::ComPtr<ID3DBlob> getCPUBuffer() const noexcept;
+	uint32 getVertexBufferSize() const noexcept;
+	uint32 getVertexStride() const noexcept;
+	bool isEmpty() const noexcept;
 private:
 	uint32  _bufferByteSize;
 	uint32  _vertexStride;

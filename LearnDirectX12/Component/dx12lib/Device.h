@@ -8,6 +8,7 @@ namespace dx12lib {
 class Adapter;
 class VertexBuffer;
 class IndexBuffer;
+class ConstantBuffer;
 class SwapChain;
 class CommandQueue;
 
@@ -15,8 +16,6 @@ class Device {
 public:
 	Device(std::shared_ptr<Adapter> pAdapter);
 	~Device() = default;
-	std::shared_ptr<VertexBuffer> createVertexBuffer() const;
-	std::shared_ptr<IndexBuffer> createIndexBuffer() const;
 
 	std::shared_ptr<SwapChain> createSwapChain(
 		HWND hwnd,
