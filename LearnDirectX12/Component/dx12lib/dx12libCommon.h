@@ -17,6 +17,7 @@
 #include <string>
 #include <deque>
 #include <queue>
+#include <source_location>
 
 namespace dx12lib {
 
@@ -38,7 +39,12 @@ inline void _ThrowIfFailedImpl(const char *file, int line, HRESULT hr) {
 	}
 }
 
-#define ThrowIfFailed(hr) (_ThrowIfFailedImpl(__FILE__, __LINE__, hr))
+inline void ThrowIfFailed(HRESULT hr, const std::source_location &sl = std::source_location::current()) {
+	if (FAILED(hr)) {
+		_com_error err(hr);
+		throw std::exception(err.ErrorMessage());
+	}
+}
 
 #define USE_RVPTR_FUNC_IMPL
 template<typename T>

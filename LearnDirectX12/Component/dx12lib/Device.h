@@ -12,7 +12,7 @@ class ConstantBuffer;
 class SwapChain;
 class CommandQueue;
 
-class Device {
+class Device : public std::enable_shared_from_this<Device> {
 public:
 	Device(std::shared_ptr<Adapter> pAdapter);
 	~Device() = default;
