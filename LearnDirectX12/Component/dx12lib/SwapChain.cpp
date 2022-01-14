@@ -2,11 +2,12 @@
 #include "Device.h"
 #include "Adapter.h"
 #include "CommandQueue.h"
+#include "CommandList.h"
 #include <string>
 
 namespace dx12lib {
 
-SwapChain::SwapChain(Device *pDevice,
+SwapChain::SwapChain(std::shared_ptr<Device> pDevice,
 		HWND hwnd,
 		DXGI_FORMAT backBufferFormat,
 		DXGI_FORMAT depthStencilFormat)
@@ -37,7 +38,7 @@ SwapChain::SwapChain(Device *pDevice,
 
 	auto *pDxgiFactory = pDevice->getAdapter()->getDxgiFactory();
 	ThrowIfFailed(pDxgiFactory->CreateSwapChain(
-		_pCommandQueue->getD3D12CommandQueue(),
+		_pCommandQueue.lock()->getCommandList()->getD3DCommandList(),
 		&sd,
 		&_pSwapChain
 	));

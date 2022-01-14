@@ -8,6 +8,15 @@
 #include <comdef.h>
 #include <Windows.h>
 #include <d3dcompiler.h>
+#include <memory>
+#include <set>
+#include <unordered_set>
+#include <map>
+#include <unordered_map>
+#include <vector>
+#include <string>
+#include <deque>
+#include <queue>
 
 namespace dx12lib {
 
@@ -55,5 +64,7 @@ enum class CommandQueueType {
 constexpr static std::size_t kComandQueueTypeCount = 3;
 constexpr static std::size_t kSwapChainBufferCount = 2;
 
+
+class Device;
 
 }

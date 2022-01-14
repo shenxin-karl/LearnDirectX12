@@ -9,7 +9,7 @@ class Texture;
 
 class SwapChain {
 public:
-	SwapChain(Device *pDevice, 
+	SwapChain(std::shared_ptr<Device> pDevice, 
 		HWND hwnd, 
 		DXGI_FORMAT backBufferFormat,
 		DXGI_FORMAT depthStencilFormat
@@ -24,8 +24,7 @@ public:
 private:
 	void updateBuffer();
 private:
-	Device  *_pDevice;
-	CommandQueue  *_pCommandQueue;
+	HWND _hwnd;
 	uint32	_width;
 	uint32  _height;
 	DXGI_FORMAT  _renderTargetFormat;
@@ -34,7 +33,8 @@ private:
 	std::shared_ptr<Texture>  _pSwapChainBuffer[kSwapChainBufferCount];
 	std::shared_ptr<Texture>  _pDepthStencilBuffer;
 	WRL::ComPtr< IDXGISwapChain>  _pSwapChain;
-	HWND _hwnd;
+	std::weak_ptr<CommandQueue> _pCommandQueue;
+	std::weak_ptr<Device> _pDevice;
 };
 
 }

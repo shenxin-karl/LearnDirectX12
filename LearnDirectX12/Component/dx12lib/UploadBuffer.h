@@ -10,6 +10,8 @@ public:
 	UploadBuffer &operator=(UploadBuffer &&other) noexcept;
 	void copyData(UINT elementIndex, const void *pData);
 	D3D12_GPU_VIRTUAL_ADDRESS getGPUAddressByIndex(UINT elementIndex = 0) const;
+	uint32 getElementByteSize() const noexcept;
+	uint32 getElementCount() const noexcept;
 	~UploadBuffer();
 	static UINT calcConstantBufferByteSize(std::size_t size) noexcept;
 	friend void swap(UploadBuffer &lhs, UploadBuffer &rhs) noexcept;

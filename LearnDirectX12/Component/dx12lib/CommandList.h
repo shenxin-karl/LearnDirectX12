@@ -31,7 +31,7 @@ public:
 	) const;
 
 private:
-	Device *_pDevice;
+	std::weak_ptr<Device> _pDevice;
 	WRL::ComPtr<ID3D12GraphicsCommandList>  _pCommandList;
 
 };
