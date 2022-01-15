@@ -18,6 +18,7 @@
 #include <deque>
 #include <queue>
 #include <source_location>
+#include <mutex>
 
 namespace dx12lib {
 

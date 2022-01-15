@@ -7,7 +7,8 @@ namespace dx12lib {
 class CommandList;
 class CommandQueue {
 public:
-	CommandQueue(std::shared_ptr<Device> pDevice);
+	CommandQueue(std::weak_ptr<Device> pDevice);
+	CommandQueue(const CommandQueue &) = delete;
 	ID3D12CommandQueue *getD3D12CommandQueue() const;
 	void signal();
 	uint64 executeCommandList(std::shared_ptr<CommandList> pCommandList);
