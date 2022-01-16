@@ -6,6 +6,7 @@ namespace dx12lib {
 
 std::shared_ptr<DescriptorAllocatorPage> DescriptorAllocator::createAllocatorPage() {
 	// todo
+	return nullptr;
 }
 
 DescriptorAllocator::DescriptorAllocator(std::weak_ptr<Device> pDevice, 

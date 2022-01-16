@@ -1,6 +1,7 @@
 #pragma once
 #include <mutex>
 #include <queue>
+#include <shared_mutex>
 
 namespace dx12lib {
 
@@ -18,45 +19,46 @@ class ThreadSafeQueue {
 	}
 
 	ThreadSafeQueue(ThreadSafeQueue &&other) noexcept : ThreadSafeQueue() {
+		std::lock_guard lock(other._mutex);
 		swap(*this, other);
 	}
 
 	ThreadSafeQueue &operator=(const ThreadSafeQueue &other) {
+		std::shared_lock lock(other._mutex);
 		ThreadSafeQueue tmp = other;
+		lock.unlock();
+
+		std::lock_guard currLock(_mutex);
 		swap(*this, tmp);
 		return *this;
 	}
 
 	ThreadSafeQueue &operator=(ThreadSafeQueue &&other) noexcept {
 		ThreadSafeQueue tmp;
+		std::lock_guard lock1(other._mutex);
+		std::lock_guard lock2(other._mutex);
 		swap(*this, tmp);
 		swap(*this, other);
 		return *this;
 	}
 
-	friend void swap(ThreadSafeQueue &lhs, ThreadSafeQueue &rhs) noexcept {
-		using std::swap;
-		swap(lhs._queue, rhs._queue);
-		swap(lhs._mutex, rhs._mutex);
-	}
-
 	void push(const T &val) {
-		std::lock_guard lock(_mutex);
+		std::unique_lock lock(_mutex);
 		_queue.push(val);
 	}
 
 	void push(T &&val) {
-		std::lock_guard lock(_mutex);
+		std::unique_lock lock(_mutex);
 		_queue.push(std::move(val));
 	}
 
 	bool empty() const noexcept	{
-		std::lock_guard lock(_mutex);
+		std::shared_lock lock(_mutex);
 		return _queue.empty();
 	}
 
 	std::size_t size() const noexcept {
-		std::lock_guard lock(_mutex);
+		std::shared_lock lock(_mutex);
 		return _queue.size();
 	}
 
@@ -70,8 +72,14 @@ class ThreadSafeQueue {
 		return true;
 	}
 private:
+	friend void swap(ThreadSafeQueue &lhs, ThreadSafeQueue &rhs) noexcept {
+		using std::swap;
+		swap(lhs._queue, rhs._queue);
+		//swap(lhs._mutex, rhs._mutex);
+	}
+private:
 	std::queue<T> _queue;
-	mutable std::mutex _mutex;
+	mutable std::shared_mutex _mutex;
 };
 
 

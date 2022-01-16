@@ -9,7 +9,7 @@ class Texture;
 
 class SwapChain {
 public:
-	SwapChain(std::shared_ptr<Device> pDevice, 
+	SwapChain(std::weak_ptr<Device> pDevice, 
 		HWND hwnd, 
 		DXGI_FORMAT backBufferFormat,
 		DXGI_FORMAT depthStencilFormat

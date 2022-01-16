@@ -19,6 +19,7 @@
 #include <queue>
 #include <source_location>
 #include <mutex>
+#include <dxgi.h>
 
 namespace dx12lib {
 

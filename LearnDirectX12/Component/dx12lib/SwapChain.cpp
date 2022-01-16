@@ -7,18 +7,21 @@
 
 namespace dx12lib {
 
-SwapChain::SwapChain(std::shared_ptr<Device> pDevice,
+SwapChain::SwapChain(std::weak_ptr<Device> pDevice,
 		HWND hwnd,
 		DXGI_FORMAT backBufferFormat,
 		DXGI_FORMAT depthStencilFormat)
 : _pDevice(pDevice), _renderTargetFormat(backBufferFormat)
 , _depthStendilFormat(depthStencilFormat), _hwnd(hwnd)
+, _currentBackBufferIndex(0)
 {
 	RECT windowRect;
 	::GetClientRect(hwnd, &windowRect);
 	_width = windowRect.right - windowRect.left;
 	_height = windowRect.bottom - windowRect.top;
 
+
+	auto pSharedDevice = pDevice.lock();
 	_pSwapChain.Reset();
 	DXGI_SWAP_CHAIN_DESC sd;
 	sd.BufferDesc.Width = _width;
@@ -28,15 +31,15 @@ SwapChain::SwapChain(std::shared_ptr<Device> pDevice,
 	sd.BufferDesc.Format = backBufferFormat;
 	sd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 	sd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
-	sd.SampleDesc.Count = pDevice->getSampleCount();
-	sd.SampleDesc.Quality = pDevice->getSampleQuality();
+	sd.SampleDesc.Count = pSharedDevice->getSampleCount();
+	sd.SampleDesc.Quality = pSharedDevice->getSampleQuality();
 	sd.OutputWindow = hwnd;
 	sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	sd.BufferCount = kSwapChainBufferCount;
 	sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
-	auto *pDxgiFactory = pDevice->getAdapter()->getDxgiFactory();
+	auto *pDxgiFactory = pSharedDevice->getAdapter()->getDxgiFactory();
 	ThrowIfFailed(pDxgiFactory->CreateSwapChain(
 		_pCommandQueue.lock()->getCommandList()->getD3DCommandList(),
 		&sd,
@@ -81,13 +84,14 @@ DXGI_FORMAT SwapChain::getDepthStencilFormat() const {
 
 
 UINT SwapChain::present() {
-
+	// todo
+	return 0;
 }
 
 void SwapChain::updateBuffer() {
 	for (std::size_t i = 0; i < kSwapChainBufferCount; ++i) {
 		WRL::ComPtr<ID3D12Resource> pBuffer;
-		ThrowIfFailed(_pSwapChain->GetBuffer(i, IID_PPV_ARGS(&pBuffer)));
+		ThrowIfFailed(_pSwapChain->GetBuffer(static_cast<UINT>(i), IID_PPV_ARGS(&pBuffer)));
 		std::wstring name = L"BackBuffer[";
 		name.append(L"i");
 		name.append(L"]");

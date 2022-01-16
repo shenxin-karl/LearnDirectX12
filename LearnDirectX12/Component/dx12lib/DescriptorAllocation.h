@@ -8,9 +8,9 @@ class DescriptorAllocatorPage;
 class DescriptorAllocation {
 	DescriptorAllocation();
 	DescriptorAllocation(const DescriptorAllocation &) = delete;
-	DescriptorAllocation(DescriptorAllocation &&other) = delete;
+	DescriptorAllocation(DescriptorAllocation &&other) noexcept;
 	DescriptorAllocation &operator=(const DescriptorAllocation &) = delete;
-	DescriptorAllocation &operator=(DescriptorAllocation &&other);
+	DescriptorAllocation &operator=(DescriptorAllocation &&other) noexcept;
 	~DescriptorAllocation();
 	friend void swap(DescriptorAllocation &lhs, DescriptorAllocation &rhs) noexcept;
 public:

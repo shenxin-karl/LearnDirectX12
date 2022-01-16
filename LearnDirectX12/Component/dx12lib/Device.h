@@ -28,6 +28,7 @@ public:
 public:
 	std::shared_ptr<Adapter> getAdapter() const;
 	std::shared_ptr<CommandQueue> getCommandQueue(CommandQueueType type) const;
+	ID3D12Device *getD3DDevice() const;
 private:
 	WRL::ComPtr<ID3D12Device>     _pDevice;
 	std::shared_ptr<Adapter>      _pAdapter;

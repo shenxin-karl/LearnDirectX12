@@ -8,7 +8,8 @@
 namespace dx12lib {
 	
 Device::Device(std::shared_ptr<Adapter> pAdapter)
-: _pAdapter(pAdapter) {
+: _pAdapter(pAdapter) 
+{
 #if defined(DEBUG) || defined(_DEBUG)
 	{
 		WRL::ComPtr<ID3D12Debug> debugController;
@@ -35,7 +36,7 @@ std::shared_ptr<SwapChain> Device::createSwapChain(
 		DXGI_FORMAT depthStencilFormat) const 
 {
 	return std::make_shared<SwapChain>(
-		const_cast<Device *>(this),
+		const_cast<Device*>(this)->weak_from_this(),
 		hwnd, 
 		backBufferFormat, 
 		depthStencilFormat
@@ -50,12 +51,16 @@ UINT Device::getSampleQuality() const {
 	return _4xMsaaState ? (_4xMsaaQuality-1) : 0;
 }
 
-std::shared_ptr<dx12lib::Adapter> Device::getAdapter() const {
+std::shared_ptr<Adapter> Device::getAdapter() const {
 	return _pAdapter;
 }
 
-std::shared_ptr<dx12lib::CommandQueue> Device::getCommandQueue(CommandQueueType type) const {
+std::shared_ptr<CommandQueue> Device::getCommandQueue(CommandQueueType type) const {
 	return _pCommandQueueList[static_cast<std::size_t>(type)];
+}
+
+ID3D12Device *Device::getD3DDevice() const {
+	return _pDevice.Get();
 }
 
 }
