@@ -25,6 +25,20 @@ public:
 	void free(DescriptorAllocation &&allocation);
 	void releaseStaleDescriptors();
 private:
+	void addNewBlock(uint32 offset, uint32 numDescriptor);
+	void freeBlock(uint32 offset, uint32 numDescriptor);
+private:
+	friend class Device;
+	struct FreeBlockInfo;
+	using OffsetType = std::size_t;
+	using SizeType = std::size_t;
+	using FreeListByOffset = std::map<OffsetType, FreeBlockInfo>;
+	using FreeListBySize = std::multimap<SizeType, FreeListByOffset::iterator>;
+	struct FreeBlockInfo {
+		std::size_t  size;
+		FreeListBySize::iterator sizeIter;
+	};
+private:
 	uint32                            _numFreeHandle;
 	uint32                            _numDescriptorInHeap;
 	uint32                            _descriptorHandleIncrementSize;
@@ -33,6 +47,9 @@ private:
 	D3D12_DESCRIPTOR_HEAP_TYPE        _heapType;
 	std::vector<DescriptorAllocation> _staleAllocation;
 	WRL::ComPtr<ID3D12DescriptorHeap> _pDescriptorHeap;
+	FreeListBySize                    _freeListBySize;
+	FreeListByOffset                  _freeListByOffset;
+
 };
 
 }
