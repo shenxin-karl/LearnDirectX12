@@ -2,6 +2,7 @@
 #include "DescriptorAllocatorPage.h"
 
 namespace dx12lib {
+
 DescriptorAllocation::DescriptorAllocation() 
 : _numHandle(0), _handleSize(0)
 , _baseHandle(D3D12_CPU_DESCRIPTOR_HANDLE{ 0 }), _pPage(nullptr) {
@@ -13,11 +14,24 @@ DescriptorAllocation::DescriptorAllocation(DescriptorAllocation &&other) noexcep
 	swap(*this, other);
 }
 
+void swap(DescriptorAllocation &lhs, DescriptorAllocation &rhs) noexcept {
+	using std::swap;
+	swap(lhs._numHandle, rhs._numHandle);
+	swap(lhs._handleSize, rhs._handleSize);
+	swap(lhs._baseHandle, rhs._baseHandle);
+	swap(lhs._pPage, rhs._pPage);
+}
+
+
+DescriptorAllocation::~DescriptorAllocation() {
+	free();
+}
+
 DescriptorAllocation::DescriptorAllocation(D3D12_CPU_DESCRIPTOR_HANDLE handle,
 	uint32 numHandle,
 	uint32 handleSize,
 	std::shared_ptr<DescriptorAllocatorPage> pPage)
-: _numHandle(numHandle), _handleSize(_handleSize), _baseHandle(handle), _pPage(pPage) {
+: _numHandle(numHandle), _handleSize(handleSize), _baseHandle(handle), _pPage(pPage) {
 }
 
 DescriptorAllocation &DescriptorAllocation::operator=(DescriptorAllocation &&other) noexcept {
@@ -65,14 +79,6 @@ void DescriptorAllocation::clear() noexcept {
 	_handleSize = 0;
 	_baseHandle = D3D12_CPU_DESCRIPTOR_HANDLE{ 0 };
 	_pPage = nullptr;
-}
-
-void swap(DescriptorAllocation &lhs, DescriptorAllocation &rhs) noexcept {
-	using std::swap;
-	swap(lhs._handleSize, rhs._handleSize);
-	swap(lhs._numHandle, rhs._numHandle);
-	swap(lhs._baseHandle, rhs._baseHandle);
-	swap(lhs._pPage, rhs._pPage);
 }
 
 }

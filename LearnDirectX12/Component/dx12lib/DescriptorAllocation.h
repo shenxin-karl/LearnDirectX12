@@ -6,6 +6,7 @@ namespace dx12lib {
 class DescriptorAllocatorPage;
 
 class DescriptorAllocation {
+public:
 	DescriptorAllocation();
 	DescriptorAllocation(const DescriptorAllocation &) = delete;
 	DescriptorAllocation(DescriptorAllocation &&other) noexcept;
@@ -30,10 +31,10 @@ private:
 	friend class DescriptorAllocatorPage;
 	void clear() noexcept;
 private:
-	uint32 _numHandle;						 // 已经分配的描述符数量
-	uint32 _handleSize;						 // 单个描述符的大小
-	D3D12_CPU_DESCRIPTOR_HANDLE _baseHandle; // 描述符的首个 handle
-	std::shared_ptr<DescriptorAllocatorPage> _pPage; // 描述符所在的描述符页
+	uint32 _numHandle;						 
+	uint32 _handleSize;						 
+	D3D12_CPU_DESCRIPTOR_HANDLE _baseHandle; 
+	std::shared_ptr<DescriptorAllocatorPage> _pPage; 
 };
 
 }

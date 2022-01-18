@@ -26,6 +26,8 @@ target_include_directories(dx12lib PUBLIC
 )
 
 target_link_libraries(dx12lib PUBLIC 
-	GameTimer
+	d3dcompiler
+	D3D12
+	dxgi
 )
 

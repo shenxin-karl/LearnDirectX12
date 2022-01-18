@@ -9,7 +9,10 @@ class DescriptorAllocator {
 public:
 	DescriptorAllocation allocate(uint32 numDescriptor = 1);
 	void releaseStateDescriptors();
-private:
+	uint32 getNumDescriptorPerHeap() const noexcept;
+	void setNumDescriptorPerHeap(uint32 num) noexcept;
+	D3D12_DESCRIPTOR_HEAP_TYPE getHeapType() const noexcept;
+//private:
 	friend class Device;
 	using DescriptorHeapPool = std::vector<std::shared_ptr<DescriptorAllocatorPage>>;
 	std::shared_ptr<DescriptorAllocatorPage> createAllocatorPage();

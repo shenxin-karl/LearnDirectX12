@@ -56,8 +56,8 @@ DescriptorAllocation DescriptorAllocatorPage::allocate(uint32 numDescriptor) {
 	if (iter == _freeListBySize.end())
 		return {};
 
-	uint32 size = iter->first;
-	uint32 offset = iter->second->first;
+	uint32 size = static_cast<uint32>(iter->first);
+	uint32 offset = static_cast<uint32>(iter->second->first);
 	auto descriptor = _baseDescriptor;
 	descriptor.Offset(offset, _descriptorHandleIncrementSize);
 	DescriptorAllocation ret = {

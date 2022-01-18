@@ -27,6 +27,11 @@ DescriptorAllocation::DescriptorAllocation(DescriptorAllocation &&other) noexcep
 	other._page = nullptr;
 }
 
+
+DescriptorAllocation::DescriptorAllocation(D3D12_CPU_DESCRIPTOR_HANDLE descriptor, uint32 numHandles, uint32 descriptorSize, uint64 frameNumber, std::shared_ptr<DescriptorAllocatorPage> pPage) {
+	// todo
+}
+
 DescriptorAllocation &DescriptorAllocation::operator=(DescriptorAllocation &&other) noexcept {
 	DescriptorAllocation tmp;
 	swap(*this, tmp);
@@ -47,6 +52,11 @@ D3D12_CPU_DESCRIPTOR_HANDLE DescriptorAllocation::getDescriptorHandle(uint32_t o
 	CD3DX12_CPU_DESCRIPTOR_HANDLE handle(_descriptor);
 	handle.Offset(offset, _descriptorSize);
 	return handle;
+}
+
+
+D3D12_CPU_DESCRIPTOR_HANDLE DescriptorAllocation::getDescriptorHandle(uint32 offset /*= 0*/) const noexcept {
+	return _descriptor;
 }
 
 uint32_t DescriptorAllocation::getNumHandles() const noexcept {
