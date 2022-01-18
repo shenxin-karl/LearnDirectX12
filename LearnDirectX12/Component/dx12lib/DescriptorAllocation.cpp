@@ -1,4 +1,5 @@
 #include "DescriptorAllocation.h"
+#include "DescriptorAllocatorPage.h"
 
 namespace dx12lib {
 DescriptorAllocation::DescriptorAllocation() 
@@ -10,6 +11,13 @@ DescriptorAllocation::DescriptorAllocation(DescriptorAllocation &&other) noexcep
 : DescriptorAllocation() 
 {
 	swap(*this, other);
+}
+
+DescriptorAllocation::DescriptorAllocation(D3D12_CPU_DESCRIPTOR_HANDLE handle,
+	uint32 numHandle,
+	uint32 handleSize,
+	std::shared_ptr<DescriptorAllocatorPage> pPage)
+: _numHandle(numHandle), _handleSize(_handleSize), _baseHandle(handle), _pPage(pPage) {
 }
 
 DescriptorAllocation &DescriptorAllocation::operator=(DescriptorAllocation &&other) noexcept {
@@ -49,7 +57,14 @@ bool DescriptorAllocation::isValid() const noexcept {
 void DescriptorAllocation::free() {
 	if (isNull() || _pPage == nullptr)
 		return;
-	// todo ÊÍ·Å
+	_pPage->free(std::move(*this));
+}
+
+void DescriptorAllocation::clear() noexcept {
+	_numHandle = 0;
+	_handleSize = 0;
+	_baseHandle = D3D12_CPU_DESCRIPTOR_HANDLE{ 0 };
+	_pPage = nullptr;
 }
 
 void swap(DescriptorAllocation &lhs, DescriptorAllocation &rhs) noexcept {
