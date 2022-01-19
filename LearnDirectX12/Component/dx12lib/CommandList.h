@@ -27,6 +27,8 @@ public:
 		const void *pData,
 		uint32 sizeInByte
 	) const;
+
+	HRESULT close();
 private:
 	D3D12_COMMAND_LIST_TYPE _cmdListType;
 	std::weak_ptr<Device> _pDevice;

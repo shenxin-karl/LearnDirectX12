@@ -20,7 +20,6 @@ SwapChain::SwapChain(std::weak_ptr<Device> pDevice,
 	_width = windowRect.right - windowRect.left;
 	_height = windowRect.bottom - windowRect.top;
 
-
 	auto pSharedDevice = pDevice.lock();
 	_pSwapChain.Reset();
 	DXGI_SWAP_CHAIN_DESC sd;
@@ -41,7 +40,7 @@ SwapChain::SwapChain(std::weak_ptr<Device> pDevice,
 
 	auto *pDxgiFactory = pSharedDevice->getAdapter()->getDxgiFactory();
 	ThrowIfFailed(pDxgiFactory->CreateSwapChain(
-		_pCommandQueue.lock()->getCommandList()->getD3DCommandList(),
+		nullptr,				
 		&sd,
 		&_pSwapChain
 	));
@@ -70,10 +69,6 @@ std::shared_ptr<Texture> SwapChain::getRenderTarget() const {
 	return _pSwapChainBuffer[_currentBackBufferIndex];
 }
 
-std::shared_ptr<Texture> SwapChain::getDepthStencil() const {
-	return _pDepthStencilBuffer;
-}
-
 DXGI_FORMAT SwapChain::getRenderTargetFormat() const {
 	return _renderTargetFormat;
 }
@@ -84,8 +79,9 @@ DXGI_FORMAT SwapChain::getDepthStencilFormat() const {
 
 
 UINT SwapChain::present() {
-	// todo
-	return 0;
+	auto errorCode = _pSwapChain->Present(0, 0);
+	_currentBackBufferIndex = (_currentBackBufferIndex + 1) % kSwapChainBufferCount;
+	return errorCode;
 }
 
 void SwapChain::updateBuffer() {
@@ -96,10 +92,8 @@ void SwapChain::updateBuffer() {
 		name.append(L"i");
 		name.append(L"]");
 		pBuffer->SetName(name.c_str());
-		// todo: 初始化 _pSwapChainBuffer
+		// todo: initialize pSwapChainBuffer
 	}
-
-	// todo: 初始化: _pDepthStencilBuffer
 }
 
 }
