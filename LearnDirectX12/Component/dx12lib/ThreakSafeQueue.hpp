@@ -13,6 +13,7 @@ void swap(ThreadSafeQueue<T> &lhs, ThreadSafeQueue<T> &rhs) noexcept;
 
 template<typename T>
 class ThreadSafeQueue {
+public:
 	ThreadSafeQueue() = default;
 
 	ThreadSafeQueue(const ThreadSafeQueue &other) : _queue(other._queue), _mutex(other._mutex) {

@@ -71,7 +71,7 @@ enum class CommandQueueType {
 
 constexpr static std::size_t kComandQueueTypeCount = 3;
 constexpr static std::size_t kSwapChainBufferCount = 2;
-
+constexpr static std::size_t kFrameResourceCount = 3;
 
 class Device;
 

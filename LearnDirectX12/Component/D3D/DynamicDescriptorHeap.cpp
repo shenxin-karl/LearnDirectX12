@@ -30,7 +30,7 @@ void DynamicDescriptorHeap::stageDescriptors(uint32 rootParameterIndex,
 
 	auto *pDestDescriptor = descriptorTableCache.pBaseDescriptor + offset;
 	for (std::size_t i = 0; i < static_cast<std::size_t>(numDescriptors); ++i)
-		pDestDescriptor[i] = CD3DX12_CPU_DESCRIPTOR_HANDLE(srcDescriptors, i, _descriptorHandleIncrementSize);
+		pDestDescriptor[i] = CD3DX12_CPU_DESCRIPTOR_HANDLE(srcDescriptors, static_cast<INT>(i), _descriptorHandleIncrementSize);
 
 	_staleDescriptorTableBitMask.set(rootParameterIndex);
 }

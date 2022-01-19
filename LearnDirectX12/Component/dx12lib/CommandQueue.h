@@ -5,9 +5,10 @@
 namespace dx12lib {
 
 class CommandList;
+class FrameResource;
 class CommandQueue {
 public:
-	CommandQueue(std::weak_ptr<Device> pDevice);
+	CommandQueue(std::weak_ptr<Device> pDevice, D3D12_COMMAND_LIST_TYPE queueType);
 	CommandQueue(const CommandQueue &) = delete;
 	ID3D12CommandQueue *getD3D12CommandQueue() const;
 	void signal();
@@ -15,14 +16,18 @@ public:
 	uint64 executeCommandList(const std::vector<std::shared_ptr<CommandList>> &cmdLists);
 	bool isFenceComplete(uint64 fenceValue) const noexcept;
 	void waitForFenceValue(uint64 fenceValue);
-	void fluse();
 	std::shared_ptr<CommandList> getCommandList() const;
+	std::shared_ptr<FrameResource> getCurrentFrameResource() const;
+	uint32 getCurrentFrameResourceIndex() const;
 private:
+	D3D12_COMMAND_LIST_TYPE _queueType;
 	std::weak_ptr<Device> _pDevice;
-	std::atomic<uint64>	_fenceValue;
+	uint64	_fenceValue;
 	WRL::ComPtr<ID3D12CommandQueue> _pCommandQueue;
-	ThreadSafeQueue<std::shared_ptr<CommandList>>  _commandLists;
-	ThreadSafeQueue<std::shared_ptr<CommandList>>  _availableCommandLists;
+	mutable ThreadSafeQueue<std::shared_ptr<CommandList>>  _commandLists;
+	mutable	ThreadSafeQueue<std::shared_ptr<CommandList>>  _availableCommandLists;
+	std::shared_ptr<FrameResource> _pFrameResource[kFrameResourceCount];
+	uint32 _currentFrameResourceIndex;
 };
 
 }
