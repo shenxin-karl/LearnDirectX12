@@ -5,6 +5,8 @@
 namespace dx12lib {
 
 class SwapChain;
+class CommandList;
+class FrameResourceQueue;
 class CommandQueue {
 public:
 	CommandQueue(std::weak_ptr<Device> pDevice, D3D12_COMMAND_LIST_TYPE queueType);
@@ -15,12 +17,14 @@ public:
 	void executeCommandList(const std::vector<std::shared_ptr<CommandList>> &cmdLists);
 	bool isFenceComplete(uint64 fenceValue) const noexcept;
 	void waitForFenceValue(uint64 fenceValue);
+	uint32 getFrameResourceCount() const;
 private:
-	uint64                          _fenceValue;
-	std::weak_ptr<Device>           _pDevice;
-	D3D12_COMMAND_LIST_TYPE         _queueType;
-	WRL::ComPtr< ID3D12Fence>       _pFence;
-	WRL::ComPtr<ID3D12CommandQueue> _pCommandQueue;
+	uint64                              _fenceValue;
+	std::weak_ptr<Device>               _pDevice;
+	D3D12_COMMAND_LIST_TYPE             _queueType;
+	WRL::ComPtr< ID3D12Fence>           _pFence;
+	WRL::ComPtr<ID3D12CommandQueue>     _pCommandQueue;
+	std::unique_ptr<FrameResourceQueue> _pFrameResourceQueue;
 };
 
 }

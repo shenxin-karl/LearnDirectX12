@@ -10,8 +10,6 @@ class ConstantBuffer {
 	ConstantBuffer(const ConstantBuffer &) = delete;
 	ConstantBuffer(ConstantBuffer &&other) noexcept;
 	ConstantBuffer &operator=(ConstantBuffer &&other) noexcept;
-	D3D12_GPU_DESCRIPTOR_HANDLE getGPUDescriptorHandle() const noexcept;
-	D3D12_CPU_DESCRIPTOR_HANDLE getCPUDescriptorHandle() const noexcept;
 	void updateConstantBuffer(const void *pData, uint32 sizeInByte, uint32 offset);
 	uint32 getConstantBufferSize() const noexcept;
 	uint32 getConstantAlignedBufferSize() const noexcept;

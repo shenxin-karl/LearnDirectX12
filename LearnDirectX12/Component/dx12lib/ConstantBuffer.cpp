@@ -24,7 +24,8 @@ ConstantBuffer &ConstantBuffer::operator=(ConstantBuffer &&other) noexcept {
 
 void ConstantBuffer::updateConstantBuffer(const void *pData, uint32 sizeInByte, uint32 offset) {
 	assert(offset + sizeInByte < _bufferSize);
-	// todo: 更新数据
+	//_pGPUBuffer->copyData()
+	// TODO:  Some data needs to be updated
 }
 
 uint32 ConstantBuffer::getConstantBufferSize() const noexcept {

@@ -1,6 +1,7 @@
 #include "CommandQueue.h"
 #include "CommandList.h"
 #include "SwapChain.h"
+#include "FrameResourceQueue.h"
 #include "Device.h"
 
 namespace dx12lib {
@@ -22,6 +23,8 @@ CommandQueue::CommandQueue(std::weak_ptr<Device> pDevice, D3D12_COMMAND_LIST_TYP
 		D3D12_FENCE_FLAG_NONE,
 		IID_PPV_ARGS(&_pFence)
 	));
+
+	_pFrameResourceQueue = std::make_unique<FrameResourceQueue>(pDevice, getFrameResourceCount());
 }
 
 ID3D12CommandQueue *CommandQueue::getD3D12CommandQueue() const {
@@ -32,6 +35,7 @@ uint64 CommandQueue::signal(std::shared_ptr<SwapChain> pSwapChain) {
 	ThrowIfFailed(pSwapChain->present());
 	auto fence = ++_fenceValue;
 	_pCommandQueue->Signal(_pFence.Get(), fence);
+	_pFrameResourceQueue->newFrame(fence);
 	return fence;
 }
 
@@ -57,10 +61,15 @@ bool CommandQueue::isFenceComplete(uint64 fenceValue) const noexcept {
 void CommandQueue::waitForFenceValue(uint64 fenceValue) {
 	if (fenceValue != 0 && _pFence->GetCompletedValue() < fenceValue) {
 		HANDLE event = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
+		assert(event != nullptr);
 		ThrowIfFailed(_pFence->SetEventOnCompletion(fenceValue, event));
 		WaitForSingleObject(event, INFINITE);
 		CloseHandle(event);
 	}
+}
+
+uint32 CommandQueue::getFrameResourceCount() const {
+	return _queueType == D3D12_COMMAND_LIST_TYPE_DIRECT ? 3 : 1;
 }
 
 }
