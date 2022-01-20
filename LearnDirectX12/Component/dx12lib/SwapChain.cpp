@@ -38,9 +38,10 @@ SwapChain::SwapChain(std::weak_ptr<Device> pDevice,
 	sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
+	CommandListProxy pCmdList = pSharedDevice->getCommandQueue(CommandQueueType::Direct)->createCommandListProxy();
 	auto *pDxgiFactory = pSharedDevice->getAdapter()->getDxgiFactory();
 	ThrowIfFailed(pDxgiFactory->CreateSwapChain(
-		nullptr,				
+		pCmdList->getD3DCommandList(),
 		&sd,
 		&_pSwapChain
 	));

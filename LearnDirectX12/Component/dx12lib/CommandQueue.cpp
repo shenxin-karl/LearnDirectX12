@@ -51,7 +51,7 @@ void CommandQueue::executeCommandList(const std::vector<std::shared_ptr<CommandL
 		ThrowIfFailed(pCmdList->close());
 		lists.push_back(pCmdList->getD3DCommandList());
 	}
-	_pCommandQueue->ExecuteCommandLists(lists.size(), lists.data());
+	_pCommandQueue->ExecuteCommandLists(static_cast<UINT>(lists.size()), lists.data());
 }
 
 bool CommandQueue::isFenceComplete(uint64 fenceValue) const noexcept {
@@ -70,6 +70,11 @@ void CommandQueue::waitForFenceValue(uint64 fenceValue) {
 
 uint32 CommandQueue::getFrameResourceCount() const {
 	return _queueType == D3D12_COMMAND_LIST_TYPE_DIRECT ? 3 : 1;
+}
+
+
+CommandListProxy CommandQueue::createCommandListProxy() {
+	return _pFrameResourceQueue->createCommandListProxy();
 }
 
 }

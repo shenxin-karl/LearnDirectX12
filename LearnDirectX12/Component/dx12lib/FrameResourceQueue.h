@@ -1,32 +1,38 @@
 #pragma once
 #include "dx12libCommon.h"
+#include "CommandListProxy.h"
+#include "ThreakSafeQueue.hpp"
 #include <array>
 
 namespace dx12lib {
 
 class CommandList;
-class FrameResourceItem {
+class FrameResourceItem;
+class CommandListProxy;
+class FrameResourceItem : public std::enable_shared_from_this<FrameResourceItem> {
 public:
 	FrameResourceItem(std::weak_ptr<Device> pDevice, D3D12_COMMAND_LIST_TYPE cmdListType);
 	FrameResourceItem(const FrameResourceItem &) = delete;
 	FrameResourceItem &operator=(const FrameResourceItem &) = delete;
 	uint64 getFence() const noexcept;
 	void setFence(uint64 fence) noexcept;
-	std::shared_ptr<CommandList> createCommandList();
+	CommandListProxy createCommandListProxy();
+	void releaseCommandList(std::shared_ptr<CommandList> pCommandList);
 	void reset();
 private:
 	uint64                                     _fence = 0;
 	D3D12_COMMAND_LIST_TYPE                    _cmdListType;
 	std::weak_ptr<Device>                      _pDevice;
 	WRL::ComPtr<ID3D12CommandAllocator>        _pCmdListAlloc;
-	std::vector<std::shared_ptr<CommandList>>  _cmdListPool;
-	std::vector<std::shared_ptr<CommandList>>  _availableCmdList;
+	mutable ThreadSafeQueue<std::shared_ptr<CommandList>>  _cmdListPool;
+	mutable ThreadSafeQueue<std::shared_ptr<CommandList>>  _availableCmdList;
 };
+
 
 class FrameResourceQueue {
 public:
 	FrameResourceQueue(std::weak_ptr<Device> pDevice, D3D12_COMMAND_LIST_TYPE cmdListType);
-	std::shared_ptr<CommandList> createCommandList();
+	CommandListProxy createCommandListProxy();
 	uint32 getMaxFrameResourceCount() const noexcept;
 	void newFrame(uint64 fence);
 private:

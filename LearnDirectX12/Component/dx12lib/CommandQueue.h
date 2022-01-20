@@ -1,6 +1,6 @@
 #pragma once
 #include "dx12libCommon.h"
-#include "ThreakSafeQueue.hpp"
+#include "CommandListProxy.h"
 
 namespace dx12lib {
 
@@ -18,6 +18,7 @@ public:
 	bool isFenceComplete(uint64 fenceValue) const noexcept;
 	void waitForFenceValue(uint64 fenceValue);
 	uint32 getFrameResourceCount() const;
+	CommandListProxy createCommandListProxy();
 private:
 	uint64                              _fenceValue;
 	std::weak_ptr<Device>               _pDevice;

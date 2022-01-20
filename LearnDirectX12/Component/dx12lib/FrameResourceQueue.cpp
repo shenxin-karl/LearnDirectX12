@@ -4,6 +4,7 @@
 
 namespace dx12lib {
 
+
 FrameResourceItem::FrameResourceItem(std::weak_ptr<Device> pDevice, D3D12_COMMAND_LIST_TYPE cmdListType)
 : _fence(0), _pDevice(pDevice), _cmdListType(cmdListType)
 {
@@ -22,16 +23,18 @@ void FrameResourceItem::setFence(uint64 fence) noexcept {
 	_fence = fence;
 }
 
-std::shared_ptr<CommandList> FrameResourceItem::createCommandList() {
+CommandListProxy FrameResourceItem::createCommandListProxy() {
 	std::shared_ptr<CommandList> pCmdList;
-	if (!_availableCmdList.empty()) {
-		pCmdList = _availableCmdList.back();
-		_availableCmdList.pop_back();
-	} else {
+	if (!_availableCmdList.tryPop(pCmdList)) {
 		pCmdList = std::make_shared<CommandList>(_pDevice, _cmdListType);
+		_cmdListPool.push(pCmdList);
 	}
 	pCmdList->getD3DCommandList()->Reset(_pCmdListAlloc.Get(), nullptr);
-	return pCmdList;
+	return CommandListProxy(pCmdList, weak_from_this());
+}
+
+void FrameResourceItem::releaseCommandList(std::shared_ptr<CommandList> pCommandList) {
+	_availableCmdList.push(pCommandList);
 }
 
 void FrameResourceItem::reset() {
@@ -46,8 +49,8 @@ FrameResourceQueue::FrameResourceQueue(std::weak_ptr<Device> pDevice, D3D12_COMM
 		_frameResourceQueue[i] = std::make_unique<FrameResourceItem>(pDevice, cmdListType);
 }
 
-std::shared_ptr<CommandList> FrameResourceQueue::createCommandList() {
-	return _frameResourceQueue[_currentFrameResourceIndex]->createCommandList();
+CommandListProxy FrameResourceQueue::createCommandListProxy() {
+	return _frameResourceQueue[_currentFrameResourceIndex]->createCommandListProxy();
 }
 
 uint32 FrameResourceQueue::getMaxFrameResourceCount() const noexcept {

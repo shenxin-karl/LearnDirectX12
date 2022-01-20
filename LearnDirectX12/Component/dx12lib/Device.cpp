@@ -4,6 +4,7 @@
 #include "CommandQueue.h"
 #include "IndexBuffer.h"
 #include "VertexBuffer.h"
+#include "ConstantBuffer.h"
 
 namespace dx12lib {
 	
@@ -41,6 +42,11 @@ std::shared_ptr<SwapChain> Device::createSwapChain(
 		backBufferFormat, 
 		depthStencilFormat
 	);
+}
+
+std::shared_ptr<dx12lib::VertexBuffer> 
+Device::createVertexBuffer(const void *pData, uint32 sizeInByte, uint32 vertexStride) const {
+	// todo
 }
 
 UINT Device::getSampleCount() const {
