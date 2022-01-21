@@ -8,7 +8,7 @@ namespace dx12lib {
 
 DescriptorAllocation DescriptorAllocator::allocate(uint32 numDescriptor) {
 	assert(numDescriptor <= _numDescriptorPreHeap);
-	std::lock_guard lock(_allocationMutex);
+	std::unique_lock lock(_allocationMutex);
 	for (auto iter = _availableHeaps.begin(); iter != _availableHeaps.end(); ++iter) {
 		auto pPage = _heapPool[*iter];
 		DescriptorAllocation alloc = pPage->allocate(numDescriptor);
@@ -17,7 +17,11 @@ DescriptorAllocation DescriptorAllocator::allocate(uint32 numDescriptor) {
 		if (alloc.isValid())
 			return alloc;
 	}
+	lock.unlock();
 	auto pNewPage = createAllocatorPage();
+	lock.lock();
+	_heapPool.push_back(pNewPage);
+	lock.unlock();
 	return pNewPage->allocate(numDescriptor);
 }
 

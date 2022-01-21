@@ -37,9 +37,6 @@ void FrameResourceItem::releaseCommandList(std::shared_ptr<CommandList> pCommand
 	_availableCmdList.push(pCommandList);
 }
 
-void FrameResourceItem::reset() {
-	_availableCmdList = _cmdListPool;
-}
 
 FrameResourceQueue::FrameResourceQueue(std::weak_ptr<Device> pDevice, D3D12_COMMAND_LIST_TYPE cmdListType)
 : _currentFrameResourceIndex(0) 
@@ -60,7 +57,6 @@ uint32 FrameResourceQueue::getMaxFrameResourceCount() const noexcept {
 void FrameResourceQueue::newFrame(uint64 fence) {
 	_frameResourceQueue[_currentFrameResourceIndex]->setFence(fence);
 	_currentFrameResourceIndex = (_currentFrameResourceIndex + 1) % _frameResourceItemCount;
-	_frameResourceQueue[_currentFrameResourceIndex]->reset();
 }
 
 }

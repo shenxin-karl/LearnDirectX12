@@ -5,6 +5,8 @@
 #include "IndexBuffer.h"
 #include "VertexBuffer.h"
 #include "ConstantBuffer.h"
+#include "DescriptorAllocator.h"
+#include "DescriptorAllocation.h"
 
 namespace dx12lib {
 	
@@ -29,6 +31,23 @@ Device::Device(std::shared_ptr<Adapter> pAdapter)
 			IID_PPV_ARGS(&_pDevice)
 		));
 	}
+
+	auto pDirectQueue = std::make_shared<CommandQueue>(weak_from_this(), D3D12_COMMAND_LIST_TYPE_DIRECT);
+	_pCommandQueueList[std::size_t(CommandQueueType::Direct)] = pDirectQueue;
+	auto pComputeQueue = std::make_shared<CommandQueue>(weak_from_this(), D3D12_COMMAND_LIST_TYPE_COMPUTE);
+	_pCommandQueueList[std::size_t(CommandQueueType::Compute)] = pComputeQueue;
+	auto pCopyQueue = std::make_shared<CommandQueue>(weak_from_this(), D3D12_COMMAND_LIST_TYPE_COMPUTE);
+	_pCommandQueueList[std::size_t(CommandQueueType::Copy)] = pCopyQueue;
+	
+	for (std::size_t i = 0; i < D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES; ++i) {
+		_pDescriptorAllocators[i] = std::make_unique<DescriptorAllocator>(
+			weak_from_this(),
+			static_cast<D3D12_DESCRIPTOR_HEAP_TYPE>(i),
+			50
+		);
+	}
+
+
 }
 
 std::shared_ptr<SwapChain> Device::createSwapChain(
@@ -37,6 +56,7 @@ std::shared_ptr<SwapChain> Device::createSwapChain(
 		DXGI_FORMAT depthStencilFormat) const 
 {
 	return std::make_shared<SwapChain>(
+
 		const_cast<Device*>(this)->weak_from_this(),
 		hwnd, 
 		backBufferFormat, 
@@ -47,6 +67,17 @@ std::shared_ptr<SwapChain> Device::createSwapChain(
 std::shared_ptr<dx12lib::VertexBuffer> 
 Device::createVertexBuffer(const void *pData, uint32 sizeInByte, uint32 vertexStride) const {
 	// todo
+	return nullptr;
+}
+
+DescriptorAllocation Device::allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32 numDescriptors /*= 1*/) {
+	auto index = static_cast<std::size_t>(type);
+	return _pDescriptorAllocators[index]->allocate(numDescriptors);
+}
+
+void Device::releaseStaleDescriptor() {
+	for (auto &pAllocator : _pDescriptorAllocators)
+		pAllocator->releaseStateDescriptors();
 }
 
 UINT Device::getSampleCount() const {

@@ -18,7 +18,6 @@ public:
 	void setFence(uint64 fence) noexcept;
 	CommandListProxy createCommandListProxy();
 	void releaseCommandList(std::shared_ptr<CommandList> pCommandList);
-	void reset();
 private:
 	uint64                                     _fence = 0;
 	D3D12_COMMAND_LIST_TYPE                    _cmdListType;

@@ -11,6 +11,8 @@ class IndexBuffer;
 class ConstantBuffer;
 class SwapChain;
 class CommandQueue;
+class DescriptorAllocation;
+class DescriptorAllocator;
 
 class Device : public std::enable_shared_from_this<Device> {
 public:
@@ -40,6 +42,10 @@ public:
 		uint32 sizeInByte
 	) const;
 
+	DescriptorAllocation allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32 numDescriptors = 1);
+
+	void releaseStaleDescriptor();
+
 	UINT getSampleCount() const;
 	UINT getSampleQuality() const;
 public:
@@ -47,9 +53,10 @@ public:
 	std::shared_ptr<CommandQueue> getCommandQueue(CommandQueueType type) const;
 	ID3D12Device *getD3DDevice() const;
 private:
-	WRL::ComPtr<ID3D12Device>     _pDevice;
-	std::shared_ptr<Adapter>      _pAdapter;
-	std::shared_ptr<CommandQueue> _pCommandQueueList[kComandQueueTypeCount];
+	WRL::ComPtr<ID3D12Device>            _pDevice;
+	std::shared_ptr<Adapter>             _pAdapter;
+	std::shared_ptr<CommandQueue>        _pCommandQueueList[kComandQueueTypeCount];
+	std::unique_ptr<DescriptorAllocator> _pDescriptorAllocators[D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES];
 	UINT _4xMsaaQuality = 0;
 	UINT _4xMsaaState = false;
 };

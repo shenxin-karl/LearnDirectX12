@@ -67,6 +67,7 @@ enum class CommandQueueType {
 	Direct,
 	Compute,
 	Copy,
+	NumType,
 };
 
 constexpr static std::size_t kComandQueueTypeCount = 3;
