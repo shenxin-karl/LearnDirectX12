@@ -18,6 +18,9 @@ public:
 	void setFence(uint64 fence) noexcept;
 	CommandListProxy createCommandListProxy();
 	void releaseCommandList(std::shared_ptr<CommandList> pCommandList);
+	std::weak_ptr<Device> getDevice() const noexcept;
+	D3D12_COMMAND_LIST_TYPE getCommandListType() const noexcept;
+	WRL::ComPtr<ID3D12CommandAllocator> getCommandListAllocator() const noexcept;
 private:
 	uint64                                     _fence = 0;
 	D3D12_COMMAND_LIST_TYPE                    _cmdListType;
@@ -26,7 +29,6 @@ private:
 	mutable ThreadSafeQueue<std::shared_ptr<CommandList>>  _cmdListPool;
 	mutable ThreadSafeQueue<std::shared_ptr<CommandList>>  _availableCmdList;
 };
-
 
 class FrameResourceQueue {
 public:

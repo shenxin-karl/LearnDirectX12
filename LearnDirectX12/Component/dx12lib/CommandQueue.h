@@ -1,6 +1,7 @@
 #pragma once
 #include "dx12libCommon.h"
 #include "CommandListProxy.h"
+#include "FrameResourceQueue.h"
 
 namespace dx12lib {
 

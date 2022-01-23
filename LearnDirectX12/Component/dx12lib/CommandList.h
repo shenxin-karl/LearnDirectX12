@@ -8,14 +8,14 @@ class IndexBuffer;
 class VertexBuffer;
 class ConstantBuffer;
 class Device;
+class FrameResourceItem;
+class CommandListProxy;
 
 class CommandList {
 public:
+	CommandList(std::weak_ptr<FrameResourceItem> pFrameResourceItem);
 	ID3D12GraphicsCommandList *getD3DCommandList() const noexcept;
 	HRESULT close();
-private:
-	friend class FrameResourceItem;
-	CommandList(std::weak_ptr<Device> pDevice, D3D12_COMMAND_LIST_TYPE cmdListType);
 private:
 	D3D12_COMMAND_LIST_TYPE                 _cmdListType;
 	std::weak_ptr<Device>                   _pDevice;

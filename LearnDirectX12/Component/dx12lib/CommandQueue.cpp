@@ -24,7 +24,7 @@ CommandQueue::CommandQueue(std::weak_ptr<Device> pDevice, D3D12_COMMAND_LIST_TYP
 		IID_PPV_ARGS(&_pFence)
 	));
 
-	_pFrameResourceQueue = std::make_unique<FrameResourceQueue>(pDevice, getFrameResourceCount());
+	_pFrameResourceQueue = std::make_unique<FrameResourceQueue>(pDevice, queueType);
 }
 
 ID3D12CommandQueue *CommandQueue::getD3D12CommandQueue() const {

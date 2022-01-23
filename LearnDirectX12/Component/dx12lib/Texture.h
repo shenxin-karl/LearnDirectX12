@@ -10,15 +10,19 @@ public:
 	D3D12_CPU_DESCRIPTOR_HANDLE getRenderTargetView() const;
 	D3D12_CPU_DESCRIPTOR_HANDLE getDepthStencilView() const;
 	D3D12_CPU_DESCRIPTOR_HANDLE getShaderResourceView() const;
-	//D3D12_CPU_DESCRIPTOR_HANDLE getUnorderedAccessView() const;
 	bool hasAlpha() const;
 	size_t bitsPerPixel() const;
+	bool checkRTVSupport() const noexcept;
+	bool checkDSVSupport() const noexcept;
+	bool checkSRVSupport() const noexcept;
+	D3D12_RESOURCE_DESC getResourceDesc() const noexcept;
 private:
 	friend class Device;
 	Texture(std::weak_ptr<Device> pDevice, const D3D12_RESOURCE_DESC &desc, const D3D12_CLEAR_VALUE *pClearValue = nullptr);
 	Texture(std::weak_ptr<Device> pDevice, WRL::ComPtr<ID3D12Resource> pResource, const D3D12_CLEAR_VALUE *pClearValue = nullptr);
 	void checkFeatureSupport();
 	bool checkFormatSupport(D3D12_FORMAT_SUPPORT1 formatSupport) const;
+	void createViews();
 private:
 	DescriptorAllocation                _renderTargetView;
 	DescriptorAllocation                _depthStencilView;
@@ -27,7 +31,6 @@ private:
 	WRL::ComPtr<ID3D12Resource>         _pResource;
 	std::unique_ptr<D3D12_CLEAR_VALUE>  _pClearValue;
 	D3D12_FEATURE_DATA_FORMAT_SUPPORT   _formatSupport;
-	//DescriptorAllocation _unorderedAccessView;
 };
 
 }

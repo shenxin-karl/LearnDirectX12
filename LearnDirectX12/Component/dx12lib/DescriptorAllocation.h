@@ -22,8 +22,7 @@ public:
 public:
 	uint32 getNumHandle() const noexcept;
 	uint32 getHandleSize() const noexcept;
-	D3D12_CPU_DESCRIPTOR_HANDLE getBaseHandle() const noexcept;
-	D3D12_CPU_DESCRIPTOR_HANDLE getHandleByOffset(uint32 offset) const;
+	D3D12_CPU_DESCRIPTOR_HANDLE getCPUHandle(uint32 offset = 0) const;
 	bool isNull() const noexcept;
 	bool isValid() const noexcept;
 	void free();

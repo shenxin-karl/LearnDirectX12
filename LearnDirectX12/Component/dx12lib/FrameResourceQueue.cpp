@@ -1,9 +1,8 @@
-#include "FrameResourceQueue.h"
 #include "CommandList.h"
+#include "FrameResourceQueue.h"
 #include "Device.h"
 
 namespace dx12lib {
-
 
 FrameResourceItem::FrameResourceItem(std::weak_ptr<Device> pDevice, D3D12_COMMAND_LIST_TYPE cmdListType)
 : _fence(0), _pDevice(pDevice), _cmdListType(cmdListType)
@@ -26,7 +25,7 @@ void FrameResourceItem::setFence(uint64 fence) noexcept {
 CommandListProxy FrameResourceItem::createCommandListProxy() {
 	std::shared_ptr<CommandList> pCmdList;
 	if (!_availableCmdList.tryPop(pCmdList)) {
-		pCmdList = std::make_shared<CommandList>(_pDevice, _cmdListType);
+		pCmdList = std::make_shared<CommandList>(weak_from_this());
 		_cmdListPool.push(pCmdList);
 	}
 	pCmdList->getD3DCommandList()->Reset(_pCmdListAlloc.Get(), nullptr);
@@ -37,6 +36,17 @@ void FrameResourceItem::releaseCommandList(std::shared_ptr<CommandList> pCommand
 	_availableCmdList.push(pCommandList);
 }
 
+std::weak_ptr<Device> FrameResourceItem::getDevice() const noexcept {
+	return _pDevice;
+}
+
+D3D12_COMMAND_LIST_TYPE FrameResourceItem::getCommandListType() const noexcept {
+	return _cmdListType;
+}
+
+WRL::ComPtr<ID3D12CommandAllocator> FrameResourceItem::getCommandListAllocator() const noexcept {
+	return _pCmdListAlloc;
+}
 
 FrameResourceQueue::FrameResourceQueue(std::weak_ptr<Device> pDevice, D3D12_COMMAND_LIST_TYPE cmdListType)
 : _currentFrameResourceIndex(0) 
