@@ -6,6 +6,8 @@ namespace dx12lib {
 
 class Texture {
 public:
+	Texture(std::weak_ptr<Device> pDevice, const D3D12_RESOURCE_DESC &desc, const D3D12_CLEAR_VALUE *pClearValue = nullptr);
+	Texture(std::weak_ptr<Device> pDevice, WRL::ComPtr<ID3D12Resource> pResource, const D3D12_CLEAR_VALUE *pClearValue = nullptr);
 	void resize(uint32 width, uint32 height, uint32 depthOrArraySize = 1);
 	D3D12_CPU_DESCRIPTOR_HANDLE getRenderTargetView() const;
 	D3D12_CPU_DESCRIPTOR_HANDLE getDepthStencilView() const;
@@ -21,9 +23,6 @@ public:
 	uint32 getHeight() const noexcept;
 	uint32 getDepthOrArraySize() const noexcept;
 private:
-	friend class Device;
-	Texture(std::weak_ptr<Device> pDevice, const D3D12_RESOURCE_DESC &desc, const D3D12_CLEAR_VALUE *pClearValue = nullptr);
-	Texture(std::weak_ptr<Device> pDevice, WRL::ComPtr<ID3D12Resource> pResource, const D3D12_CLEAR_VALUE *pClearValue = nullptr);
 	void checkFeatureSupport();
 	bool checkFormatSupport(D3D12_FORMAT_SUPPORT1 formatSupport) const;
 	void createViews();

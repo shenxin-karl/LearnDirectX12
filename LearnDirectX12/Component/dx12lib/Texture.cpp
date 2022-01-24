@@ -97,8 +97,8 @@ Texture::Texture(std::weak_ptr<Device> pDevice, const D3D12_RESOURCE_DESC &desc,
 		IID_PPV_ARGS(&_pResource)
 	));
 
-	_width = desc.Width;
-	_height = desc.Height;
+	_width = static_cast<uint32>(desc.Width);
+	_height = static_cast<uint32>(desc.Height);
 	_depthOrArraySize = desc.DepthOrArraySize;
 
 	checkFeatureSupport();
@@ -109,8 +109,8 @@ Texture::Texture(std::weak_ptr<Device> pDevice, const D3D12_RESOURCE_DESC &desc,
 Texture::Texture(std::weak_ptr<Device> pDevice, WRL::ComPtr<ID3D12Resource> pResource, const D3D12_CLEAR_VALUE *pClearValue /*= nullptr*/) {
 	_pDevice = pDevice;
 	auto desc = pResource->GetDesc();
-	_width = desc.Width;
-	_height = desc.Height;
+	_width = static_cast<uint32>(desc.Width);
+	_height = static_cast<uint32>(desc.Height);
 	_depthOrArraySize = desc.DepthOrArraySize;
 	_pResource = _pResource;
 	if (pClearValue != nullptr)

@@ -118,7 +118,7 @@ void SwapChain::updateBuffer() {
 	optClear.Format = _depthStendilFormat;
 	optClear.DepthStencil.Depth = 1.f;
 	optClear.DepthStencil.Stencil = 0;
-	_pDepthStencilBuffer = std::make_shared<Texture>(_pDevice, &depthStencilDesc, &optClear);
+	_pDepthStencilBuffer = std::make_shared<Texture>(_pDevice, depthStencilDesc, &optClear);
 
 	_pRenderTarget->attachTexture(AttachmentPoint::Color0, getCurrentBackBuffer());
 	_pRenderTarget->attachTexture(AttachmentPoint::DepthStencil, _pDepthStencilBuffer);
