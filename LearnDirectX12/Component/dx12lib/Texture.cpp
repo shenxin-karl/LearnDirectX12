@@ -9,6 +9,22 @@ void Texture::resize(uint32 width, uint32 height, uint32 depthOrArraySize /*= 1*
 		return;
 	}
 	
+	CD3DX12_RESOURCE_DESC resDesc(_pResource->GetDesc());
+	resDesc.Width = std::max(1u, width);
+	resDesc.Height = std::max(1u, height);
+	resDesc.DepthOrArraySize = depthOrArraySize;
+	resDesc.MipLevels = resDesc.SampleDesc.Count > 1 ? 1 : 0;
+	auto pd3d12Device = _pDevice.lock()->getD3DDevice();
+	ThrowIfFailed(pd3d12Device->CreateCommittedResource(
+		RVPtr(CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT)),
+		D3D12_HEAP_FLAG_NONE,
+		&resDesc,
+		D3D12_RESOURCE_STATE_COMMON,
+		_pClearValue.get(),
+		IID_PPV_ARGS(&_pResource)
+	));
+	// todo setName
+	createViews();
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE Texture::getRenderTargetView() const {
@@ -44,6 +60,10 @@ D3D12_RESOURCE_DESC Texture::getResourceDesc() const noexcept {
 	if (_pResource != nullptr)
 		desc = _pResource->GetDesc();
 	return desc;
+}
+
+WRL::ComPtr<ID3D12Resource> Texture::getResource() const {
+	return _pResource;
 }
 
 Texture::Texture(std::weak_ptr<Device> pDevice, const D3D12_RESOURCE_DESC &desc, 

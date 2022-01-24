@@ -16,6 +16,7 @@ public:
 	bool checkDSVSupport() const noexcept;
 	bool checkSRVSupport() const noexcept;
 	D3D12_RESOURCE_DESC getResourceDesc() const noexcept;
+	WRL::ComPtr<ID3D12Resource> getResource() const;
 private:
 	friend class Device;
 	Texture(std::weak_ptr<Device> pDevice, const D3D12_RESOURCE_DESC &desc, const D3D12_CLEAR_VALUE *pClearValue = nullptr);

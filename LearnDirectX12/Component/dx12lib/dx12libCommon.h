@@ -20,10 +20,13 @@
 #include <source_location>
 #include <mutex>
 #include <dxgi.h>
+#include <DirectXMath.h>
+
 
 namespace dx12lib {
 
 namespace WRL = Microsoft::WRL;
+namespace DX = DirectX;
 
 using uint8 = std::uint8_t;
 using uin16 = std::uint16_t;
