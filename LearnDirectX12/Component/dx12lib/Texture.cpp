@@ -9,6 +9,9 @@ void Texture::resize(uint32 width, uint32 height, uint32 depthOrArraySize /*= 1*
 		return;
 	}
 	
+	if (_width == width && _height == height && _depthOrArraySize == depthOrArraySize)
+		return;
+
 	CD3DX12_RESOURCE_DESC resDesc(_pResource->GetDesc());
 	resDesc.Width = std::max(1u, width);
 	resDesc.Height = std::max(1u, height);
@@ -66,6 +69,18 @@ WRL::ComPtr<ID3D12Resource> Texture::getResource() const {
 	return _pResource;
 }
 
+uint32 Texture::getWidth() const noexcept {
+	return _width;
+}
+
+uint32 Texture::getHeight() const noexcept {
+	return _height;
+}
+
+uint32 Texture::getDepthOrArraySize() const noexcept {
+	return _depthOrArraySize;
+}
+
 Texture::Texture(std::weak_ptr<Device> pDevice, const D3D12_RESOURCE_DESC &desc, 
 	const D3D12_CLEAR_VALUE *pClearValue /*= nullptr*/) 
 {
@@ -81,6 +96,25 @@ Texture::Texture(std::weak_ptr<Device> pDevice, const D3D12_RESOURCE_DESC &desc,
 		_pClearValue.get(),
 		IID_PPV_ARGS(&_pResource)
 	));
+
+	_width = desc.Width;
+	_height = desc.Height;
+	_depthOrArraySize = desc.DepthOrArraySize;
+
+	checkFeatureSupport();
+	createViews();
+}
+
+
+Texture::Texture(std::weak_ptr<Device> pDevice, WRL::ComPtr<ID3D12Resource> pResource, const D3D12_CLEAR_VALUE *pClearValue /*= nullptr*/) {
+	_pDevice = pDevice;
+	auto desc = pResource->GetDesc();
+	_width = desc.Width;
+	_height = desc.Height;
+	_depthOrArraySize = desc.DepthOrArraySize;
+	_pResource = _pResource;
+	if (pClearValue != nullptr)
+		_pClearValue = std::make_unique<D3D12_CLEAR_VALUE>(*pClearValue);
 
 	checkFeatureSupport();
 	createViews();

@@ -3,6 +3,8 @@
 #include "Adapter.h"
 #include "CommandQueue.h"
 #include "CommandList.h"
+#include "Texture.h"
+#include "RenderTarget.h"
 #include <string>
 
 namespace dx12lib {
@@ -46,6 +48,7 @@ SwapChain::SwapChain(std::weak_ptr<Device> pDevice,
 		&_pSwapChain
 	));
 
+	_pRenderTarget = std::make_shared<RenderTarget>(_width, _height);
 }
 
 void SwapChain::resize(uint32 width, uint32 height) {
@@ -66,10 +69,6 @@ void SwapChain::resize(uint32 width, uint32 height) {
 	updateBuffer();
 }
 
-std::shared_ptr<Texture> SwapChain::getRenderTarget() const {
-	return _pSwapChainBuffer[_currentBackBufferIndex];
-}
-
 DXGI_FORMAT SwapChain::getRenderTargetFormat() const {
 	return _renderTargetFormat;
 }
@@ -78,11 +77,19 @@ DXGI_FORMAT SwapChain::getDepthStencilFormat() const {
 	return _depthStendilFormat;
 }
 
-
 UINT SwapChain::present() {
 	auto errorCode = _pSwapChain->Present(0, 0);
 	_currentBackBufferIndex = (_currentBackBufferIndex + 1) % kSwapChainBufferCount;
+	_pRenderTarget->attachTexture(AttachmentPoint::Color0, getCurrentBackBuffer());
 	return errorCode;
+}
+
+std::shared_ptr<RenderTarget> SwapChain::getRenderTarget() const {
+	return _pRenderTarget;
+}
+
+std::shared_ptr<Texture> SwapChain::getCurrentBackBuffer() const {
+	return _pSwapChainBuffer[_currentBackBufferIndex];
 }
 
 void SwapChain::updateBuffer() {
@@ -93,8 +100,28 @@ void SwapChain::updateBuffer() {
 		name.append(L"i");
 		name.append(L"]");
 		pBuffer->SetName(name.c_str());
-		// todo: initialize pSwapChainBuffer
+		_pSwapChainBuffer[i] = std::make_shared<Texture>(_pDevice, pBuffer, nullptr);
 	}
+
+	D3D12_RESOURCE_DESC depthStencilDesc;
+	depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	depthStencilDesc.Alignment = 0;
+	depthStencilDesc.Width = _width;
+	depthStencilDesc.Height = _height;
+	depthStencilDesc.DepthOrArraySize = 1;
+	depthStencilDesc.Format = _depthStendilFormat;
+	depthStencilDesc.SampleDesc = _pDevice.lock()->getSampleDesc();
+	depthStencilDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+	D3D12_CLEAR_VALUE optClear;
+	optClear.Format = _depthStendilFormat;
+	optClear.DepthStencil.Depth = 1.f;
+	optClear.DepthStencil.Stencil = 0;
+	_pDepthStencilBuffer = std::make_shared<Texture>(_pDevice, &depthStencilDesc, &optClear);
+
+	_pRenderTarget->attachTexture(AttachmentPoint::Color0, getCurrentBackBuffer());
+	_pRenderTarget->attachTexture(AttachmentPoint::DepthStencil, _pDepthStencilBuffer);
 }
 
 }

@@ -88,6 +88,13 @@ UINT Device::getSampleQuality() const {
 	return _4xMsaaState ? (_4xMsaaQuality-1) : 0;
 }
 
+DXGI_SAMPLE_DESC Device::getSampleDesc() const {
+	return {
+		getSampleCount(),
+		getSampleQuality(),
+	};
+}
+
 std::shared_ptr<Adapter> Device::getAdapter() const {
 	return _pAdapter;
 }

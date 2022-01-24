@@ -17,6 +17,9 @@ public:
 	bool checkSRVSupport() const noexcept;
 	D3D12_RESOURCE_DESC getResourceDesc() const noexcept;
 	WRL::ComPtr<ID3D12Resource> getResource() const;
+	uint32 getWidth() const noexcept;
+	uint32 getHeight() const noexcept;
+	uint32 getDepthOrArraySize() const noexcept;
 private:
 	friend class Device;
 	Texture(std::weak_ptr<Device> pDevice, const D3D12_RESOURCE_DESC &desc, const D3D12_CLEAR_VALUE *pClearValue = nullptr);
@@ -32,6 +35,9 @@ private:
 	WRL::ComPtr<ID3D12Resource>         _pResource;
 	std::unique_ptr<D3D12_CLEAR_VALUE>  _pClearValue;
 	D3D12_FEATURE_DATA_FORMAT_SUPPORT   _formatSupport;
+	uint32 _width;
+	uint32 _height;
+	uint32 _depthOrArraySize;
 };
 
 }

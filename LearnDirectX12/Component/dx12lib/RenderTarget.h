@@ -21,7 +21,7 @@ enum class AttachmentPoint {
 
 class RenderTarget {
 public:
-	RenderTarget() = default;
+	RenderTarget(uint32 width, uint32 height);
 	RenderTarget(const RenderTarget &) = delete;
 	RenderTarget(RenderTarget &&) = default;
 	RenderTarget &operator=(const RenderTarget &) = delete;
@@ -41,6 +41,7 @@ public:
 		float minDepth = 0.f, 
 		float maxDepth = 1.0
 	) const;
+
 	D3D12_RT_FORMAT_ARRAY getRenderTargetFormats() const;
 	DXGI_FORMAT getDepthStencilFormat() const;
 	DXGI_SAMPLE_DESC getSampleDesc() const;

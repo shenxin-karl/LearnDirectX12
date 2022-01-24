@@ -48,6 +48,7 @@ public:
 
 	UINT getSampleCount() const;
 	UINT getSampleQuality() const;
+	DXGI_SAMPLE_DESC getSampleDesc() const;
 public:
 	std::shared_ptr<Adapter> getAdapter() const;
 	std::shared_ptr<CommandQueue> getCommandQueue(CommandQueueType type) const;
