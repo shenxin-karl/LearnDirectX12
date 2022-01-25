@@ -83,8 +83,8 @@ DescriptorAllocation DescriptorAllocatorPage::allocate(uint32 numDescriptor) {
 void DescriptorAllocatorPage::free(DescriptorAllocation &&allocation) {
 	auto temp = std::move(allocation);
 	StaleDescriptorInfo staleInfo = {
-		computeOffset(allocation.getCPUHandle()),
-		allocation.getHandleSize(),
+		computeOffset(temp.getCPUHandle()),
+		temp.getHandleSize(),
 	};
 	temp.clear();
 	std::lock_guard lock(_allocationMutex);

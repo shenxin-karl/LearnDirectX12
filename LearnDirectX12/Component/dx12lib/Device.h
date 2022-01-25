@@ -17,6 +17,7 @@ class DescriptorAllocator;
 class Device : public std::enable_shared_from_this<Device> {
 public:
 	Device(std::shared_ptr<Adapter> pAdapter);
+	void initialize();
 	~Device() = default;
 
 	std::shared_ptr<SwapChain> createSwapChain(

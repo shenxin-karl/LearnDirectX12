@@ -17,11 +17,7 @@ DescriptorAllocation DescriptorAllocator::allocate(uint32 numDescriptor) {
 		if (alloc.isValid())
 			return alloc;
 	}
-	lock.unlock();
 	auto pNewPage = createAllocatorPage();
-	lock.lock();
-	_heapPool.push_back(pNewPage);
-	lock.unlock();
 	return pNewPage->allocate(numDescriptor);
 }
 
@@ -32,7 +28,7 @@ std::shared_ptr<DescriptorAllocatorPage> DescriptorAllocator::createAllocatorPag
 		_numDescriptorPreHeap
 	);
 	_heapPool.push_back(pPage);
-	_availableHeaps.insert(_heapPool.size());
+	_availableHeaps.insert(_heapPool.size()-1);
 	return pPage;
 }
 

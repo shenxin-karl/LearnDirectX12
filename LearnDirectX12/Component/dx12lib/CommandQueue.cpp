@@ -13,6 +13,8 @@ CommandQueue::CommandQueue(std::weak_ptr<Device> pDevice, D3D12_COMMAND_LIST_TYP
 	D3D12_COMMAND_QUEUE_DESC desc;
 	desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 	desc.Type = queueType;
+	desc.Priority = 0;
+	desc.NodeMask = 0;
 	ThrowIfFailed(pD3DDevice->CreateCommandQueue(
 		&desc,
 		IID_PPV_ARGS(&_pCommandQueue)

@@ -50,7 +50,7 @@ uint32 DescriptorAllocation::getHandleSize() const noexcept {
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE DescriptorAllocation::getCPUHandle(uint32 offset) const {
-	assert(offset > _numHandle);
+	assert(offset < _numHandle);
 	CD3DX12_CPU_DESCRIPTOR_HANDLE handle(_baseHandle);
 	handle.Offset(offset, _handleSize);
 	return handle;

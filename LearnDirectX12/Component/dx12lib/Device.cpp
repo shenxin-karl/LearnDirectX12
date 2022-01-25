@@ -11,8 +11,10 @@
 namespace dx12lib {
 	
 Device::Device(std::shared_ptr<Adapter> pAdapter)
-: _pAdapter(pAdapter) 
-{
+: _pAdapter(pAdapter) {
+}
+
+void Device::initialize() {
 #if defined(DEBUG) || defined(_DEBUG)
 	{
 		WRL::ComPtr<ID3D12Debug> debugController;
@@ -24,7 +26,7 @@ Device::Device(std::shared_ptr<Adapter> pAdapter)
 	HRESULT hr = D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&_pDevice));
 	if (FAILED(hr)) {
 		WRL::ComPtr<IDXGIAdapter> pWarpAdapter;
-		ThrowIfFailed(pAdapter->getDxgiFactory()->EnumWarpAdapter(IID_PPV_ARGS(&pWarpAdapter)));
+		ThrowIfFailed(_pAdapter->getDxgiFactory()->EnumWarpAdapter(IID_PPV_ARGS(&pWarpAdapter)));
 		ThrowIfFailed(D3D12CreateDevice(
 			pWarpAdapter.Get(),
 			D3D_FEATURE_LEVEL_11_0,
@@ -38,7 +40,7 @@ Device::Device(std::shared_ptr<Adapter> pAdapter)
 	_pCommandQueueList[std::size_t(CommandQueueType::Compute)] = pComputeQueue;
 	auto pCopyQueue = std::make_shared<CommandQueue>(weak_from_this(), D3D12_COMMAND_LIST_TYPE_COMPUTE);
 	_pCommandQueueList[std::size_t(CommandQueueType::Copy)] = pCopyQueue;
-	
+
 	for (std::size_t i = 0; i < D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES; ++i) {
 		_pDescriptorAllocators[i] = std::make_unique<DescriptorAllocator>(
 			weak_from_this(),
@@ -46,8 +48,6 @@ Device::Device(std::shared_ptr<Adapter> pAdapter)
 			50
 		);
 	}
-
-
 }
 
 std::shared_ptr<SwapChain> Device::createSwapChain(

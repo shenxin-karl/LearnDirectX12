@@ -102,4 +102,8 @@ DXGI_SAMPLE_DESC RenderTarget::getSampleDesc() const {
 	return sampleDesc;
 }
 
+D3D12_RECT RenderTarget::getScissiorRect() const {
+	return D3D12_RECT(0, 0, _size.x, _size.y);
+}
+
 }

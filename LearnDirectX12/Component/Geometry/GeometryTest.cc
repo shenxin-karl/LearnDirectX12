@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include "Geometry/GeometryGenerator.h"
 #include "Geometry/HalfEdgeMesh.h"
 #include "Geometry/LoopSubdivision.h"

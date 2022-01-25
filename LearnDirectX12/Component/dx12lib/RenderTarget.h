@@ -45,6 +45,7 @@ public:
 	D3D12_RT_FORMAT_ARRAY getRenderTargetFormats() const;
 	DXGI_FORMAT getDepthStencilFormat() const;
 	DXGI_SAMPLE_DESC getSampleDesc() const;
+	D3D12_RECT getScissiorRect() const;
 private:
 	constexpr static std::size_t kAttachmentPointSize = static_cast<std::size_t>(AttachmentPoint::NumAttachmentPoints);
 	std::array<std::shared_ptr<Texture>, kAttachmentPointSize>  _textures;
