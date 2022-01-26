@@ -1,5 +1,5 @@
-#pragma once
-#include "dx12libCommon.h"
+﻿#pragma once
+#include "dx12libStd.h"
 #include "DescriptorAllocation.h"
 
 namespace dx12lib {

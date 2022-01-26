@@ -1,4 +1,4 @@
-#include "dx12libCommon.h"
+#include "dx12libStd.h"
 
 namespace dx12lib {
 
