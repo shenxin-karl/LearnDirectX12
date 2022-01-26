@@ -77,6 +77,23 @@ constexpr static std::size_t kComandQueueTypeCount = 3;
 constexpr static std::size_t kSwapChainBufferCount = 2;
 constexpr static std::size_t kFrameResourceCount = 3;
 
+class Adapter;
+class CommandList;
+class CommandListProxy;
+class CommandQueue;
+class ConstantBuffer;
+class DefaultBuffer;
+class DescriptorAllocation;
+class DescriptorAllocatorPage;
+class DescriptorAllocator;
 class Device;
+class FrameResourceItem;
+class FrameResourceQueue;
+class IndexBuffer;
+class VertexBuffer;
+class RenderTarget;
+class SwapChain;
+class Texture;
+class UploadBuffer;
 
 }

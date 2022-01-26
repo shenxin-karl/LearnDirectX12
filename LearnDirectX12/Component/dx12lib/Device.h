@@ -5,20 +5,13 @@
 
 namespace dx12lib {
 
-class Adapter;
-class VertexBuffer;
-class IndexBuffer;
-class ConstantBuffer;
-class SwapChain;
-class CommandQueue;
-class DescriptorAllocation;
-class DescriptorAllocator;
-
 class Device : public std::enable_shared_from_this<Device> {
 public:
 	Device(std::shared_ptr<Adapter> pAdapter);
+	Device(const Device &) = delete;
+	Device &operator=(const Device &) = delete;
+	~Device();
 	void initialize();
-	~Device() = default;
 
 	std::shared_ptr<SwapChain> createSwapChain(
 		HWND hwnd,

@@ -29,4 +29,5 @@ target_link_libraries(BaseApp PUBLIC
 	InputSystem
 	GameTimer
 	D3D
+	dx12lib
 )	

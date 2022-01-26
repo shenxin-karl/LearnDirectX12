@@ -37,7 +37,6 @@ uint64 CommandQueue::signal(std::shared_ptr<SwapChain> pSwapChain) {
 	ThrowIfFailed(pSwapChain->present());
 	auto fence = ++_fenceValue;
 	_pCommandQueue->Signal(_pFence.Get(), fence);
-	_pFrameResourceQueue->newFrame(fence);
 	return fence;
 }
 
@@ -74,9 +73,17 @@ uint32 CommandQueue::getFrameResourceCount() const {
 	return _queueType == D3D12_COMMAND_LIST_TYPE_DIRECT ? 3 : 1;
 }
 
-
 CommandListProxy CommandQueue::createCommandListProxy() {
 	return _pFrameResourceQueue->createCommandListProxy();
+}
+
+void CommandQueue::newFrame() {
+	waitForFenceValue(_fenceValue);
+	_pFrameResourceQueue->newFrame(_fenceValue);
+}
+
+CommandQueue::~CommandQueue() {
+	waitForFenceValue(_fenceValue);
 }
 
 }

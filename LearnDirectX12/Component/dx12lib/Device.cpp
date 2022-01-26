@@ -14,6 +14,9 @@ Device::Device(std::shared_ptr<Adapter> pAdapter)
 : _pAdapter(pAdapter) {
 }
 
+Device::~Device() {
+}
+
 void Device::initialize() {
 #if defined(DEBUG) || defined(_DEBUG)
 	{
