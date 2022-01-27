@@ -20,6 +20,7 @@ enum class AttachmentPoint {
 };
 
 class RenderTarget {
+	constexpr static std::size_t kAttachmentPointSize = static_cast<std::size_t>(AttachmentPoint::NumAttachmentPoints);
 public:
 	RenderTarget(uint32 width, uint32 height);
 	RenderTarget(const RenderTarget &) = delete;
@@ -46,10 +47,15 @@ public:
 	DXGI_FORMAT getDepthStencilFormat() const;
 	DXGI_SAMPLE_DESC getSampleDesc() const;
 	D3D12_RECT getScissiorRect() const;
+	bool isRTVClearValueDirty() const;
+	bool isDSVClearValueDirty() const;
+	void setRTVClearValueDirty(bool dirty);
+	void setDSVClearValueDirty(bool dirty);
 private:
-	constexpr static std::size_t kAttachmentPointSize = static_cast<std::size_t>(AttachmentPoint::NumAttachmentPoints);
 	std::array<std::shared_ptr<Texture>, kAttachmentPointSize>  _textures;
 	DX::XMUINT2 _size;
+	bool _RTVClearValueDirty = true;
+	bool _DSVClearValueDirty = true;
 };
 
 }

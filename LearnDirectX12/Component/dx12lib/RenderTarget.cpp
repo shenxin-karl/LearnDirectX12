@@ -106,4 +106,20 @@ D3D12_RECT RenderTarget::getScissiorRect() const {
 	return D3D12_RECT(0, 0, _size.x, _size.y);
 }
 
+bool RenderTarget::isRTVClearValueDirty() const {
+	return _RTVClearValueDirty;
+}
+
+bool RenderTarget::isDSVClearValueDirty() const {
+	return _DSVClearValueDirty;
+}
+
+void RenderTarget::setRTVClearValueDirty(bool dirty) {
+	_RTVClearValueDirty = dirty;
+}
+
+void RenderTarget::setDSVClearValueDirty(bool dirty) {
+	_DSVClearValueDirty = dirty;
+}
+
 }

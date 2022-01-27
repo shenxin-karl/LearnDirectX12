@@ -22,6 +22,7 @@ public:
 	uint32 getWidth() const noexcept;
 	uint32 getHeight() const noexcept;
 	uint32 getDepthOrArraySize() const noexcept;
+	D3D12_CLEAR_VALUE *getClearValue() const;
 private:
 	void checkFeatureSupport();
 	bool checkFormatSupport(D3D12_FORMAT_SUPPORT1 formatSupport) const;

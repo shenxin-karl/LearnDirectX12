@@ -81,6 +81,10 @@ uint32 Texture::getDepthOrArraySize() const noexcept {
 	return _depthOrArraySize;
 }
 
+D3D12_CLEAR_VALUE * Texture::getClearValue() const {
+	return _pClearValue.get();
+}
+
 Texture::Texture(std::weak_ptr<Device> pDevice, const D3D12_RESOURCE_DESC &desc, 
 	const D3D12_CLEAR_VALUE *pClearValue /*= nullptr*/) 
 {
