@@ -6,6 +6,7 @@
 namespace dx12lib {
 
 enum class ClearFlag {
+	None    = 0,
 	Color   = (0x1 << 0),
 	Depth   = (0x1 << 1),
 	Stencil = (0x1 << 2),
@@ -41,6 +42,7 @@ public:
 	void setClearFlag(ClearFlag flag);
 	void clearDepthStencil(float depth, UINT stencil);
 	void clearColorDepthStencil(DX::XMVECTORF32 color, float depth, UINT stencil);
+	ClearFlag getClearFlag() const;
 private:
 	void initializeClearValue(const D3D12_CLEAR_VALUE *pClearValue);
 	void checkFeatureSupport();

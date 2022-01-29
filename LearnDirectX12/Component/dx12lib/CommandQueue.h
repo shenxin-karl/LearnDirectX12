@@ -19,8 +19,11 @@ public:
 	bool isFenceComplete(uint64 fenceValue) const noexcept;
 	void waitForFenceValue(uint64 fenceValue);
 	uint32 getFrameResourceCount() const;
+	uint64 getFenceValue() const;
+	uint64 getCompletedValue() const;
 	CommandListProxy createCommandListProxy();
 	void newFrame();
+	void resize(uint32 width, uint32 height, std::shared_ptr<SwapChain> pSwapChain);
 	~CommandQueue();
 private:
 	uint64                              _fenceValue;

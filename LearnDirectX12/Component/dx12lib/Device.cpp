@@ -59,7 +59,6 @@ std::shared_ptr<SwapChain> Device::createSwapChain(
 		DXGI_FORMAT depthStencilFormat) const 
 {
 	return std::make_shared<SwapChain>(
-
 		const_cast<Device*>(this)->weak_from_this(),
 		hwnd, 
 		backBufferFormat, 

@@ -47,15 +47,9 @@ public:
 	DXGI_FORMAT getDepthStencilFormat() const;
 	DXGI_SAMPLE_DESC getSampleDesc() const;
 	D3D12_RECT getScissiorRect() const;
-	bool isRTVClearValueDirty() const;
-	bool isDSVClearValueDirty() const;
-	void setRTVClearValueDirty(bool dirty);
-	void setDSVClearValueDirty(bool dirty);
 private:
 	std::array<std::shared_ptr<Texture>, kAttachmentPointSize>  _textures;
 	DX::XMUINT2 _size;
-	bool _RTVClearValueDirty = true;
-	bool _DSVClearValueDirty = true;
 };
 
 }

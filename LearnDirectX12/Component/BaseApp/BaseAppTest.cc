@@ -33,28 +33,28 @@ void TestApp::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pCmdQueue = _pDevice->getCommandQueue(dx12lib::CommandQueueType::Direct);
 	auto pCmdList = pCmdQueue->createCommandListProxy();
 	auto pRenderTarget = _pSwapChain->getRenderTarget();
+
+	pCmdList->setViewports(pRenderTarget->getViewport());
+	pCmdList->setScissorRects(pRenderTarget->getScissiorRect());
+
 	auto pTexture = pRenderTarget->getTexture(dx12lib::AttachmentPoint::Color0);
-	pTexture->clearColorDepthStencil(
-		{ 1.f, std::sin(pGameTimer->getTotalTime()) * 0.5f + 0.5f, 0.f, 1.f }, 
-		1.f, 
-		1
-	);
+	pTexture->clearColor({ 1.f, std::sin(pGameTimer->getTotalTime()) * 0.5f + 0.5f, 0.f, 1.f });
 
-	pRenderTarget->setRTVClearValueDirty(true);
-	pRenderTarget->setDSVClearValueDirty(true);
+	auto pDepthStencil = pRenderTarget->getTexture(dx12lib::AttachmentPoint::DepthStencil);
+	pDepthStencil->clearDepthStencil(1.f, 0);
+
 	pCmdList->setRenderTarget(pRenderTarget);
-
 	pCmdQueue->executeCommandList(pCmdList);
 	pCmdQueue->signal(_pSwapChain);
 }
 
 int main() {
 	std::shared_ptr<com::GameTimer> pGameTimer = std::make_shared<com::GameTimer>();
-	try
-	{
+	try {
 		TestApp app;
 		app.initialize();
 		while (app.isRuning()) {
+			pGameTimer->newFrame();
 			app.beginTick(pGameTimer);
 			app.tick(pGameTimer);
 			app.endTick(pGameTimer);

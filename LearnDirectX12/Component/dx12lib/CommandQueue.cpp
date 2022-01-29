@@ -79,6 +79,14 @@ uint32 CommandQueue::getFrameResourceCount() const {
 	return _queueType == D3D12_COMMAND_LIST_TYPE_DIRECT ? 3 : 1;
 }
 
+uint64 CommandQueue::getFenceValue() const {
+	return _fenceValue;
+}
+
+uint64 CommandQueue::getCompletedValue() const {
+	return _pFence->GetCompletedValue();
+}
+
 CommandListProxy CommandQueue::createCommandListProxy() {
 	return _pFrameResourceQueue->createCommandListProxy();
 }
@@ -86,6 +94,12 @@ CommandListProxy CommandQueue::createCommandListProxy() {
 void CommandQueue::newFrame() {
 	waitForFenceValue(_fenceValue);
 	_pFrameResourceQueue->newFrame(_fenceValue);
+}
+
+void CommandQueue::resize(uint32 width, uint32 height, std::shared_ptr<SwapChain> pSwapChain) {
+	newFrame();
+	pSwapChain->resize(width, height);
+	waitForFenceValue(_fenceValue);
 }
 
 CommandQueue::~CommandQueue() {

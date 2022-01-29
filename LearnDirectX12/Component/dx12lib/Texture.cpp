@@ -134,9 +134,14 @@ void Texture::clearColorDepthStencil(DX::XMVECTORF32 color, float depth, UINT st
 	clearStencil(stencil);
 }
 
+ClearFlag Texture::getClearFlag() const {
+	return _clearFlag;
+}
+
 Texture::Texture(std::weak_ptr<Device> pDevice, const D3D12_RESOURCE_DESC &desc, 
 	const D3D12_CLEAR_VALUE *pClearValue /*= nullptr*/) 
 {
+	_pDevice = pDevice;
 	auto pD3DDevice = pDevice.lock()->getD3DDevice();
 	initializeClearValue(pClearValue);
 	ThrowIfFailed(pD3DDevice->CreateCommittedResource(
@@ -163,7 +168,7 @@ Texture::Texture(std::weak_ptr<Device> pDevice, WRL::ComPtr<ID3D12Resource> pRes
 	_width = static_cast<uint32>(desc.Width);
 	_height = static_cast<uint32>(desc.Height);
 	_depthOrArraySize = desc.DepthOrArraySize;
-	_pResource = _pResource;
+	_pResource = pResource;
 	initializeClearValue(pClearValue);
 	checkFeatureSupport();
 	createViews();

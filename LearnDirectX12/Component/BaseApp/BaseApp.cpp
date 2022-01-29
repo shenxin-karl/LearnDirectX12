@@ -3,6 +3,7 @@
 #include "dx12lib/Adapter.h"
 #include "dx12lib/Device.h"
 #include "dx12lib/SwapChain.h"
+#include "dx12lib/CommandQueue.h"
 
 namespace com {
 
@@ -37,8 +38,8 @@ void BaseApp::onResize(int width, int height) {
 
 	_width = width;
 	_height = height;
-	if (_pSwapChain != nullptr)
-		_pSwapChain->resize(width, height);
+	auto pCmdQueue = _pDevice->getCommandQueue(dx12lib::CommandQueueType::Direct);
+	pCmdQueue->resize(width, height, _pSwapChain);
 }
 
 bool BaseApp::isRuning() const {

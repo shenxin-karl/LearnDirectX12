@@ -39,7 +39,7 @@ public:
 private:
 	uint32 _currentFrameResourceIndex;
 	uint32 _frameResourceItemCount;
-	std::array<std::unique_ptr<FrameResourceItem>, kFrameResourceCount>  _frameResourceQueue;
+	std::array<std::shared_ptr<FrameResourceItem>, kFrameResourceCount>  _frameResourceQueue;
 };
 
 

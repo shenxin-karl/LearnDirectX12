@@ -19,14 +19,14 @@ SwapChain::SwapChain(std::weak_ptr<Device> pDevice,
 {
 	RECT windowRect;
 	::GetClientRect(hwnd, &windowRect);
-	_width = windowRect.right - windowRect.left;
-	_height = windowRect.bottom - windowRect.top;
+	auto width = windowRect.right - windowRect.left;
+	auto height = windowRect.bottom - windowRect.top;
 
 	auto pSharedDevice = pDevice.lock();
 	_pSwapChain.Reset();
 	DXGI_SWAP_CHAIN_DESC sd;
-	sd.BufferDesc.Width = _width;
-	sd.BufferDesc.Height = _height;
+	sd.BufferDesc.Width = width;
+	sd.BufferDesc.Height = height;
 	sd.BufferDesc.RefreshRate.Denominator = 1;
 	sd.BufferDesc.RefreshRate.Numerator = 60;
 	sd.BufferDesc.Format = backBufferFormat;
@@ -40,15 +40,16 @@ SwapChain::SwapChain(std::weak_ptr<Device> pDevice,
 	sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
-	CommandListProxy pCmdList = pSharedDevice->getCommandQueue(CommandQueueType::Direct)->createCommandListProxy();
+	auto pCmdQueue = pSharedDevice->getCommandQueue(CommandQueueType::Direct);
 	auto *pDxgiFactory = pSharedDevice->getAdapter()->getDxgiFactory();
 	ThrowIfFailed(pDxgiFactory->CreateSwapChain(
-		pCmdList->getD3DCommandList(),
+		pCmdQueue->getD3D12CommandQueue(),
 		&sd,
 		&_pSwapChain
 	));
 
-	_pRenderTarget = std::make_shared<RenderTarget>(_width, _height);
+	_pRenderTarget = std::make_shared<RenderTarget>(width, height);
+	resize(width, height);
 }
 
 void SwapChain::resize(uint32 width, uint32 height) {
@@ -109,6 +110,7 @@ void SwapChain::updateBuffer() {
 	depthStencilDesc.Width = _width;
 	depthStencilDesc.Height = _height;
 	depthStencilDesc.DepthOrArraySize = 1;
+	depthStencilDesc.MipLevels = 1;
 	depthStencilDesc.Format = _depthStendilFormat;
 	depthStencilDesc.SampleDesc = _pDevice.lock()->getSampleDesc();
 	depthStencilDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
