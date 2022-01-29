@@ -14,8 +14,8 @@ public:
 	CommandQueue(const CommandQueue &) = delete;
 	ID3D12CommandQueue *getD3D12CommandQueue() const;
 	uint64 signal(std::shared_ptr<SwapChain> pSwapChain);
-	void executeCommandList(std::shared_ptr<CommandList> pCommandList);
-	void executeCommandList(const std::vector<std::shared_ptr<CommandList>> &cmdLists);
+	void executeCommandList(CommandListProxy pCommandList);
+	void executeCommandList(const std::vector<CommandListProxy> &cmdLists);
 	bool isFenceComplete(uint64 fenceValue) const noexcept;
 	void waitForFenceValue(uint64 fenceValue);
 	uint32 getFrameResourceCount() const;

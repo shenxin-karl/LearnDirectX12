@@ -8,11 +8,15 @@
 #include "dx12lib/CommandListProxy.h"
 #include "dx12lib/CommandList.h"
 #include "dx12lib/CommandQueue.h"
+#include "dx12lib/SwapChain.h"
+#include "dx12lib/RenderTarget.h"
+#include "dx12lib/Texture.h"
 
 
 class TestApp : public com::BaseApp {
 public:
 	TestApp();
+	virtual void beginTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 	virtual void tick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 };
 
@@ -20,11 +24,27 @@ TestApp::TestApp() {
 
 }
 
+void TestApp::beginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
+	auto pCmdQueue = _pDevice->getCommandQueue(dx12lib::CommandQueueType::Direct);
+	pCmdQueue->newFrame();
+}
+
 void TestApp::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pCmdQueue = _pDevice->getCommandQueue(dx12lib::CommandQueueType::Direct);
 	auto pCmdList = pCmdQueue->createCommandListProxy();
+	auto pRenderTarget = _pSwapChain->getRenderTarget();
+	auto pTexture = pRenderTarget->getTexture(dx12lib::AttachmentPoint::Color0);
+	pTexture->clearColorDepthStencil(
+		{ 1.f, std::sin(pGameTimer->getTotalTime()) * 0.5f + 0.5f, 0.f, 1.f }, 
+		1.f, 
+		1
+	);
 
-	//pCmdQueue->executeCommandList(pCmdList)
+	pRenderTarget->setRTVClearValueDirty(true);
+	pRenderTarget->setDSVClearValueDirty(true);
+	pCmdList->setRenderTarget(pRenderTarget);
+
+	pCmdQueue->executeCommandList(pCmdList);
 	pCmdQueue->signal(_pSwapChain);
 }
 

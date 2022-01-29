@@ -3,30 +3,43 @@
 
 namespace dx12lib {
 
-CommandListProxy::CommandListProxy(std::shared_ptr<CommandList> pCmdList, std::weak_ptr<FrameResourceItem> pFrameResourceItem)
-: _pCmdList(pCmdList), _pFrameResourceItem(pFrameResourceItem) {
+CommandListProxy::CommandListProxy(std::shared_ptr<CommandList> pCmdList, std::weak_ptr<FrameResourceItem> pFrameResourceItem) {
+	_pSharedBuffer = std::make_shared<SharedBuffer>(pCmdList, pFrameResourceItem);
 }
 
-CommandListProxy::~CommandListProxy() {
-	auto pFrameResourceItem = _pFrameResourceItem.lock();
-	if (pFrameResourceItem != nullptr)
-		pFrameResourceItem->releaseCommandList(_pCmdList);
+CommandList *CommandListProxy::operator->() {
+	return _pSharedBuffer->_pCmdList.get();
 }
 
-CommandList *CommandListProxy::operator->() noexcept {
-	return _pCmdList.get();
+const CommandList *CommandListProxy::operator->() const {
+	return _pSharedBuffer->_pCmdList.get();
 }
 
-CommandList &CommandListProxy::operator*() noexcept {
-	return *_pCmdList.get();
+CommandList &CommandListProxy::operator*() {
+	return *_pSharedBuffer->_pCmdList.get();
 }
 
-const CommandList *CommandListProxy::operator->() const noexcept {
-	return _pCmdList.get();
+const CommandList &CommandListProxy::operator*() const {
+	return *_pSharedBuffer->_pCmdList.get();
 }
 
-const CommandList &CommandListProxy::operator*() const noexcept {
-	return *_pCmdList.get();
+CommandListProxy::SharedBuffer::~SharedBuffer() {
+	auto pSharedFrameResourceItem = _pFreamResourceItem.lock();
+	if (pSharedFrameResourceItem != nullptr)
+		pSharedFrameResourceItem->releaseCommandList(_pCmdList);
 }
+
+CommandListProxy::operator bool() const {
+	return _pSharedBuffer->_pCmdList.operator bool();
+}
+
+bool operator==(const CommandListProxy &lhs, std::nullptr_t) {
+	return lhs._pSharedBuffer->_pCmdList == nullptr;
+}
+
+bool operator!=(const CommandListProxy &lhs, std::nullptr_t) {
+	return lhs._pSharedBuffer->_pCmdList != nullptr;
+}
+
 
 }

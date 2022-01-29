@@ -40,17 +40,23 @@ uint64 CommandQueue::signal(std::shared_ptr<SwapChain> pSwapChain) {
 	return fence;
 }
 
-void CommandQueue::executeCommandList(std::shared_ptr<CommandList> pCommandList) {
+void CommandQueue::executeCommandList(CommandListProxy pCommandList) {
 	ThrowIfFailed(pCommandList->close());
 	ID3D12CommandList *cmdList[] = { pCommandList->getD3DCommandList() };
 	_pCommandQueue->ExecuteCommandLists(1, cmdList);
 }
 
-void CommandQueue::executeCommandList(const std::vector<std::shared_ptr<CommandList>> &cmdLists) {
+void CommandQueue::executeCommandList(const std::vector<CommandListProxy> &cmdLists) {
+	std::unordered_set<ID3D12CommandList *> hashset;
 	std::vector<ID3D12CommandList *> lists;
-	for (auto &pCmdList : cmdLists) {
-		ThrowIfFailed(pCmdList->close());
-		lists.push_back(pCmdList->getD3DCommandList());
+	for (auto pCmdList : cmdLists) {
+		auto *pD3DCmdList = pCmdList->getD3DCommandList();
+		if (hashset.find(pD3DCmdList) != hashset.end())
+			continue;
+		hashset.insert(pD3DCmdList);
+		if (auto *pD3DGraphicsCmdList = dynamic_cast<ID3D12GraphicsCommandList *>(pD3DCmdList))
+			ThrowIfFailed(pD3DGraphicsCmdList->Close());
+		lists.push_back(pD3DCmdList);
 	}
 	_pCommandQueue->ExecuteCommandLists(static_cast<UINT>(lists.size()), lists.data());
 }
