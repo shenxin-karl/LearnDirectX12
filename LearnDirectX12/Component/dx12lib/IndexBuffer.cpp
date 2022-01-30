@@ -42,6 +42,12 @@ bool IndexBuffer::isEmpty() const noexcept {
 	return _pGPUBuffer == nullptr;
 }
 
+WRL::ComPtr<ID3D12Resource> IndexBuffer::getD3DResource() const {
+	if (_pGPUBuffer == nullptr)
+		return nullptr;
+	return _pGPUBuffer->getD3DResource();
+}
+
 IndexBuffer &IndexBuffer::operator=(IndexBuffer &&other) noexcept {
 	IndexBuffer tmp;
 	swap(*this, tmp);

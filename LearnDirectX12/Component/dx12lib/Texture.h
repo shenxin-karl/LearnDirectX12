@@ -1,6 +1,7 @@
 #pragma once
 #include "dx12libStd.h"
 #include "DescriptorAllocation.h"
+#include "IResource.h"
 #include <DirectXColors.h>
 
 namespace dx12lib {
@@ -16,7 +17,7 @@ ClearFlag operator|(ClearFlag lhs, ClearFlag rhs);
 ClearFlag &operator|=(ClearFlag &lhs, ClearFlag rhs);
 bool operator&(ClearFlag lhs, ClearFlag rhs);
 
-class Texture {
+class Texture : public IResource {
 public:
 	Texture(std::weak_ptr<Device> pDevice, const D3D12_RESOURCE_DESC &desc, const D3D12_CLEAR_VALUE *pClearValue = nullptr);
 	Texture(std::weak_ptr<Device> pDevice, WRL::ComPtr<ID3D12Resource> pResource, const D3D12_CLEAR_VALUE *pClearValue = nullptr);
@@ -30,7 +31,7 @@ public:
 	bool checkDSVSupport() const noexcept;
 	bool checkSRVSupport() const noexcept;
 	D3D12_RESOURCE_DESC getResourceDesc() const noexcept;
-	WRL::ComPtr<ID3D12Resource> getResource() const;
+	WRL::ComPtr<ID3D12Resource> getD3DResource() const;
 	uint32 getWidth() const noexcept;
 	uint32 getHeight() const noexcept;
 	uint32 getDepthOrArraySize() const noexcept;

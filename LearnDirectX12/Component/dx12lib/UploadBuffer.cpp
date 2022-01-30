@@ -57,6 +57,10 @@ uint32 UploadBuffer::getElementCount() const noexcept {
 	return _elementCount;
 }
 
+WRL::ComPtr<ID3D12Resource> UploadBuffer::getD3DResource() const {
+	return _pUploadBuffer;
+}
+
 UploadBuffer::~UploadBuffer() {
 	if (_pUploadBuffer != nullptr)
 		_pUploadBuffer->Unmap(0, nullptr);

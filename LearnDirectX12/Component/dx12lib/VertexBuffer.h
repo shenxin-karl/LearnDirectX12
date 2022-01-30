@@ -5,8 +5,7 @@
 
 namespace dx12lib {
 
-class DefaultBuffer;
-class VertexBuffer {
+class VertexBuffer : public IResource {
 public:
 	VertexBuffer();
 	VertexBuffer(ID3D12Device *pDevice, ID3D12GraphicsCommandList *pCmdList, void *pData, uint32 sizeInByte, uint32 stride);
@@ -20,10 +19,11 @@ public:
 	uint32 getVertexBufferSize() const noexcept;
 	uint32 getVertexStride() const noexcept;
 	bool isEmpty() const noexcept;
+	virtual WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
 private:
-	uint32  _bufferByteSize;
-	uint32  _vertexStride;
-	WRL::ComPtr<ID3DBlob> _pCPUBuffer;
+	uint32                         _bufferByteSize;
+	uint32                         _vertexStride;
+	WRL::ComPtr<ID3DBlob>          _pCPUBuffer;
 	std::unique_ptr<DefaultBuffer> _pGPUBuffer;
 };
 

@@ -6,7 +6,7 @@
 
 namespace dx12lib {
 
-ID3D12GraphicsCommandList * CommandList::getD3DCommandList() const noexcept {
+ID3D12GraphicsCommandList *CommandList::getD3DCommandList() const noexcept {
 	return _pCommandList.Get();
 }
 

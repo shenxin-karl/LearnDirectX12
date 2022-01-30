@@ -55,8 +55,8 @@ D3D12_GPU_VIRTUAL_ADDRESS DefaultBuffer::getAddress() const {
 	return _pDefaultBuffer->GetGPUVirtualAddress();
 }
 
-ID3D12Resource *DefaultBuffer::getResource() const {
-	return _pDefaultBuffer.Get();
+WRL::ComPtr<ID3D12Resource> DefaultBuffer::getD3DResource() const {
+	return _pDefaultBuffer;
 }
 
 DefaultBuffer &DefaultBuffer::operator=(DefaultBuffer &&other) noexcept {

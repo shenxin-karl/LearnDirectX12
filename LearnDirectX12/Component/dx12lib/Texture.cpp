@@ -80,7 +80,7 @@ D3D12_RESOURCE_DESC Texture::getResourceDesc() const noexcept {
 	return desc;
 }
 
-WRL::ComPtr<ID3D12Resource> Texture::getResource() const {
+WRL::ComPtr<ID3D12Resource> Texture::getD3DResource() const {
 	return _pResource;
 }
 

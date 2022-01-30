@@ -95,5 +95,7 @@ class RenderTarget;
 class SwapChain;
 class Texture;
 class UploadBuffer;
+class ResourceStateTracker;
+class IResource;
 
 }
