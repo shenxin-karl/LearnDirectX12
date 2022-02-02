@@ -64,8 +64,10 @@ WRL::ComPtr<ID3D12Resource> UploadBuffer::getD3DResource() const {
 }
 
 UploadBuffer::~UploadBuffer() {
-	if (_pUploadBuffer != nullptr)
+	if (_pUploadBuffer != nullptr) {
 		_pUploadBuffer->Unmap(0, nullptr);
+		ResourceStateTracker::removeGlobalResourceState(_pUploadBuffer.Get());
+	}
 }
 
 UINT UploadBuffer::calcConstantBufferByteSize(std::size_t size) noexcept {

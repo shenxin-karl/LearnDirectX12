@@ -11,7 +11,7 @@ public:
 	DefaultBuffer(const DefaultBuffer &) = delete;
 	DefaultBuffer(DefaultBuffer &&other) noexcept;
 	DefaultBuffer &operator=(DefaultBuffer &&other) noexcept;
-	~DefaultBuffer() = default;
+	~DefaultBuffer();
 	D3D12_GPU_VIRTUAL_ADDRESS getAddress() const;
 	virtual WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
 	friend void swap(DefaultBuffer &lhs, DefaultBuffer &rhs) noexcept;

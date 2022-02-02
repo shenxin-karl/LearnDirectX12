@@ -17,7 +17,7 @@ ClearFlag operator|(ClearFlag lhs, ClearFlag rhs);
 ClearFlag &operator|=(ClearFlag &lhs, ClearFlag rhs);
 bool operator&(ClearFlag lhs, ClearFlag rhs);
 
-class Texture : public IResource {
+class Texture : public Resource {
 public:
 	Texture(std::weak_ptr<Device> pDevice, const D3D12_RESOURCE_DESC &desc, const D3D12_CLEAR_VALUE *pClearValue = nullptr);
 	Texture(std::weak_ptr<Device> pDevice, WRL::ComPtr<ID3D12Resource> pResource, const D3D12_CLEAR_VALUE *pClearValue = nullptr);
@@ -46,17 +46,13 @@ public:
 	ClearFlag getClearFlag() const;
 private:
 	void initializeClearValue(const D3D12_CLEAR_VALUE *pClearValue);
-	void checkFeatureSupport();
-	bool checkFormatSupport(D3D12_FORMAT_SUPPORT1 formatSupport) const;
 	void createViews();
 private:
 	DescriptorAllocation                _renderTargetView;
 	DescriptorAllocation                _depthStencilView;
 	DescriptorAllocation                _shaderResourceView;
 	std::weak_ptr<Device>               _pDevice;
-	WRL::ComPtr<ID3D12Resource>         _pResource;
 	D3D12_CLEAR_VALUE					_clearValue;
-	D3D12_FEATURE_DATA_FORMAT_SUPPORT   _formatSupport;
 	uint32    _width;
 	uint32    _height;
 	uint32    _depthOrArraySize;
