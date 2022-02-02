@@ -33,6 +33,10 @@ CommandListProxy::operator bool() const {
 	return _pSharedBuffer->_pCmdList.operator bool();
 }
 
+std::shared_ptr<dx12lib::CommandList> CommandListProxy::_getCommandList() const {
+	return _pSharedBuffer->_pCmdList;
+}
+
 bool operator==(const CommandListProxy &lhs, std::nullptr_t) {
 	return lhs._pSharedBuffer->_pCmdList == nullptr;
 }

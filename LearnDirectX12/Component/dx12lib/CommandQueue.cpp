@@ -3,6 +3,7 @@
 #include "SwapChain.h"
 #include "FrameResourceQueue.h"
 #include "Device.h"
+#include "ResourceStateTracker.h"
 
 namespace dx12lib {
 
@@ -41,24 +42,31 @@ uint64 CommandQueue::signal(std::shared_ptr<SwapChain> pSwapChain) {
 }
 
 void CommandQueue::executeCommandList(CommandListProxy pCommandList) {
-	ThrowIfFailed(pCommandList->close());
-	ID3D12CommandList *cmdList[] = { pCommandList->getD3DCommandList() };
-	_pCommandQueue->ExecuteCommandLists(1, cmdList);
+	std::vector<CommandListProxy> cmdLists;
+	cmdLists.push_back(pCommandList);
+	executeCommandList(cmdLists);
 }
 
 void CommandQueue::executeCommandList(const std::vector<CommandListProxy> &cmdLists) {
 	std::unordered_set<ID3D12CommandList *> hashset;
 	std::vector<ID3D12CommandList *> lists;
+
+	ResourceStateTracker::lock();
 	for (auto pCmdList : cmdLists) {
 		auto *pD3DCmdList = pCmdList->getD3DCommandList();
 		if (hashset.find(pD3DCmdList) != hashset.end())
 			continue;
 		hashset.insert(pD3DCmdList);
-		if (auto *pD3DGraphicsCmdList = dynamic_cast<ID3D12GraphicsCommandList *>(pD3DCmdList))
-			ThrowIfFailed(pD3DGraphicsCmdList->Close());
+		if (auto *pD3DGraphicsCmdList = dynamic_cast<ID3D12GraphicsCommandList *>(pD3DCmdList)) {
+			CommandListProxy pPendingCmdList = createCommandListProxy();
+			pCmdList->close(pPendingCmdList._getCommandList());
+			pPendingCmdList->close();
+			lists.push_back(pPendingCmdList->getD3DCommandList());
+		}
 		lists.push_back(pD3DCmdList);
 	}
 	_pCommandQueue->ExecuteCommandLists(static_cast<UINT>(lists.size()), lists.data());
+	ResourceStateTracker::unlock();
 }
 
 bool CommandQueue::isFenceComplete(uint64 fenceValue) const noexcept {

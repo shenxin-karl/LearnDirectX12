@@ -1,5 +1,6 @@
 #include "Texture.h"
 #include "Device.h"
+#include "ResourceStateTracker.h"
 
 namespace dx12lib {
 
@@ -41,6 +42,8 @@ void Texture::resize(uint32 width, uint32 height, uint32 depthOrArraySize /*= 1*
 		&_clearValue,
 		IID_PPV_ARGS(&_pResource)
 	));
+
+	ResourceStateTracker::addGlobalResourceState(_pResource.Get(), D3D12_RESOURCE_STATE_COMMON);
 	// todo setName
 	createViews();
 }
@@ -145,14 +148,13 @@ Texture::Texture(std::weak_ptr<Device> pDevice, const D3D12_RESOURCE_DESC &desc,
 	auto pD3DDevice = pDevice.lock()->getD3DDevice();
 	initializeClearValue(pClearValue);
 	ThrowIfFailed(pD3DDevice->CreateCommittedResource(
-		RVPtr(CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT)), 
+		RVPtr(CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT)),
 		D3D12_HEAP_FLAG_NONE,
 		&desc,
 		D3D12_RESOURCE_STATE_COMMON,
 		&_clearValue,
 		IID_PPV_ARGS(&_pResource)
 	));
-
 	_width = static_cast<uint32>(desc.Width);
 	_height = static_cast<uint32>(desc.Height);
 	_depthOrArraySize = desc.DepthOrArraySize;

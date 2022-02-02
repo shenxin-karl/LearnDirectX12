@@ -1,3 +1,4 @@
+#include <iostream>
 #include "IResource.h"
 #include "ResourceStateTracker.h"
 #include "CommandList.h"
@@ -75,27 +76,73 @@ void ResourceStateTracker::aliasBarrier(const IResource *pResourceBefore /*= nul
 {
 	auto *pD3DBeforceResource = pResourceBefore != nullptr ? pResourceBefore->getD3DResource().Get() : nullptr;
 	auto *pD3DAfterResource = pResourceAfter != nullptr ? pResourceAfter->getD3DResource().Get() : nullptr;
+	if (pD3DBeforceResource == nullptr || pD3DAfterResource == nullptr) {
+		assert(false);
+		std::cout << __FUNCTION__ << " pD3DBeforceResource == nullptr || pD3DAfterResource == nullptr" << std::endl;
+		return;
+	}
 	resourceBarrier(CD3DX12_RESOURCE_BARRIER::Aliasing(pD3DBeforceResource, pD3DAfterResource));
 }
 
-uint32 ResourceStateTracker::flushResourceBarriers(CommandListProxy pCmdList) {
+uint32 ResourceStateTracker::flushResourceBarriers(std::shared_ptr<CommandList> pCmdList) {
 	UINT numBarrier = static_cast<UINT>(_resourceBarriers.size());
 	if (numBarrier > 0) {
 		pCmdList->getD3DCommandList()->ResourceBarrier(numBarrier, _resourceBarriers.data());
 		_resourceBarriers.clear();
 	}
+	return numBarrier;
 }
 
 void ResourceStateTracker::commitFinalResourceStates() {
 	assert(_isLocked);
-	for (const auto &resourceState : _finalResourceState) 
-		_globalResourceState[resourceState.first] = resourceState.second;
+	for (auto &&[pResource, state] : _finalResourceState) 
+		_globalResourceState[pResource] = state;
 	_finalResourceState.clear();
 }
 
-void ResourceStateTracker::flusePendingResourceBarriers(CommandListProxy pCmdList) {
+UINT ResourceStateTracker::flusePendingResourceBarriers(std::shared_ptr<CommandList> pCmdList) {
 	assert(_isLocked);
 
+	std::vector<D3D12_RESOURCE_BARRIER> resourceBarriers;
+	resourceBarriers.reserve(_pendingResourceBarriers.size());
+	for (auto &pendingBarrier : _pendingResourceBarriers) {
+		if (pendingBarrier.Type == D3D12_RESOURCE_BARRIER_TYPE_TRANSITION) {
+			auto &pendingTransition = pendingBarrier.Transition;
+			auto iter = _globalResourceState.find(pendingTransition.pResource);
+			if (iter == _globalResourceState.end())
+				continue;
+
+			auto &currResourceState = iter->second;
+			if (pendingTransition.Subresource == D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES &&
+				!currResourceState._subresourceState.empty())
+			{
+				for (auto &&[subResource, state]: currResourceState._subresourceState) {
+					if (pendingTransition.StateAfter != state) {
+						auto newBarrier = pendingBarrier;
+						newBarrier.Transition.Subresource = subResource;
+						newBarrier.Transition.StateBefore = state;
+						resourceBarriers.push_back(newBarrier);
+					}
+				}
+			} else {	// Uniform subResource status	
+				if (currResourceState._state != pendingTransition.StateAfter) {
+					auto newBarrier = pendingBarrier;
+					newBarrier.Transition.Subresource = currResourceState._state;
+					resourceBarriers.push_back(newBarrier);
+				}
+			}
+		}
+	}
+	_pendingResourceBarriers.clear();
+
+	UINT numBarriers = static_cast<UINT>(resourceBarriers.size());
+	if (numBarriers > 0) {
+		pCmdList->getD3DCommandList()->ResourceBarrier(
+			numBarriers, 
+			resourceBarriers.data()
+		);
+	}
+	return numBarriers;
 }
 
 void ResourceStateTracker::reset() {
@@ -126,6 +173,26 @@ void ResourceStateTracker::removeGlobalResourceState(ID3D12Resource *pResource) 
 		std::lock_guard lock(_globalMutex);
 		_globalResourceState.erase(pResource);
 	}
+}
+
+ResourceStateTracker::ResourceState::ResourceState(D3D12_RESOURCE_STATES state /*= D3D12_RESOURCE_STATE_COMMON*/)
+: _state(state) {
+}
+
+void ResourceStateTracker::ResourceState::setSubresourceState(UINT subresource, D3D12_RESOURCE_STATES state) {
+	if (subresource == D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES) {
+		_state = state;
+		_subresourceState.clear();
+	} else {
+		_subresourceState[subresource] = state;
+	}
+}
+
+D3D12_RESOURCE_STATES ResourceStateTracker::ResourceState::getSubresourceState(UINT subresource) {
+	auto state = _state;
+	if (auto iter = _subresourceState.find(subresource); iter != _subresourceState.end())
+		state = iter->second;
+	return state;
 }
 
 }

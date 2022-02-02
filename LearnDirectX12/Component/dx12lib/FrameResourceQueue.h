@@ -20,12 +20,10 @@ public:
 	void releaseCommandList(std::shared_ptr<CommandList> pCommandList);
 	std::weak_ptr<Device> getDevice() const noexcept;
 	D3D12_COMMAND_LIST_TYPE getCommandListType() const noexcept;
-	WRL::ComPtr<ID3D12CommandAllocator> getCommandListAllocator() const noexcept;
 private:
 	uint64                                     _fence = 0;
 	D3D12_COMMAND_LIST_TYPE                    _cmdListType;
 	std::weak_ptr<Device>                      _pDevice;
-	WRL::ComPtr<ID3D12CommandAllocator>        _pCmdListAlloc;
 	mutable ThreadSafeQueue<std::shared_ptr<CommandList>>  _cmdListPool;
 	mutable ThreadSafeQueue<std::shared_ptr<CommandList>>  _availableCmdList;
 };

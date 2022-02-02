@@ -1,4 +1,5 @@
 #include "UploadBuffer.h"
+#include "ResourceStateTracker.h"
 
 namespace dx12lib {
 
@@ -19,6 +20,7 @@ UploadBuffer::UploadBuffer(ID3D12Device *pDevice, UINT elementCount, UINT elemen
 		IID_PPV_ARGS(&_pUploadBuffer)
 	));
 	_pUploadBuffer->Map(0, nullptr, reinterpret_cast<void **>(&_pMappedData));
+	ResourceStateTracker::addGlobalResourceState(_pUploadBuffer.Get(), D3D12_RESOURCE_STATE_GENERIC_READ);
 }
 
 UploadBuffer::UploadBuffer(UploadBuffer &&other) noexcept : UploadBuffer() {

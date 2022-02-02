@@ -1,5 +1,7 @@
 #pragma once
+#include "dx12libStd.h"
 #include <d3d12.h>
+#include <wrl.h>
 
 namespace dx12lib {
 

@@ -1,5 +1,6 @@
 #include "RenderTarget.h"
 #include "Texture.h"
+#include "CommandList.h"
 
 namespace dx12lib {
 
@@ -29,7 +30,7 @@ void RenderTarget::resize(uint32 width, uint32 height) {
 }
 
 void RenderTarget::attachTexture(AttachmentPoint point, std::shared_ptr<Texture> pTexture) {
-	if (pTexture == nullptr || pTexture->getResource() == nullptr)
+	if (pTexture == nullptr || pTexture->getD3DResource() == nullptr)
 		return;
 
 	pTexture->resize(_size.x, _size.y);
@@ -104,6 +105,35 @@ DXGI_SAMPLE_DESC RenderTarget::getSampleDesc() const {
 
 D3D12_RECT RenderTarget::getScissiorRect() const {
 	return D3D12_RECT(0, 0, _size.x, _size.y);
+}
+
+void RenderTarget::transitionBarrier(CommandListProxy pCmdList, 
+	D3D12_RESOURCE_STATES state, 
+	UINT subresource /*= D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES */) 
+{
+	for (std::size_t i = 0; i < AttachmentPoint::DepthStencil; ++i) {
+		auto pTexture = getTexture(static_cast<AttachmentPoint>(i));
+		if (pTexture != nullptr) {
+			pCmdList->transitionBarrier(
+				std::static_pointer_cast<IResource>(pTexture),
+				state,
+				subresource
+			);
+		}
+	}
+}
+
+RenderTargetTransitionBarrier::RenderTargetTransitionBarrier(CommandListProxy pCmdList, 
+	std::shared_ptr<RenderTarget> pRenderTarget, 
+	D3D12_RESOURCE_STATES stateBeforce, 
+	D3D12_RESOURCE_STATES stateAfter)
+: _pCmdList(pCmdList), _pRenderTarget(pRenderTarget), _stateBeforce(stateBeforce), _stateAfter(stateAfter)
+{
+	_pRenderTarget->transitionBarrier(_pCmdList, _stateBeforce);
+}
+
+RenderTargetTransitionBarrier::~RenderTargetTransitionBarrier() {
+	_pRenderTarget->transitionBarrier(_pCmdList, _stateAfter);
 }
 
 }

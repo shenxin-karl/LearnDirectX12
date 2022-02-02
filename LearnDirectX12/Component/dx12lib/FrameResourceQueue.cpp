@@ -5,13 +5,7 @@
 namespace dx12lib {
 
 FrameResourceItem::FrameResourceItem(std::weak_ptr<Device> pDevice, D3D12_COMMAND_LIST_TYPE cmdListType)
-: _fence(0), _pDevice(pDevice), _cmdListType(cmdListType)
-{
-	ID3D12Device *pD3DDevice = pDevice.lock()->getD3DDevice();
-	ThrowIfFailed(pD3DDevice->CreateCommandAllocator(
-		cmdListType,
-		IID_PPV_ARGS(&_pCmdListAlloc)
-	));
+: _fence(0), _pDevice(pDevice), _cmdListType(cmdListType) {
 }
 
 uint64 FrameResourceItem::getFence() const noexcept {
@@ -29,7 +23,7 @@ CommandListProxy FrameResourceItem::createCommandListProxy() {
 		_cmdListPool.push(pCmdList);
 		ThrowIfFailed(pCmdList->close());
 	}
-	pCmdList->getD3DCommandList()->Reset(_pCmdListAlloc.Get(), nullptr);
+	pCmdList->reset();
 	return CommandListProxy(pCmdList, weak_from_this());
 }
 
@@ -43,10 +37,6 @@ std::weak_ptr<Device> FrameResourceItem::getDevice() const noexcept {
 
 D3D12_COMMAND_LIST_TYPE FrameResourceItem::getCommandListType() const noexcept {
 	return _cmdListType;
-}
-
-WRL::ComPtr<ID3D12CommandAllocator> FrameResourceItem::getCommandListAllocator() const noexcept {
-	return _pCmdListAlloc;
 }
 
 FrameResourceQueue::FrameResourceQueue(std::weak_ptr<Device> pDevice, D3D12_COMMAND_LIST_TYPE cmdListType)

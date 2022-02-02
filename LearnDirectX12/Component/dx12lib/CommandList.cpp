@@ -3,15 +3,12 @@
 #include "FrameResourceQueue.h"
 #include "RenderTarget.h"
 #include "Texture.h"
+#include "ResourceStateTracker.h"
 
 namespace dx12lib {
 
 ID3D12GraphicsCommandList *CommandList::getD3DCommandList() const noexcept {
 	return _pCommandList.Get();
-}
-
-HRESULT CommandList::close() {
-	return _pCommandList->Close();
 }
 
 void CommandList::setViewports(const D3D12_VIEWPORT &viewport) {
@@ -79,6 +76,44 @@ void CommandList::setRenderTarget(std::shared_ptr<RenderTarget> pRenderTarget) {
 	);
 }
 
+void CommandList::flushResourceBarriers() {
+	_pResourceStateTracker->flushResourceBarriers(shared_from_this());
+}	
+
+void CommandList::transitionBarrier(const IResource &resource, 
+	D3D12_RESOURCE_STATES state, UINT subresource /*= D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES*/, 
+	bool flushBarrier /*= false */) 
+{
+	_pResourceStateTracker->transitionResource(resource, state, subresource);
+	if (flushBarrier)
+		flushResourceBarriers();
+}
+
+void CommandList::transitionBarrier(const IResource *pResource, 
+	D3D12_RESOURCE_STATES state, 
+	UINT subresource /*= D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES*/,
+	bool flushBarrier /*= false */) 
+{
+	transitionBarrier(*pResource, state, subresource, flushBarrier);
+}
+
+void CommandList::transitionBarrier(std::shared_ptr<IResource> pResource, 
+	D3D12_RESOURCE_STATES state, 
+	UINT subresource /*= D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES*/, 
+	bool flushBarrier /*= false */) 
+{
+	transitionBarrier(pResource.get(), state, subresource, flushBarrier);
+}
+
+void CommandList::aliasBarrier(const IResource *pResourceBeforce /*= nullptr*/, 
+	const IResource *pResourceAfter /*= nullptr*/, 
+	bool flushBarrier /*= false */) 
+{
+	_pResourceStateTracker->aliasBarrier(pResourceBeforce, pResourceAfter);
+	if (flushBarrier)
+		flushResourceBarriers();
+}
+
 CommandList::CommandList(std::weak_ptr<FrameResourceItem> pFrameResourceItem) {
 	auto pSharedFrameResourceItem = pFrameResourceItem.lock();
 	_cmdListType = pSharedFrameResourceItem->getCommandListType();
@@ -86,13 +121,41 @@ CommandList::CommandList(std::weak_ptr<FrameResourceItem> pFrameResourceItem) {
 
 	auto pDevice = pSharedFrameResourceItem->getDevice();
 	auto pd3d12Device = pDevice.lock()->getD3DDevice();
+	ThrowIfFailed(pd3d12Device->CreateCommandAllocator(
+		_cmdListType,
+		IID_PPV_ARGS(&_pCmdListAlloc)
+	));
 	ThrowIfFailed(pd3d12Device->CreateCommandList(
 		0,
-		pSharedFrameResourceItem->getCommandListType(),
-		pSharedFrameResourceItem->getCommandListAllocator().Get(),
+		_cmdListType,
+		_pCmdListAlloc.Get(),
 		nullptr,
 		IID_PPV_ARGS(&_pCommandList)
 	));
+
+
+
+	_pResourceStateTracker = std::make_unique<ResourceStateTracker>();
+}
+
+CommandList::~CommandList() {
+}
+
+HRESULT CommandList::close() {
+	flushResourceBarriers();
+	return _pCommandList->Close();
+}
+
+HRESULT CommandList::close(std::shared_ptr<CommandList> pPendingCmdList) {
+	flushResourceBarriers();
+	_pResourceStateTracker->flusePendingResourceBarriers(pPendingCmdList);
+	_pResourceStateTracker->commitFinalResourceStates();
+	return _pCommandList->Close();
+}
+
+void CommandList::reset() {
+	ThrowIfFailed(_pCommandList->Reset(_pCmdListAlloc.Get(), nullptr));
+	_pResourceStateTracker->reset();
 }
 
 }

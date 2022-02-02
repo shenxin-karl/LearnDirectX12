@@ -1,12 +1,13 @@
 #pragma once
 #include "dx12libStd.h"
+#include "CommandListProxy.h"
 #include <array>
 
 namespace dx12lib {
 
 class Texture;
 
-enum class AttachmentPoint {
+enum AttachmentPoint : std::size_t {
 	Color0,
 	Color1,
 	Color2,
@@ -47,9 +48,28 @@ public:
 	DXGI_FORMAT getDepthStencilFormat() const;
 	DXGI_SAMPLE_DESC getSampleDesc() const;
 	D3D12_RECT getScissiorRect() const;
+	void transitionBarrier(CommandListProxy pCmdList, 
+		D3D12_RESOURCE_STATES state, 
+		UINT subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES
+	);
 private:
 	std::array<std::shared_ptr<Texture>, kAttachmentPointSize>  _textures;
 	DX::XMUINT2 _size;
+};
+
+class RenderTargetTransitionBarrier {
+public:
+	RenderTargetTransitionBarrier(CommandListProxy pCmdList, 
+		std::shared_ptr<RenderTarget> pRenderTarget, 
+		D3D12_RESOURCE_STATES stateBeforce,
+		D3D12_RESOURCE_STATES stateAfter
+	);
+	~RenderTargetTransitionBarrier();
+private:
+	CommandListProxy              _pCmdList;
+	std::shared_ptr<RenderTarget> _pRenderTarget;
+	D3D12_RESOURCE_STATES         _stateBeforce;
+	D3D12_RESOURCE_STATES         _stateAfter;
 };
 
 }

@@ -1,4 +1,5 @@
 #include "DefaultBuffer.h"
+#include "ResourceStateTracker.h"
 
 namespace dx12lib {
 
@@ -45,6 +46,8 @@ DefaultBuffer::DefaultBuffer(ID3D12Device *pDevice, ID3D12GraphicsCommandList *p
 		D3D12_RESOURCE_STATE_COPY_DEST,
 		D3D12_RESOURCE_STATE_GENERIC_READ
 	)));
+
+	ResourceStateTracker::addGlobalResourceState(_pDefaultBuffer.Get(), D3D12_RESOURCE_STATE_GENERIC_READ);
 }
 
 DefaultBuffer::DefaultBuffer(DefaultBuffer &&other) noexcept : DefaultBuffer() {

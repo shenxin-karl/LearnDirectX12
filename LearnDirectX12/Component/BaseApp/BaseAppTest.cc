@@ -37,13 +37,20 @@ void TestApp::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	pCmdList->setViewports(pRenderTarget->getViewport());
 	pCmdList->setScissorRects(pRenderTarget->getScissiorRect());
 
-	auto pTexture = pRenderTarget->getTexture(dx12lib::AttachmentPoint::Color0);
-	pTexture->clearColor({ 1.f, std::sin(pGameTimer->getTotalTime()) * 0.5f + 0.5f, 0.f, 1.f });
+	{
+		auto pTexture = pRenderTarget->getTexture(dx12lib::AttachmentPoint::Color0);
+		pTexture->clearColor({ 1.f, std::sin(pGameTimer->getTotalTime()) * 0.5f + 0.5f, 0.f, 1.f });
+		auto pDepthStencil = pRenderTarget->getTexture(dx12lib::AttachmentPoint::DepthStencil);
+		pDepthStencil->clearDepthStencil(1.f, 0);
 
-	auto pDepthStencil = pRenderTarget->getTexture(dx12lib::AttachmentPoint::DepthStencil);
-	pDepthStencil->clearDepthStencil(1.f, 0);
-
-	pCmdList->setRenderTarget(pRenderTarget);
+		dx12lib::RenderTargetTransitionBarrier barrierGuard = {
+			pCmdList,
+			pRenderTarget,
+			D3D12_RESOURCE_STATE_RENDER_TARGET,
+			D3D12_RESOURCE_STATE_PRESENT,
+		};
+		pCmdList->setRenderTarget(pRenderTarget);
+	}
 	pCmdQueue->executeCommandList(pCmdList);
 	pCmdQueue->signal(_pSwapChain);
 }

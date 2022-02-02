@@ -16,6 +16,7 @@ public:
 	operator bool() const;
 	friend bool operator==(const CommandListProxy &lhs, std::nullptr_t);
 	friend bool operator!=(const CommandListProxy &lhs, std::nullptr_t);
+	std::shared_ptr<CommandList> _getCommandList() const;
 private:
 	struct SharedBuffer {
 		std::shared_ptr<CommandList>     _pCmdList;
