@@ -107,12 +107,12 @@ UINT ResourceStateTracker::flusePendingResourceBarriers(std::shared_ptr<CommandL
 	resourceBarriers.reserve(_pendingResourceBarriers.size());
 	for (auto &pendingBarrier : _pendingResourceBarriers) {
 		if (pendingBarrier.Type == D3D12_RESOURCE_BARRIER_TYPE_TRANSITION) {
-			auto &pendingTransition = pendingBarrier.Transition;
+			const auto &pendingTransition = pendingBarrier.Transition;
 			auto iter = _globalResourceState.find(pendingTransition.pResource);
 			if (iter == _globalResourceState.end())
 				continue;
 
-			auto &currResourceState = iter->second;
+			const auto &currResourceState = iter->second;
 			if (pendingTransition.Subresource == D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES &&
 				!currResourceState._subresourceState.empty())
 			{

@@ -151,6 +151,7 @@ void CommandList::close(std::shared_ptr<CommandList> pPendingCmdList) {
 }
 
 void CommandList::reset() {
+	_pCmdListAlloc->Reset();
 	ThrowIfFailed(_pCommandList->Reset(_pCmdListAlloc.Get(), nullptr));
 	_pResourceStateTracker->reset();
 }

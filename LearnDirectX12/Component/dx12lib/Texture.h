@@ -51,7 +51,7 @@ private:
 	DescriptorAllocation                _depthStencilView;
 	DescriptorAllocation                _shaderResourceView;
 	std::weak_ptr<Device>               _pDevice;
-	D3D12_CLEAR_VALUE					_clearValue;
+	D3D12_CLEAR_VALUE                   _clearValue;
 	uint32    _width;
 	uint32    _height;
 	uint32    _depthOrArraySize;

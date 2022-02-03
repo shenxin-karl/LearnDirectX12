@@ -166,7 +166,9 @@ void Texture::initializeClearValue(const D3D12_CLEAR_VALUE *pClearValue) {
 	if (pClearValue != nullptr) {
 		_clearValue = *pClearValue;
 	} else {
+		auto desc = getD3DResource()->GetDesc();
 		std::memset(&_clearValue.Color, 0, sizeof(_clearValue.Color));
+		_clearValue.Format = desc.Format;
 		_clearValue.DepthStencil.Depth = 1.f;
 		_clearValue.DepthStencil.Stencil = 0;
 	}
