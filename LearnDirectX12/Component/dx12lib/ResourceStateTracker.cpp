@@ -116,7 +116,7 @@ UINT ResourceStateTracker::flusePendingResourceBarriers(std::shared_ptr<CommandL
 			if (pendingTransition.Subresource == D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES &&
 				!currResourceState._subresourceState.empty())
 			{
-				for (auto &&[subResource, state]: currResourceState._subresourceState) {
+				for (auto &&[subResource, state] : currResourceState._subresourceState) {
 					if (pendingTransition.StateAfter != state) {
 						auto newBarrier = pendingBarrier;
 						newBarrier.Transition.Subresource = subResource;
@@ -127,7 +127,7 @@ UINT ResourceStateTracker::flusePendingResourceBarriers(std::shared_ptr<CommandL
 			} else {	// Uniform subResource status	
 				if (currResourceState._state != pendingTransition.StateAfter) {
 					auto newBarrier = pendingBarrier;
-					newBarrier.Transition.Subresource = currResourceState._state;
+					newBarrier.Transition.StateBefore = currResourceState._state;
 					resourceBarriers.push_back(newBarrier);
 				}
 			}

@@ -16,7 +16,7 @@ class ThreadSafeQueue {
 public:
 	ThreadSafeQueue() = default;
 
-	ThreadSafeQueue(const ThreadSafeQueue &other) : _queue(other._queue), _mutex(other._mutex) {
+	ThreadSafeQueue(const ThreadSafeQueue &other) : _queue(other._queue) {
 	}
 
 	ThreadSafeQueue(ThreadSafeQueue &&other) noexcept : ThreadSafeQueue() {

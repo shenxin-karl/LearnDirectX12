@@ -47,15 +47,17 @@ SwapChain::SwapChain(std::weak_ptr<Device> pDevice,
 		&sd,
 		&_pSwapChain
 	));
-
-	_pRenderTarget = std::make_shared<RenderTarget>(width, height);
-	resize(width, height);
 }
 
-void SwapChain::resize(uint32 width, uint32 height) {
+void SwapChain::resize(CommandListProxy pCmdList, uint32 width, uint32 height) {
 	if (width == _width && height == _height)
 		return;
 
+	_pDepthStencilBuffer = nullptr;
+	for (auto &pTexture : _pSwapChainBuffer)
+		pTexture = nullptr;
+
+	_pRenderTarget = std::make_shared<RenderTarget>(width, height);
 	_width = std::max(width, uint32(1));
 	_height = std::max(height, uint32(1));
 	DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
@@ -67,7 +69,7 @@ void SwapChain::resize(uint32 width, uint32 height) {
 		swapChainDesc.BufferDesc.Format, 
 		swapChainDesc.Flags
 	));
-	updateBuffer();
+	updateBuffer(pCmdList);
 }
 
 DXGI_FORMAT SwapChain::getRenderTargetFormat() const {
@@ -78,11 +80,10 @@ DXGI_FORMAT SwapChain::getDepthStencilFormat() const {
 	return _depthStendilFormat;
 }
 
-UINT SwapChain::present() {
-	auto errorCode = _pSwapChain->Present(0, 0);
+void SwapChain::present() {
+	ThrowIfFailed(_pSwapChain->Present(0, 0));
 	_currentBackBufferIndex = (_currentBackBufferIndex + 1) % kSwapChainBufferCount;
 	_pRenderTarget->attachTexture(AttachmentPoint::Color0, getCurrentBackBuffer());
-	return errorCode;
 }
 
 std::shared_ptr<RenderTarget> SwapChain::getRenderTarget() const {
@@ -93,12 +94,12 @@ std::shared_ptr<Texture> SwapChain::getCurrentBackBuffer() const {
 	return _pSwapChainBuffer[_currentBackBufferIndex];
 }
 
-void SwapChain::updateBuffer() {
+void SwapChain::updateBuffer(CommandListProxy pCmdList) {
 	for (std::size_t i = 0; i < kSwapChainBufferCount; ++i) {
 		WRL::ComPtr<ID3D12Resource> pBuffer;
 		ThrowIfFailed(_pSwapChain->GetBuffer(static_cast<UINT>(i), IID_PPV_ARGS(&pBuffer)));
 		std::wstring name = L"BackBuffer[";
-		name.append(L"i");
+		name.append(std::to_wstring(i));
 		name.append(L"]");
 		pBuffer->SetName(name.c_str());
 		_pSwapChainBuffer[i] = std::make_shared<Texture>(_pDevice, pBuffer, nullptr);
@@ -121,6 +122,8 @@ void SwapChain::updateBuffer() {
 	optClear.DepthStencil.Depth = 1.f;
 	optClear.DepthStencil.Stencil = 0;
 	_pDepthStencilBuffer = std::make_shared<Texture>(_pDevice, depthStencilDesc, &optClear);
+	_pDepthStencilBuffer->getD3DResource()->SetName(L"DepthStencilBuffer");
+	pCmdList->transitionBarrier(_pDepthStencilBuffer, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
 	_pRenderTarget->attachTexture(AttachmentPoint::Color0, getCurrentBackBuffer());
 	_pRenderTarget->attachTexture(AttachmentPoint::DepthStencil, _pDepthStencilBuffer);

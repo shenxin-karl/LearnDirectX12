@@ -17,6 +17,9 @@ bool BaseApp::initialize() {
 	_pDevice = std::make_shared<dx12lib::Device>(_pAdapter);
 	_pDevice->initialize();
 	_pSwapChain = _pDevice->createSwapChain(_pInputSystem->window->getHWND(), _backBufferFormat, _depthStencilFormat);
+	// first resize
+	auto pCmdQueue = _pDevice->getCommandQueue(dx12lib::CommandQueueType::Direct);
+	pCmdQueue->resize(_width, _height, _pSwapChain);
 	return true;
 }
 
@@ -30,6 +33,7 @@ void BaseApp::tick(std::shared_ptr<GameTimer> pGameTimer) {
 
 void BaseApp::endTick(std::shared_ptr<GameTimer> pGameTimer) {
 	_pInputSystem->endTick(pGameTimer);
+	_pDevice->releaseStaleDescriptor();
 }
 
 void BaseApp::onResize(int width, int height) {

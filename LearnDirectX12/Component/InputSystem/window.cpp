@@ -94,7 +94,10 @@ void Window::beginTick(std::shared_ptr<GameTimer> pGameTimer) {
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
-
+	if (resizeDirty_) {
+		resizeDirty_ = true;
+		resizeCallback_(width_, height_);
+	}
 	if (pGameTimer->oneSecondTrigger()) {
 		std::stringstream sbuf;
 		sbuf << title_ << ' ';
@@ -143,7 +146,7 @@ LRESULT Window::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		GetWindowRect(hwnd, &rect);
 		width_ = rect.right - rect.left;
 		height_ = rect.bottom - rect.top;
-		resizeCallback_(width_, height_);
+		resizeDirty_ = true;
 		break;
 	}
 	case WM_ACTIVATE:
@@ -184,7 +187,7 @@ LRESULT Window::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			paused_ = false;
 			minimized_ = false;
 			maximized_ = true;
-			resizeCallback_(width_, height_);
+			resizeDirty_ = true;
 		} else if (wParam == SIZE_RESTORED) {		// restore for old state
 			if (minimized_) {
 				paused_ = false;
@@ -193,11 +196,11 @@ LRESULT Window::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			} else if (maximized_) {
 				paused_ = false;
 				maximized_ = false;
-				resizeCallback_(width_, height_);
+				resizeDirty_ = true;
 			} else if (resizing_) {
 				break;
 			} else {
-				resizeCallback_(width_, height_);
+				resizeDirty_ = true;
 			}
 		}
 		break;

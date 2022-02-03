@@ -20,7 +20,7 @@ bool operator&(ClearFlag lhs, ClearFlag rhs) {
 }
 
 void Texture::resize(uint32 width, uint32 height, uint32 depthOrArraySize /*= 1*/) {
-	if (_pResource == nullptr) {
+	if (getD3DResource() == nullptr) {
 		assert(false);
 		return;
 	}
@@ -28,23 +28,23 @@ void Texture::resize(uint32 width, uint32 height, uint32 depthOrArraySize /*= 1*
 	if (_width == width && _height == height && _depthOrArraySize == depthOrArraySize)
 		return;
 
-	CD3DX12_RESOURCE_DESC resDesc(_pResource->GetDesc());
+	CD3DX12_RESOURCE_DESC resDesc(getD3DResource()->GetDesc());
 	resDesc.Width = std::max(1u, width);
 	resDesc.Height = std::max(1u, height);
 	resDesc.DepthOrArraySize = depthOrArraySize;
 	resDesc.MipLevels = resDesc.SampleDesc.Count > 1 ? 1 : 0;
 	auto pd3d12Device = _pDevice.lock()->getD3DDevice();
+	WRL::ComPtr<ID3D12Resource> pResource;
 	ThrowIfFailed(pd3d12Device->CreateCommittedResource(
 		RVPtr(CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT)),
 		D3D12_HEAP_FLAG_NONE,
 		&resDesc,
 		D3D12_RESOURCE_STATE_COMMON,
 		&_clearValue,
-		IID_PPV_ARGS(&_pResource)
+		IID_PPV_ARGS(&pResource)
 	));
-
-	ResourceStateTracker::addGlobalResourceState(_pResource.Get(), D3D12_RESOURCE_STATE_COMMON);
-	// todo setName
+	setD3DResource(pResource);
+	checkFeatureSupport(pd3d12Device);
 	createViews();
 }
 
@@ -78,13 +78,9 @@ bool Texture::checkSRVSupport() const noexcept {
 D3D12_RESOURCE_DESC Texture::getResourceDesc() const noexcept {
 	D3D12_RESOURCE_DESC desc;
 	std::memset(&desc, 0, sizeof(desc));
-	if (_pResource != nullptr)
-		desc = _pResource->GetDesc();
+	if (auto pResource = getD3DResource())
+		desc = pResource->GetDesc();
 	return desc;
-}
-
-WRL::ComPtr<ID3D12Resource> Texture::getD3DResource() const {
-	return _pResource;
 }
 
 uint32 Texture::getWidth() const noexcept {
@@ -178,23 +174,24 @@ void Texture::initializeClearValue(const D3D12_CLEAR_VALUE *pClearValue) {
 }
 
 void Texture::createViews() {
-	if (_pResource == nullptr)
+	auto pResource = getD3DResource();
+	if (pResource == nullptr)
 		return;
 
 	auto pSharedDevice = _pDevice.lock();
-	CD3DX12_RESOURCE_DESC desc(_pResource->GetDesc());
+	CD3DX12_RESOURCE_DESC desc(pResource->GetDesc());
 	if ((desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET) != 0 && checkRTVSupport()) {
 		_renderTargetView = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 		pSharedDevice->getD3DDevice()->CreateRenderTargetView(
-			_pResource.Get(), 
-			nullptr, 
+			pResource.Get(),
+			nullptr,
 			_renderTargetView.getCPUHandle()
 		);
 	}
 	if ((desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL) != 0 && checkDSVSupport()) {
 		_depthStencilView = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 		pSharedDevice->getD3DDevice()->CreateDepthStencilView(
-			_pResource.Get(),
+			pResource.Get(),
 			nullptr,
 			_depthStencilView.getCPUHandle()
 		);
@@ -202,7 +199,7 @@ void Texture::createViews() {
 	if ((desc.Flags & D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE) != 0 && checkSRVSupport()) {
 		_shaderResourceView = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 		pSharedDevice->getD3DDevice()->CreateShaderResourceView(
-			_pResource.Get(),
+			pResource.Get(),
 			nullptr,
 			_shaderResourceView.getCPUHandle()
 		);

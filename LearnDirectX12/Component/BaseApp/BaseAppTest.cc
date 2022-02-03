@@ -25,11 +25,13 @@ TestApp::TestApp() {
 }
 
 void TestApp::beginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
+	com::BaseApp::beginTick(pGameTimer);
 	auto pCmdQueue = _pDevice->getCommandQueue(dx12lib::CommandQueueType::Direct);
 	pCmdQueue->newFrame();
 }
 
 void TestApp::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
+	com::BaseApp::tick(pGameTimer);
 	auto pCmdQueue = _pDevice->getCommandQueue(dx12lib::CommandQueueType::Direct);
 	auto pCmdList = pCmdQueue->createCommandListProxy();
 	auto pRenderTarget = _pSwapChain->getRenderTarget();

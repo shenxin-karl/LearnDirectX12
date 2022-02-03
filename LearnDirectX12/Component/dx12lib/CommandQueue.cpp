@@ -35,10 +35,9 @@ ID3D12CommandQueue *CommandQueue::getD3D12CommandQueue() const {
 }
 
 uint64 CommandQueue::signal(std::shared_ptr<SwapChain> pSwapChain) {
-	ThrowIfFailed(pSwapChain->present());
-	auto fence = ++_fenceValue;
-	_pCommandQueue->Signal(_pFence.Get(), fence);
-	return fence;
+	pSwapChain->present();
+	_pCommandQueue->Signal(_pFence.Get(), _fenceValue);
+	return _fenceValue;
 }
 
 void CommandQueue::executeCommandList(CommandListProxy pCommandList) {
@@ -57,12 +56,10 @@ void CommandQueue::executeCommandList(const std::vector<CommandListProxy> &cmdLi
 		if (hashset.find(pD3DCmdList) != hashset.end())
 			continue;
 		hashset.insert(pD3DCmdList);
-		if (auto *pD3DGraphicsCmdList = dynamic_cast<ID3D12GraphicsCommandList *>(pD3DCmdList)) {
-			CommandListProxy pPendingCmdList = createCommandListProxy();
-			pCmdList->close(pPendingCmdList._getCommandList());
-			pPendingCmdList->close();
-			lists.push_back(pPendingCmdList->getD3DCommandList());
-		}
+		CommandListProxy pPendingCmdList = createCommandListProxy();
+		pCmdList->close(pPendingCmdList._getCommandList());
+		pPendingCmdList->close();
+		lists.push_back(pPendingCmdList->getD3DCommandList());
 		lists.push_back(pD3DCmdList);
 	}
 	_pCommandQueue->ExecuteCommandLists(static_cast<UINT>(lists.size()), lists.data());
@@ -100,13 +97,19 @@ CommandListProxy CommandQueue::createCommandListProxy() {
 }
 
 void CommandQueue::newFrame() {
-	waitForFenceValue(_fenceValue);
+	auto pCurrentFrameResourceItem = _pFrameResourceQueue->getCurrentFrameResourceItem();
+	waitForFenceValue(pCurrentFrameResourceItem->getFence());
+	++_fenceValue;
 	_pFrameResourceQueue->newFrame(_fenceValue);
 }
 
 void CommandQueue::resize(uint32 width, uint32 height, std::shared_ptr<SwapChain> pSwapChain) {
+	waitForFenceValue(_fenceValue);
 	newFrame();
-	pSwapChain->resize(width, height);
+	auto pCmdList = createCommandListProxy();
+	pSwapChain->resize(pCmdList, width, height);
+	executeCommandList(pCmdList);
+	_pCommandQueue->Signal(_pFence.Get(), _fenceValue);
 	waitForFenceValue(_fenceValue);
 }
 

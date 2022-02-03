@@ -1,12 +1,8 @@
 #pragma once
 #include "dx12libStd.h"
+#include "CommandListProxy.h"
 
 namespace dx12lib {
-
-class Device;
-class CommandQueue;
-class Texture;
-class RenderTarget;
 
 class SwapChain {
 public:
@@ -15,14 +11,14 @@ public:
 		DXGI_FORMAT backBufferFormat,
 		DXGI_FORMAT depthStencilFormat
 	);
-	void resize(uint32 width, uint32 height);
+	void resize(CommandListProxy pCmdList, uint32 width, uint32 height);
 	DXGI_FORMAT getRenderTargetFormat() const;
 	DXGI_FORMAT getDepthStencilFormat() const;
-	UINT present();
+	void present();
 	std::shared_ptr<RenderTarget> getRenderTarget() const;
 private:
 	std::shared_ptr<Texture> getCurrentBackBuffer() const;
-	void updateBuffer();
+	void updateBuffer(CommandListProxy pCmdList);
 private:
 	HWND                          _hwnd;
 	uint32	                      _width;

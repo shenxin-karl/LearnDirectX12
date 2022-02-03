@@ -21,14 +21,14 @@ CommandListProxy FrameResourceItem::createCommandListProxy() {
 	if (!_availableCmdList.tryPop(pCmdList)) {
 		pCmdList = std::make_shared<CommandList>(weak_from_this());
 		_cmdListPool.push(pCmdList);
-		ThrowIfFailed(pCmdList->close());
+		pCmdList->close();
 	}
 	pCmdList->reset();
 	return CommandListProxy(pCmdList, weak_from_this());
 }
 
 void FrameResourceItem::releaseCommandList(std::shared_ptr<CommandList> pCommandList) {
-	_availableCmdList.push(pCommandList);
+	//_availableCmdList.push(pCommandList);
 }
 
 std::weak_ptr<Device> FrameResourceItem::getDevice() const noexcept {
@@ -37,6 +37,11 @@ std::weak_ptr<Device> FrameResourceItem::getDevice() const noexcept {
 
 D3D12_COMMAND_LIST_TYPE FrameResourceItem::getCommandListType() const noexcept {
 	return _cmdListType;
+}
+
+void FrameResourceItem::newFrame(uint64 fence) {
+	_availableCmdList = _cmdListPool;
+	setFence(fence);
 }
 
 FrameResourceQueue::FrameResourceQueue(std::weak_ptr<Device> pDevice, D3D12_COMMAND_LIST_TYPE cmdListType)
@@ -56,8 +61,12 @@ uint32 FrameResourceQueue::getMaxFrameResourceCount() const noexcept {
 }
 
 void FrameResourceQueue::newFrame(uint64 fence) {
-	_frameResourceQueue[_currentFrameResourceIndex]->setFence(fence);
 	_currentFrameResourceIndex = (_currentFrameResourceIndex + 1) % _frameResourceItemCount;
+	_frameResourceQueue[_currentFrameResourceIndex]->newFrame(fence);
+}
+
+std::shared_ptr<FrameResourceItem> FrameResourceQueue::getCurrentFrameResourceItem() const {
+	return _frameResourceQueue[_currentFrameResourceIndex];
 }
 
 }

@@ -1,5 +1,6 @@
 #include "Device.h"
 #include "IResource.h"
+#include "ResourceStateTracker.h"
 
 namespace dx12lib {
 
@@ -12,15 +13,25 @@ Resource::Resource(ID3D12Device *pDevice, const D3D12_RESOURCE_DESC &desc, const
 		pClearValue,
 		IID_PPV_ARGS(&_pResource)
 	));
+	ResourceStateTracker::addGlobalResourceState(_pResource.Get(), D3D12_RESOURCE_STATE_COMMON);
 	checkFeatureSupport(pDevice);
 }
 
-Resource::Resource(ID3D12Device *pDevice, WRL::ComPtr<ID3D12Resource> pResource) : _pResource(pResource) {
+Resource::Resource(ID3D12Device *pDevice, WRL::ComPtr<ID3D12Resource> pResource, D3D12_RESOURCE_STATES state) 
+: _pResource(pResource) 
+{
+	ResourceStateTracker::addGlobalResourceState(_pResource.Get(), state);
 	checkFeatureSupport(pDevice);
 }
 
 WRL::ComPtr<ID3D12Resource> Resource::getD3DResource() const {
 	return _pResource;
+}
+
+void Resource::setD3DResource(WRL::ComPtr<ID3D12Resource> pResource, D3D12_RESOURCE_STATES state) {
+	ResourceStateTracker::removeGlobalResourceState(_pResource.Get());
+	_pResource = pResource;
+	ResourceStateTracker::addGlobalResourceState(pResource.Get(), state);
 }
 
 void Resource::checkFeatureSupport(ID3D12Device *pDevice) {
@@ -35,6 +46,10 @@ void Resource::checkFeatureSupport(ID3D12Device *pDevice) {
 
 bool Resource::checkFormatSupport(D3D12_FORMAT_SUPPORT1 formatSupport) const {
 	return _formatSupport.Support1 & formatSupport;
+}
+
+Resource::~Resource() {
+	ResourceStateTracker::removeGlobalResourceState(_pResource.Get());
 }
 
 }

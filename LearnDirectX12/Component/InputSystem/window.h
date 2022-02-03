@@ -45,11 +45,12 @@ private:
 	std::function<void(int x, int y)>				resizeCallback_;
 	std::shared_ptr<GameTimer>						pGameTimer_;
 public:
-	bool paused_ = false;
-	bool minimized_ = false;
-	bool maximized_ = false;
-	bool resizing_ = false;
+	bool paused_          = false;
+	bool minimized_       = false;
+	bool maximized_       = false;
+	bool resizing_        = false;
 	bool fullScreenState_ = false;
+	bool resizeDirty_     = false;
 };
 
 class Window::WindowClass {

@@ -31,7 +31,6 @@ public:
 	bool checkDSVSupport() const noexcept;
 	bool checkSRVSupport() const noexcept;
 	D3D12_RESOURCE_DESC getResourceDesc() const noexcept;
-	WRL::ComPtr<ID3D12Resource> getD3DResource() const;
 	uint32 getWidth() const noexcept;
 	uint32 getHeight() const noexcept;
 	uint32 getDepthOrArraySize() const noexcept;

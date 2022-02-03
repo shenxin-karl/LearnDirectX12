@@ -20,6 +20,7 @@ public:
 	void releaseCommandList(std::shared_ptr<CommandList> pCommandList);
 	std::weak_ptr<Device> getDevice() const noexcept;
 	D3D12_COMMAND_LIST_TYPE getCommandListType() const noexcept;
+	void newFrame(uint64 fence);
 private:
 	uint64                                     _fence = 0;
 	D3D12_COMMAND_LIST_TYPE                    _cmdListType;
@@ -34,6 +35,7 @@ public:
 	CommandListProxy createCommandListProxy();
 	uint32 getMaxFrameResourceCount() const noexcept;
 	void newFrame(uint64 fence);
+	std::shared_ptr<FrameResourceItem> getCurrentFrameResourceItem() const;
 private:
 	uint32 _currentFrameResourceIndex;
 	uint32 _frameResourceItemCount;

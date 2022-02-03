@@ -38,8 +38,8 @@ public:
 private:
 	friend class CommandQueue;
 	friend class FrameResourceItem;
-	HRESULT close();
-	HRESULT close(std::shared_ptr<CommandList> pPendingCmdList);
+	void close();
+	void close(std::shared_ptr<CommandList> pPendingCmdList);
 	void reset();
 private:
 	D3D12_COMMAND_LIST_TYPE                 _cmdListType;

@@ -132,25 +132,22 @@ CommandList::CommandList(std::weak_ptr<FrameResourceItem> pFrameResourceItem) {
 		nullptr,
 		IID_PPV_ARGS(&_pCommandList)
 	));
-
-
-
 	_pResourceStateTracker = std::make_unique<ResourceStateTracker>();
 }
 
 CommandList::~CommandList() {
 }
 
-HRESULT CommandList::close() {
+void CommandList::close() {
 	flushResourceBarriers();
-	return _pCommandList->Close();
+	ThrowIfFailed(_pCommandList->Close());
 }
 
-HRESULT CommandList::close(std::shared_ptr<CommandList> pPendingCmdList) {
+void CommandList::close(std::shared_ptr<CommandList> pPendingCmdList) {
 	flushResourceBarriers();
 	_pResourceStateTracker->flusePendingResourceBarriers(pPendingCmdList);
 	_pResourceStateTracker->commitFinalResourceStates();
-	return _pCommandList->Close();
+	ThrowIfFailed(_pCommandList->Close());
 }
 
 void CommandList::reset() {
