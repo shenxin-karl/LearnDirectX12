@@ -7,10 +7,10 @@
 
 namespace com {
 
-bool BaseApp::initialize() {
+void BaseApp::initialize() {
 	_pInputSystem = std::make_unique<InputSystem>(_title, _width, _height);
 	_pInputSystem->window->setResizeCallback([&](int width, int height) {
-		onResize(width, height);
+		resize(width, height);
 	});
 
 	_pAdapter = std::make_shared<dx12lib::Adapter>();
@@ -20,24 +20,38 @@ bool BaseApp::initialize() {
 	// first resize
 	auto pCmdQueue = _pDevice->getCommandQueue(dx12lib::CommandQueueType::Direct);
 	pCmdQueue->resize(_width, _height, _pSwapChain);
-	return true;
+	onInitialize();
 }
 
 void BaseApp::beginTick(std::shared_ptr<GameTimer> pGameTimer) {
 	_pInputSystem->beginTick(pGameTimer);
+	if (_pInputSystem->window->isPause()) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(1000.f / 60.f)));
+		return;
+	}
+
+	onBeginTick(pGameTimer);
 }
 
 void BaseApp::tick(std::shared_ptr<GameTimer> pGameTimer) {
 	_pInputSystem->tick(pGameTimer);
+	if (_pInputSystem->window->isPause())
+		return;
+
+	onTick(pGameTimer);
 }
 
 void BaseApp::endTick(std::shared_ptr<GameTimer> pGameTimer) {
 	_pInputSystem->endTick(pGameTimer);
+	if (_pInputSystem->window->isPause())
+		return;
+
 	_pDevice->releaseStaleDescriptor();
+	onEndTick(pGameTimer);
 }
 
-void BaseApp::onResize(int width, int height) {
-	if (width == _width || height == _height)
+void BaseApp::resize(int width, int height) {
+	if (width == _width || height == _height || width == 0 || height == 0)
 		return;
 
 	_width = width;

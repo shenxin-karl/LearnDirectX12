@@ -20,12 +20,18 @@ public:
 	BaseApp &operator=(const BaseApp &) = delete;
 	virtual ~BaseApp() = default;
 
-	virtual bool initialize();
-	virtual void beginTick(std::shared_ptr<GameTimer> pGameTimer) override;
-	virtual void tick(std::shared_ptr<GameTimer> pGameTimer) override;
-	virtual void endTick(std::shared_ptr<GameTimer> pGameTimer) override;
-	virtual void onResize(int width, int height);
+	virtual void initialize() override final;
+	virtual void beginTick(std::shared_ptr<GameTimer> pGameTimer) override final;
+	virtual void tick(std::shared_ptr<GameTimer> pGameTimer) override final;
+	virtual void endTick(std::shared_ptr<GameTimer> pGameTimer) override final;
+	virtual void resize(int width, int height);
 	bool isRuning() const;
+protected:
+	virtual void onInitialize() {}
+	virtual void onBeginTick(std::shared_ptr<GameTimer> pGameTimer) {}
+	virtual void onTick(std::shared_ptr<GameTimer> pGameTimer) {}
+	virtual void onEndTick(std::shared_ptr<GameTimer> pGameTimer) {}
+	virtual void onResize(int width, int height) {}
 protected:
 	int _width = 800;
 	int _height = 600;

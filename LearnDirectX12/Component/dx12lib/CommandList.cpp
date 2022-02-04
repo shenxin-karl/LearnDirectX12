@@ -46,6 +46,7 @@ void CommandList::setRenderTarget(std::shared_ptr<RenderTarget> pRenderTarget) {
 				0,
 				nullptr
 			);
+			pTexture->setClearFlag(ClearFlag::None);
 		}
 		renderTargetViews.push_back(pTexture->getRenderTargetView());
 	}
@@ -65,6 +66,7 @@ void CommandList::setRenderTarget(std::shared_ptr<RenderTarget> pRenderTarget) {
 			0,
 			nullptr
 		);
+		pDepthStencilTexture->setClearFlag(ClearFlag::None);
 		depthStencilViews.push_back(pDepthStencilTexture->getDepthStencilView());
 	}
 
