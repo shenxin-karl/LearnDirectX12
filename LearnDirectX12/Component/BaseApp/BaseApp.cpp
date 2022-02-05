@@ -9,6 +9,7 @@ namespace com {
 
 void BaseApp::initialize() {
 	_pInputSystem = std::make_unique<InputSystem>(_title, _width, _height);
+	_pInputSystem->initialize();
 	_pInputSystem->window->setResizeCallback([&](int width, int height) {
 		resize(width, height);
 	});
@@ -21,6 +22,12 @@ void BaseApp::initialize() {
 	auto pCmdQueue = _pDevice->getCommandQueue(dx12lib::CommandQueueType::Direct);
 	pCmdQueue->resize(_width, _height, _pSwapChain);
 	onInitialize();
+}
+
+void BaseApp::destory() {
+	onDistory();
+	_pInputSystem->destory();
+	_pDevice->destory();
 }
 
 void BaseApp::beginTick(std::shared_ptr<GameTimer> pGameTimer) {
@@ -58,6 +65,7 @@ void BaseApp::resize(int width, int height) {
 	_height = height;
 	auto pCmdQueue = _pDevice->getCommandQueue(dx12lib::CommandQueueType::Direct);
 	pCmdQueue->resize(width, height, _pSwapChain);
+	onResize(width, height);
 }
 
 bool BaseApp::isRuning() const {

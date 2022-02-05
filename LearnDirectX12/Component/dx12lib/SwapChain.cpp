@@ -15,7 +15,7 @@ SwapChain::SwapChain(std::weak_ptr<Device> pDevice,
 		DXGI_FORMAT depthStencilFormat)
 : _pDevice(pDevice), _renderTargetFormat(backBufferFormat)
 , _depthStendilFormat(depthStencilFormat), _hwnd(hwnd)
-, _currentBackBufferIndex(0)
+, _currentBackBufferIndex(0), _width(0), _height(0)
 {
 	RECT windowRect;
 	::GetClientRect(hwnd, &windowRect);
@@ -57,9 +57,11 @@ void SwapChain::resize(CommandListProxy pCmdList, uint32 width, uint32 height) {
 	for (auto &pTexture : _pSwapChainBuffer)
 		pTexture = nullptr;
 
+	_currentBackBufferIndex = 0;
 	_pRenderTarget = std::make_shared<RenderTarget>(width, height);
 	_width = std::max(width, uint32(1));
 	_height = std::max(height, uint32(1));
+
 	DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
 	ThrowIfFailed(_pSwapChain->GetDesc(&swapChainDesc));
 	ThrowIfFailed(_pSwapChain->ResizeBuffers(

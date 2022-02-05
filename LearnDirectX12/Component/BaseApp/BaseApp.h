@@ -18,16 +18,18 @@ public:
 	BaseApp() = default;
 	BaseApp(const BaseApp &) = delete;
 	BaseApp &operator=(const BaseApp &) = delete;
-	virtual ~BaseApp() = default;
+	virtual ~BaseApp() override = default;
 
-	virtual void initialize() override final;
-	virtual void beginTick(std::shared_ptr<GameTimer> pGameTimer) override final;
-	virtual void tick(std::shared_ptr<GameTimer> pGameTimer) override final;
-	virtual void endTick(std::shared_ptr<GameTimer> pGameTimer) override final;
+	virtual void initialize() override;
+	virtual void destory() override;
+	virtual void beginTick(std::shared_ptr<GameTimer> pGameTimer) override;
+	virtual void tick(std::shared_ptr<GameTimer> pGameTimer) override;
+	virtual void endTick(std::shared_ptr<GameTimer> pGameTimer) override;
 	virtual void resize(int width, int height);
 	bool isRuning() const;
 protected:
 	virtual void onInitialize() {}
+	virtual void onDistory() {}
 	virtual void onBeginTick(std::shared_ptr<GameTimer> pGameTimer) {}
 	virtual void onTick(std::shared_ptr<GameTimer> pGameTimer) {}
 	virtual void onEndTick(std::shared_ptr<GameTimer> pGameTimer) {}

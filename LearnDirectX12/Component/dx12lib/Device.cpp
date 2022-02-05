@@ -53,6 +53,11 @@ void Device::initialize() {
 	}
 }
 
+void Device::destory() {
+	for (auto &pCmdQueue : _pCommandQueueList)
+		pCmdQueue->flushCommandQueue();
+}
+
 std::shared_ptr<SwapChain> Device::createSwapChain(
 		HWND hwnd,
 		DXGI_FORMAT backBufferFormat,

@@ -12,6 +12,7 @@ public:
 	Device &operator=(const Device &) = delete;
 	~Device();
 	void initialize();
+	void destory();
 
 	std::shared_ptr<SwapChain> createSwapChain(
 		HWND hwnd,

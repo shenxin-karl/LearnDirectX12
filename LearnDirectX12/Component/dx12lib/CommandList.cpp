@@ -29,7 +29,7 @@ void CommandList::setScissorRects(const std::vector<D3D12_RECT> &rects) {
 
 void CommandList::setRenderTarget(std::shared_ptr<RenderTarget> pRenderTarget) {
 	assert(pRenderTarget != nullptr);
-
+	
 	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> renderTargetViews;
 	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> depthStencilViews;
 	for (std::size_t i = 0; i < static_cast<std::size_t>(AttachmentPoint::DepthStencil); ++i) {
@@ -146,8 +146,8 @@ void CommandList::close() {
 }
 
 void CommandList::close(std::shared_ptr<CommandList> pPendingCmdList) {
-	flushResourceBarriers();
 	_pResourceStateTracker->flusePendingResourceBarriers(pPendingCmdList);
+	flushResourceBarriers();
 	_pResourceStateTracker->commitFinalResourceStates();
 	ThrowIfFailed(_pCommandList->Close());
 }

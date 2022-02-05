@@ -34,17 +34,17 @@ void TestApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	pCmdList->setScissorRects(pRenderTarget->getScissiorRect());
 
 	{
-		auto pTexture = pRenderTarget->getTexture(dx12lib::AttachmentPoint::Color0);
-		pTexture->clearColor({ 1.f, std::sin(pGameTimer->getTotalTime()) * 0.5f + 0.5f, 0.f, 1.f });
-		auto pDepthStencil = pRenderTarget->getTexture(dx12lib::AttachmentPoint::DepthStencil);
-		pDepthStencil->clearDepthStencil(1.f, 0);
-
 		dx12lib::RenderTargetTransitionBarrier barrierGuard = {
 			pCmdList,
 			pRenderTarget,
 			D3D12_RESOURCE_STATE_RENDER_TARGET,
 			D3D12_RESOURCE_STATE_PRESENT,
 		};
+
+		auto pTexture = pRenderTarget->getTexture(dx12lib::AttachmentPoint::Color0);
+		pTexture->clearColor({ 1.f, std::sin(pGameTimer->getTotalTime()) * 0.5f + 0.5f, 0.f, 1.f });
+		auto pDepthStencil = pRenderTarget->getTexture(dx12lib::AttachmentPoint::DepthStencil);
+		pDepthStencil->clearDepthStencil(1.f, 0);
 		pCmdList->setRenderTarget(pRenderTarget);
 	}
 	pCmdQueue->executeCommandList(pCmdList);
@@ -62,6 +62,7 @@ int main() {
 			app.tick(pGameTimer);
 			app.endTick(pGameTimer);
 		}
+		app.destory();
 	} catch (const com::ExceptionBase &e) {
 		std::cerr << e.what() << std::endl;
 		OutputDebugStringA(e.what());

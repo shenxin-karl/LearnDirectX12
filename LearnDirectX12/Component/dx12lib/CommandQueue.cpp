@@ -35,8 +35,8 @@ ID3D12CommandQueue *CommandQueue::getD3D12CommandQueue() const {
 }
 
 uint64 CommandQueue::signal(std::shared_ptr<SwapChain> pSwapChain) {
+	ThrowIfFailed(_pCommandQueue->Signal(_pFence.Get(), _fenceValue));
 	pSwapChain->present();
-	_pCommandQueue->Signal(_pFence.Get(), _fenceValue);
 	return _fenceValue;
 }
 
@@ -71,7 +71,8 @@ bool CommandQueue::isFenceComplete(uint64 fenceValue) const noexcept {
 }
 
 void CommandQueue::waitForFenceValue(uint64 fenceValue) {
-	if (fenceValue != 0 && _pFence->GetCompletedValue() < fenceValue) {
+	auto completedValue = _pFence->GetCompletedValue();
+	if (fenceValue != 0 && completedValue < fenceValue) {
 		HANDLE event = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
 		assert(event != nullptr);
 		ThrowIfFailed(_pFence->SetEventOnCompletion(fenceValue, event));
@@ -104,12 +105,18 @@ void CommandQueue::newFrame() {
 }
 
 void CommandQueue::resize(uint32 width, uint32 height, std::shared_ptr<SwapChain> pSwapChain) {
-	waitForFenceValue(_fenceValue);
+	flushCommandQueue();
 	newFrame();
 	auto pCmdList = createCommandListProxy();
 	pSwapChain->resize(pCmdList, width, height);
 	executeCommandList(pCmdList);
-	_pCommandQueue->Signal(_pFence.Get(), _fenceValue);
+	signal(pSwapChain);
+	flushCommandQueue();
+}
+
+void CommandQueue::flushCommandQueue() {
+	++_fenceValue;
+	ThrowIfFailed(_pCommandQueue->Signal(_pFence.Get(), _fenceValue));
 	waitForFenceValue(_fenceValue);
 }
 

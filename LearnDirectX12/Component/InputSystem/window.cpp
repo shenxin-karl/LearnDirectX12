@@ -95,7 +95,7 @@ void Window::beginTick(std::shared_ptr<GameTimer> pGameTimer) {
 		DispatchMessage(&msg);
 	}
 	if (resizeDirty_) {
-		resizeDirty_ = true;
+		resizeDirty_ = false;
 		resizeCallback_(width_, height_);
 	}
 	if (pGameTimer->oneSecondTrigger()) {
