@@ -29,7 +29,6 @@ void TestApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pCmdQueue = _pDevice->getCommandQueue(dx12lib::CommandQueueType::Direct);
 	auto pCmdList = pCmdQueue->createCommandListProxy();
 	auto pRenderTarget = _pSwapChain->getRenderTarget();
-
 	pCmdList->setViewports(pRenderTarget->getViewport());
 	pCmdList->setScissorRects(pRenderTarget->getScissiorRect());
 

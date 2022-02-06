@@ -21,6 +21,8 @@
 #include <mutex>
 #include <dxgi.h>
 #include <DirectXMath.h>
+#include <bitset>
+#include <functional>
 
 
 namespace dx12lib {
@@ -36,6 +38,7 @@ using int8 = std::int8_t;
 using in16 = std::int16_t;
 using int32 = std::int32_t;
 using int64 = std::int64_t;
+using size_t = std::size_t;
 
 inline void _ThrowIfFailedImpl(const char *file, int line, HRESULT hr) {
 	if (FAILED(hr)) {
@@ -76,6 +79,9 @@ enum class CommandQueueType {
 constexpr static std::size_t kComandQueueTypeCount = 3;
 constexpr static std::size_t kSwapChainBufferCount = 2;
 constexpr static std::size_t kFrameResourceCount = 3;
+constexpr static std::size_t kMaxDescriptorTables = 32;
+constexpr static std::size_t kDynamicDescriptorPerHeap = 32;
+constexpr static std::size_t kDynamicDescriptorHeapCount = 2;
 
 class Adapter;
 class CommandList;
@@ -97,5 +103,7 @@ class Texture;
 class UploadBuffer;
 class ResourceStateTracker;
 class IResource;
+class DynamicDescriptorHeap;
+class RootSignature;
 
 }

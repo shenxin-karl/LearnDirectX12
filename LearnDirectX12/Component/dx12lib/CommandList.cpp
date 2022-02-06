@@ -4,6 +4,7 @@
 #include "RenderTarget.h"
 #include "Texture.h"
 #include "ResourceStateTracker.h"
+#include "DynamicDescriptorHeap.h"
 
 namespace dx12lib {
 
@@ -134,7 +135,16 @@ CommandList::CommandList(std::weak_ptr<FrameResourceItem> pFrameResourceItem) {
 		nullptr,
 		IID_PPV_ARGS(&_pCommandList)
 	));
+
 	_pResourceStateTracker = std::make_unique<ResourceStateTracker>();
+
+	for (std::size_t i = 0; i < D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES; ++i) {
+		_pDynamicDescriptorHeaps[i] = std::make_unique<DynamicDescriptorHeap>(
+			_pDevice,
+			static_cast<D3D12_DESCRIPTOR_HEAP_TYPE>(i),
+			kDynamicDescriptorPerHeap
+		);
+	}
 }
 
 CommandList::~CommandList() {
@@ -155,7 +165,11 @@ void CommandList::close(std::shared_ptr<CommandList> pPendingCmdList) {
 void CommandList::reset() {
 	_pCmdListAlloc->Reset();
 	ThrowIfFailed(_pCommandList->Reset(_pCmdListAlloc.Get(), nullptr));
+
 	_pResourceStateTracker->reset();
+
+	for (auto &pDynamicDescriptorHeap : _pDynamicDescriptorHeaps)
+		pDynamicDescriptorHeap->reset();
 }
 
 }

@@ -47,6 +47,7 @@ private:
 	WRL::ComPtr<ID3D12GraphicsCommandList>  _pCommandList;
 	WRL::ComPtr<ID3D12CommandAllocator>     _pCmdListAlloc;
 	std::unique_ptr<ResourceStateTracker>   _pResourceStateTracker;
+	std::unique_ptr<DynamicDescriptorHeap>  _pDynamicDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES];
 };
 
 }
