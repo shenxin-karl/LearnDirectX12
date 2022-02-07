@@ -28,7 +28,7 @@ public:
 	void free();
 private:
 	friend class DescriptorAllocatorPage;
-	void clear() noexcept;
+	void reset() noexcept;
 private:
 	uint32 _numHandle;						 
 	uint32 _handleSize;						 

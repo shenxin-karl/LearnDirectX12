@@ -60,17 +60,16 @@ DescriptorAllocation DescriptorAllocatorPage::allocate(uint32 numDescriptor) {
 		return {};
 
 	auto &&[size, offsetIt] = *iter;
-	UINT offset = offsetIt->first;
+	UINT offset = static_cast<UINT>(offsetIt->first);
 	auto descriptor = _baseDescriptor;
 	descriptor.Offset(offset, _descriptorHandleIncrementSize);
 	DescriptorAllocation ret = {
 		static_cast<D3D12_CPU_DESCRIPTOR_HANDLE>(descriptor),
 		numDescriptor,
 		_descriptorHandleIncrementSize,
-		this->shared_from_this(),
+		shared_from_this(),
 	};
 	
-	// 拆开内存块
 	_freeListByOffset.erase(offset);
 	_freeListBySize.erase(iter);
 	uint32 newSize = size - numDescriptor;
@@ -89,7 +88,7 @@ void DescriptorAllocatorPage::free(DescriptorAllocation &&allocation) {
 		computeOffset(temp.getCPUHandle()),
 		temp.getNumHandle(),
 	};
-	temp.clear();
+	temp.reset();
 	std::lock_guard lock(_allocationMutex);
 	_staleAllocation.push(staleInfo);
 }

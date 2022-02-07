@@ -70,7 +70,7 @@ void DescriptorAllocation::free() {
 	_pPage->free(std::move(*this));
 }
 
-void DescriptorAllocation::clear() noexcept {
+void DescriptorAllocation::reset() noexcept {
 	_numHandle = 0;
 	_handleSize = 0;
 	_baseHandle = D3D12_CPU_DESCRIPTOR_HANDLE{ 0 };
