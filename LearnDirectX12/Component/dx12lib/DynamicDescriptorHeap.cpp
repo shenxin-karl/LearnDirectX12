@@ -25,11 +25,12 @@ void DynamicDescriptorHeap::parseRootSignature(std::shared_ptr<RootSignature> pR
 		if (!descriptorTableBitMask.test(i))
 			continue;
 		
-		uint32 numDescriptors = pRootSignature->getNumDescriptors(i);
+		uint32 numDescriptors = pRootSignature->getNumDescriptorsByType(_heapType, i);
 		DescriptorTableCache &descriptorTableCache = _descriptorTableCache[i];
 		descriptorTableCache._numDescriptors = numDescriptors;
 		descriptorTableCache._pBaseHandle = _descriptorHandleCache.data() + currentOffset;
 		currentOffset += numDescriptors;
+		_descriptorTableBitMask.set(i);
 	}
 	/// out of cache range
 	assert(currentOffset < kMaxDescriptorTables);

@@ -72,7 +72,7 @@ DescriptorAllocation DescriptorAllocatorPage::allocate(uint32 numDescriptor) {
 	
 	_freeListByOffset.erase(offset);
 	_freeListBySize.erase(iter);
-	uint32 newSize = size - numDescriptor;
+	uint32 newSize = static_cast<UINT>(size) - numDescriptor;
 	uint32 newOffset = offset + numDescriptor;
 	_numFreeHandle -= numDescriptor;
 	if (newSize > 0)

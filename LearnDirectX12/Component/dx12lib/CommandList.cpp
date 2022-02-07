@@ -138,7 +138,7 @@ CommandList::CommandList(std::weak_ptr<FrameResourceItem> pFrameResourceItem) {
 
 	_pResourceStateTracker = std::make_unique<ResourceStateTracker>();
 
-	for (std::size_t i = 0; i < D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES; ++i) {
+	for (std::size_t i = 0; i < kDynamicDescriptorHeapCount; ++i) {
 		_pDynamicDescriptorHeaps[i] = std::make_unique<DynamicDescriptorHeap>(
 			_pDevice,
 			static_cast<D3D12_DESCRIPTOR_HEAP_TYPE>(i),
