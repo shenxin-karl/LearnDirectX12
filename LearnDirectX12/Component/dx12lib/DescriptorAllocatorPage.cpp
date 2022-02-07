@@ -20,8 +20,6 @@ DescriptorAllocatorPage::DescriptorAllocatorPage(std::weak_ptr<Device> pDevice,
 : _pDevice(pDevice), _heapType(heapType)
 {
 	ID3D12Device *pD3DDevice = pDevice.lock()->getD3DDevice();
-
-
 	auto flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	if (_heapType == D3D12_DESCRIPTOR_HEAP_TYPE_DSV || _heapType == D3D12_DESCRIPTOR_HEAP_TYPE_RTV)
 		flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
@@ -61,8 +59,8 @@ DescriptorAllocation DescriptorAllocatorPage::allocate(uint32 numDescriptor) {
 	if (iter == _freeListBySize.end())
 		return {};
 
-	uint32 size = static_cast<uint32>(iter->first);
-	uint32 offset = static_cast<uint32>(iter->second->first);
+	auto &&[size, offsetIt] = *iter;
+	UINT offset = offsetIt->first;
 	auto descriptor = _baseDescriptor;
 	descriptor.Offset(offset, _descriptorHandleIncrementSize);
 	DescriptorAllocation ret = {
@@ -73,7 +71,7 @@ DescriptorAllocation DescriptorAllocatorPage::allocate(uint32 numDescriptor) {
 	};
 	
 	// 拆开内存块
-	_freeListByOffset.erase(iter->second);
+	_freeListByOffset.erase(offset);
 	_freeListBySize.erase(iter);
 	uint32 newSize = size - numDescriptor;
 	uint32 newOffset = offset + numDescriptor;
@@ -110,9 +108,10 @@ uint32 DescriptorAllocatorPage::computeOffset(D3D12_CPU_DESCRIPTOR_HANDLE handle
 }
 
 void DescriptorAllocatorPage::addNewBlock(std::size_t offset, std::size_t numDescriptor) {
-	auto offsetIt = _freeListByOffset.emplace(offset, FreeBlockInfo{});
-	auto sizeIt = _freeListBySize.emplace(numDescriptor, offsetIt.first);
-	offsetIt.first->second.sizeIter = sizeIt;
+	auto &&[offsetIt, flag] = _freeListByOffset.emplace(offset, FreeBlockInfo{ numDescriptor });
+	auto sizeIt = _freeListBySize.emplace(numDescriptor, offsetIt);
+	offsetIt->second.sizeIter = sizeIt;
+	assert(flag);
 }
 
 void DescriptorAllocatorPage::freeBlock(std::size_t offset, std::size_t numDescriptor) {
