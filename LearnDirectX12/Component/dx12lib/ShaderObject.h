@@ -1,10 +1,39 @@
 #pragma once
 #include "dx12libStd.h"
 
+namespace com {
+class GameTimer;
+}
+
 namespace dx12lib {
+
+template<typename T, typename...Args> requires(std::is_base_of_v<ShaderObject, T>)
+std::shared_ptr<T> createShaderObject(Args&&... args) {
+#define ErrorReturnNullptr(b) do { if (!b) return nullptr; } while (false)
+	try {
+		auto pShaderObject = std::make_shared<T>(std::forward<Args>(args)...);
+		ErrorReturnNullptr(pShaderObject->loadShader());
+		ErrorReturnNullptr(pShaderObject->onBuildInputLayout());
+		ErrorReturnNullptr(pShaderObject->onBuildRootSignature());
+		ErrorReturnNullptr(pShaderObject->onBuildPipelineStateObject());
+		return pShaderObject;
+	} catch (...) {
+		throw;
+	}
+#undef ErrorReturnNullptr
+}
 
 class ShaderObject {
 public:
+	template<typename T, typename...Args>
+	friend std::shared_ptr<T> createShaderObject(Args&&... args);
+// initialize step
+	virtual bool onBuildInputLayout() { return true; }
+	virtual bool onBuildShader() { return true; }
+	virtual bool onBuildRootSignature() { return true; }
+	virtual bool onBuildPipelineStateObject() { return true; }
+protected:
+	bool loadShader();
 	ShaderObject(const std::wstring &shaderFile);
 	ShaderObject(const std::wstring &shaderFile, WRL::ComPtr<ID3DBlob> pShaderCode);
 	ShaderObject(const ShaderObject &) = delete;
