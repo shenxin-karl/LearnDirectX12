@@ -15,6 +15,7 @@ public:
 	void setScissorRects(const std::vector<D3D12_RECT> &rects);
 	void setRenderTarget(std::shared_ptr<RenderTarget> pRenderTarget);
 	void flushResourceBarriers();
+	void setPipelineStateObject(std::shared_ptr<PipelineStateObject> pPso);
 // barrier
 	void transitionBarrier(const IResource &resource, 
 		D3D12_RESOURCE_STATES state,

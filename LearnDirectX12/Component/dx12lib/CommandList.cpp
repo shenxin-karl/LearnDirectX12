@@ -5,6 +5,7 @@
 #include "Texture.h"
 #include "ResourceStateTracker.h"
 #include "DynamicDescriptorHeap.h"
+#include "PipelineStateObject.h"
 
 namespace dx12lib {
 
@@ -82,6 +83,10 @@ void CommandList::setRenderTarget(std::shared_ptr<RenderTarget> pRenderTarget) {
 void CommandList::flushResourceBarriers() {
 	_pResourceStateTracker->flushResourceBarriers(shared_from_this());
 }	
+
+void CommandList::setPipelineStateObject(std::shared_ptr<PipelineStateObject> pPso) {
+	_pCommandList->SetPipelineState(pPso->getPSO().Get());
+}
 
 void CommandList::transitionBarrier(const IResource &resource, 
 	D3D12_RESOURCE_STATES state, UINT subresource /*= D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES*/, 

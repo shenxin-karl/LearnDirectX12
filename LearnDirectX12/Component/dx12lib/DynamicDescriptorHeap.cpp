@@ -16,7 +16,7 @@ DynamicDescriptorHeap::DynamicDescriptorHeap(std::weak_ptr<Device> pDevice,
 
 void DynamicDescriptorHeap::parseRootSignature(std::shared_ptr<RootSignature> pRootSignature) {
 	assert(pRootSignature == nullptr);
-	_staleDescriptorTableBitMask.reset();
+	reset();
 
 	uint32 currentOffset = 0;
 	const auto &rootSignatureDesc = pRootSignature->getRootSignatureDesc();

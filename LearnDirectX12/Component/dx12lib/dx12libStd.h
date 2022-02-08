@@ -23,6 +23,7 @@
 #include <DirectXMath.h>
 #include <bitset>
 #include <functional>
+#include <array>
 
 
 namespace dx12lib {
@@ -105,5 +106,7 @@ class ResourceStateTracker;
 class IResource;
 class DynamicDescriptorHeap;
 class RootSignature;
+class PipelineStateObject;
+class ShaderObject;
 
 }
