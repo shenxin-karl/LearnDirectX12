@@ -1,5 +1,6 @@
 #pragma once
 #include "dx12libStd.h"
+#include "CommandListProxy.h"
 
 namespace com {
 class GameTimer;
@@ -32,19 +33,21 @@ public:
 	virtual bool onBuildShader() { return true; }
 	virtual bool onBuildRootSignature() { return true; }
 	virtual bool onBuildPipelineStateObject() { return true; }
+// do draw
+	virtual void activate(CommandListProxy pCmdList) {}
 protected:
 	bool loadShader();
-	ShaderObject(const std::wstring &shaderFile);
-	ShaderObject(const std::wstring &shaderFile, WRL::ComPtr<ID3DBlob> pShaderCode);
+	ShaderObject(const std::string &shaderFile);
+	ShaderObject(const std::string &shaderFile, WRL::ComPtr<ID3DBlob> pShaderCode);
 	ShaderObject(const ShaderObject &) = delete;
 protected:
 	void compileShader(WRL::ComPtr<ID3DBlob> &pByteCode, 
-		const D3D_SHADER_MACRO *defines, 
 		const std::string &entrypoint,
-		const std::string &target
+		const std::string &target,
+		const D3D_SHADER_MACRO *defines = nullptr
 	);
 protected:
-	std::wstring _shaderFile;
+	std::string _shaderFile;
 	WRL::ComPtr<ID3DBlob> _pShaderCode;
 	WRL::ComPtr<ID3DBlob> _pVSByteCode;
 	WRL::ComPtr<ID3DBlob> _pFSByteCode;
