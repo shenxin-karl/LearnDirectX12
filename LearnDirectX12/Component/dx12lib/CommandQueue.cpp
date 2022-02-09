@@ -57,7 +57,7 @@ void CommandQueue::executeCommandList(const std::vector<CommandListProxy> &cmdLi
 			continue;
 		hashset.insert(pD3DCmdList);
 		CommandListProxy pPendingCmdList = createCommandListProxy();
-		pCmdList->close(pPendingCmdList._getCommandList());
+		pCmdList->close(pPendingCmdList);
 		pPendingCmdList->close();
 		lists.push_back(pPendingCmdList->getD3DCommandList());
 		lists.push_back(pD3DCmdList);

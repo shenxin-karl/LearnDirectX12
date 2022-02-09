@@ -1,14 +1,16 @@
 #include "ConstantBuffer.h"
 #include "UploadBuffer.h"
+#include "Device.h"
 
 namespace dx12lib {
 
 ConstantBuffer::ConstantBuffer() : _bufferSize(0) {
 }
 
-ConstantBuffer::ConstantBuffer(ID3D12Device *pDevice, const void *pData, uint32 sizeInByte) {
+ConstantBuffer::ConstantBuffer(std::weak_ptr<Device> pDevice, const void *pData, uint32 sizeInByte) {
 	_bufferSize = sizeInByte;
-	_pGPUBuffer = std::make_unique<UploadBuffer>(pDevice, 1, sizeInByte, true);
+	_pGPUBuffer = std::make_unique<UploadBuffer>(pDevice.lock()->getD3DDevice(), 1, sizeInByte, true);
+	_CBV = pDevice.lock()->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1);
 }
 
 ConstantBuffer::ConstantBuffer(ConstantBuffer &&other) noexcept : ConstantBuffer() {
@@ -34,6 +36,11 @@ uint32 ConstantBuffer::getConstantBufferSize() const noexcept {
 
 uint32 ConstantBuffer::getConstantAlignedBufferSize() const noexcept {
 	return _pGPUBuffer != nullptr ? _pGPUBuffer->getElementByteSize() : 0;
+}
+
+
+D3D12_CPU_DESCRIPTOR_HANDLE ConstantBuffer::getConstantBufferView() const {
+	return _CBV.getCPUHandle();
 }
 
 bool ConstantBuffer::isEmpty() const noexcept {

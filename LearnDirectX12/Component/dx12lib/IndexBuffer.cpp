@@ -1,21 +1,28 @@
 #include "IndexBuffer.h"
 #include "DefaultBuffer.h"
+#include "Device.h"
+#include "CommandList.h"
 
 namespace dx12lib {
 
 IndexBuffer::IndexBuffer() : _indexFormat(DXGI_FORMAT_UNKNOWN), _indexBufferByteSize(0) {
 }
 
-IndexBuffer::IndexBuffer(ID3D12Device *pDevice, 
-	ID3D12GraphicsCommandList *pCmdList, 
-	const void *pData, 
-	uint32 sizeInByte, 
-	DXGI_FORMAT format) 
+IndexBuffer::IndexBuffer(std::weak_ptr<Device> pDevice,
+	std::shared_ptr<CommandList> pCmdList,
+	const void *pData,
+	uint32 sizeInByte,
+	DXGI_FORMAT format)
 : _indexFormat(format), _indexBufferByteSize(sizeInByte) 
 {
 	ThrowIfFailed(D3DCreateBlob(sizeInByte, &_pCPUBuffer));
 	memcpy(_pCPUBuffer->GetBufferPointer(), pData, sizeInByte);
-	_pGPUBuffer = std::make_unique<DefaultBuffer>(pDevice, pCmdList, pData, sizeInByte);
+	_pGPUBuffer = std::make_unique<DefaultBuffer>(
+		pDevice.lock()->getD3DDevice(), 
+		pCmdList->getD3DCommandList(), 
+		pData, 
+		sizeInByte
+	);
 }
 
 IndexBuffer::IndexBuffer(IndexBuffer &&other) noexcept : IndexBuffer() {

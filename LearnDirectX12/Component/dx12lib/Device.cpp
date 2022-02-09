@@ -7,6 +7,7 @@
 #include "ConstantBuffer.h"
 #include "DescriptorAllocator.h"
 #include "DescriptorAllocation.h"
+#include "PipelineStateObject.h"
 
 namespace dx12lib {
 	
@@ -71,12 +72,6 @@ std::shared_ptr<SwapChain> Device::createSwapChain(
 	);
 }
 
-std::shared_ptr<dx12lib::VertexBuffer> 
-Device::createVertexBuffer(const void *pData, uint32 sizeInByte, uint32 vertexStride) const {
-	// todo
-	return nullptr;
-}
-
 DescriptorAllocation Device::allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32 numDescriptors /*= 1*/) {
 	auto index = static_cast<std::size_t>(type);
 	return _pDescriptorAllocators[index]->allocate(numDescriptors);
@@ -87,9 +82,8 @@ void Device::releaseStaleDescriptor() {
 		pAllocator->releaseStateDescriptors();
 }
 
-std::shared_ptr<dx12lib::PipelineStateObject>
-Device::createPipelineStateObject(const D3D12_GRAPHICS_PIPELINE_STATE_DESC &desc) {
-	return std::make_shared<dx12lib::PipelineStateObject>(weak_from_this());
+std::shared_ptr<PipelineStateObject> Device::createPipelineStateObject(const D3D12_GRAPHICS_PIPELINE_STATE_DESC &desc) {
+	return std::make_shared<PipelineStateObject>(weak_from_this(), desc);
 }
 
 UINT Device::getSampleCount() const {

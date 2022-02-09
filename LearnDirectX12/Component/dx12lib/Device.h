@@ -20,23 +20,6 @@ public:
 		DXGI_FORMAT depthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT
 	) const;
 
-	std::shared_ptr<VertexBuffer> createVertexBuffer(
-		const void *pData,
-		uint32 sizeInByte,
-		uint32 vertexStride
-	) const;
-
-	std::shared_ptr<IndexBuffer> createIndexBuffer(
-		const void *pData,
-		uint32 sizeInByte,
-		DXGI_FORMAT indexFormat
-	) const;
-
-	std::shared_ptr<ConstantBuffer> createConstantBuffer(
-		const void *pData,
-		uint32 sizeInByte
-	) const;
-
 	DescriptorAllocation allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32 numDescriptors = 1);
 
 	void releaseStaleDescriptor();

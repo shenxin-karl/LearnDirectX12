@@ -8,7 +8,7 @@ class FrameResourceItem;
 
 class CommandListProxy {
 public:
-	CommandListProxy(std::shared_ptr<CommandList> pCmdList, std::weak_ptr<FrameResourceItem> pFrameResourceItem);
+	CommandListProxy(std::shared_ptr<CommandList> pCmdList);
 	CommandList *operator->();
 	CommandList &operator*();
 	const CommandList *operator->() const;
@@ -16,14 +16,8 @@ public:
 	operator bool() const;
 	friend bool operator==(const CommandListProxy &lhs, std::nullptr_t);
 	friend bool operator!=(const CommandListProxy &lhs, std::nullptr_t);
-	std::shared_ptr<CommandList> _getCommandList() const;
 private:
-	struct SharedBuffer {
-		std::shared_ptr<CommandList>     _pCmdList;
-		std::weak_ptr<FrameResourceItem> _pFreamResourceItem;
-		~SharedBuffer();
-	};
-	std::shared_ptr<SharedBuffer> _pSharedBuffer;
+	std::shared_ptr<CommandList> _pCmdList;
 };
 
 }

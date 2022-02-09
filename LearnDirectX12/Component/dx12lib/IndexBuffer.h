@@ -7,8 +7,8 @@ namespace dx12lib {
 class IndexBuffer : public IResource {
 public:
 	IndexBuffer();
-	IndexBuffer(ID3D12Device *pDevice, 
-		ID3D12GraphicsCommandList *pCmdList, 
+	IndexBuffer(std::weak_ptr<Device> pDevice, 
+		std::shared_ptr<CommandList> pCmdList, 
 		const void *pData,
 		uint32 sizeInByte, 
 		DXGI_FORMAT format

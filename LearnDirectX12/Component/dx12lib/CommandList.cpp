@@ -6,6 +6,9 @@
 #include "ResourceStateTracker.h"
 #include "DynamicDescriptorHeap.h"
 #include "PipelineStateObject.h"
+#include "ConstantBuffer.h"
+#include "IndexBuffer.h"
+#include "VertexBuffer.h"
 
 namespace dx12lib {
 
@@ -122,6 +125,40 @@ void CommandList::aliasBarrier(const IResource *pResourceBeforce /*= nullptr*/,
 		flushResourceBarriers();
 }
 
+std::shared_ptr<VertexBuffer> 
+CommandList::createVertexBuffer(const void *pData, uint32 sizeInByte, uint32 stride, uint32 slot) {
+	return std::make_shared<VertexBuffer>(_pDevice, shared_from_this(), pData, sizeInByte, stride, slot);
+}
+
+std::shared_ptr<IndexBuffer> 
+CommandList::createIndexBuffer(const void *pData, uint32 sizeInByte, DXGI_FORMAT indexFormat) {
+	return std::make_shared<IndexBuffer>(_pDevice, shared_from_this(), pData, sizeInByte, indexFormat);
+}
+
+std::shared_ptr<ConstantBuffer> 
+CommandList::createConstantBuffer(const void *pData, uint32 sizeInByte) {
+	return std::make_shared<ConstantBuffer>(_pDevice, pData, sizeInByte);
+}
+
+void CommandList::setVertexBuffer(std::shared_ptr<VertexBuffer> pVertBuffer) {
+	assert(pVertBuffer != nullptr);
+	_pCommandList->IASetVertexBuffers(
+		pVertBuffer->getVertexSlot(),
+		1,
+		RVPtr(pVertBuffer->getVertexBufferView())
+	);
+}
+
+void CommandList::setIndexBuffer(std::shared_ptr<IndexBuffer> pIndexBuffer) {
+	assert(pIndexBuffer != nullptr);
+	_pCommandList->IASetIndexBuffer(RVPtr(pIndexBuffer->getIndexBufferView()));
+}
+
+void CommandList::setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuffer, uint32 rootIndex, uint32 offset) {
+	assert(pConstantBuffer != nullptr);
+	_pDynamicDescriptorHeaps[0]->stageDescriptors(rootIndex, offset, 1, pConstantBuffer->getConstantBufferView());
+}
+
 CommandList::CommandList(std::weak_ptr<FrameResourceItem> pFrameResourceItem) {
 	auto pSharedFrameResourceItem = pFrameResourceItem.lock();
 	_cmdListType = pSharedFrameResourceItem->getCommandListType();
@@ -147,7 +184,7 @@ CommandList::CommandList(std::weak_ptr<FrameResourceItem> pFrameResourceItem) {
 		_pDynamicDescriptorHeaps[i] = std::make_unique<DynamicDescriptorHeap>(
 			_pDevice,
 			static_cast<D3D12_DESCRIPTOR_HEAP_TYPE>(i),
-			kDynamicDescriptorPerHeap
+			static_cast<uint32>(kDynamicDescriptorPerHeap)
 		);
 	}
 }
@@ -160,8 +197,8 @@ void CommandList::close() {
 	ThrowIfFailed(_pCommandList->Close());
 }
 
-void CommandList::close(std::shared_ptr<CommandList> pPendingCmdList) {
-	_pResourceStateTracker->flusePendingResourceBarriers(pPendingCmdList);
+void CommandList::close(CommandListProxy pPendingCmdList) {
+	_pResourceStateTracker->flusePendingResourceBarriers(pPendingCmdList->shared_from_this());
 	flushResourceBarriers();
 	_pResourceStateTracker->commitFinalResourceStates();
 	ThrowIfFailed(_pCommandList->Close());

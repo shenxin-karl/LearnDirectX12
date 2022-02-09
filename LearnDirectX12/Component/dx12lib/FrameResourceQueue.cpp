@@ -24,7 +24,7 @@ CommandListProxy FrameResourceItem::createCommandListProxy() {
 		pCmdList->close();
 	}
 	pCmdList->reset();
-	return CommandListProxy(pCmdList, weak_from_this());
+	return CommandListProxy(pCmdList);
 }
 
 void FrameResourceItem::releaseCommandList(std::shared_ptr<CommandList> pCommandList) {

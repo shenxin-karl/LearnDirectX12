@@ -1,15 +1,22 @@
 #include "VertexBuffer.h"
 #include "DefaultBuffer.h"
+#include "CommandList.h"
+#include "Device.h"
 
 namespace dx12lib {
 
-VertexBuffer::VertexBuffer() : _bufferByteSize(0), _vertexStride(0) {
+VertexBuffer::VertexBuffer() : _bufferByteSize(0), _vertexStride(0), _slot(0) {
 }
 
-VertexBuffer::VertexBuffer(ID3D12Device *pDevice, ID3D12GraphicsCommandList *pCmdList, void *pData, uint32 sizeInByte, uint32 stride)
-: _bufferByteSize(sizeInByte), _vertexStride(stride)
+VertexBuffer::VertexBuffer(std::weak_ptr<Device> pDevice, std::shared_ptr<CommandList> pCmdList,
+	const void *pData, uint32 sizeInByte, uint32 stride, uint32 slot)
+: _bufferByteSize(sizeInByte), _vertexStride(stride), _slot(slot)
 {
-	_pGPUBuffer = std::make_unique<DefaultBuffer>(pDevice, pCmdList, pData, sizeInByte);
+	_pGPUBuffer = std::make_unique<DefaultBuffer>(pDevice.lock()->getD3DDevice(), 
+		pCmdList->getD3DCommandList(), 
+		pData, 
+		sizeInByte
+	);
 	ThrowIfFailed(D3DCreateBlob(sizeInByte, &_pCPUBuffer));
 	memcpy(_pCPUBuffer->GetBufferPointer(), pData, sizeInByte);
 }
@@ -26,11 +33,9 @@ D3D12_VERTEX_BUFFER_VIEW VertexBuffer::getVertexBufferView() const noexcept {
 	};
 }
 
-
 WRL::ComPtr<ID3DBlob> VertexBuffer::getCPUBuffer() const noexcept {
 	return _pCPUBuffer;
 }
-
 
 uint32 VertexBuffer::getVertexBufferSize() const noexcept {
 	return _bufferByteSize;
@@ -38,6 +43,10 @@ uint32 VertexBuffer::getVertexBufferSize() const noexcept {
 
 uint32 VertexBuffer::getVertexStride() const noexcept {
 	return _vertexStride;
+}
+
+uint32 VertexBuffer::getVertexSlot() const noexcept {
+	return _slot;
 }
 
 bool VertexBuffer::isEmpty() const noexcept {

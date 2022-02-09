@@ -1,10 +1,11 @@
 #pragma once
 #include "dx12libStd.h"
+#include "CommandListProxy.h"
 #include <memory>
 
 namespace dx12lib {
 
-class CommandList : public std::enable_shared_from_this<CommandList> {
+class CommandList : protected std::enable_shared_from_this<CommandList> {
 public:
 	CommandList(std::weak_ptr<FrameResourceItem> pFrameResourceItem);
 	~CommandList();
@@ -36,11 +37,33 @@ public:
 		const IResource *pResourceAfter = nullptr,
 		bool flushBarrier = false
 	);
+// buffer
+	std::shared_ptr<VertexBuffer> createVertexBuffer(
+		const void *pData,
+		uint32 sizeInByte,
+		uint32 stride,
+		uint32 slot = 0
+	);
+
+	std::shared_ptr<IndexBuffer> createIndexBuffer(
+		const void *pData,
+		uint32 sizeInByte,
+		DXGI_FORMAT indexFormat
+	);
+
+	std::shared_ptr<ConstantBuffer> createConstantBuffer(
+		const void *pData,
+		uint32 sizeInByte
+	);
+	
+	void setVertexBuffer(std::shared_ptr<VertexBuffer> pVertBuffer);
+	void setIndexBuffer(std::shared_ptr<IndexBuffer> pIndexBuffer);
+	void setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuffer, uint32 rootIndex, uint32 offset = 0);
 private:
 	friend class CommandQueue;
 	friend class FrameResourceItem;
 	void close();
-	void close(std::shared_ptr<CommandList> pPendingCmdList);
+	void close(CommandListProxy pPendingCmdList);
 	void reset();
 private:
 	D3D12_COMMAND_LIST_TYPE                 _cmdListType;
