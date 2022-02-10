@@ -60,7 +60,7 @@ uint32 FrameResourceQueue::getMaxFrameResourceCount() const noexcept {
 	return _frameResourceItemCount;
 }
 
-std::atomic_uint32_t &FrameResourceQueue::getFrameIndexRef() {
+std::atomic_uint32_t &FrameResourceQueue::getCurrentFrameResourceIndexRef() {
 	return _currentFrameResourceIndex;
 }
 

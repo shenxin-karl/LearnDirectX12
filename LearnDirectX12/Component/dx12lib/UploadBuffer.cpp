@@ -53,7 +53,12 @@ D3D12_GPU_VIRTUAL_ADDRESS UploadBuffer::getGPUAddressByIndex(UINT elementIndex /
 
 BYTE *UploadBuffer::getMappedDataByIndex(UINT elementIndex /*= 0*/) {
 	assert(elementIndex < _elementCount);
-	return _pMappedData + (elementIndex * _elementByteSize);
+	return _pMappedData + (std::ptrdiff_t(elementIndex) * _elementByteSize);
+}
+
+const BYTE *UploadBuffer::getMappedDataByIndex(UINT elementIndex /*= 0*/) const {
+	assert(elementIndex < _elementCount);
+	return _pMappedData + (std::ptrdiff_t(elementIndex) * _elementByteSize);
 }
 
 uint32 UploadBuffer::getElementByteSize() const noexcept {

@@ -9,6 +9,7 @@
 #include "ConstantBuffer.h"
 #include "IndexBuffer.h"
 #include "VertexBuffer.h"
+#include "CommandQueue.h"
 
 namespace dx12lib {
 
@@ -136,15 +137,17 @@ CommandList::createIndexBuffer(const void *pData, uint32 sizeInByte, DXGI_FORMAT
 }
 
 std::shared_ptr<ConstantBuffer> 
-CommandList::createConstantBuffer(uint32 sizeInByte) {	
+CommandList::createConstantBuffer(uint32 sizeInByte, const void *pData) {
 	auto pSharedDevice = _pDevice.lock();
-
+	auto *pFrameResourceQueue = pSharedDevice->getCommandQueue(toCommandQueueType(_cmdListType))->getFrameResourceQueue();
 	ConstantBufferDesc desc = {
 		_pDevice,
-		//pSharedDevice->getCommandQueue(_cmdListType)->getFrameResourceQueue()->getFrameIndexRef()
-
+		pFrameResourceQueue->getCurrentFrameResourceIndexRef(),
+		pFrameResourceQueue->getMaxFrameResourceCount(),
+		sizeInByte,
+		pData
 	};
-	return std::make_shared<ConstantBuffer>(_pDevice, pData, sizeInByte);
+	return std::make_shared<ConstantBuffer>(desc);
 }
 
 void CommandList::setVertexBuffer(std::shared_ptr<VertexBuffer> pVertBuffer) {

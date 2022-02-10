@@ -22,6 +22,18 @@ ConstantBuffer::ConstantBuffer(const ConstantBufferDesc &desc)
 	auto pShadedDevice = desc.pDevice.lock();
 	auto *pD3DDevice = pShadedDevice->getD3DDevice();
 	for (uint32 i = 0; i < desc.frameCount; ++i) {
+		// padding buffer data
+		auto *pMappedPtr = _pGPUBuffer->getMappedDataByIndex(i);
+		if (desc.pData == nullptr) {
+			std::memset(pMappedPtr, 0, bufferSizes);
+		} else {
+			std::memcpy(pMappedPtr, desc.pData, desc.sizeInByte);
+			pMappedPtr += desc.sizeInByte;
+			if (auto leftSize = (bufferSizes - desc.sizeInByte))
+				std::memset(pMappedPtr, 0, leftSize);
+		}
+
+		// create constant buffer view
 		auto CBV = pShadedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1);
 		D3D12_CONSTANT_BUFFER_VIEW_DESC constantBufferDesc = {
 			_pGPUBuffer->getGPUAddressByIndex(i),
@@ -31,7 +43,7 @@ ConstantBuffer::ConstantBuffer(const ConstantBufferDesc &desc)
 			&constantBufferDesc,
 			CBV.getCPUHandle()
 		);
-		_CBV.push_back(CBV);
+		_CBV.push_back(std::move(CBV));
 	}
 }
 
@@ -43,6 +55,10 @@ void ConstantBuffer::updateConstantBuffer(const void *pData, uint32 sizeInByte, 
 }
 
 BYTE *ConstantBuffer::getMappedPtr() {
+	return _pGPUBuffer->getMappedDataByIndex(_frameIndex);
+}
+
+BYTE *ConstantBuffer::getMappedPtr() const {
 	return _pGPUBuffer->getMappedDataByIndex(_frameIndex);
 }
 

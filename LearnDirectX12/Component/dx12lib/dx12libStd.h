@@ -71,11 +71,14 @@ constexpr auto RVPtr(T &&val) {
 }
 
 enum class CommandQueueType {
+	None = -1,
 	Direct,
 	Compute,
 	Copy,
 	NumType,
 };
+
+CommandQueueType toCommandQueueType(D3D12_COMMAND_LIST_TYPE type);
 
 constexpr static std::size_t kComandQueueTypeCount = 3;
 constexpr static std::size_t kSwapChainBufferCount = 2;
@@ -107,6 +110,5 @@ class IResource;
 class DynamicDescriptorHeap;
 class RootSignature;
 class PipelineStateObject;
-class ShaderObject;
 
 }

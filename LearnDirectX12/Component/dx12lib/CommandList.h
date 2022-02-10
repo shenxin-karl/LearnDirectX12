@@ -5,7 +5,7 @@
 
 namespace dx12lib {
 
-class CommandList : protected std::enable_shared_from_this<CommandList> {
+class CommandList : public std::enable_shared_from_this<CommandList> {
 public:
 	CommandList(std::weak_ptr<FrameResourceItem> pFrameResourceItem);
 	~CommandList();
@@ -51,7 +51,7 @@ public:
 		DXGI_FORMAT indexFormat
 	);
 
-	std::shared_ptr<ConstantBuffer> createConstantBuffer(uint32 sizeInByte);
+	std::shared_ptr<ConstantBuffer> createConstantBuffer(uint32 sizeInByte, const void *pData = nullptr);
 	
 	void setVertexBuffer(std::shared_ptr<VertexBuffer> pVertBuffer);
 	void setIndexBuffer(std::shared_ptr<IndexBuffer> pIndexBuffer);

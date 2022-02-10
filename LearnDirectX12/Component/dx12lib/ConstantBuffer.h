@@ -11,6 +11,7 @@ struct ConstantBufferDesc {
 	std::atomic_uint32_t        &frameIndex;
 	uint32                       frameCount;
 	uint32                       sizeInByte;
+	const void                  *pData = nullptr;
 };
 
 class ConstantBuffer {
@@ -18,8 +19,9 @@ public:
 	ConstantBuffer(const ConstantBufferDesc &desc);
 	ConstantBuffer(const ConstantBuffer &) = delete;
 	ConstantBuffer &operator=(const ConstantBuffer &) = delete;
-	void updateConstantBuffer(const void *pData, uint32 sizeInByte, uint32 offset);
+	void updateConstantBuffer(const void *pData, uint32 sizeInByte, uint32 offset = 0);
 	BYTE *getMappedPtr();
+	BYTE *getMappedPtr() const;
 	uint32 getConstantBufferSize() const noexcept;
 	uint32 getConstantAlignedBufferSize() const noexcept;
 	D3D12_CPU_DESCRIPTOR_HANDLE getConstantBufferView() const;

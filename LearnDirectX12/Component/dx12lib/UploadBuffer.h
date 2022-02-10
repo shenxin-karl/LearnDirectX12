@@ -12,6 +12,7 @@ public:
 	void copyData(UINT elementIndex, const void *pData);
 	D3D12_GPU_VIRTUAL_ADDRESS getGPUAddressByIndex(UINT elementIndex = 0) const;
 	BYTE *getMappedDataByIndex(UINT elementIndex = 0);
+	const BYTE *getMappedDataByIndex(UINT elementIndex = 0) const;
 	uint32 getElementByteSize() const noexcept;
 	uint32 getElementCount() const noexcept;
 	virtual WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
