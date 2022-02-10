@@ -5,23 +5,29 @@
 namespace dx12lib {
 
 class UploadBuffer;
+
+struct ConstantBufferDesc {
+	std::weak_ptr<Device>        pDevice;
+	std::atomic_uint32_t        &frameIndex;
+	uint32                       frameCount;
+	uint32                       sizeInByte;
+};
+
 class ConstantBuffer {
 public:
-	ConstantBuffer();
-	ConstantBuffer(std::weak_ptr<Device> pDevice, const void *pData, uint32 sizeInByte);
+	ConstantBuffer(const ConstantBufferDesc &desc);
 	ConstantBuffer(const ConstantBuffer &) = delete;
-	ConstantBuffer(ConstantBuffer &&other) noexcept;
-	ConstantBuffer &operator=(ConstantBuffer &&other) noexcept;
+	ConstantBuffer &operator=(const ConstantBuffer &) = delete;
 	void updateConstantBuffer(const void *pData, uint32 sizeInByte, uint32 offset);
+	BYTE *getMappedPtr();
 	uint32 getConstantBufferSize() const noexcept;
 	uint32 getConstantAlignedBufferSize() const noexcept;
 	D3D12_CPU_DESCRIPTOR_HANDLE getConstantBufferView() const;
-	bool isEmpty() const noexcept;
-	friend void swap(ConstantBuffer &lhs, ConstantBuffer &rhs) noexcept;
 private:
-	uint32                        _bufferSize;
-	DescriptorAllocation          _CBV;
-	std::unique_ptr<UploadBuffer> _pGPUBuffer;
+	uint32                            _bufferSize;
+	std::atomic_uint32_t             &_frameIndex;
+	std::unique_ptr<UploadBuffer>     _pGPUBuffer;
+	std::vector<DescriptorAllocation> _CBV;
 };
 
 }

@@ -60,6 +60,10 @@ uint32 FrameResourceQueue::getMaxFrameResourceCount() const noexcept {
 	return _frameResourceItemCount;
 }
 
+std::atomic_uint32_t &FrameResourceQueue::getFrameIndexRef() {
+	return _currentFrameResourceIndex;
+}
+
 void FrameResourceQueue::newFrame(uint64 fence) {
 	_currentFrameResourceIndex = (_currentFrameResourceIndex + 1) % _frameResourceItemCount;
 	_frameResourceQueue[_currentFrameResourceIndex]->newFrame(fence);

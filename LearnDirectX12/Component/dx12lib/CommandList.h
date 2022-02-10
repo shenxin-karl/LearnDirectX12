@@ -51,10 +51,7 @@ public:
 		DXGI_FORMAT indexFormat
 	);
 
-	std::shared_ptr<ConstantBuffer> createConstantBuffer(
-		const void *pData,
-		uint32 sizeInByte
-	);
+	std::shared_ptr<ConstantBuffer> createConstantBuffer(uint32 sizeInByte);
 	
 	void setVertexBuffer(std::shared_ptr<VertexBuffer> pVertBuffer);
 	void setIndexBuffer(std::shared_ptr<IndexBuffer> pIndexBuffer);

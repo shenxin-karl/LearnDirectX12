@@ -5,9 +5,6 @@
 
 namespace dx12lib {
 
-class SwapChain;
-class CommandList;
-class FrameResourceQueue;
 class CommandQueue {
 public:
 	CommandQueue(std::weak_ptr<Device> pDevice, D3D12_COMMAND_LIST_TYPE queueType);
@@ -26,6 +23,9 @@ public:
 	void resize(uint32 width, uint32 height, std::shared_ptr<SwapChain> pSwapChain);
 	void flushCommandQueue();
 	~CommandQueue();
+protected:
+	friend class CommandList;
+	FrameResourceQueue *getFrameResourceQueue();
 private:
 	uint64                              _fenceValue;
 	std::weak_ptr<Device>               _pDevice;

@@ -124,4 +124,8 @@ CommandQueue::~CommandQueue() {
 	waitForFenceValue(_fenceValue);
 }
 
+FrameResourceQueue *CommandQueue::getFrameResourceQueue() {
+	return _pFrameResourceQueue.get();
+}
+
 }

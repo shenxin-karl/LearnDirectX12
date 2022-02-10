@@ -136,7 +136,14 @@ CommandList::createIndexBuffer(const void *pData, uint32 sizeInByte, DXGI_FORMAT
 }
 
 std::shared_ptr<ConstantBuffer> 
-CommandList::createConstantBuffer(const void *pData, uint32 sizeInByte) {
+CommandList::createConstantBuffer(uint32 sizeInByte) {	
+	auto pSharedDevice = _pDevice.lock();
+
+	ConstantBufferDesc desc = {
+		_pDevice,
+		//pSharedDevice->getCommandQueue(_cmdListType)->getFrameResourceQueue()->getFrameIndexRef()
+
+	};
 	return std::make_shared<ConstantBuffer>(_pDevice, pData, sizeInByte);
 }
 

@@ -34,11 +34,12 @@ public:
 	FrameResourceQueue(std::weak_ptr<Device> pDevice, D3D12_COMMAND_LIST_TYPE cmdListType);
 	CommandListProxy createCommandListProxy();
 	uint32 getMaxFrameResourceCount() const noexcept;
+	std::atomic_uint32_t &getFrameIndexRef();
 	void newFrame(uint64 fence);
 	std::shared_ptr<FrameResourceItem> getCurrentFrameResourceItem() const;
 private:
-	uint32 _currentFrameResourceIndex;
-	uint32 _frameResourceItemCount;
+	uint32                _frameResourceItemCount;
+	std::atomic_uint32_t _currentFrameResourceIndex;
 	std::array<std::shared_ptr<FrameResourceItem>, kFrameResourceCount>  _frameResourceQueue;
 };
 
