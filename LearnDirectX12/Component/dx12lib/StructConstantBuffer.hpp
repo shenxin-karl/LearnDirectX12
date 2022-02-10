@@ -75,8 +75,8 @@ public:
 	MappedPtr<T> mapped() {
 		return MappedPtr<T>(_pConstantBuffer->getMappedPtr());
 	}
-	MappedPtr<const T *> mapped() const {.
-		return MappedPtr<T>(_pConstantBuffer->getMappedPtr());
+	MappedPtr<const T> mapped() const {
+		return MappedPtr<const T>(_pConstantBuffer->getMappedPtr());
 	}
 private:
 	std::shared_ptr<ConstantBuffer> _pConstantBuffer;
