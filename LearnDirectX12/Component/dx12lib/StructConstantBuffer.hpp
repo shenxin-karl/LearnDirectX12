@@ -4,7 +4,7 @@
 namespace dx12lib {
 
 template<typename T>
-concept StructConstantBufferConcept = std::is_class_v<T> && std::is_trivial_v<T> && !std::is_union_v<T>;
+concept StructConstantBufferConcept = std::is_class_v<T> && !std::is_union_v<T>;
 
 template<StructConstantBufferConcept T>
 class StructConstantBuffer;
@@ -72,11 +72,11 @@ public:
 	friend void swap(StructConstantBuffer &lhs, StructConstantBuffer &rhs) noexcept {
 		std::swap(lhs._pConstantBuffer, rhs._pConstantBuffer);
 	}
-	MappedPtr<T> mapped() {
-		return MappedPtr<T>(_pConstantBuffer->getMappedPtr());
+	MappedPtr<T> map() {
+		return MappedPtr<T>(this->operator->());
 	}
-	MappedPtr<const T> mapped() const {
-		return MappedPtr<const T>(_pConstantBuffer->getMappedPtr());
+	MappedPtr<const T> map() const {
+		return MappedPtr<const T>(this->operator->());
 	}
 private:
 	std::shared_ptr<ConstantBuffer> _pConstantBuffer;

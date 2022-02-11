@@ -3,6 +3,10 @@
 #include "DescriptorAllocator.h"
 #include "DescriptorAllocation.h"
 #include "DescriptorAllocatorPage.h"
+#include "CommandQueue.h"
+#include "CommandListProxy.h"
+#include "CommandList.h"
+#include <iostream>
 
 using namespace dx12lib;
 
@@ -12,10 +16,32 @@ void testDescriptorAllocator(std::shared_ptr<Device> pDevice) {
 	auto descriptor2 = pDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 46);
 }
 
+
+struct Test {
+	int a;
+	char b;
+	float c;
+	double d;
+};
+
+
+void testStructConstantBuffer(std::shared_ptr<Device> pDevice) {
+	auto pCmdQueue = pDevice->getCommandQueue(CommandQueueType::Direct);
+	auto pCmdList = pCmdQueue->createCommandListProxy();
+	auto pGPUTest = pCmdList->createStructConstantBuffer<Test>({ 10, 'a', 1.f, 10.0 });
+	auto pMappedTest = pGPUTest->map();
+	std::cout << pMappedTest->a << " " 
+		      << pMappedTest->b << " "
+		      << pMappedTest->c << " "
+		      << pMappedTest->d << std::endl;
+
+}
+
 int main(int argc, char *argv[]) {
 	std::shared_ptr<Adapter> pAdapter = std::make_shared<Adapter>();
 	std::shared_ptr<Device> pDevice = std::make_shared<Device>(pAdapter);
 	pDevice->initialize();
 	testDescriptorAllocator(pDevice);
+	testStructConstantBuffer(pDevice);
 	return 0;
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include "dx12libStd.h"
 #include "CommandListProxy.h"
+#include "StructConstantBuffer.hpp"
 #include <memory>
 
 namespace dx12lib {
@@ -52,6 +53,17 @@ public:
 	);
 
 	std::shared_ptr<ConstantBuffer> createConstantBuffer(uint32 sizeInByte, const void *pData = nullptr);
+
+	template<StructConstantBufferConcept T>
+	std::shared_ptr<StructConstantBuffer<T>> createStructConstantBuffer(const T *pData = nullptr) {
+		std::shared_ptr<ConstantBuffer> pConstantBuffer = createConstantBuffer(sizeof(T), pData);
+		return std::make_shared<StructConstantBuffer<T>>(pConstantBuffer);
+	}
+
+	template<StructConstantBufferConcept T>
+	std::shared_ptr<StructConstantBuffer<T>> createStructConstantBuffer(const T &buff) {
+		return this->template createStructConstantBuffer<T>(&buff);
+	}
 	
 	void setVertexBuffer(std::shared_ptr<VertexBuffer> pVertBuffer);
 	void setIndexBuffer(std::shared_ptr<IndexBuffer> pIndexBuffer);
