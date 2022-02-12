@@ -1,60 +1,36 @@
+#pragma once
 #include "BaseApp/BaseApp.h"
-#include "Math/MathHelper.h"
-#include "D3D/d3dutil.h"
-#include "D3D/UploadBuffer.h"
+#include "GameTimer/GameTimer.h"
+#include "Math/VectorHelper.h"
+#include "Math/MatrixHelper.h"
+#include "D3D/FrameResource.h"
+#include "dx12lib/StructConstantBuffer.hpp"
 
-namespace DX = DirectX;
-namespace WRL = Microsoft::WRL;
+using namespace vec;
+using namespace mat;
 
 struct Vertex {
-	DX::XMFLOAT3  position;
-	DX::XMFLOAT4  color;
-};
-
-struct ObjectConstants {
-	DX::XMFLOAT4X4 worldViewProj = MathHelper::identity4x4();
+	float3 position;
+	float3 color;
 };
 
 class BoxApp : public com::BaseApp {
 public:
 	BoxApp();
-	BoxApp(const BoxApp &) = delete;
-	BoxApp &operator=(const BoxApp &) = delete;
-
-	virtual bool initialize() override;
-	virtual void beginTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
-	virtual void tick(std::shared_ptr<com::GameTimer> pGameTimer) override;
-	virtual ~BoxApp() = default;
+protected:
+	virtual void onInitialize(dx12lib::CommandListProxy pCmdList) override;
+	virtual void onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
+	virtual void onTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 private:
-	virtual void onResize(int width, int height) override;
-	void buildDescriptorHeaps();
-	void buildConstantsBuffers();
-	void buildRootSignature();
-	void buildShaderAndInputLayout();
-	void buildBoxGeometry();
-	void buildPSO();
-	void processEvent();
-	void onMouseMove(POINT mousePosition);
-	void onMouseRPress();
-	void onMouseRRelease();
-	void onMouseWheel(float offset);
-	void updateConstantBuffer() const;
-	static DX::XMVECTOR toVector3(const DX::XMFLOAT3 &float3) noexcept;
+	using GPUPassConstantBufferPtr = std::shared_ptr<dx12lib::StructConstantBuffer<d3dUtil::PassConstants>>;
 private:
-	WRL::ComPtr<ID3D12RootSignature>				pRootSignature_;
-	WRL::ComPtr<ID3D12DescriptorHeap>				pCbvHeap_;
-	WRL::ComPtr<ID3D12PipelineState>				pPSO_;
-	WRL::ComPtr<ID3DBlob>							pVsByteCode_;
-	WRL::ComPtr<ID3DBlob>							pPsByteCode_;
-	std::unique_ptr<UploadBuffer<ObjectConstants>>	pObjectCB_;
-	std::unique_ptr<MeshGeometry>					pBoxGeo_;
-	std::vector<D3D12_INPUT_ELEMENT_DESC>			inputLayout_;
-	DX::XMFLOAT4X4 worldMat_ = MathHelper::identity4x4();
-	DX::XMFLOAT4X4 viewMat_ = MathHelper::identity4x4();
-	DX::XMFLOAT4X4 projMat_ = MathHelper::identity4x4();
-	float theta_ = 0;
-	float phi_ = 0;
-	float radius_ = 10.0f;
-	bool isMouseLeftPressed_ = false;
-	POINT lastMousePos_ = { 0, 0 };
+	std::shared_ptr<dx12lib::GraphicsPSO>  _pGraphicsPSO;
+	std::shared_ptr<dx12lib::VertexBuffer> _pVertexBuffer;
+	std::shared_ptr<dx12lib::IndexBuffer>  _pIndexBuffer;
+	GPUPassConstantBufferPtr               _pPassConstantBuffer;
+	float    _theta = 0.f;
+	float    _phi = 0.f;
+	float4x4 _world;
+	float4x4 _projection;
+	float4x4 _view;
 };

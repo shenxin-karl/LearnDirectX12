@@ -16,14 +16,8 @@
 class TestApp : public com::BaseApp {
 public:
 	TestApp() = default;
-	virtual void onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 	virtual void onTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 };
-
-void TestApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
-	auto pCmdQueue = _pDevice->getCommandQueue(dx12lib::CommandQueueType::Direct);
-	pCmdQueue->newFrame();
-}
 
 void TestApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pCmdQueue = _pDevice->getCommandQueue(dx12lib::CommandQueueType::Direct);

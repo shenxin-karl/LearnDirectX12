@@ -104,16 +104,6 @@ void CommandQueue::newFrame() {
 	_pFrameResourceQueue->newFrame(_fenceValue);
 }
 
-void CommandQueue::resize(uint32 width, uint32 height, std::shared_ptr<SwapChain> pSwapChain) {
-	flushCommandQueue();
-	newFrame();
-	auto pCmdList = createCommandListProxy();
-	pSwapChain->resize(pCmdList, width, height);
-	executeCommandList(pCmdList);
-	signal(pSwapChain);
-	flushCommandQueue();
-}
-
 void CommandQueue::flushCommandQueue() {
 	++_fenceValue;
 	ThrowIfFailed(_pCommandQueue->Signal(_pFence.Get(), _fenceValue));

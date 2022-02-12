@@ -20,8 +20,12 @@ void BaseApp::initialize() {
 	_pSwapChain = _pDevice->createSwapChain(_pInputSystem->window->getHWND(), _backBufferFormat, _depthStencilFormat);
 	// first resize
 	auto pCmdQueue = _pDevice->getCommandQueue(dx12lib::CommandQueueType::Direct);
-	pCmdQueue->resize(_width, _height, _pSwapChain);
-	onInitialize();
+	auto pCmdList = pCmdQueue->createCommandListProxy();
+	_pSwapChain->resize(pCmdList, _width, _height);
+	onInitialize(pCmdList);
+	pCmdQueue->executeCommandList(pCmdList);
+	pCmdQueue->signal(_pSwapChain);
+	pCmdQueue->flushCommandQueue();
 }
 
 void BaseApp::destory() {
@@ -37,6 +41,8 @@ void BaseApp::beginTick(std::shared_ptr<GameTimer> pGameTimer) {
 		return;
 	}
 
+	auto pCmdQueue = _pDevice->getCommandQueue(dx12lib::CommandQueueType::Direct);
+	pCmdQueue->newFrame();		// start new frames
 	onBeginTick(pGameTimer);
 }
 
@@ -64,8 +70,14 @@ void BaseApp::resize(int width, int height) {
 	_width = width;
 	_height = height;
 	auto pCmdQueue = _pDevice->getCommandQueue(dx12lib::CommandQueueType::Direct);
-	pCmdQueue->resize(width, height, _pSwapChain);
-	onResize(width, height);
+	pCmdQueue->flushCommandQueue();
+	pCmdQueue->newFrame();
+	auto pCmdList = pCmdQueue->createCommandListProxy();
+	_pSwapChain->resize(pCmdList, width, height);
+	onResize(pCmdList, width, height);
+	pCmdQueue->executeCommandList(pCmdList);
+	pCmdQueue->signal(_pSwapChain);
+	pCmdQueue->flushCommandQueue();
 }
 
 bool BaseApp::isRuning() const {

@@ -5,6 +5,7 @@
 #include "dx12lib/dx12libStd.h"
 #include "ITick.h"
 #include "InputSystem/InputSystem.h"
+#include "CommandListProxy.h"
 
 
 namespace com {
@@ -28,12 +29,12 @@ public:
 	virtual void resize(int width, int height);
 	bool isRuning() const;
 protected:
-	virtual void onInitialize() {}
+	virtual void onInitialize(dx12lib::CommandListProxy pCmdList) {}
 	virtual void onDistory() {}
 	virtual void onBeginTick(std::shared_ptr<GameTimer> pGameTimer) {}
 	virtual void onTick(std::shared_ptr<GameTimer> pGameTimer) {}
 	virtual void onEndTick(std::shared_ptr<GameTimer> pGameTimer) {}
-	virtual void onResize(int width, int height) {}
+	virtual void onResize(dx12lib::CommandListProxy pCmdList, int width, int height) {}
 protected:
 	int _width = 800;
 	int _height = 600;

@@ -78,6 +78,9 @@ void DynamicDescriptorHeap::stageDescriptors(size_t rootParameterIndex,
 }
 
 uint32 DynamicDescriptorHeap::computeStaleDescriptorCount() const {
+	if (_staleDescriptorTableBitMask.none())
+		return 0;
+
 	uint32 numStaleDescriptors = 0;
 	for (std::size_t i = 0; i < kMaxDescriptorTables; ++i) {
 		if (_staleDescriptorTableBitMask.test(i))
@@ -91,21 +94,23 @@ void DynamicDescriptorHeap::commitDescriptorTables(std::shared_ptr<CommandList> 
 	if (numDescriptors == 0)
 		return;
 
+	auto *pD3DCommandList = pCmdList->getD3DCommandList();
 	if (_pCurrentDescriptorHeap == nullptr || _numFreeHandles < numDescriptors) {
 		_staleDescriptorTableBitMask = _descriptorTableBitMask;
 		_pCurrentDescriptorHeap = requestDescriptorHeap();
 		_currentCPUDescriptorHandle = _pCurrentDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 		_currentGPUDescriptorHandle = _pCurrentDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 		_numFreeHandles = _numDescriptorsPerHeap;
+		pD3DCommandList->SetDescriptorHeaps(1, RVPtr(_pCurrentDescriptorHeap.Get()));
 	}
 
 	auto *pD3DDevice = _pDevice.lock()->getD3DDevice();
-	for (std::size_t i = 0; i < kMaxDescriptorTables; ++i) {
-		if (!_staleDescriptorTableBitMask.test(i))
+	for (std::size_t rootIndex = 0; rootIndex < kMaxDescriptorTables; ++rootIndex) {
+		if (!_staleDescriptorTableBitMask.test(rootIndex))
 			continue;
 
-		UINT numDescriptors = _descriptorTableCache[i]._numDescriptors;
-		auto *pSrcHandle = _descriptorTableCache[i]._pBaseHandle;
+		UINT numDescriptors = _descriptorTableCache[rootIndex]._numDescriptors;
+		auto *pSrcHandle = _descriptorTableCache[rootIndex]._pBaseHandle;
 		D3D12_CPU_DESCRIPTOR_HANDLE pDstDescriptorRangeStarts[] = { _currentCPUDescriptorHandle };
 		UINT pDstDescriptorRangeSizes[] = { numDescriptors };
 		pD3DDevice->CopyDescriptors(
@@ -114,7 +119,8 @@ void DynamicDescriptorHeap::commitDescriptorTables(std::shared_ptr<CommandList> 
 			_heapType
 		);
 
-		setFunc(pCmdList->getD3DCommandList(), numDescriptors, _currentGPUDescriptorHandle);
+		// Bind to the Command list 
+		setFunc(pD3DCommandList, static_cast<UINT>(rootIndex), _currentGPUDescriptorHandle);
 		_numFreeHandles -= numDescriptors;
 		_currentCPUDescriptorHandle.Offset(numDescriptors, _descriptorHandleIncrementSize);
 		_currentGPUDescriptorHandle.Offset(numDescriptors, _descriptorHandleIncrementSize);

@@ -20,7 +20,6 @@ public:
 	uint64 getCompletedValue() const;
 	CommandListProxy createCommandListProxy();
 	void newFrame();
-	void resize(uint32 width, uint32 height, std::shared_ptr<SwapChain> pSwapChain);
 	void flushCommandQueue();
 	~CommandQueue();
 protected:
