@@ -9,6 +9,7 @@ public:
 	const D3D12_ROOT_SIGNATURE_DESC &getRootSignatureDesc() const;
 	std::bitset<kMaxDescriptorTables> getDescriptorTableBitMask(D3D12_DESCRIPTOR_HEAP_TYPE heapType);
 	uint32 getNumDescriptorsByType(D3D12_DESCRIPTOR_HEAP_TYPE type, std::size_t rootParameterIndex) const;
+	WRL::ComPtr<ID3D12RootSignature> getRootSignature() const;
 	void reset();
 private:
 	void setRootSignatureDesc(const D3D12_ROOT_SIGNATURE_DESC &desc);

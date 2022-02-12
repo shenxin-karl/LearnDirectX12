@@ -42,44 +42,66 @@ private:
 template<StructConstantBufferConcept T>
 class StructConstantBuffer {
 public:
-	StructConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuffer) : _pConstantBuffer(pConstantBuffer) {
+	StructConstantBuffer(const void *pData, std::shared_ptr<ConstantBuffer> pConstantBuffer) 
+	: _pConstantBuffer(pConstantBuffer) 
+	{
+		assert(pConstantBuffer != nullptr);
+		setDirty();
+		if (pData != nullptr)
+			std::memcpy(&_buffer, pData, sizeof(T));
+		else
+			std::memset(&_buffer, 0, sizeof(T));
 	}
-	StructConstantBuffer(const StructConstantBuffer &) = default;
-	StructConstantBuffer(StructConstantBuffer &&) = default;
-	StructConstantBuffer &operator=(const StructConstantBuffer &) = default;
-	StructConstantBuffer &operator=(StructConstantBuffer &&) = default;
-	T *operator->() {
-		return reinterpret_cast<T *>(_pConstantBuffer->getMappedPtr());
-	}
-	T &operator*() {
-		return *reinterpret_cast<T *>(_pConstantBuffer->getMappedPtr());
-	}
-	const T *operator->() const {
-		return reinterpret_cast<const T *>(_pConstantBuffer->getMappedPtr());
-	}
-	const T &operator*() const {
-		return *reinterpret_cast<const T *>(_pConstantBuffer->getMappedPtr());
-	}
-	explicit operator bool() const noexcept {
-		return _pConstantBuffer == nullptr || _pConstantBuffer->getMappedPtr() == nullptr;
-	}
-	friend bool operator==(const StructConstantBuffer &lhs, std::nullptr_t) noexcept {
-		return lhs.operator bool();
-	}
-	friend bool operator!=(const StructConstantBuffer &lhs, std::nullptr_t) noexcept {
-		return !lhs.operator bool();
-	}
+	StructConstantBuffer(const StructConstantBuffer &) = delete;
+	StructConstantBuffer(StructConstantBuffer &&) = delete;
+	StructConstantBuffer &operator=(const StructConstantBuffer &) = delete;
+	StructConstantBuffer &operator=(StructConstantBuffer &&) = delete;
+
 	friend void swap(StructConstantBuffer &lhs, StructConstantBuffer &rhs) noexcept {
 		std::swap(lhs._pConstantBuffer, rhs._pConstantBuffer);
 	}
+
 	MappedPtr<T> map() {
-		return MappedPtr<T>(this->operator->());
+		setDirty();
+		return MappedPtr<T>(&_buffer);
 	}
-	MappedPtr<const T> map() const {
-		return MappedPtr<const T>(this->operator->());
+
+	MappedPtr<const T> cmap() const {
+		return MappedPtr<const T>(_buffer);
 	}
+
+	void setDirty() {
+		for (std::size_t i = 0; i < kFrameResourceCount; ++i)
+			_bufferDirty.set(i, true);
+	}
+
+	void padding(const T &data) {
+		setDirty();
+		_buffer = data;
+	}
+
+	void padding(const void *pData) {
+		assert(pData != nullptr);
+		setDirty();
+		std::memset(&_buffer, pData, sizeof(T));
+	}
+
+	void updateConstantBuffer() {
+		auto frameIndex = _pConstantBuffer->getFrameIndex();
+		if (!_bufferDirty.test(frameIndex))
+			return;
+		_pConstantBuffer->updateConstantBuffer(&_buffer, sizeof(T), 0);
+		_bufferDirty.set(frameIndex, false);
+	}
+
+	D3D12_CPU_DESCRIPTOR_HANDLE getConstantBufferView() const {
+		return _pConstantBuffer->getConstantBufferView();
+	}
+
 private:
-	std::shared_ptr<ConstantBuffer> _pConstantBuffer;
+	std::bitset<kFrameResourceCount> _bufferDirty;
+	std::shared_ptr<ConstantBuffer>  _pConstantBuffer;
+	T _buffer;
 };
 
 }

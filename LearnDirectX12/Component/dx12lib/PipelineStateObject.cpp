@@ -1,18 +1,206 @@
 #include "PipelineStateObject.h"
+#include "RootSignature.h"
 #include "Device.h"
 
 namespace dx12lib {
 
-PipelineStateObject::PipelineStateObject(std::weak_ptr<Device> pDevice, const D3D12_GRAPHICS_PIPELINE_STATE_DESC &desc)
-{
-	ThrowIfFailed(pDevice.lock()->getD3DDevice()->CreateGraphicsPipelineState(
-		&desc,
-		IID_PPV_ARGS(&_pPso)
-	));
+PSO::PSO(const std::string &name) : _name(name) {
 }
 
-WRL::ComPtr<ID3D12PipelineState> PipelineStateObject::getPSO() const {
-	return _pPso;
+void PSO::setRootSignature(std::shared_ptr<RootSignature> pRootSignature) {
+	_pRootSignature = pRootSignature;
+}
+
+std::shared_ptr<RootSignature> PSO::getRootSignature() const {
+	return _pRootSignature;
+}
+
+WRL::ComPtr<ID3D12PipelineState> PSO::getPipelineStateObject() const {
+	return _pPSO;
+}
+
+const std::string &PSO::getName() const {
+	return _name;
+}
+
+GraphicsPSO::GraphicsPSO(const std::string &name) : PSO(name) {
+	std::memset(&_psoDesc, 0, sizeof(_psoDesc));
+}
+
+void GraphicsPSO::setBlendState(const D3D12_BLEND_DESC& blendDesc) {
+	_psoDesc.BlendState = blendDesc;
+	_dirty = true;
+}
+
+void GraphicsPSO::setRasterizerState(const D3D12_RASTERIZER_DESC& rasterizerDesc) {
+	_psoDesc.RasterizerState = rasterizerDesc;
+	_dirty = true;
+}
+
+void GraphicsPSO::setDepthStencilState(const D3D12_DEPTH_STENCIL_DESC &depthStencilDesc) {
+	_psoDesc.DepthStencilState = depthStencilDesc;
+	_dirty = true;
+}
+
+void GraphicsPSO::setSampleMask(UINT sampleMask) {
+	_psoDesc.NodeMask = sampleMask;
+	_dirty = true;
+}
+
+void GraphicsPSO::setPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE primitiveType) {
+	_psoDesc.PrimitiveTopologyType = primitiveType;
+	_dirty = true;
+}
+
+void GraphicsPSO::setDepthTargetFormat(DXGI_FORMAT DSVFormat, UINT msaaCount /*= 1*/, UINT massQuality /*= 1*/) {
+	setRenderTargetFormats(0, nullptr, DSVFormat, msaaCount, massQuality);
+}
+
+void GraphicsPSO::setRenderTargetFormat(DXGI_FORMAT RTVFormat, DXGI_FORMAT DSVFormat, UINT MsaaCount /*= 1*/, UINT MsaaQuality /*= 1 */) {
+	setRenderTargetFormats(1, &RTVFormat, DSVFormat, MsaaCount, MsaaQuality);
+}
+
+void GraphicsPSO::setRenderTargetFormats(UINT numRTVFormat, 
+	const DXGI_FORMAT *pRTVFormat,
+	DXGI_FORMAT DSVFormat, 
+	UINT MsaaCount /*= 1*/, 
+	UINT MsaaQuality /*= 0 */) 
+{
+	assert(numRTVFormat == 0 || pRTVFormat != nullptr);
+	for (UINT i = 0; i < numRTVFormat; ++i) {
+		assert(pRTVFormat[i] != DXGI_FORMAT_UNKNOWN);
+		_psoDesc.RTVFormats[i] = pRTVFormat[i];
+	}
+	for (UINT i = numRTVFormat; i < _psoDesc.NumRenderTargets; ++i)
+		_psoDesc.RTVFormats[i] = DXGI_FORMAT_UNKNOWN;
+	_psoDesc.NumRenderTargets = numRTVFormat;
+	_psoDesc.DSVFormat = DSVFormat;
+	_psoDesc.SampleDesc.Count = MsaaCount;
+	_psoDesc.SampleDesc.Quality = MsaaQuality;
+	_dirty = true;
+}
+
+void GraphicsPSO::setInputLayer(const std::vector<D3D12_INPUT_ELEMENT_DESC> &inputLayout) {
+	_dirty = true;
+	if (inputLayout.empty()) {
+		_psoDesc.InputLayout.NumElements = 0;
+		_psoDesc.InputLayout.pInputElementDescs = nullptr;
+		return;
+	}
+
+	_pInputLayout = std::shared_ptr<D3D12_INPUT_ELEMENT_DESC[]>(new D3D12_INPUT_ELEMENT_DESC[inputLayout.size()]);
+	for (std::size_t i = 0; i < inputLayout.size(); ++i)
+		_pInputLayout[i] = inputLayout[i];
+
+	_psoDesc.InputLayout.NumElements = static_cast<UINT>(inputLayout.size());
+	_psoDesc.InputLayout.pInputElementDescs = _pInputLayout ? _pInputLayout.get() : nullptr;
+}
+
+void GraphicsPSO::setPrimitiveRestart(D3D12_INDEX_BUFFER_STRIP_CUT_VALUE IBProps) {
+	_psoDesc.IBStripCutValue = IBProps;
+	_dirty = true;
+}
+void GraphicsPSO::setVertexShader(const void *pBinary, size_t size) {
+	_psoDesc.VS = cacheBytecode("VS", pBinary, size);
+	_dirty = true;
+}
+void GraphicsPSO::setPixelShader(const void *pBinary, size_t size) {
+	_psoDesc.PS = cacheBytecode("PS", pBinary, size);
+	_dirty = true;
+}
+void GraphicsPSO::setGeometryShader(const void *pBinary, size_t size) {
+	_psoDesc.GS = cacheBytecode("GS", pBinary, size);
+	_dirty = true;
+}
+void GraphicsPSO::setHullShader(const void *pBinary, size_t size) {
+	_psoDesc.HS = cacheBytecode("HS", pBinary, size);
+	_dirty = true;
+}
+void GraphicsPSO::setDomainShader(const void *pBinary, size_t size) {
+	_psoDesc.DS = cacheBytecode("DS", pBinary, size);
+	_dirty = true;
+}
+
+void GraphicsPSO::setVertexShader(WRL::ComPtr<ID3DBlob> pBytecode) {
+	_psoDesc.VS = cacheBytecode("VS", pBytecode);
+	_dirty = true;
+}
+void GraphicsPSO::setPixelShader(WRL::ComPtr<ID3DBlob> pBytecode) {
+	_psoDesc.PS = cacheBytecode("PS", pBytecode);
+	_dirty = true;
+}
+void GraphicsPSO::setGeometryShader(WRL::ComPtr<ID3DBlob> pBytecode) {
+	_psoDesc.GS = cacheBytecode("GS", pBytecode);
+	_dirty = true;
+}
+void GraphicsPSO::setHullShader(WRL::ComPtr<ID3DBlob> pBytecode) {
+	_psoDesc.HS = cacheBytecode("HS", pBytecode);
+	_dirty = true;
+}
+void GraphicsPSO::setDomainShader(WRL::ComPtr<ID3DBlob> pBytecode) {
+	_psoDesc.DS = cacheBytecode("DS", pBytecode);
+	_dirty = true;
+}
+
+void GraphicsPSO::setVertexShader(const D3D12_SHADER_BYTECODE &bytecode) {
+	setVertexShader(bytecode.pShaderBytecode, bytecode.BytecodeLength);
+}
+void GraphicsPSO::setPixelShader(const D3D12_SHADER_BYTECODE &bytecode) {
+	setPixelShader(bytecode.pShaderBytecode, bytecode.BytecodeLength);
+}
+void GraphicsPSO::setGeometryShader(const D3D12_SHADER_BYTECODE &bytecode) {
+	setGeometryShader(bytecode.pShaderBytecode, bytecode.BytecodeLength);
+}
+void GraphicsPSO::setHullShader(const D3D12_SHADER_BYTECODE &bytecode) {
+	setHullShader(bytecode.pShaderBytecode, bytecode.BytecodeLength);
+}
+void GraphicsPSO::setDomainShader(const D3D12_SHADER_BYTECODE &bytecode) {
+	setDomainShader(bytecode.pShaderBytecode, bytecode.BytecodeLength);
+}
+
+void GraphicsPSO::finalize(std::weak_ptr<Device> pDevice) {
+	if (!_dirty)
+		return;
+	
+	assert(_pRootSignature != nullptr);
+	_psoDesc.pRootSignature = _pRootSignature->getRootSignature().Get();
+	ThrowIfFailed(pDevice.lock()->getD3DDevice()->CreateGraphicsPipelineState(
+		&_psoDesc,
+		IID_PPV_ARGS(&_pPSO)
+	));
+	_dirty = false;
+}
+
+std::shared_ptr<PSO> GraphicsPSO::clone(const std::string &name) {
+	auto pRes = std::make_shared<GraphicsPSO>(name);
+	pRes->_dirty = this->_dirty;
+	pRes->_pPSO = this->_pPSO;
+	pRes->_psoDesc = this->_psoDesc;
+	pRes->_pRootSignature = this->_pRootSignature;
+	pRes->_shaderBytecodeCache = this->_shaderBytecodeCache;
+	return std::static_pointer_cast<PSO>(pRes);
+}
+
+D3D12_SHADER_BYTECODE GraphicsPSO::cacheBytecode(const std::string &name, const void *pData, size_t size) {
+	if (pData == nullptr) {
+		_shaderBytecodeCache.erase(name);
+		return { nullptr, 0 };
+	}
+
+	WRL::ComPtr<ID3DBlob> pBuffer;
+	ThrowIfFailed(D3DCreateBlob(size, &pBuffer));
+	std::memcpy(pBuffer->GetBufferPointer(), pData, size);
+	_shaderBytecodeCache[name] = pBuffer;
+	return { pBuffer->GetBufferPointer(), pBuffer->GetBufferSize() };
+}
+
+D3D12_SHADER_BYTECODE GraphicsPSO::cacheBytecode(const std::string &name, WRL::ComPtr<ID3DBlob> pBytecode) {
+	if (pBytecode == nullptr) {
+		_shaderBytecodeCache.erase(name);
+		return { nullptr, 0 };
+	}
+	_shaderBytecodeCache[name] = pBytecode;
+	return { pBytecode->GetBufferPointer(), pBytecode->GetBufferSize() };
 }
 
 }

@@ -24,8 +24,6 @@ public:
 
 	void releaseStaleDescriptor();
 
-	std::shared_ptr<PipelineStateObject> createPipelineStateObject(const D3D12_GRAPHICS_PIPELINE_STATE_DESC &desc);
-
 	UINT getSampleCount() const;
 	UINT getSampleQuality() const;
 	DXGI_SAMPLE_DESC getSampleDesc() const;

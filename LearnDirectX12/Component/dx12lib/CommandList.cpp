@@ -88,40 +88,40 @@ void CommandList::flushResourceBarriers() {
 	_pResourceStateTracker->flushResourceBarriers(shared_from_this());
 }	
 
-void CommandList::setPipelineStateObject(std::shared_ptr<PipelineStateObject> pPso) {
-	_pCommandList->SetPipelineState(pPso->getPSO().Get());
-}
+//void CommandList::setPipelineStateObject(std::shared_ptr<PipelineStateObject> pPso) {
+//	_pCommandList->SetPipelineState(pPso->getPSO().Get());
+//}
 
 void CommandList::transitionBarrier(const IResource &resource, 
-	D3D12_RESOURCE_STATES state, UINT subresource /*= D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES*/, 
+	D3D12_RESOURCE_STATES state, UINT subResource /*= D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES*/,
 	bool flushBarrier /*= false */) 
 {
-	_pResourceStateTracker->transitionResource(resource, state, subresource);
+	_pResourceStateTracker->transitionResource(resource, state, subResource);
 	if (flushBarrier)
 		flushResourceBarriers();
 }
 
 void CommandList::transitionBarrier(const IResource *pResource, 
 	D3D12_RESOURCE_STATES state, 
-	UINT subresource /*= D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES*/,
+	UINT subResource /*= D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES*/,
 	bool flushBarrier /*= false */) 
 {
-	transitionBarrier(*pResource, state, subresource, flushBarrier);
+	transitionBarrier(*pResource, state, subResource, flushBarrier);
 }
 
 void CommandList::transitionBarrier(std::shared_ptr<IResource> pResource, 
 	D3D12_RESOURCE_STATES state, 
-	UINT subresource /*= D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES*/, 
+	UINT subResource /*= D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES*/, 
 	bool flushBarrier /*= false */) 
 {
-	transitionBarrier(pResource.get(), state, subresource, flushBarrier);
+	transitionBarrier(pResource.get(), state, subResource, flushBarrier);
 }
 
-void CommandList::aliasBarrier(const IResource *pResourceBeforce /*= nullptr*/, 
+void CommandList::aliasBarrier(const IResource *pResourceBefore /*= nullptr*/,
 	const IResource *pResourceAfter /*= nullptr*/, 
 	bool flushBarrier /*= false */) 
 {
-	_pResourceStateTracker->aliasBarrier(pResourceBeforce, pResourceAfter);
+	_pResourceStateTracker->aliasBarrier(pResourceBefore, pResourceAfter);
 	if (flushBarrier)
 		flushResourceBarriers();
 }
@@ -167,6 +167,17 @@ void CommandList::setIndexBuffer(std::shared_ptr<IndexBuffer> pIndexBuffer) {
 void CommandList::setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuffer, uint32 rootIndex, uint32 offset) {
 	assert(pConstantBuffer != nullptr);
 	_pDynamicDescriptorHeaps[0]->stageDescriptors(rootIndex, offset, 1, pConstantBuffer->getConstantBufferView());
+}
+
+void CommandList::setPipelineStateObject(std::shared_ptr<PSO> pPipelineStateObject) {
+	assert(pPipelineStateObject != nullptr);
+	if (_pCurrentPSO == pPipelineStateObject)
+		return;
+
+	_pCurrentPSO = pPipelineStateObject;
+	for (auto &pHeap : _pDynamicDescriptorHeaps)
+		pHeap->parseRootSignature(pPipelineStateObject->getRootSignature());
+	_pCommandList->SetPipelineState(pPipelineStateObject->getPipelineStateObject().Get());
 }
 
 CommandList::CommandList(std::weak_ptr<FrameResourceItem> pFrameResourceItem) {
@@ -217,9 +228,8 @@ void CommandList::close(CommandListProxy pPendingCmdList) {
 void CommandList::reset() {
 	_pCmdListAlloc->Reset();
 	ThrowIfFailed(_pCommandList->Reset(_pCmdListAlloc.Get(), nullptr));
-
 	_pResourceStateTracker->reset();
-
+	_pCurrentPSO = nullptr;
 	for (auto &pDynamicDescriptorHeap : _pDynamicDescriptorHeaps)
 		pDynamicDescriptorHeap->reset();
 }

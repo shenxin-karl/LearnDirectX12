@@ -82,10 +82,6 @@ void Device::releaseStaleDescriptor() {
 		pAllocator->releaseStateDescriptors();
 }
 
-std::shared_ptr<PipelineStateObject> Device::createPipelineStateObject(const D3D12_GRAPHICS_PIPELINE_STATE_DESC &desc) {
-	return std::make_shared<PipelineStateObject>(weak_from_this(), desc);
-}
-
 UINT Device::getSampleCount() const {
 	return _4xMsaaState ? 4 : 1;
 }

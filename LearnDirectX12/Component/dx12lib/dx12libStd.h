@@ -109,6 +109,8 @@ class ResourceStateTracker;
 class IResource;
 class DynamicDescriptorHeap;
 class RootSignature;
-class PipelineStateObject;
+class PSO;
+class GraphicsPSO;
+class ComputePSO;
 
 }

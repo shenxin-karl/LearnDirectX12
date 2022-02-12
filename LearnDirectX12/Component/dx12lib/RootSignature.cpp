@@ -36,6 +36,10 @@ uint32 RootSignature::getNumDescriptorsByType(D3D12_DESCRIPTOR_HEAP_TYPE type, s
 	}
 }
 
+WRL::ComPtr<ID3D12RootSignature> RootSignature::getRootSignature() const {
+	return _pRootSignature;
+}
+
 void RootSignature::reset() {
 	_rootSignatureDesc = CD3DX12_ROOT_SIGNATURE_DESC(D3D12_DEFAULT);
 	_pRootSignature = nullptr;

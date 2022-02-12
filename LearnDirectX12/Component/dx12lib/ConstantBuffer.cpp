@@ -74,4 +74,8 @@ D3D12_CPU_DESCRIPTOR_HANDLE ConstantBuffer::getConstantBufferView() const {
 	return _CBV[_frameIndex].getCPUHandle();
 }
 
+uint32 ConstantBuffer::getFrameIndex() const {
+	return _frameIndex;
+}
+
 }

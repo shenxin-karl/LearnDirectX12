@@ -7,11 +7,11 @@ namespace dx12lib {
 class UploadBuffer;
 
 struct ConstantBufferDesc {
-	std::weak_ptr<Device>        pDevice;
-	std::atomic_uint32_t        &frameIndex;
-	uint32                       frameCount;
-	uint32                       sizeInByte;
-	const void                  *pData = nullptr;
+	std::weak_ptr<Device>  pDevice;
+	std::atomic_uint32_t  &frameIndex;
+	uint32                 frameCount;
+	uint32                 sizeInByte;
+	const void            *pData = nullptr;
 };
 
 class ConstantBuffer {
@@ -25,6 +25,7 @@ public:
 	uint32 getConstantBufferSize() const noexcept;
 	uint32 getConstantAlignedBufferSize() const noexcept;
 	D3D12_CPU_DESCRIPTOR_HANDLE getConstantBufferView() const;
+	uint32 getFrameIndex() const;
 private:
 	uint32                            _bufferSize;
 	std::atomic_uint32_t             &_frameIndex;
