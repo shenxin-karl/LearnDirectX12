@@ -9,7 +9,7 @@ class VertexBuffer : public IResource {
 public:
 	VertexBuffer();
 	VertexBuffer(std::weak_ptr<Device> pDevice, std::shared_ptr<CommandList> pCmdList, 
-		const void *pData, uint32 sizeInByte, uint32 stride, uint32 slot
+		const void *pData, uint32 sizeInByte, uint32 stride
 	);
 	VertexBuffer(const VertexBuffer &) = delete;
 	VertexBuffer(VertexBuffer &&other) noexcept;
@@ -20,13 +20,11 @@ public:
 	WRL::ComPtr<ID3DBlob> getCPUBuffer() const noexcept;
 	uint32 getVertexBufferSize() const noexcept;
 	uint32 getVertexStride() const noexcept;
-	uint32 getVertexSlot() const noexcept;
 	bool isEmpty() const noexcept;
 	virtual WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
 private:
 	uint32                         _bufferByteSize;
 	uint32                         _vertexStride;
-	uint32                         _slot;
 	WRL::ComPtr<ID3DBlob>          _pCPUBuffer;
 	std::unique_ptr<DefaultBuffer> _pGPUBuffer;
 };

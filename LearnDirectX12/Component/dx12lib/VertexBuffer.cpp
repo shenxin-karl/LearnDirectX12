@@ -5,12 +5,12 @@
 
 namespace dx12lib {
 
-VertexBuffer::VertexBuffer() : _bufferByteSize(0), _vertexStride(0), _slot(0) {
+VertexBuffer::VertexBuffer() : _bufferByteSize(0), _vertexStride(0) {
 }
 
 VertexBuffer::VertexBuffer(std::weak_ptr<Device> pDevice, std::shared_ptr<CommandList> pCmdList,
-	const void *pData, uint32 sizeInByte, uint32 stride, uint32 slot)
-: _bufferByteSize(sizeInByte), _vertexStride(stride), _slot(slot)
+	const void *pData, uint32 sizeInByte, uint32 stride)
+: _bufferByteSize(sizeInByte), _vertexStride(stride)
 {
 	_pGPUBuffer = std::make_unique<DefaultBuffer>(pDevice.lock()->getD3DDevice(), 
 		pCmdList->getD3DCommandList(), 
@@ -43,10 +43,6 @@ uint32 VertexBuffer::getVertexBufferSize() const noexcept {
 
 uint32 VertexBuffer::getVertexStride() const noexcept {
 	return _vertexStride;
-}
-
-uint32 VertexBuffer::getVertexSlot() const noexcept {
-	return _slot;
 }
 
 bool VertexBuffer::isEmpty() const noexcept {

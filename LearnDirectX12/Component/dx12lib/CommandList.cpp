@@ -123,8 +123,8 @@ void CommandList::aliasBarrier(const IResource *pResourceBefore /*= nullptr*/,
 }
 
 std::shared_ptr<VertexBuffer> 
-CommandList::createVertexBuffer(const void *pData, uint32 sizeInByte, uint32 stride, uint32 slot) {
-	return std::make_shared<VertexBuffer>(_pDevice, shared_from_this(), pData, sizeInByte, stride, slot);
+CommandList::createVertexBuffer(const void *pData, uint32 sizeInByte, uint32 stride) {
+	return std::make_shared<VertexBuffer>(_pDevice, shared_from_this(), pData, sizeInByte, stride);
 }
 
 std::shared_ptr<IndexBuffer> 
@@ -146,10 +146,10 @@ CommandList::createConstantBuffer(uint32 sizeInByte, const void *pData) {
 	return std::make_shared<ConstantBuffer>(desc);
 }
 
-void CommandList::setVertexBuffer(std::shared_ptr<VertexBuffer> pVertBuffer) {
+void CommandList::setVertexBuffer(std::shared_ptr<VertexBuffer> pVertBuffer, UINT slot /*= 0 */) {
 	assert(pVertBuffer != nullptr);
 	_pCommandList->IASetVertexBuffers(
-		pVertBuffer->getVertexSlot(),
+		slot,
 		1,
 		RVPtr(pVertBuffer->getVertexBufferView())
 	);

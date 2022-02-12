@@ -43,8 +43,7 @@ public:
 	std::shared_ptr<VertexBuffer> createVertexBuffer(
 		const void *pData,
 		uint32 sizeInByte,
-		uint32 stride,
-		uint32 slot = 0
+		uint32 stride
 	);
 
 	std::shared_ptr<IndexBuffer> createIndexBuffer(
@@ -67,7 +66,7 @@ public:
 	}
 	
 /// bind gpu buffer
-	void setVertexBuffer(std::shared_ptr<VertexBuffer> pVertBuffer);
+	void setVertexBuffer(std::shared_ptr<VertexBuffer> pVertBuffer, UINT slot = 0);
 	void setIndexBuffer(std::shared_ptr<IndexBuffer> pIndexBuffer);
 	void setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuffer, uint32 rootIndex, uint32 offset = 0);
 	void setPipelineStateObject(std::shared_ptr<PSO> pPipelineStateObject);
