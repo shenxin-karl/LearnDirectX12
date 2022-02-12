@@ -88,10 +88,6 @@ void CommandList::flushResourceBarriers() {
 	_pResourceStateTracker->flushResourceBarriers(shared_from_this());
 }	
 
-//void CommandList::setPipelineStateObject(std::shared_ptr<PipelineStateObject> pPso) {
-//	_pCommandList->SetPipelineState(pPso->getPSO().Get());
-//}
-
 void CommandList::transitionBarrier(const IResource &resource, 
 	D3D12_RESOURCE_STATES state, UINT subResource /*= D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES*/,
 	bool flushBarrier /*= false */) 
@@ -174,10 +170,45 @@ void CommandList::setPipelineStateObject(std::shared_ptr<PSO> pPipelineStateObje
 	if (_pCurrentPSO == pPipelineStateObject)
 		return;
 
+	setRootSignature(pPipelineStateObject->getRootSignature());
 	_pCurrentPSO = pPipelineStateObject;
-	for (auto &pHeap : _pDynamicDescriptorHeaps)
-		pHeap->parseRootSignature(pPipelineStateObject->getRootSignature());
 	_pCommandList->SetPipelineState(pPipelineStateObject->getPipelineStateObject().Get());
+}
+
+void CommandList::setRootSignature(std::shared_ptr<RootSignature> pRootSignature) {
+	if (_pCurrentRootSignature != pRootSignature) {
+		_pCurrentRootSignature = pRootSignature;
+		for (auto &pHeap : _pDynamicDescriptorHeaps)
+			pHeap->parseRootSignature(_pCurrentRootSignature);
+	}
+}
+
+void CommandList::draw(uint32 vertCount, 
+	uint32 instanceCount, 
+	uint32 startVertex, 
+	uint32 startInstance) 
+{
+	flushResourceBarriers();
+	for (auto &pDynamicHeap : _pDynamicDescriptorHeaps)
+		pDynamicHeap->commitStagedDescriptorForDraw(shared_from_this());
+	_pCommandList->DrawInstanced(vertCount, instanceCount, startVertex, startInstance);
+}
+
+void CommandList::drawIndex(uint32 indexCountPerInstance, 
+	uint32 instanceCount, 
+	uint32 startIndexLocation, 
+	uint32 startVertexLocation, 
+	uint32 startInstanceLocation) 
+{
+	flushResourceBarriers();
+	for (auto &pDynamicHeap : _pDynamicDescriptorHeaps)
+		pDynamicHeap->commitStagedDescriptorForDraw(shared_from_this());
+	_pCommandList->DrawIndexedInstanced(indexCountPerInstance, 
+		instanceCount, 
+		startIndexLocation, 
+		startVertexLocation, 
+		startIndexLocation
+	);
 }
 
 CommandList::CommandList(std::weak_ptr<FrameResourceItem> pFrameResourceItem) {
@@ -230,6 +261,7 @@ void CommandList::reset() {
 	ThrowIfFailed(_pCommandList->Reset(_pCmdListAlloc.Get(), nullptr));
 	_pResourceStateTracker->reset();
 	_pCurrentPSO = nullptr;
+	_pCurrentRootSignature = nullptr;
 	for (auto &pDynamicDescriptorHeap : _pDynamicDescriptorHeaps)
 		pDynamicDescriptorHeap->reset();
 }

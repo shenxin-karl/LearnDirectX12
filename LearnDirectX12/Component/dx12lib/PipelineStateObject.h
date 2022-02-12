@@ -41,7 +41,7 @@ public:
 		UINT MsaaCount = 1, 
 		UINT MsaaQuality = 0
 	);
-	void setInputLayer(const std::vector<D3D12_INPUT_ELEMENT_DESC> &inputLayout);
+	void setInputLayout(const std::vector<D3D12_INPUT_ELEMENT_DESC> &inputLayout);
 	void setPrimitiveRestart(D3D12_INDEX_BUFFER_STRIP_CUT_VALUE IBProps);
 	
 	void setVertexShader(const void *pBinary, size_t size);

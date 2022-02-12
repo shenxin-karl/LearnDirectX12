@@ -98,6 +98,9 @@ public:
 		return _pConstantBuffer->getConstantBufferView();
 	}
 
+	std::shared_ptr<ConstantBuffer> getConstantBuffer() const {
+		return _pConstantBuffer;
+	}
 private:
 	std::bitset<kFrameResourceCount> _bufferDirty;
 	std::shared_ptr<ConstantBuffer>  _pConstantBuffer;

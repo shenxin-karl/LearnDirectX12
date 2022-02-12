@@ -11,13 +11,15 @@ public:
 	CommandList(std::weak_ptr<FrameResourceItem> pFrameResourceItem);
 	~CommandList();
 	ID3D12GraphicsCommandList *getD3DCommandList() const noexcept;
+/// viewport scissorRect
 	void setViewports(const D3D12_VIEWPORT &viewport);
 	void setViewprots(const std::vector<D3D12_VIEWPORT> &viewports);
 	void setScissorRects(const D3D12_RECT &rect);
 	void setScissorRects(const std::vector<D3D12_RECT> &rects);
+
 	void setRenderTarget(std::shared_ptr<RenderTarget> pRenderTarget);
 	void flushResourceBarriers();
-// barrier
+/// resource barrier
 	void transitionBarrier(const IResource &resource, 
 		D3D12_RESOURCE_STATES state,
 		UINT subResource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
@@ -37,7 +39,7 @@ public:
 		const IResource *pResourceAfter = nullptr,
 		bool flushBarrier = false
 	);
-// buffer
+/// create gpu buffer
 	std::shared_ptr<VertexBuffer> createVertexBuffer(
 		const void *pData,
 		uint32 sizeInByte,
@@ -64,10 +66,35 @@ public:
 		return this->template createStructConstantBuffer<T>(&buff);
 	}
 	
+/// bind gpu buffer
 	void setVertexBuffer(std::shared_ptr<VertexBuffer> pVertBuffer);
 	void setIndexBuffer(std::shared_ptr<IndexBuffer> pIndexBuffer);
 	void setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuffer, uint32 rootIndex, uint32 offset = 0);
 	void setPipelineStateObject(std::shared_ptr<PSO> pPipelineStateObject);
+	void setRootSignature(std::shared_ptr<RootSignature> pRootSignature);
+
+	template<typename T>
+	void setStructConstantBuffer(std::shared_ptr<StructConstantBuffer<T>> pStructConstantBuffer,
+		uint32 rootIndex,
+		uint32 offset) 
+	{
+		assert(pStructConstantBuffer != nullptr);
+		pStructConstantBuffer->updateConstantBuffer();
+		setConstantBuffer(pStructConstantBuffer->getConstantBuffer(), rootIndex, offset);
+	}
+/// draw function
+	void draw(uint32 vertCount, 
+		uint32 instanceCount, 
+		uint32 startVertex, 
+		uint32 startInstance
+	);
+	
+	void drawIndex(uint32 indexCountPerInstance, 
+		uint32 instanceCount, 
+		uint32 startIndexLocation, 
+		uint32 startVertexLocation, 
+		uint32 startInstanceLocation
+	);
 private:
 	friend class CommandQueue;
 	friend class FrameResourceItem;
@@ -82,6 +109,7 @@ private:
 	std::unique_ptr<ResourceStateTracker>   _pResourceStateTracker;
 	std::unique_ptr<DynamicDescriptorHeap>  _pDynamicDescriptorHeaps[kDynamicDescriptorHeapCount];
 	std::shared_ptr<PSO>                    _pCurrentPSO;
+	std::shared_ptr<RootSignature>          _pCurrentRootSignature;
 };
 
 }
