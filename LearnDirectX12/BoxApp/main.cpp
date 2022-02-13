@@ -6,8 +6,8 @@
 
 int main() {
 	std::shared_ptr<com::GameTimer> pGameTimer = std::make_shared<com::GameTimer>();
+	BoxApp app;
 	try {
-		BoxApp app;
 		app.initialize();
 		while (!app.isRuning()) {
 			pGameTimer->newFrame();

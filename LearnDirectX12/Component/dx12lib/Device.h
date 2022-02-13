@@ -20,6 +20,10 @@ public:
 		DXGI_FORMAT depthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT
 	) const;
 
+	std::shared_ptr<RootSignature> createRootSignature(const D3D12_ROOT_SIGNATURE_DESC &desc);
+	std::shared_ptr<RootSignature> createRootSignature(const RootSignatureDescHelper &desc);
+	std::shared_ptr<GraphicsPSO> createGraphicsPSO(const std::string &name);
+
 	DescriptorAllocation allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32 numDescriptors = 1);
 
 	void releaseStaleDescriptor();

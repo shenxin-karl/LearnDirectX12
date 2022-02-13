@@ -7,6 +7,7 @@
 #include "ConstantBuffer.h"
 #include "DescriptorAllocator.h"
 #include "DescriptorAllocation.h"
+#include "RootSignature.h"
 #include "PipelineStateObject.h"
 
 namespace dx12lib {
@@ -70,6 +71,18 @@ std::shared_ptr<SwapChain> Device::createSwapChain(
 		backBufferFormat, 
 		depthStencilFormat
 	);
+}
+
+std::shared_ptr<RootSignature> Device::createRootSignature(const D3D12_ROOT_SIGNATURE_DESC &desc) {
+	return std::make_shared<RootSignature>(weak_from_this(), desc);
+}
+
+std::shared_ptr<RootSignature> Device::createRootSignature(const RootSignatureDescHelper &desc) {
+	return std::make_shared<RootSignature>(weak_from_this(), desc.getRootSignatureDesc());
+}
+
+std::shared_ptr<GraphicsPSO> Device::createGraphicsPSO(const std::string &name) {
+	return std::make_shared<GraphicsPSO>(name);
 }
 
 DescriptorAllocation Device::allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32 numDescriptors /*= 1*/) {

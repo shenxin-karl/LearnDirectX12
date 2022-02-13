@@ -24,7 +24,12 @@ const std::string &PSO::getName() const {
 }
 
 GraphicsPSO::GraphicsPSO(const std::string &name) : PSO(name) {
+	/// graphics pipeline static object has default state
 	std::memset(&_psoDesc, 0, sizeof(_psoDesc));
+	_psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	_psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	_psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	_psoDesc.SampleMask = 0xffffffff;
 }
 
 void GraphicsPSO::setBlendState(const D3D12_BLEND_DESC& blendDesc) {
@@ -115,6 +120,10 @@ void GraphicsPSO::setHullShader(const void *pBinary, size_t size) {
 }
 void GraphicsPSO::setDomainShader(const void *pBinary, size_t size) {
 	_psoDesc.DS = cacheBytecode("DS", pBinary, size);
+}
+
+bool GraphicsPSO::isDirty() const {
+	return _dirty;
 }
 
 void GraphicsPSO::setVertexShader(WRL::ComPtr<ID3DBlob> pBytecode) {

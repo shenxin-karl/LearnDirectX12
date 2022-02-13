@@ -1,5 +1,4 @@
 #pragma once
-//#include <winnt.h>
 #include <d3d12.h>
 #include <wrl.h>
 #include <utility>
@@ -9,9 +8,8 @@
 #include <unordered_map>
 #include <array>
 #include "d3dx12.h"
+#include "ComponentStd.h"
 
-void _ThrowIfFailedImpl(const char *file, int line, HRESULT hr);
-#define ThrowIfFailed(hr) (_ThrowIfFailedImpl(__FILE__, __LINE__, hr))
 
 Microsoft::WRL::ComPtr<ID3D12Resource> createDefaultBuffer(
 	ID3D12Device *device,
@@ -30,20 +28,6 @@ Microsoft::WRL::ComPtr<ID3DBlob> compileShader(
 	const std::string		&entrypoint,
 	const std::string		&target
 );
-
-
-#define USE_RVPTR_FUNC_IMPL
-#ifdef USE_RVPTR_FUNC_IMPL
-	template<typename T>
-	const T *_rightValuePtr(const T &val) {
-		return &val;
-	}
-// use thread local static object save return value. return value ptr
-#define RVPtr(val) _rightValuePtr(val)
-#else
-#define RVPtr(val) (&val)
-#endif
-
 
 struct SubmeshGeometry {
 	UINT	indexCount = 0;
@@ -78,6 +62,7 @@ namespace d3dUtil {
 namespace WRL = Microsoft::WRL;
 using uint32 = std::uint32_t;
 using uint64 = std::uint64_t;
+using ::ThrowIfFailed;
 
 const CD3DX12_STATIC_SAMPLER_DESC &getPointWrapStaticSampler();
 const CD3DX12_STATIC_SAMPLER_DESC &getPointClampStaticSampler();

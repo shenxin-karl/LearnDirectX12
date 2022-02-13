@@ -42,17 +42,17 @@ public:
 /// create gpu buffer
 	std::shared_ptr<VertexBuffer> createVertexBuffer(
 		const void *pData,
-		uint32 sizeInByte,
-		uint32 stride
+		std::size_t sizeInByte,
+		std::size_t stride
 	);
 
 	std::shared_ptr<IndexBuffer> createIndexBuffer(
 		const void *pData,
-		uint32 sizeInByte,
+		std::size_t sizeInByte,
 		DXGI_FORMAT indexFormat
 	);
 
-	std::shared_ptr<ConstantBuffer> createConstantBuffer(uint32 sizeInByte, const void *pData = nullptr);
+	std::shared_ptr<ConstantBuffer> createConstantBuffer(std::size_t sizeInByte, const void *pData = nullptr);
 
 	template<StructConstantBufferConcept T>
 	std::shared_ptr<StructConstantBuffer<T>> createStructConstantBuffer(const T *pData = nullptr) {

@@ -3,6 +3,51 @@
 
 namespace dx12lib {
 
+RootParameter::RootParameter(D3D12_SHADER_VISIBILITY visibility /*= D3D12_SHADER_VISIBILITY_ALL*/)
+: _visibility(visibility) {
+	_pRanges = std::make_shared<std::vector<D3D12_DESCRIPTOR_RANGE>>();
+}
+
+void RootParameter::initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, 
+	UINT numDescriptors, 
+	UINT baseShaderRegister, 
+	UINT registerSpace /*= 0 */) 
+{
+	CD3DX12_DESCRIPTOR_RANGE range;
+	range.Init(rangeType, numDescriptors, baseShaderRegister, registerSpace);
+	_pRanges->push_back(range);
+	_rootParame.InitAsDescriptorTable(static_cast<UINT>(_pRanges->size()), _pRanges->data(), _visibility);
+}
+
+const CD3DX12_ROOT_PARAMETER &RootParameter::getRootParameDesc() const {
+	return _rootParame;
+}
+
+RootSignatureDescHelper::RootSignatureDescHelper(D3D12_ROOT_SIGNATURE_FLAGS flag /*= D3D12_ROOT_SIGNATURE_FLAG_NONE*/)
+: _flag(flag) {
+}
+
+RootSignatureDescHelper::RootSignatureDescHelper(const std::vector<D3D12_STATIC_SAMPLER_DESC> &staticSamplers, 
+	D3D12_ROOT_SIGNATURE_FLAGS flag /*= D3D12_ROOT_SIGNATURE_FLAG_NONE */)
+: _staticSamplers(staticSamplers), _flag(flag) {
+}
+
+void RootSignatureDescHelper::addRootParameter(const RootParameter &parame) {
+	_rootParameterInfos.push_back(parame);
+	_rootParameters.push_back(_rootParameterInfos.back().getRootParameDesc());
+}
+
+D3D12_ROOT_SIGNATURE_DESC RootSignatureDescHelper::getRootSignatureDesc() const {
+	CD3DX12_ROOT_SIGNATURE_DESC rootDesc;
+	rootDesc.Init(static_cast<UINT>(_rootParameters.size()),
+		_rootParameters.data(),
+		static_cast<UINT>(_staticSamplers.size()),
+		_staticSamplers.data(),
+		_flag
+	);
+	return rootDesc;
+}
+
 RootSignature::RootSignature(std::weak_ptr<Device> pDevice, const D3D12_ROOT_SIGNATURE_DESC &desc) 
 : _pDevice(pDevice) 
 {
@@ -123,5 +168,6 @@ std::size_t RootSignature::getPerTableIndexByRangeType(D3D12_DESCRIPTOR_RANGE_TY
 		return 0;
 	};
 }
+
 
 }

@@ -15,6 +15,7 @@ IndexBuffer::IndexBuffer(std::weak_ptr<Device> pDevice,
 	DXGI_FORMAT format)
 : _indexFormat(format), _indexBufferByteSize(sizeInByte) 
 {
+	assert(getIndexStrideByFormat(format) != 0 && "invalid index type");
 	ThrowIfFailed(D3DCreateBlob(sizeInByte, &_pCPUBuffer));
 	memcpy(_pCPUBuffer->GetBufferPointer(), pData, sizeInByte);
 	_pGPUBuffer = std::make_unique<DefaultBuffer>(
@@ -43,6 +44,27 @@ DXGI_FORMAT IndexBuffer::getIndexFormat() const noexcept {
 
 uint32 IndexBuffer::getIndexBufferSize() const noexcept {
 	return _indexBufferByteSize;
+}
+
+uint32 IndexBuffer::getIndexCount() const noexcept {
+	return _indexBufferByteSize / getIndexStrideByFormat(_indexFormat);
+}
+
+uint32 IndexBuffer::getIndexStrideByFormat(DXGI_FORMAT format) {
+	switch (format) {
+	case DXGI_FORMAT_R8_SINT:
+	case DXGI_FORMAT_R8_UINT:
+		return 1;
+	case DXGI_FORMAT_R16_SINT:
+	case DXGI_FORMAT_R16_UINT:
+		return 2;
+	case DXGI_FORMAT_R32_SINT:
+	case DXGI_FORMAT_R32_UINT:
+		return 4;
+	default:
+		assert(false);
+		return 0;
+	}
 }
 
 bool IndexBuffer::isEmpty() const noexcept {

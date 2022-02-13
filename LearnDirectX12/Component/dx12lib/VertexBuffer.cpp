@@ -45,6 +45,11 @@ uint32 VertexBuffer::getVertexStride() const noexcept {
 	return _vertexStride;
 }
 
+uint32 VertexBuffer::getVertexCount() const noexcept {
+	assert(_vertexStride != 0);
+	return _bufferByteSize / _vertexStride;
+}
+
 bool VertexBuffer::isEmpty() const noexcept {
 	return _pGPUBuffer == nullptr;
 }

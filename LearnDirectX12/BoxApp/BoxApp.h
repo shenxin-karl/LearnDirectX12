@@ -11,7 +11,14 @@ using namespace mat;
 
 struct Vertex {
 	float3 position;
-	float3 color;
+	float4 color;
+};
+
+struct BoxMesh {
+	std::shared_ptr<dx12lib::VertexBuffer> _pVertexBuffer;
+	std::shared_ptr<dx12lib::IndexBuffer>  _pIndexBuffer;
+	UINT _baseVertexLocation = 0;
+	UINT _startIndexLocation = 0;
 };
 
 class BoxApp : public com::BaseApp {
@@ -22,12 +29,13 @@ protected:
 	virtual void onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 	virtual void onTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 private:
+	void buildBoxGeometry(dx12lib::CommandListProxy pCmdList);
+	void renderBoxPass(dx12lib::CommandListProxy pCmdList);
 	using GPUPassConstantBufferPtr = std::shared_ptr<dx12lib::StructConstantBuffer<d3dUtil::PassConstants>>;
 private:
 	std::shared_ptr<dx12lib::GraphicsPSO>  _pGraphicsPSO;
-	std::shared_ptr<dx12lib::VertexBuffer> _pVertexBuffer;
-	std::shared_ptr<dx12lib::IndexBuffer>  _pIndexBuffer;
 	GPUPassConstantBufferPtr               _pPassConstantBuffer;
+	std::unique_ptr<BoxMesh>               _pBoxMesh;
 	float    _theta = 0.f;
 	float    _phi = 0.f;
 	float4x4 _world;

@@ -24,7 +24,7 @@
 #include <bitset>
 #include <functional>
 #include <array>
-
+#include "ComponentStd.h"
 
 namespace dx12lib {
 
@@ -40,35 +40,6 @@ using in16 = std::int16_t;
 using int32 = std::int32_t;
 using int64 = std::int64_t;
 using size_t = std::size_t;
-
-inline void _ThrowIfFailedImpl(const char *file, int line, HRESULT hr) {
-	if (FAILED(hr)) {
-		_com_error err(hr);
-		throw std::exception(err.ErrorMessage());
-	}
-}
-
-inline void ThrowIfFailed(HRESULT hr, const std::source_location &sl = std::source_location::current()) {
-	if (FAILED(hr)) {
-		_com_error err(hr);
-		throw std::exception(err.ErrorMessage());
-	}
-}
-
-#define USE_RVPTR_FUNC_IMPL
-template<typename T>
-const T *_rightValuePtr(const T &val) {
-	return &val;
-}
-
-template<typename T>
-constexpr auto RVPtr(T &&val) {
-#ifdef USE_RVPTR_FUNC_IMPL
-	return _rightValuePtr(val);
-#else
-	return &val;
-#endif
-}
 
 enum class CommandQueueType {
 	None = -1,
@@ -108,6 +79,7 @@ class UploadBuffer;
 class ResourceStateTracker;
 class IResource;
 class DynamicDescriptorHeap;
+class RootSignatureDescHelper;
 class RootSignature;
 class PSO;
 class GraphicsPSO;

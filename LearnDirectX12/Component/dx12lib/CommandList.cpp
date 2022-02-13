@@ -123,24 +123,35 @@ void CommandList::aliasBarrier(const IResource *pResourceBefore /*= nullptr*/,
 }
 
 std::shared_ptr<VertexBuffer> 
-CommandList::createVertexBuffer(const void *pData, uint32 sizeInByte, uint32 stride) {
-	return std::make_shared<VertexBuffer>(_pDevice, shared_from_this(), pData, sizeInByte, stride);
+CommandList::createVertexBuffer(const void *pData, std::size_t sizeInByte, std::size_t stride) {
+	return std::make_shared<VertexBuffer>(_pDevice, 
+		shared_from_this(), 
+		pData, 
+		uint32(sizeInByte), 
+		uint32(stride)
+	);
 }
 
 std::shared_ptr<IndexBuffer> 
-CommandList::createIndexBuffer(const void *pData, uint32 sizeInByte, DXGI_FORMAT indexFormat) {
-	return std::make_shared<IndexBuffer>(_pDevice, shared_from_this(), pData, sizeInByte, indexFormat);
+CommandList::createIndexBuffer(const void *pData, std::size_t sizeInByte, DXGI_FORMAT indexFormat) {
+	return std::make_shared<IndexBuffer>(_pDevice, 
+		shared_from_this(), 
+		pData, 
+		uint32(sizeInByte),
+		indexFormat
+	);
 }
 
 std::shared_ptr<ConstantBuffer> 
-CommandList::createConstantBuffer(uint32 sizeInByte, const void *pData) {
+CommandList::createConstantBuffer(std::size_t sizeInByte, const void *pData) {
 	auto pSharedDevice = _pDevice.lock();
-	auto *pFrameResourceQueue = pSharedDevice->getCommandQueue(toCommandQueueType(_cmdListType))->getFrameResourceQueue();
+	auto queueType = toCommandQueueType(_cmdListType);
+	auto *pFrameResourceQueue = pSharedDevice->getCommandQueue(queueType)->getFrameResourceQueue();
 	ConstantBufferDesc desc = {
 		_pDevice,
 		pFrameResourceQueue->getCurrentFrameResourceIndexRef(),
 		pFrameResourceQueue->getMaxFrameResourceCount(),
-		sizeInByte,
+		uint32(sizeInByte),
 		pData
 	};
 	return std::make_shared<ConstantBuffer>(desc);
@@ -160,9 +171,14 @@ void CommandList::setIndexBuffer(std::shared_ptr<IndexBuffer> pIndexBuffer) {
 	_pCommandList->IASetIndexBuffer(RVPtr(pIndexBuffer->getIndexBufferView()));
 }
 
-void CommandList::setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuffer, uint32 rootIndex, uint32 offset) {
+void CommandList::setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuffer, uint32 rootIndex, uint32 offset){
 	assert(pConstantBuffer != nullptr);
-	_pDynamicDescriptorHeaps[0]->stageDescriptors(rootIndex, offset, 1, pConstantBuffer->getConstantBufferView());
+	_pDynamicDescriptorHeaps[0]->stageDescriptors(
+		rootIndex, 
+		offset, 
+		1, 
+		pConstantBuffer->getConstantBufferView()
+	);
 }
 
 void CommandList::setPipelineStateObject(std::shared_ptr<PSO> pPipelineStateObject) {

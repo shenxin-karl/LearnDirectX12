@@ -47,7 +47,7 @@ void UploadBuffer::copyData(UINT elementIndex, const void *pData) {
 
 D3D12_GPU_VIRTUAL_ADDRESS UploadBuffer::getGPUAddressByIndex(UINT elementIndex /*= 0*/) const {
 	D3D12_GPU_VIRTUAL_ADDRESS address = _pUploadBuffer->GetGPUVirtualAddress();
-	address += elementIndex;
+	address += UINT64(elementIndex) * _elementByteSize;
 	return address;
 }
 

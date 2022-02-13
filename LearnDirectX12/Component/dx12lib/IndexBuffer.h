@@ -21,6 +21,8 @@ public:
 	D3D12_INDEX_BUFFER_VIEW getIndexBufferView() const noexcept;
 	DXGI_FORMAT getIndexFormat() const noexcept;
 	uint32 getIndexBufferSize() const noexcept;
+	uint32 getIndexCount() const noexcept;
+	static uint32 getIndexStrideByFormat(DXGI_FORMAT format);
 	bool isEmpty() const noexcept;
 	virtual WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
 private:

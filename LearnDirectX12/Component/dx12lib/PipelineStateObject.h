@@ -3,6 +3,34 @@
 
 namespace dx12lib {
 
+enum class InputLayoutType {
+	VertexData,
+	InstanceData,
+};
+
+template<InputLayoutType type>
+struct InputLayoutDescHelper : public D3D12_INPUT_ELEMENT_DESC {
+public:
+	template<typename Class, typename Member>
+	InputLayoutDescHelper(Member (Class::*pMember), 
+		std::string_view name, 
+		DXGI_FORMAT format,
+		UINT semanticIndex = 0, 
+		UINT slot = 0) 
+	{
+		static_assert(std::is_member_pointer_v<decltype(pMember)>, "Pmember must be a member pointer");
+		this->SemanticName = name.data();
+		this->SemanticIndex = semanticIndex;
+		this->Format = format;
+		this->AlignedByteOffset = (UINT)(std::size_t)((&(static_cast<Class *>(nullptr)->*pMember)));
+		this->InputSlotClass = (type == InputLayoutType::VertexData) ?
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA : D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA;
+	}
+};
+
+using VInputLayoutDescHelper = InputLayoutDescHelper<InputLayoutType::VertexData>;
+using IInputLayoutDescHepler = InputLayoutDescHelper<InputLayoutType::InstanceData>;
+
 class PSO {
 public:
 	explicit PSO(const std::string &name);
@@ -61,6 +89,7 @@ public:
 	void setGeometryShader(const D3D12_SHADER_BYTECODE &bytecode);
 	void setHullShader(const D3D12_SHADER_BYTECODE &bytecode);
 	void setDomainShader(const D3D12_SHADER_BYTECODE &bytecode);
+	bool isDirty() const;
 	virtual void finalize(std::weak_ptr<Device> pDevice) override;
 	virtual std::shared_ptr<PSO> clone(const std::string &name) override;
 private:

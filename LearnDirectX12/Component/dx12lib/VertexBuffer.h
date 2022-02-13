@@ -20,6 +20,7 @@ public:
 	WRL::ComPtr<ID3DBlob> getCPUBuffer() const noexcept;
 	uint32 getVertexBufferSize() const noexcept;
 	uint32 getVertexStride() const noexcept;
+	uint32 getVertexCount() const noexcept;
 	bool isEmpty() const noexcept;
 	virtual WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
 private:
