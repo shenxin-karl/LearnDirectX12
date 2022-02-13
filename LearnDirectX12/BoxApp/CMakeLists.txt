@@ -23,6 +23,9 @@ add_executable(BoxApp ${AllFile})
 set(RESOURCES ${SHADER_FILES})
 set_property(SOURCE ${RESOURCES} PROPERTY VS_TOOL_OVERRIDE "shader")			# 设置 hlsl 为 shader 资源文件
 
+# 设置程序工作目录为 cmake 工作目录
+set_property(TARGET BoxApp PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+
 target_include_directories(BoxApp PUBLIC
 	${CMAKE_CURRENT_SOURCE_DIR}/..
 )

@@ -3,7 +3,6 @@
 #include "GameTimer/GameTimer.h"
 #include "Math/VectorHelper.h"
 #include "Math/MatrixHelper.h"
-#include "D3D/FrameResource.h"
 #include "dx12lib/StructConstantBuffer.hpp"
 
 using namespace vec;
@@ -21,6 +20,14 @@ struct BoxMesh {
 	UINT _startIndexLocation = 0;
 };
 
+enum BoxRootParame : UINT {
+	WorldViewProjCBuffer = 0,
+};
+
+struct WVMConstantBuffer {
+	float4x4 gWorldViewProj;
+};
+
 class BoxApp : public com::BaseApp {
 public:
 	BoxApp();
@@ -29,15 +36,21 @@ protected:
 	virtual void onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 	virtual void onTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 private:
+	void pollEvent();
+	void updatePhiAndTheta(int x, int y);
+	void updateRadius(float offset);
 	void buildBoxGeometry(dx12lib::CommandListProxy pCmdList);
 	void renderBoxPass(dx12lib::CommandListProxy pCmdList);
-	using GPUPassConstantBufferPtr = std::shared_ptr<dx12lib::StructConstantBuffer<d3dUtil::PassConstants>>;
+	using GPUPassConstantBufferPtr = std::shared_ptr<dx12lib::StructConstantBuffer<WVMConstantBuffer>>;
 private:
 	std::shared_ptr<dx12lib::GraphicsPSO>  _pGraphicsPSO;
-	GPUPassConstantBufferPtr               _pPassConstantBuffer;
+	GPUPassConstantBufferPtr               _pMVPConstantBuffer;
 	std::unique_ptr<BoxMesh>               _pBoxMesh;
 	float    _theta = 0.f;
 	float    _phi = 0.f;
+	float    _radius = 5.f;
+	bool     _isMouseLeftPress = false;
+	POINT    _lastMousePosition;
 	float4x4 _world;
 	float4x4 _projection;
 	float4x4 _view;

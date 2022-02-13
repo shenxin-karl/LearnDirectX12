@@ -23,12 +23,12 @@ const CD3DX12_ROOT_PARAMETER &RootParameter::getRootParameDesc() const {
 	return _rootParame;
 }
 
-RootSignatureDescHelper::RootSignatureDescHelper(D3D12_ROOT_SIGNATURE_FLAGS flag /*= D3D12_ROOT_SIGNATURE_FLAG_NONE*/)
+RootSignatureDescHelper::RootSignatureDescHelper(D3D12_ROOT_SIGNATURE_FLAGS flag)
 : _flag(flag) {
 }
 
 RootSignatureDescHelper::RootSignatureDescHelper(const std::vector<D3D12_STATIC_SAMPLER_DESC> &staticSamplers, 
-	D3D12_ROOT_SIGNATURE_FLAGS flag /*= D3D12_ROOT_SIGNATURE_FLAG_NONE */)
+	D3D12_ROOT_SIGNATURE_FLAGS flag /*= D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT */)
 : _staticSamplers(staticSamplers), _flag(flag) {
 }
 

@@ -18,13 +18,16 @@ public:
 		UINT semanticIndex = 0, 
 		UINT slot = 0) 
 	{
+		bool isInstance = type == InputLayoutType::InstanceData;
 		static_assert(std::is_member_pointer_v<decltype(pMember)>, "Pmember must be a member pointer");
 		this->SemanticName = name.data();
 		this->SemanticIndex = semanticIndex;
 		this->Format = format;
+		this->InputSlot = slot;
 		this->AlignedByteOffset = (UINT)(std::size_t)((&(static_cast<Class *>(nullptr)->*pMember)));
-		this->InputSlotClass = (type == InputLayoutType::VertexData) ?
-			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA : D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA;
+		this->InputSlotClass = isInstance ? D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA :
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+		this->InstanceDataStepRate = isInstance ? 1 : 0;
 	}
 };
 
@@ -44,6 +47,7 @@ public:
 	virtual std::shared_ptr<PSO> clone(const std::string &name) = 0;
 	virtual ~PSO() = default;
 protected:
+	bool                             _dirty = true;
 	std::string                      _name;
 	std::shared_ptr<RootSignature>   _pRootSignature;
 	WRL::ComPtr<ID3D12PipelineState> _pPSO;
@@ -96,7 +100,6 @@ private:
 	D3D12_SHADER_BYTECODE cacheBytecode(const std::string &name, const void *pData, size_t size);
 	D3D12_SHADER_BYTECODE cacheBytecode(const std::string &name, WRL::ComPtr<ID3DBlob> pBytecode);
 private:
-	bool                                          _dirty = true;
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC            _psoDesc;
 	std::shared_ptr<D3D12_INPUT_ELEMENT_DESC[]>   _pInputLayout;
 	std::map<std::string, WRL::ComPtr<ID3DBlob>>  _shaderBytecodeCache;

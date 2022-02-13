@@ -9,6 +9,7 @@ PSO::PSO(const std::string &name) : _name(name) {
 
 void PSO::setRootSignature(std::shared_ptr<RootSignature> pRootSignature) {
 	_pRootSignature = pRootSignature;
+	_dirty = true;
 }
 
 std::shared_ptr<RootSignature> PSO::getRootSignature() const {
