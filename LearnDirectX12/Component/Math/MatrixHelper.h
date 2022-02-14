@@ -1,7 +1,8 @@
 #pragma once
 #include <DirectXMath.h>
 
-namespace matrix {
+
+namespace Math {
 
 namespace DX = DirectX;
 
@@ -20,4 +21,3 @@ struct MatrixHelper<float, 4, 4> : public DX::XMFLOAT4X4 {
 
 }
 
-namespace mat = matrix;

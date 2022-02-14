@@ -6,7 +6,8 @@
 namespace DX = DirectX;
 #define FORCEINLINE __forceinline
 
-namespace vec {
+namespace Math {
+
 using size_t = std::size_t;
 template<typename T, size_t N>
 struct VectorHelper;
@@ -160,7 +161,6 @@ public:
 		: VectorHelper(color.operator DirectX::XMVECTOR())
 	{}
 };
-
 
 template<typename T, size_t N>
 FORCEINLINE T dot(const VectorHelper<T, N> &lhs, const VectorHelper<T, N> &rhs);

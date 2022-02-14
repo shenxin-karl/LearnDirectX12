@@ -1,7 +1,13 @@
 #pragma once
 #include <DirectXMath.h>
+#include "Math/VectorHelper.h"
+#include "Math/MatrixHelper.h"
+
+namespace Math {
 
 namespace DX = DirectX;
+namespace XM = DirectX;
+
 class MathHelper {
 public:
 	static DX::XMFLOAT4X4 identity4x4();
@@ -13,4 +19,10 @@ public:
 		return lhs + (rhs - lhs) * t;
 	}
 };
+
+using namespace XM;
+
+}
+
+
 
