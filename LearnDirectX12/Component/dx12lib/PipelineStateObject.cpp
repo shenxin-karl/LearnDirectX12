@@ -30,6 +30,7 @@ GraphicsPSO::GraphicsPSO(const std::string &name) : PSO(name) {
 	_psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	_psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	_psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	_psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	_psoDesc.SampleMask = 0xffffffff;
 }
 

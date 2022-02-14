@@ -69,8 +69,9 @@ public:
 	void setVertexBuffer(std::shared_ptr<VertexBuffer> pVertBuffer, UINT slot = 0);
 	void setIndexBuffer(std::shared_ptr<IndexBuffer> pIndexBuffer);
 	void setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuffer, uint32 rootIndex, uint32 offset = 0);
-	void setPipelineStateObject(std::shared_ptr<PSO> pPipelineStateObject);
-	void setRootSignature(std::shared_ptr<RootSignature> pRootSignature);
+	void setPipelineStateObject(std::shared_ptr<GraphicsPSO> pPipelineStateObject);
+	void setGrahicsRootSignature(std::shared_ptr<RootSignature> pRootSignature);
+	void setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology);
 
 	template<typename T>
 	void setStructConstantBuffer(std::shared_ptr<StructConstantBuffer<T>> pStructConstantBuffer,
@@ -100,6 +101,9 @@ private:
 	void close();
 	void close(CommandListProxy pPendingCmdList);
 	void reset();
+
+	using SetRootSignatureFunc = std::function<void(ID3D12GraphicsCommandList *, ID3D12RootSignature *)>;
+	void setRootSignature(std::shared_ptr<RootSignature> pRootSignature, const SetRootSignatureFunc &setFunc);
 private:
 	D3D12_COMMAND_LIST_TYPE                 _cmdListType;
 	std::weak_ptr<Device>                   _pDevice;

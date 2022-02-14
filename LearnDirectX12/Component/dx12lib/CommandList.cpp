@@ -10,6 +10,7 @@
 #include "IndexBuffer.h"
 #include "VertexBuffer.h"
 #include "CommandQueue.h"
+#include "RootSignature.h"
 
 namespace dx12lib {
 
@@ -181,22 +182,22 @@ void CommandList::setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuf
 	);
 }
 
-void CommandList::setPipelineStateObject(std::shared_ptr<PSO> pPipelineStateObject) {
+void CommandList::setPipelineStateObject(std::shared_ptr<GraphicsPSO> pPipelineStateObject) {
 	assert(pPipelineStateObject != nullptr);
 	if (_pCurrentPSO == pPipelineStateObject)
 		return;
 
-	setRootSignature(pPipelineStateObject->getRootSignature());
+	setGrahicsRootSignature(pPipelineStateObject->getRootSignature());
 	_pCurrentPSO = pPipelineStateObject;
 	_pCommandList->SetPipelineState(pPipelineStateObject->getPipelineStateObject().Get());
 }
 
-void CommandList::setRootSignature(std::shared_ptr<RootSignature> pRootSignature) {
-	if (_pCurrentRootSignature != pRootSignature) {
-		_pCurrentRootSignature = pRootSignature;
-		for (auto &pHeap : _pDynamicDescriptorHeaps)
-			pHeap->parseRootSignature(_pCurrentRootSignature);
-	}
+void CommandList::setGrahicsRootSignature(std::shared_ptr<RootSignature> pRootSignature) {
+	setRootSignature(pRootSignature, &ID3D12GraphicsCommandList::SetGraphicsRootSignature);
+}
+
+void CommandList::setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology) {
+	_pCommandList->IASetPrimitiveTopology(topology);
 }
 
 void CommandList::draw(uint32 vertCount, 
@@ -280,6 +281,15 @@ void CommandList::reset() {
 	_pCurrentRootSignature = nullptr;
 	for (auto &pDynamicDescriptorHeap : _pDynamicDescriptorHeaps)
 		pDynamicDescriptorHeap->reset();
+}
+
+void CommandList::setRootSignature(std::shared_ptr<RootSignature> pRootSignature, const SetRootSignatureFunc &setFunc) {
+	if (_pCurrentRootSignature != pRootSignature) {
+		_pCurrentRootSignature = pRootSignature;
+		setFunc(_pCommandList.Get(), pRootSignature->getRootSignature().Get());
+		for (auto &pHeap : _pDynamicDescriptorHeaps)
+			pHeap->parseRootSignature(_pCurrentRootSignature);
+	}
 }
 
 }

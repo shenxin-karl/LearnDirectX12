@@ -29,12 +29,11 @@ void BoxApp::onInitialize(dx12lib::CommandListProxy pCmdList) {
 	auto pRootSignature = _pDevice->createRootSignature(desc);
 
 	// initialize graphics pipeline state object
-	auto pGraphicsPSO = _pDevice->createGraphicsPSO("colorPSO");
-	pGraphicsPSO->setVertexShader(compileShader(L"shader/Color.hlsl", nullptr, "VS", "vs_5_0"));
-	pGraphicsPSO->setPixelShader(compileShader(L"shader/Color.hlsl", nullptr, "PS", "ps_5_0"));
-	pGraphicsPSO->setRootSignature(pRootSignature);
-	pGraphicsPSO->setPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
-	pGraphicsPSO->setRenderTargetFormats(
+	_pGraphicsPSO = _pDevice->createGraphicsPSO("colorPSO");
+	_pGraphicsPSO->setVertexShader(compileShader(L"shader/Color.hlsl", nullptr, "VS", "vs_5_0"));
+	_pGraphicsPSO->setPixelShader(compileShader(L"shader/Color.hlsl", nullptr, "PS", "ps_5_0"));
+	_pGraphicsPSO->setRootSignature(pRootSignature);
+	_pGraphicsPSO->setRenderTargetFormats(
 		1, RVPtr(_pSwapChain->getRenderTargetFormat()),
 		_pSwapChain->getDepthStencilFormat(),
 		_pDevice->getSampleCount(),
@@ -46,8 +45,8 @@ void BoxApp::onInitialize(dx12lib::CommandListProxy pCmdList) {
 		dx12lib::VInputLayoutDescHelper(&Vertex::position, "POSITION", DXGI_FORMAT_R32G32B32_FLOAT, 0, 0),
 		dx12lib::VInputLayoutDescHelper(&Vertex::color, "COLOR", DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0),
 	};
-	pGraphicsPSO->setInputLayout(inputLayout);
-	pGraphicsPSO->finalize(_pDevice);
+	_pGraphicsPSO->setInputLayout(inputLayout);
+	_pGraphicsPSO->finalize(_pDevice);
 
 	buildBoxGeometry(pCmdList);
 }
@@ -122,10 +121,12 @@ void BoxApp::pollEvent() {
 }
 
 void BoxApp::updatePhiAndTheta(int x, int y) {
-	float dx = static_cast<float>(x - _lastMousePosition.x);
-	float dy = static_cast<float>(y - _lastMousePosition.y);
-	_theta = std::clamp(_theta + dy, -89.f, +89.f);;
-	_phi -= dx;
+	if (_isMouseLeftPress) {
+		float dx = static_cast<float>(x - _lastMousePosition.x);
+		float dy = static_cast<float>(y - _lastMousePosition.y);
+		_theta = std::clamp(_theta + dy, -89.f, +89.f);;
+		_phi -= dx;
+	}
 	_lastMousePosition = POINT(x, y);
 }
 
@@ -178,6 +179,7 @@ void BoxApp::renderBoxPass(dx12lib::CommandListProxy pCmdList) {
 	pCmdList->setStructConstantBuffer(_pMVPConstantBuffer, WorldViewProjCBuffer, 0);
 	pCmdList->setVertexBuffer(_pBoxMesh->_pVertexBuffer);
 	pCmdList->setIndexBuffer(_pBoxMesh->_pIndexBuffer);
+	pCmdList->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	pCmdList->drawIndex(
 		_pBoxMesh->_pIndexBuffer->getIndexCount(),
 		1,

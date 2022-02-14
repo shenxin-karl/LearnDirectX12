@@ -20,9 +20,9 @@ DescriptorAllocatorPage::DescriptorAllocatorPage(std::weak_ptr<Device> pDevice,
 : _pDevice(pDevice), _heapType(heapType)
 {
 	ID3D12Device *pD3DDevice = pDevice.lock()->getD3DDevice();
-	auto flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	if (_heapType == D3D12_DESCRIPTOR_HEAP_TYPE_DSV || _heapType == D3D12_DESCRIPTOR_HEAP_TYPE_RTV)
-		flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	auto flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	//if (_heapType == D3D12_DESCRIPTOR_HEAP_TYPE_DSV || _heapType == D3D12_DESCRIPTOR_HEAP_TYPE_RTV)
+	//	flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc;
 	heapDesc.Flags = flags;

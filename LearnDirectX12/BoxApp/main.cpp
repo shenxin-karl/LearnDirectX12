@@ -9,7 +9,7 @@ int main() {
 	BoxApp app;
 	try {
 		app.initialize();
-		while (!app.isRuning()) {
+		while (app.isRuning()) {
 			pGameTimer->newFrame();
 			app.beginTick(pGameTimer);
 			app.tick(pGameTimer);

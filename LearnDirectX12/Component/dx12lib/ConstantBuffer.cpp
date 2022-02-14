@@ -48,7 +48,7 @@ ConstantBuffer::ConstantBuffer(const ConstantBufferDesc &desc)
 }
 
 void ConstantBuffer::updateConstantBuffer(const void *pData, uint32 sizeInByte, uint32 offset) {
-	assert(offset + sizeInByte < _bufferSize);
+	assert((offset + sizeInByte) <= _bufferSize);
 	BYTE *pDest = getMappedPtr();
 	pDest += offset;
 	std::memcpy(pDest, pData, sizeInByte);
