@@ -55,10 +55,16 @@ void BoxApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	pollEvent();
 
 	auto pGPUWVM = _pMVPConstantBuffer->map();
+	float phiRadians = DX::XMConvertToRadians(_phi);
+	float thetaRadians = DX::XMConvertToRadians(_theta);
+	float cosTh = std::cos(thetaRadians); 
+	float sinTh = std::sin(thetaRadians);
+	float cosPhi = std::cos(phiRadians);
+	float sinPhi = std::sin(phiRadians);
 	float3 direction = {
-		std::cos(_phi) * std::cos(_theta),
-		std::sin(_phi),
-		std::cos(_phi) * std::sin(_theta),
+		cosPhi * cosTh,
+		sinPhi,
+		cosPhi * sinTh,
 	};
 
 	float aspect = float(_width) / float(_height);
@@ -78,6 +84,8 @@ void BoxApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pCmdQueue = _pDevice->getCommandQueue(dx12lib::CommandQueueType::Direct);
 	auto pCmdList = pCmdQueue->createCommandListProxy();
 	auto pRenderTarget = _pSwapChain->getRenderTarget();
+	pCmdList->setViewports(pRenderTarget->getViewport());
+	pCmdList->setScissorRects(pRenderTarget->getScissiorRect());
 	{
 		dx12lib::RenderTargetTransitionBarrier barrierGuard = {
 			pCmdList,
@@ -86,7 +94,14 @@ void BoxApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 			D3D12_RESOURCE_STATE_PRESENT,
 		};
 
-		pRenderTarget->getTexture(dx12lib::Color0)->clearColor(DX::Colors::LightGreen);
+		float cosine = std::cos(pGameTimer->getTotalTime());
+		float sine = std::sin(pGameTimer->getTotalTime());
+		pRenderTarget->getTexture(dx12lib::Color0)->clearColor({
+			cosine * 0.5f + 0.5f,
+			sine * 0.5f + 0.5f,
+			0.6f,
+			1.f,
+		});
 		pRenderTarget->getTexture(dx12lib::DepthStencil)->clearDepthStencil(1.f, 0);
 		pCmdList->setRenderTarget(pRenderTarget);
 		renderBoxPass(pCmdList);
@@ -122,17 +137,18 @@ void BoxApp::pollEvent() {
 
 void BoxApp::updatePhiAndTheta(int x, int y) {
 	if (_isMouseLeftPress) {
-		float dx = static_cast<float>(x - _lastMousePosition.x);
-		float dy = static_cast<float>(y - _lastMousePosition.y);
-		_theta = std::clamp(_theta + dy, -89.f, +89.f);;
-		_phi -= dx;
+		constexpr float sensitivety = 0.5f;
+		float dx = static_cast<float>(x - _lastMousePosition.x) * sensitivety;
+		float dy = static_cast<float>(y - _lastMousePosition.y) * sensitivety;
+		_phi = std::clamp(_phi + dy, -89.f, +89.f);;
+		_theta -= dx;
 	}
 	_lastMousePosition = POINT(x, y);
 }
 
 void BoxApp::updateRadius(float offset) {
 	constexpr float sensitivety = 0.1f;
-	_radius = std::max(5.f, _radius + offset * sensitivety);
+	_radius = std::max(5.f, _radius - offset * sensitivety);
 }
 
 void BoxApp::buildBoxGeometry(dx12lib::CommandListProxy pCmdList) {

@@ -51,7 +51,4 @@ private:
 	float    _radius = 5.f;
 	bool     _isMouseLeftPress = false;
 	POINT    _lastMousePosition;
-	float4x4 _world;
-	float4x4 _projection;
-	float4x4 _view;
 };
