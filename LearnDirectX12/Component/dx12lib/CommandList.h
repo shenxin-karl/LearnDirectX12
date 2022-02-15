@@ -111,8 +111,9 @@ private:
 	WRL::ComPtr<ID3D12CommandAllocator>     _pCmdListAlloc;
 	std::unique_ptr<ResourceStateTracker>   _pResourceStateTracker;
 	std::unique_ptr<DynamicDescriptorHeap>  _pDynamicDescriptorHeaps[kDynamicDescriptorHeapCount];
-	std::shared_ptr<PSO>                    _pCurrentPSO;
-	std::shared_ptr<RootSignature>          _pCurrentRootSignature;
+private:
+	PSO           *_pCurrentPSO = nullptr;
+	RootSignature *_pCurrentRootSignature = nullptr;
 };
 
 }

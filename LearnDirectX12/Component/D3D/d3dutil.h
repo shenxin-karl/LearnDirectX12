@@ -72,4 +72,7 @@ const CD3DX12_STATIC_SAMPLER_DESC &getAnisotropicWrapStaticSampler();
 const CD3DX12_STATIC_SAMPLER_DESC &getAnisotropicClampStaticSampler();
 const std::array<CD3DX12_STATIC_SAMPLER_DESC, 6> &getStaticSamplers();
 
+class CameraBase;
+class CoronaCamera;
+
 }

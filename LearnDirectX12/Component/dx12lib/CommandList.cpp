@@ -184,11 +184,11 @@ void CommandList::setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuf
 
 void CommandList::setPipelineStateObject(std::shared_ptr<GraphicsPSO> pPipelineStateObject) {
 	assert(pPipelineStateObject != nullptr);
-	if (_pCurrentPSO == pPipelineStateObject)
+	if (_pCurrentPSO == pPipelineStateObject.get())
 		return;
 
 	setGrahicsRootSignature(pPipelineStateObject->getRootSignature());
-	_pCurrentPSO = pPipelineStateObject;
+	_pCurrentPSO = pPipelineStateObject.get();
 	_pCommandList->SetPipelineState(pPipelineStateObject->getPipelineStateObject().Get());
 }
 
@@ -284,11 +284,11 @@ void CommandList::reset() {
 }
 
 void CommandList::setRootSignature(std::shared_ptr<RootSignature> pRootSignature, const SetRootSignatureFunc &setFunc) {
-	if (_pCurrentRootSignature != pRootSignature) {
-		_pCurrentRootSignature = pRootSignature;
+	if (_pCurrentRootSignature != pRootSignature.get()) {
+		_pCurrentRootSignature = pRootSignature.get();
 		setFunc(_pCommandList.Get(), pRootSignature->getRootSignature().Get());
 		for (auto &pHeap : _pDynamicDescriptorHeaps)
-			pHeap->parseRootSignature(_pCurrentRootSignature);
+			pHeap->parseRootSignature(pRootSignature);
 	}
 }
 

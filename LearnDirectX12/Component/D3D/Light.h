@@ -4,7 +4,7 @@
 //#include "Math/MatrixHelper.h"
 
 namespace d3dUtil {
-using namespace vec;
+using namespace Math;
 
 struct Light {
 	float3	strength	= float3(0.5f);				// 光的辐射强度
