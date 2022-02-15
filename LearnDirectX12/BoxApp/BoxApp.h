@@ -1,12 +1,10 @@
 #pragma once
 #include "BaseApp/BaseApp.h"
 #include "GameTimer/GameTimer.h"
-#include "Math/VectorHelper.h"
-#include "Math/MatrixHelper.h"
+#include "Math/MathHelper.h"
 #include "dx12lib/StructConstantBuffer.hpp"
 
-using namespace vec;
-using namespace mat;
+using namespace Math;
 
 struct Vertex {
 	float3 position;

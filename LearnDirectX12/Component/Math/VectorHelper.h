@@ -225,6 +225,8 @@ FORCEINLINE  VectorHelper<T, N> operator/(const VectorHelper<T, N> &lhs, const V
 template<typename T, size_t N>
 FORCEINLINE VectorHelper<T, N> &operator/=(VectorHelper<T, N> &lhs, const VectorHelper<T, N> &rhs);
 /*----------------------------- div --------------------------------*/
+template<typename T, size_t N>
+FORCEINLINE VectorHelper<T, N> operator-(VectorHelper<T, N> &v);
 
 }
 
