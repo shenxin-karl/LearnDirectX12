@@ -19,6 +19,16 @@ BoxApp::BoxApp() {
 }
 
 void BoxApp::onInitialize(dx12lib::CommandListProxy pCmdList) {
+	d3dUtil::CameraDesc cameraDesc;
+	cameraDesc.lookAt = float3(0, 0, 0);
+	cameraDesc.lookFrom = float3(2, 2, 2);
+	cameraDesc.lookUp = float3(0, 1, 0);
+	cameraDesc.nearClip = 0.1f;
+	cameraDesc.farClip = 100.f;
+	cameraDesc.fov = 45.f;
+	cameraDesc.aspect = float(_width) / float(_height);
+
+	_pCamera = std::make_unique<d3dUtil::CoronaCamera>(cameraDesc);
 	_pMVPConstantBuffer = pCmdList->createStructConstantBuffer<WVMConstantBuffer>();
 
 	// initialize root signature
@@ -53,31 +63,9 @@ void BoxApp::onInitialize(dx12lib::CommandListProxy pCmdList) {
 
 void BoxApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	pollEvent();
-
 	auto pGPUWVM = _pMVPConstantBuffer->map();
-	float phiRadians = DX::XMConvertToRadians(_phi);
-	float thetaRadians = DX::XMConvertToRadians(_theta);
-	float cosTh = std::cos(thetaRadians); 
-	float sinTh = std::sin(thetaRadians);
-	float cosPhi = std::cos(phiRadians);
-	float sinPhi = std::sin(phiRadians);
-	float3 direction = {
-		cosPhi * cosTh,
-		sinPhi,
-		cosPhi * sinTh,
-	};
-
-	float aspect = float(_width) / float(_height);
-	float3 lookfrom = direction * _radius;
-	float3 lookat = float3(0.f, 0.f, 0.f);
-	float3 lookup = float3(0.f, 1.f, 0.f);
-
-	float4x4 world = MathHelper::identity4x4();
-	DX::XMMATRIX gWorld = DX::XMLoadFloat4x4(&world);
-	DX::XMMATRIX gView = DX::XMMatrixLookAtLH(lookfrom.toVec(), lookat.toVec(), lookup.toVec());
-	DX::XMMATRIX gProj = DX::XMMatrixPerspectiveFovLH(DX::XMConvertToRadians(45.f), aspect, 0.1f, 100.f);
-	DX::XMMATRIX gWorldViewProj = gWorld * gView * gProj;
-	DX::XMStoreFloat4x4(&pGPUWVM->gWorldViewProj, gWorldViewProj);
+	_pCamera->update();
+	pGPUWVM->gWorldViewProj = _pCamera->getViewProj();
 }
 
 void BoxApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
@@ -140,15 +128,16 @@ void BoxApp::updatePhiAndTheta(int x, int y) {
 		constexpr float sensitivety = 0.5f;
 		float dx = static_cast<float>(x - _lastMousePosition.x) * sensitivety;
 		float dy = static_cast<float>(y - _lastMousePosition.y) * sensitivety;
-		_phi = std::clamp(_phi + dy, -89.f, +89.f);;
-		_theta -= dx;
+		_pCamera->setPhi(_pCamera->getPhi() + dy);
+		_pCamera->setTheta(_pCamera->getTheta() - dx);
 	}
 	_lastMousePosition = POINT(x, y);
 }
 
 void BoxApp::updateRadius(float offset) {
 	constexpr float sensitivety = 0.1f;
-	_radius = std::max(5.f, _radius - offset * sensitivety);
+	auto radius = std::max(0.1f, _pCamera->getRadius() - offset * sensitivety);
+	_pCamera->setRadiuse(radius);
 }
 
 void BoxApp::buildBoxGeometry(dx12lib::CommandListProxy pCmdList) {

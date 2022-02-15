@@ -9,7 +9,7 @@
 
 namespace sim {
 
-using namespace vec;
+using namespace Math;
 
 struct SimVertex {
 	float3	position;

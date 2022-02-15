@@ -1,6 +1,7 @@
 #pragma once
 #include "BaseApp/BaseApp.h"
 #include "GameTimer/GameTimer.h"
+#include "D3D/Camera.h"
 #include "Math/MathHelper.h"
 #include "dx12lib/StructConstantBuffer.hpp"
 
@@ -42,6 +43,7 @@ private:
 	using GPUPassConstantBufferPtr = std::shared_ptr<dx12lib::StructConstantBuffer<WVMConstantBuffer>>;
 private:
 	std::shared_ptr<dx12lib::GraphicsPSO>  _pGraphicsPSO;
+	std::unique_ptr<d3dUtil::CoronaCamera> _pCamera;
 	GPUPassConstantBufferPtr               _pMVPConstantBuffer;
 	std::unique_ptr<BoxMesh>               _pBoxMesh;
 	float    _theta = 0.f;

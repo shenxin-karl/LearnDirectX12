@@ -1,10 +1,15 @@
 #include "Camera.h"
+#include <algorithm>
 
 namespace d3dUtil {
 
 CameraBase::CameraBase(const CameraDesc &desc) {
+	float3 w = normalize(desc.lookAt - desc.lookFrom);
+	float3 u = normalize(cross(desc.lookUp, w));
+	float3 v = cross(w, u);
+
 	_lookFrom = desc.lookFrom;
-	_lookUp = desc.lookUp;
+	_lookUp = v;
 	_lookAt = desc.lookAt;
 	_nearClip = desc.nearClip;
 	_farClip = desc.farClip;
@@ -12,10 +17,13 @@ CameraBase::CameraBase(const CameraDesc &desc) {
 	_aspect = desc.aspect;
 }
 
-CoronaCamera::CoronaCamera(const CoronaCameraDesc &desc) : CameraBase(desc) {
-	_phi = desc.phi;
-	_theta = desc.theta;
-	_radius = desc.radius;
+CoronaCamera::CoronaCamera(const CameraDesc &desc) : CameraBase(desc) {
+	auto direction = desc.lookAt - desc.lookFrom;
+	_radius = length(direction);
+	assert(_radius != 0.f);
+	direction = -direction / _radius;
+	_phi = DX::XMConvertToDegrees(std::asin(direction.y));
+	_theta = DX::XMConvertToDegrees(std::atan2(direction.x, direction.z));
 	update();
 }
 
@@ -56,13 +64,17 @@ void CoronaCamera::update() {
 		cosPhi * sinTh,
 	};
 
-	DX::XMVECTOR lookAt = _lookAt.toVec();
-	_lookFrom = float3(lookAt + direction.toVec() * _radius);
-	float3 right = { _lookFrom.x, 0, _lookFrom.z };
-	_lookUp = cross(-direction, right);
+	float3 w = normalize(-direction);
+	float3 u;
+	if (std::abs(w.y) != 1.f)
+		u = normalize(cross(float3(0, 1, 0), w));
+	else
+		u = float3(w.y > 0.f ? +1.f : -1.f, 0.f, 0.f);
+	_lookUp = cross(w, u);
+	_lookFrom = _lookAt + direction * _radius;
 
 	DX::XMMATRIX view = DX::XMMatrixLookAtLH(_lookFrom.toVec(), _lookAt.toVec(), _lookUp.toVec());
-	DX::XMMATRIX proj = DX::XMMatrixPerspectiveFovLH(DX::XMConvertToDegrees(_fov), _aspect, _nearClip, _farClip);
+	DX::XMMATRIX proj = DX::XMMatrixPerspectiveFovLH(DX::XMConvertToRadians(_fov), _aspect, _nearClip, _farClip);
 	DX::XMMATRIX viewProj = view * proj;
 
 	DX::XMVECTOR det;
@@ -78,6 +90,31 @@ void CoronaCamera::update() {
 	DX::XMStoreFloat4x4(&_invView, invView);
 	DX::XMStoreFloat4x4(&_invProj, invProj);
 	DX::XMStoreFloat4x4(&_invViewProj, invViewProj);
+}
+
+
+float CoronaCamera::getPhi() const {
+	return _phi;
+}
+
+float CoronaCamera::getTheta() const {
+	return _theta;
+}
+
+float CoronaCamera::getRadius() const {
+	return _radius;
+}
+
+void CoronaCamera::setPhi(float phi) {
+	_phi = std::clamp(phi, -89.f, +89.f);
+}
+
+void CoronaCamera::setTheta(float theta) {
+	_theta = theta;
+}
+
+void CoronaCamera::setRadiuse(float radius) {
+	_radius = radius;
 }
 
 }

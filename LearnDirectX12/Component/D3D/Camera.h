@@ -35,15 +35,9 @@ public:
 };
 
 
-struct CoronaCameraDesc : public CameraDesc {
-	float phi = 0.f;
-	float theta = 0.f;
-	float radius = 10.f;
-};
-
 class CoronaCamera : public CameraBase {
 public:
-	CoronaCamera(const CoronaCameraDesc &desc);
+	CoronaCamera(const CameraDesc &desc);
 	virtual const float4x4 &getView() const override;
 	virtual const float4x4 &getProj() const override;
 	virtual const float4x4 &getViewProj() const override;
@@ -54,6 +48,9 @@ public:
 	float getPhi() const;
 	float getTheta() const;
 	float getRadius() const;
+	void setPhi(float phi);
+	void setTheta(float theta);
+	void setRadiuse(float radius);
 public:
 	float _phi;
 	float _theta;

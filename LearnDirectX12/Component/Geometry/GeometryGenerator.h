@@ -5,7 +5,7 @@
 #include <tuple>
 
 namespace com {
-using namespace vec;
+using namespace Math;
 using uint16 = std::uint16_t;
 using uint32 = std::uint32_t;
 

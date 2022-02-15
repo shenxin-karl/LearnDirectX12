@@ -228,14 +228,14 @@ Window::WindowClass::WindowClass() : hInstance_(GetModuleHandle(nullptr)) {
 	// register class
 	WNDCLASSEX wc;
 	wc.cbSize = sizeof(wc);
-	wc.style = CS_OWNDC;
+	wc.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc = handleMsgSetup;
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
 	wc.hInstance = hInstance_;
-	wc.hIcon = nullptr;
-	wc.hCursor = nullptr;
-	wc.hbrBackground = nullptr;
+	wc.hIcon = LoadIcon(0, IDI_APPLICATION);
+	wc.hCursor = LoadCursor(0, IDC_ARROW);
+	wc.hbrBackground = static_cast<HBRUSH>(GetStockObject(NULL_BRUSH));
 	wc.lpszMenuName = nullptr;
 	wc.lpszClassName = getClassName();
 	wc.hIconSm = nullptr;

@@ -6,7 +6,7 @@
 
 namespace loop {
 
-using namespace vec;
+using namespace Math;
 using namespace com;
 
 struct LoopVert {

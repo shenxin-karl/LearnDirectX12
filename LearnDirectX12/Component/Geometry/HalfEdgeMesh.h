@@ -10,7 +10,7 @@
 #include "GeometryGenerator.h"
 
 namespace HalfEdge {
-using namespace vec;
+using namespace Math;
 
 struct HEFace;
 struct HEEdge;

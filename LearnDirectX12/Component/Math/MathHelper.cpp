@@ -1,5 +1,7 @@
 #include "MathHelper.h"
 
+namespace Math {
+
 DX::XMFLOAT4X4 MathHelper::identity4x4() {
 	struct ObjectStore {
 		DX::XMFLOAT4X4 object;
@@ -62,4 +64,6 @@ DX::XMFLOAT3X3 MathHelper::identity3x3() {
 	};
 	static ObjectStore object;
 	return object.get();
+}
+
 }
