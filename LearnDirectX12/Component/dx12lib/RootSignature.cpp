@@ -34,10 +34,13 @@ RootSignatureDescHelper::RootSignatureDescHelper(const std::vector<D3D12_STATIC_
 
 void RootSignatureDescHelper::addRootParameter(const RootParameter &parame) {
 	_rootParameterInfos.push_back(parame);
-	_rootParameters.push_back(_rootParameterInfos.back().getRootParameDesc());
 }
 
 D3D12_ROOT_SIGNATURE_DESC RootSignatureDescHelper::getRootSignatureDesc() const {
+	_rootParameters.clear();
+	for (auto &rootParameter : _rootParameterInfos)
+		_rootParameters.push_back(rootParameter.getRootParameDesc());
+
 	CD3DX12_ROOT_SIGNATURE_DESC rootDesc;
 	rootDesc.Init(static_cast<UINT>(_rootParameters.size()),
 		_rootParameters.data(),
@@ -46,6 +49,17 @@ D3D12_ROOT_SIGNATURE_DESC RootSignatureDescHelper::getRootSignatureDesc() const 
 		_flag
 	);
 	return rootDesc;
+}
+
+void RootSignatureDescHelper::reset(std::size_t num, D3D12_SHADER_VISIBILITY visibility) {
+	_rootParameters.clear();
+	for (std::size_t i = 0; i < num; ++i)
+		_rootParameterInfos.push_back(RootParameter(visibility));
+}
+
+dx12lib::RootParameter &RootSignatureDescHelper::operator[](std::size_t index) {
+	assert(index < _rootParameterInfos.size());
+	return _rootParameterInfos[index];
 }
 
 RootSignature::RootSignature(std::weak_ptr<Device> pDevice, const D3D12_ROOT_SIGNATURE_DESC &desc) 

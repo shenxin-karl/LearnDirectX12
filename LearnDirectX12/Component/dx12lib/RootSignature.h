@@ -7,7 +7,7 @@ namespace dx12lib {
 class RootParameter {
 public:
 	RootParameter(D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_ALL);
-
+	RootParameter(const RootParameter &) = default;
 	void initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE rangeType,
 		UINT numDescriptors,
 		UINT baseShaderRegister,
@@ -31,11 +31,13 @@ public:
 	RootSignatureDescHelper &operator=(const RootSignatureDescHelper &) = delete;
 	void addRootParameter(const RootParameter &parame);
 	D3D12_ROOT_SIGNATURE_DESC getRootSignatureDesc() const;
+	void reset(std::size_t num, D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_ALL);
+	RootParameter &operator[](std::size_t index);
 private:
-	std::vector<RootParameter>             _rootParameterInfos;
-	std::vector<D3D12_ROOT_PARAMETER>      _rootParameters;
-	std::vector<D3D12_STATIC_SAMPLER_DESC> _staticSamplers;
-	D3D12_ROOT_SIGNATURE_FLAGS             _flag;
+	std::vector<RootParameter>					_rootParameterInfos;
+	mutable std::vector<D3D12_ROOT_PARAMETER>   _rootParameters;
+	std::vector<D3D12_STATIC_SAMPLER_DESC>		_staticSamplers;
+	D3D12_ROOT_SIGNATURE_FLAGS					_flag;
 };
 
 class RootSignature {

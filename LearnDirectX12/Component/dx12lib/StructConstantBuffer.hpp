@@ -1,5 +1,6 @@
 #pragma once
 #include "ConstantBuffer.h"
+#include <memory>
 
 namespace dx12lib {
 
@@ -8,6 +9,9 @@ concept StructConstantBufferConcept = std::is_class_v<T> && !std::is_union_v<T>;
 
 template<StructConstantBufferConcept T>
 class StructConstantBuffer;
+
+template<StructConstantBufferConcept T>
+using GPUStructCBPtr = std::shared_ptr<StructConstantBuffer<T>>;
 
 template<typename T>
 class MappedPtr {
@@ -108,3 +112,5 @@ private:
 };
 
 }
+
+using dx12lib::GPUStructCBPtr;

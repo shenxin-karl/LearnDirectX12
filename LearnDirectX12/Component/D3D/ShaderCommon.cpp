@@ -1,6 +1,6 @@
-#include "ShaderCommand.h"
+#include "ShaderCommon.h"
 
-namespace d3dUtil {
+namespace d3dutil {
 
 	const CD3DX12_STATIC_SAMPLER_DESC &getPointWrapStaticSampler() {
 	static CD3DX12_STATIC_SAMPLER_DESC sampler(

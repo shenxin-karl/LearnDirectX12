@@ -31,6 +31,8 @@ void Shape::onInitialize(dx12lib::CommandListProxy pCmdList) {
 	_pCamera = std::make_unique<d3dutil::CoronaCamera>(cameraDesc);
 	_pPassCB = pCmdList->createStructConstantBuffer<d3dutil::PassCBType>();
 	_pGameLightsCB = pCmdList->createStructConstantBuffer<d3dutil::LightCBType>();
+	buildPSO(pCmdList);
+	buildRenderItem(pCmdList);
 }
 
 void Shape::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
@@ -42,7 +44,11 @@ void Shape::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 }
 
 void Shape::buildPSO(dx12lib::CommandListProxy pCmdList) {
-	
+	dx12lib::RootSignatureDescHelper rootDesc;
+	rootDesc.reset(3);
+	rootDesc[0].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+	rootDesc[1].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+	rootDesc[2].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2);
 }
 
 void Shape::buildRenderItem(dx12lib::CommandListProxy pCmdList) {

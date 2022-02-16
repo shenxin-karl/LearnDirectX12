@@ -1,8 +1,9 @@
 #pragma once
 #include "dx12libStd.h"
+#include "D3D/ShaderCommon.h"
+#include "D3D/d3dutil.h"
 #include "GameTimer/GameTimer.h"
 #include "BaseApp/BaseApp.h"
-#include "D3D/d3dutil.h"
 #include "Math/MathHelper.h"
 #include "dx12lib/StructConstantBuffer.hpp"
 
@@ -19,11 +20,8 @@ struct Mesh {
 };
 
 struct ObjectCB {
-	float4x4 gWorld;
-	float3   albedo;
-	float    roughness;
-	float3   fresnel;
-	float    metallic;
+	float4x4          world;
+	d3dutil::Material material;
 };
 
 struct RenderItem {
@@ -35,9 +33,9 @@ struct RenderItem {
 };
 
 enum ShapeShaderCBType : UINT {
-	Pass   = 0,
-	Light  = 1,
-	Object = 2,
+	CBPass   = 0,
+	CBLight  = 1,
+	CBObject = 2,
 };
 
 class Shape : public com::BaseApp {
@@ -59,7 +57,7 @@ private:
 	bool  _isLeftPress = false;
 	std::unique_ptr<d3dutil::CoronaCamera>  _pCamera;
 	std::shared_ptr<dx12lib::GraphicsPSO>   _pGraphicsPSO;
-	GPUGameLightCBPtr                       _pGameLightsCB;
-	GPUPassCBPtr                            _pPassCB;
+	GPUStructCBPtr<d3dutil::LightCBType>    _pGameLightsCB;
+	GPUStructCBPtr<d3dutil::PassCBType>     _pPassCB;
 	std::vector<RenderItem>                 _renderItems;
 };
