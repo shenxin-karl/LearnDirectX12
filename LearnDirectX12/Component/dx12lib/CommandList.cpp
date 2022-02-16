@@ -160,16 +160,24 @@ CommandList::createConstantBuffer(std::size_t sizeInByte, const void *pData) {
 
 void CommandList::setVertexBuffer(std::shared_ptr<VertexBuffer> pVertBuffer, UINT slot /*= 0 */) {
 	assert(pVertBuffer != nullptr);
-	_pCommandList->IASetVertexBuffers(
-		slot,
-		1,
-		RVPtr(pVertBuffer->getVertexBufferView())
-	);
+	assert(slot < kVertexBufferSlotCount);
+	if (_currentGPUState.pVertexBuffers[slot] != pVertBuffer.get()) {
+		_currentGPUState.pVertexBuffers[slot] = pVertBuffer.get();
+		_pCommandList->IASetVertexBuffers(
+			slot,
+			1,
+			RVPtr(pVertBuffer->getVertexBufferView())
+		);
+	}
+
 }
 
 void CommandList::setIndexBuffer(std::shared_ptr<IndexBuffer> pIndexBuffer) {
 	assert(pIndexBuffer != nullptr);
-	_pCommandList->IASetIndexBuffer(RVPtr(pIndexBuffer->getIndexBufferView()));
+	if (_currentGPUState.pIndexBuffer != pIndexBuffer.get()) {
+		_currentGPUState.pIndexBuffer = pIndexBuffer.get();
+		_pCommandList->IASetIndexBuffer(RVPtr(pIndexBuffer->getIndexBufferView()));
+	}
 }
 
 void CommandList::setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuffer, uint32 rootIndex, uint32 offset){
@@ -184,11 +192,11 @@ void CommandList::setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuf
 
 void CommandList::setPipelineStateObject(std::shared_ptr<GraphicsPSO> pPipelineStateObject) {
 	assert(pPipelineStateObject != nullptr);
-	if (_pCurrentPSO == pPipelineStateObject.get())
+	if (_currentGPUState.pPSO == pPipelineStateObject.get())
 		return;
 
 	setGrahicsRootSignature(pPipelineStateObject->getRootSignature());
-	_pCurrentPSO = pPipelineStateObject.get();
+	_currentGPUState.pPSO = pPipelineStateObject.get();
 	_pCommandList->SetPipelineState(pPipelineStateObject->getPipelineStateObject().Get());
 }
 
@@ -277,15 +285,14 @@ void CommandList::reset() {
 	_pCmdListAlloc->Reset();
 	ThrowIfFailed(_pCommandList->Reset(_pCmdListAlloc.Get(), nullptr));
 	_pResourceStateTracker->reset();
-	_pCurrentPSO = nullptr;
-	_pCurrentRootSignature = nullptr;
+	std::memset(&_currentGPUState, 0, sizeof(_currentGPUState));
 	for (auto &pDynamicDescriptorHeap : _pDynamicDescriptorHeaps)
 		pDynamicDescriptorHeap->reset();
 }
 
 void CommandList::setRootSignature(std::shared_ptr<RootSignature> pRootSignature, const SetRootSignatureFunc &setFunc) {
-	if (_pCurrentRootSignature != pRootSignature.get()) {
-		_pCurrentRootSignature = pRootSignature.get();
+	if (_currentGPUState.pRootSignature != pRootSignature.get()) {
+		_currentGPUState.pRootSignature = pRootSignature.get();
 		setFunc(_pCommandList.Get(), pRootSignature->getRootSignature().Get());
 		for (auto &pHeap : _pDynamicDescriptorHeaps)
 			pHeap->parseRootSignature(pRootSignature);

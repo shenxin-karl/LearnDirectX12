@@ -78,7 +78,7 @@ float3 BlinnPhong(float3 lightStrength, float3 L, float3 N, float3 V, Material m
     float3 fresnelFactor = SchlickFresnel(R0, H, L);
     float3 specAlbedo = fresnelFactor * roughnessFactor;
     specAlbedo = specAlbedo / (specAlbedo + 1.0f);
-    return (mat.diffuseAlbedo.rgb + specAlbedo) * lightStrength;
+    return (diffuse + specAlbedo) * lightStrength;
 }
 
 float3 ComputeDirectLight(Light light, Material mat, float3 N, float3 V) {

@@ -13,7 +13,6 @@ using namespace Math;
 struct Vertex {
 	float3 position;
 	float3 normal;
-	float3 color;
 };
 
 struct Mesh {
@@ -57,6 +56,10 @@ public:
 private:
 	using GPUGameLightCBPtr = std::shared_ptr<dx12lib::StructConstantBuffer<GameLights>>;
 	using GPUPassCBPtr = std::shared_ptr<dx12lib::StructConstantBuffer<d3dUtil::PassConstants>>;
+	void buildPSO(dx12lib::CommandListProxy pCmdList);
+	void buildRenderItem(dx12lib::CommandListProxy pCmdList);
+	void renderShapesPass(dx12lib::CommandListProxy pCmdList);
+	void pollEvent();
 private:
 	POINT _lastMousePoint;
 	bool  _isLeftPress = false;

@@ -57,6 +57,7 @@ constexpr static std::size_t kFrameResourceCount = 3;
 constexpr static std::size_t kMaxDescriptorTables = 32;
 constexpr static std::size_t kDynamicDescriptorPerHeap = 32;
 constexpr static std::size_t kDynamicDescriptorHeapCount = 2;
+constexpr static std::size_t kVertexBufferSlotCount = 16;
 
 class Adapter;
 class CommandList;

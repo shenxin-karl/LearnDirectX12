@@ -1,4 +1,3 @@
-#include "../../Component/D3D/shader/CommonDefines.hlsl"
 #include "../../Component/D3D/shader/LightingUtil.hlsl"
 #include "../../Component/D3D/shader/PassConstantBuffer.hlsl"
 #include "../../Component/D3D/shader/MaterialConstantBuffer.hlsl"

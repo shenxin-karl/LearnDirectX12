@@ -71,10 +71,16 @@ void DynamicDescriptorHeap::stageDescriptors(size_t rootParameterIndex,
 		throw std::length_error("Number of descriptors exceeds the number of descriptors in the descriptor table.");
 
 	D3D12_CPU_DESCRIPTOR_HANDLE *pDstDescriptor = (descriptorTableCache._pBaseHandle + offset);
-	for (uint32 i = 0; i < numDescripotrs; ++i)
-		pDstDescriptor[i] = CD3DX12_CPU_DESCRIPTOR_HANDLE(srcDescriptor, i, _descriptorHandleIncrementSize);
-
-	_staleDescriptorTableBitMask.set(rootParameterIndex, true);
+	bool dirty = false;
+	for (uint32 i = 0; i < numDescripotrs; ++i) {
+		auto descriptor = CD3DX12_CPU_DESCRIPTOR_HANDLE(srcDescriptor, i, _descriptorHandleIncrementSize);
+		if (descriptor.ptr != pDstDescriptor[i].ptr) {
+			pDstDescriptor[i] = descriptor;
+			dirty = true;
+		}
+	}
+	if (dirty)
+		_staleDescriptorTableBitMask.set(rootParameterIndex, true);
 }
 
 uint32 DynamicDescriptorHeap::computeStaleDescriptorCount() const {

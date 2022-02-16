@@ -112,8 +112,13 @@ private:
 	std::unique_ptr<ResourceStateTracker>   _pResourceStateTracker;
 	std::unique_ptr<DynamicDescriptorHeap>  _pDynamicDescriptorHeaps[kDynamicDescriptorHeapCount];
 private:
-	PSO           *_pCurrentPSO = nullptr;
-	RootSignature *_pCurrentRootSignature = nullptr;
+	struct CommandListState {
+		PSO           *pPSO;
+		RootSignature *pRootSignature;
+		VertexBuffer  *pVertexBuffers[kVertexBufferSlotCount];
+		IndexBuffer   *pIndexBuffer;
+	};
+	CommandListState _currentGPUState;
 };
 
 }
