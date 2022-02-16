@@ -24,7 +24,7 @@
 #include <wrl.h>
 
 #include "DDSTextureLoader.h" 
-#include "d3dUtil.h"
+#include "d3dutil.h"
 
 using namespace Microsoft::WRL;
 

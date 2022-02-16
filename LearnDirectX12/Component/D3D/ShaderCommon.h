@@ -1,5 +1,11 @@
-#ifndef _COMMON_H_
-#define _COMMON_H_
+#pragma once
+#include "Math/MathHelper.h"
+#include "D3Dx12.h"
+#include <array>
+
+namespace d3dutil {
+
+using namespace Math;
 
 struct Light {
 	float3  strength;		// ∑¯…‰«ø∂»
@@ -18,13 +24,13 @@ struct Material {
 };
 
 struct PassCBType {
-	float4x4 view;
-	float4x4 invView;
+	float4x4 view;			
+	float4x4 invView;		
 	float4x4 proj;
 	float4x4 invProj;
 	float4x4 viewProj;
 	float4x4 invViewProj;
-	float3	 eyePos;
+	float3	 eyePos;	
 	float	 objectPad0;			// padding
 	float2	 renderTargetSize;
 	float2	 invRenderTargetSize;
@@ -34,7 +40,7 @@ struct PassCBType {
 	float	 deltaTime;
 };
 
-#define kMaxLightCount 16
+constexpr std::size_t kMaxLightCount = 16;
 struct LightCBType {
 	int      directLightCount;
 	int      pointLightCount;
@@ -44,13 +50,13 @@ struct LightCBType {
 	Light    lights[kMaxLightCount];
 };
 
-#ifndef	DISABLE_DEFAULT_SAMPLER
-SamplerState gSamPointWrap        : register(s0);
-SamplerState gSamPointClamp       : register(s1);
-SamplerState gSamLinearWrap       : register(s2);
-SamplerState gSamLinearClamp      : register(s3);
-SamplerState gSamAnisotropicWrap  : register(s4);
-SamplerState gSamAnisotropicClamp : register(s5);
-#endif // !DISABLE_DEFAULT_SAMPLER
 
-#endif // !_COMMON_H_
+const CD3DX12_STATIC_SAMPLER_DESC &getPointWrapStaticSampler();
+const CD3DX12_STATIC_SAMPLER_DESC &getPointClampStaticSampler();
+const CD3DX12_STATIC_SAMPLER_DESC &getLinearWrapStaticSampler();
+const CD3DX12_STATIC_SAMPLER_DESC &getLinearClampStaticSampler();
+const CD3DX12_STATIC_SAMPLER_DESC &getAnisotropicWrapStaticSampler();
+const CD3DX12_STATIC_SAMPLER_DESC &getAnisotropicClampStaticSampler();
+const std::array<CD3DX12_STATIC_SAMPLER_DESC, 6> &getStaticSamplers();
+
+}

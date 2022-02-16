@@ -38,7 +38,7 @@ bool LandAndWater::initialize() {
 void LandAndWater::beginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	BaseApp::beginTick(pGameTimer);
 
-	currentFrameResourceIndex_ = (currentFrameResourceIndex_ + 1) % d3dUtil::kNumFrameResources;
+	currentFrameResourceIndex_ = (currentFrameResourceIndex_ + 1) % d3dutil::kNumFrameResources;
 	currentFrameResource_ = frameResources_[currentFrameResourceIndex_].get();
 	auto fence = currentFrameResource_->fence_;
 	if (fence != 0 && pFence_->GetCompletedValue() < fence) {
@@ -79,7 +79,7 @@ void LandAndWater::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 
 	pCommandList_->SetGraphicsRootSignature(pRootSignature_.Get());
 	pCommandList_->SetGraphicsRootConstantBufferView(
-		d3dUtil::CB_Pass, currentFrameResource_->passCB_->getGPUAddressByIndex(0)
+		d3dutil::CB_Pass, currentFrameResource_->passCB_->getGPUAddressByIndex(0)
 	);
 
 	// draw Land
@@ -135,9 +135,9 @@ void LandAndWater::waitFrameResource() {
 void LandAndWater::buildFrameResource() {
 	UINT allItemSize = static_cast<UINT>(allRenderItem_.size());
 	UINT matSize = static_cast<UINT>(materials_.size());
-	d3dUtil::FrameResourceDesc desc(1, allItemSize, matSize);
-	for (size_t i = 0; i < d3dUtil::kNumFrameResources; ++i) {
-		auto pFrameResource = std::make_unique<d3dUtil::FrameResource>(pDevice_.Get(), desc);
+	d3dutil::FrameResourceDesc desc(1, allItemSize, matSize);
+	for (size_t i = 0; i < d3dutil::kNumFrameResources; ++i) {
+		auto pFrameResource = std::make_unique<d3dutil::FrameResource>(pDevice_.Get(), desc);
 		frameResources_.push_back(std::move(pFrameResource));
 	}
 }

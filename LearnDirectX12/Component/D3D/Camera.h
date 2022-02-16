@@ -1,7 +1,7 @@
 #pragma once
 #include "Math/MathHelper.h"
 
-namespace d3dUtil {
+namespace d3dutil {
 
 using namespace Math;
 

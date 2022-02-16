@@ -1,7 +1,7 @@
 #include "Camera.h"
 #include <algorithm>
 
-namespace d3dUtil {
+namespace d3dutil {
 
 CameraBase::CameraBase(const CameraDesc &desc) {
 	float3 w = normalize(desc.lookAt - desc.lookFrom);

@@ -2,9 +2,7 @@
 #include "dx12libStd.h"
 #include "GameTimer/GameTimer.h"
 #include "BaseApp/BaseApp.h"
-#include "D3D/FrameResource.h"
 #include "D3D/d3dutil.h"
-#include "D3D/Light.h"
 #include "Math/MathHelper.h"
 #include "dx12lib/StructConstantBuffer.hpp"
 
@@ -28,11 +26,6 @@ struct ObjectCB {
 	float    metallic;
 };
 
-struct GameLights {
-	float4          gAmbientStrength;
-	d3dUtil::Light  gLights[3];
-};
-
 struct RenderItem {
 	UINT _baseVertexLocation;
 	UINT _startIndexLocation;
@@ -50,12 +43,13 @@ enum ShapeShaderCBType : UINT {
 class Shape : public com::BaseApp {
 public:
 	Shape();
+	virtual ~Shape() override;
 	virtual void onInitialize(dx12lib::CommandListProxy pCmdList) override;
 	virtual void onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 	virtual void onTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 private:
-	using GPUGameLightCBPtr = std::shared_ptr<dx12lib::StructConstantBuffer<GameLights>>;
-	using GPUPassCBPtr = std::shared_ptr<dx12lib::StructConstantBuffer<d3dUtil::PassConstants>>;
+	using GPUGameLightCBPtr = std::shared_ptr<dx12lib::StructConstantBuffer<d3dutil::LightCBType>>;
+	using GPUPassCBPtr = std::shared_ptr<dx12lib::StructConstantBuffer<d3dutil::PassCBType>>;
 	void buildPSO(dx12lib::CommandListProxy pCmdList);
 	void buildRenderItem(dx12lib::CommandListProxy pCmdList);
 	void renderShapesPass(dx12lib::CommandListProxy pCmdList);
@@ -63,7 +57,7 @@ private:
 private:
 	POINT _lastMousePoint;
 	bool  _isLeftPress = false;
-	std::unique_ptr<d3dUtil::CoronaCamera>  _pCamera;
+	std::unique_ptr<d3dutil::CoronaCamera>  _pCamera;
 	std::shared_ptr<dx12lib::GraphicsPSO>   _pGraphicsPSO;
 	GPUGameLightCBPtr                       _pGameLightsCB;
 	GPUPassCBPtr                            _pPassCB;

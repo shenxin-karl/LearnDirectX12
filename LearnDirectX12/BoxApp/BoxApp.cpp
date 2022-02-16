@@ -19,7 +19,7 @@ BoxApp::BoxApp() {
 }
 
 void BoxApp::onInitialize(dx12lib::CommandListProxy pCmdList) {
-	d3dUtil::CameraDesc cameraDesc;
+	d3dutil::CameraDesc cameraDesc;
 	cameraDesc.lookAt = float3(0, 0, 0);
 	cameraDesc.lookFrom = float3(2, 2, 2);
 	cameraDesc.lookUp = float3(0, 1, 0);
@@ -28,7 +28,7 @@ void BoxApp::onInitialize(dx12lib::CommandListProxy pCmdList) {
 	cameraDesc.fov = 45.f;
 	cameraDesc.aspect = float(_width) / float(_height);
 
-	_pCamera = std::make_unique<d3dUtil::CoronaCamera>(cameraDesc);
+	_pCamera = std::make_unique<d3dutil::CoronaCamera>(cameraDesc);
 	_pMVPConstantBuffer = pCmdList->createStructConstantBuffer<WVMConstantBuffer>();
 
 	// initialize root signature
@@ -40,8 +40,8 @@ void BoxApp::onInitialize(dx12lib::CommandListProxy pCmdList) {
 
 	// initialize graphics pipeline state object
 	_pGraphicsPSO = _pDevice->createGraphicsPSO("colorPSO");
-	_pGraphicsPSO->setVertexShader(compileShader(L"shader/Color.hlsl", nullptr, "VS", "vs_5_0"));
-	_pGraphicsPSO->setPixelShader(compileShader(L"shader/Color.hlsl", nullptr, "PS", "ps_5_0"));
+	_pGraphicsPSO->setVertexShader(d3dutil::compileShader(L"shader/Color.hlsl", nullptr, "VS", "vs_5_0"));
+	_pGraphicsPSO->setPixelShader(d3dutil::compileShader(L"shader/Color.hlsl", nullptr, "PS", "ps_5_0"));
 	_pGraphicsPSO->setRootSignature(pRootSignature);
 	_pGraphicsPSO->setRenderTargetFormats(
 		1, RVPtr(_pSwapChain->getRenderTargetFormat()),

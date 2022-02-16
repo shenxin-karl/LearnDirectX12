@@ -1,5 +1,7 @@
 #include "Shape.h"
+#include "D3D/d3dutil.h"
 #include "D3D/Camera.h"
+#include "D3D/ShaderCommon.h"
 #include "dx12lib/CommandList.h"
 #include "dx12lib/PipelineStateObject.h"
 #include "dx12lib/SwapChain.h"
@@ -12,8 +14,12 @@ Shape::Shape() {
 	_title = "Shape";
 }
 
+Shape::~Shape() {
+
+}
+
 void Shape::onInitialize(dx12lib::CommandListProxy pCmdList) {
-	d3dUtil::CameraDesc cameraDesc = {
+	d3dutil::CameraDesc cameraDesc = {
 		float3(3, 3, 3),
 		float3(0, 1, 0),
 		float3(0, 0, 0),
@@ -22,9 +28,9 @@ void Shape::onInitialize(dx12lib::CommandListProxy pCmdList) {
 		100.f,
 		float(_width) / float(_height),
 	};
-	_pCamera = std::make_unique<d3dUtil::CoronaCamera>(cameraDesc);
-	_pPassCB = pCmdList->createStructConstantBuffer<d3dUtil::PassConstants>();
-	_pGameLightsCB = pCmdList->createStructConstantBuffer<GameLights>();
+	_pCamera = std::make_unique<d3dutil::CoronaCamera>(cameraDesc);
+	_pPassCB = pCmdList->createStructConstantBuffer<d3dutil::PassCBType>();
+	_pGameLightsCB = pCmdList->createStructConstantBuffer<d3dutil::LightCBType>();
 }
 
 void Shape::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
