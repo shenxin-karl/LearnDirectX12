@@ -9,7 +9,7 @@
 
 using namespace Math;
 
-struct Vertex {
+struct ShapeVertex {
 	float3 position;
 	float3 normal;
 };
@@ -29,7 +29,7 @@ struct RenderItem {
 	UINT _startIndexLocation;
 	UINT _indexCount;
 	std::shared_ptr<Mesh>     _pMesh;
-	std::shared_ptr<ObjectCB> _pObjectCB;
+	GPUStructCBPtr<ObjectCB>  _pObjectCB;
 };
 
 enum ShapeShaderCBType : UINT {
@@ -50,6 +50,8 @@ private:
 	using GPUPassCBPtr = std::shared_ptr<dx12lib::StructConstantBuffer<d3dutil::PassCBType>>;
 	void buildPSO(dx12lib::CommandListProxy pCmdList);
 	void buildRenderItem(dx12lib::CommandListProxy pCmdList);
+	void buildGeometry(dx12lib::CommandListProxy pCmdList);
+	void buildMaterials();
 	void renderShapesPass(dx12lib::CommandListProxy pCmdList);
 	void pollEvent();
 private:
@@ -60,4 +62,6 @@ private:
 	GPUStructCBPtr<d3dutil::LightCBType>    _pGameLightsCB;
 	GPUStructCBPtr<d3dutil::PassCBType>     _pPassCB;
 	std::vector<RenderItem>                 _renderItems;
+	std::unordered_map<std::string, std::shared_ptr<Mesh>> _geometrys;
+	std::unordered_map<std::string, d3dutil::Material>     _materials;
 };

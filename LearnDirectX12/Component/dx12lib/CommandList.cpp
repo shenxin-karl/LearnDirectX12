@@ -192,6 +192,7 @@ void CommandList::setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuf
 
 void CommandList::setPipelineStateObject(std::shared_ptr<GraphicsPSO> pPipelineStateObject) {
 	assert(pPipelineStateObject != nullptr);
+	assert(!pPipelineStateObject->isDirty());
 	if (_currentGPUState.pPSO == pPipelineStateObject.get())
 		return;
 
