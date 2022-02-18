@@ -49,6 +49,19 @@ enum class CommandQueueType {
 	NumType,
 };
 
+enum AttachmentPoint : std::size_t {
+	Color0,
+	Color1,
+	Color2,
+	Color3,
+	Color4,
+	Color5,
+	Color6,
+	Color7,
+	DepthStencil,
+	NumAttachmentPoints,
+};
+
 CommandQueueType toCommandQueueType(D3D12_COMMAND_LIST_TYPE type);
 
 constexpr static std::size_t kComandQueueTypeCount = 3;

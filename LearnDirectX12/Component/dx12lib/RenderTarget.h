@@ -5,21 +5,6 @@
 
 namespace dx12lib {
 
-class Texture;
-
-enum AttachmentPoint : std::size_t {
-	Color0,
-	Color1,
-	Color2,
-	Color3,
-	Color4,
-	Color5,
-	Color6,
-	Color7,
-	DepthStencil,
-	NumAttachmentPoints,
-};
-
 class RenderTarget {
 	constexpr static std::size_t kAttachmentPointSize = static_cast<std::size_t>(AttachmentPoint::NumAttachmentPoints);
 public:

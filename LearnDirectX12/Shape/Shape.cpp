@@ -11,6 +11,7 @@
 #include "dx12lib/Texture.h"
 #include "dx12lib/IndexBuffer.h"
 #include "dx12lib/RootSignature.h"
+#include "dx12lib/CommandQueue.h"
 #include "Geometry/GeometryGenerator.h"
 #include "InputSystem/InputSystem.h"
 #include "InputSystem/Mouse.h"
@@ -25,7 +26,7 @@ Shape::~Shape() {
 
 void Shape::onInitialize(dx12lib::CommandListProxy pCmdList) {
 	d3dutil::CameraDesc cameraDesc = {
-		float3(3, 3, 3),
+		float3(10, 10, 10),
 		float3(0, 1, 0),
 		float3(0, 0, 0),
 		45.f,
@@ -37,15 +38,38 @@ void Shape::onInitialize(dx12lib::CommandListProxy pCmdList) {
 	_pPassCB = pCmdList->createStructConstantBuffer<d3dutil::PassCBType>();
 	_pGameLightsCB = pCmdList->createStructConstantBuffer<d3dutil::LightCBType>();
 	buildPSO(pCmdList);
+	buildGeometry(pCmdList);
+	buildMaterials();
 	buildRenderItem(pCmdList);
 }
 
 void Shape::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
+	pollEvent();
 	updatePassCB(pGameTimer);
 }
 
 void Shape::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
+	auto pCmdQueue = _pDevice->getCommandQueue(dx12lib::CommandQueueType::Direct);
+	auto pCmdList = pCmdQueue->createCommandListProxy();
+	auto pRenderTarget = _pSwapChain->getRenderTarget();
 
+	pCmdList->setViewports(pRenderTarget->getViewport());
+	pCmdList->setScissorRects(pRenderTarget->getScissiorRect());
+	{
+		dx12lib::RenderTargetTransitionBarrier barrierGuard = {
+			pCmdList,
+			pRenderTarget,
+			D3D12_RESOURCE_STATE_RENDER_TARGET,
+			D3D12_RESOURCE_STATE_PRESENT,
+		};
+
+		pRenderTarget->getTexture(dx12lib::Color0)->clearColor(DX::Colors::Black);
+		pRenderTarget->getTexture(dx12lib::DepthStencil)->clearDepthStencil(1.0f, 0);
+		pCmdList->setRenderTarget(pRenderTarget);
+		renderShapesPass(pCmdList);
+	}
+	pCmdQueue->executeCommandList(pCmdList);
+	pCmdQueue->signal(_pSwapChain);
 }
 
 void Shape::buildPSO(dx12lib::CommandListProxy pCmdList) {
@@ -201,7 +225,19 @@ void Shape::buildMaterials() {
 }
 
 void Shape::renderShapesPass(dx12lib::CommandListProxy pCmdList) {
-
+	pCmdList->setPipelineStateObject(_pGraphicsPSO);
+	pCmdList->setStructConstantBuffer(_pPassCB, ShapeShaderCBType::CBPass);
+	pCmdList->setStructConstantBuffer(_pGameLightsCB, ShapeShaderCBType::CBLight);
+	for (auto &rItem : _renderItems) {
+		pCmdList->setVertexBuffer(rItem._pMesh->_pVertexBuffer);
+		pCmdList->setIndexBuffer(rItem._pMesh->_pIndexBuffer);
+		pCmdList->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		pCmdList->setStructConstantBuffer(rItem._pObjectCB, ShapeShaderCBType::CBObject);
+		pCmdList->drawIndexdInstanced(
+			rItem._pMesh->_pIndexBuffer->getIndexCount(), 1, 0,
+			0, 0
+		);
+	}
 }
 
 void Shape::pollEvent() {
@@ -219,4 +255,3 @@ void Shape::updatePassCB(std::shared_ptr<com::GameTimer> pGameTimer) {
 	pGPUPassCB->totalTime = pGameTimer->getTotalTime();
 	pGPUPassCB->deltaTime = pGameTimer->getDeltaTime();
 }
-

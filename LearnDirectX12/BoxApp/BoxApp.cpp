@@ -148,7 +148,7 @@ void BoxApp::renderBoxPass(dx12lib::CommandListProxy pCmdList) {
 	pCmdList->setVertexBuffer(_pBoxMesh->_pVertexBuffer);
 	pCmdList->setIndexBuffer(_pBoxMesh->_pIndexBuffer);
 	pCmdList->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	pCmdList->drawIndex(
+	pCmdList->drawIndexdInstanced(
 		_pBoxMesh->_pIndexBuffer->getIndexCount(),
 		1,
 		_pBoxMesh->_baseVertexLocation,

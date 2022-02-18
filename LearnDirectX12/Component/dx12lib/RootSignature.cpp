@@ -124,8 +124,8 @@ void RootSignature::setRootSignatureDesc(const D3D12_ROOT_SIGNATURE_DESC &desc) 
 	// build _rootSignatureDesc
 	_rootSignatureDesc = desc;
 	auto *pBaseDescriptor = _descriptorRangeCache.data();
-	for (std::size_t i = 0; i < desc.NumParameters; ++i) {
-		const D3D12_ROOT_PARAMETER &rootParameter = _rootSignatureDesc.pParameters[i];
+	for (std::size_t rootIndex = 0; rootIndex < desc.NumParameters; ++rootIndex) {
+		const D3D12_ROOT_PARAMETER &rootParameter = _rootSignatureDesc.pParameters[rootIndex];
 		if (rootParameter.ParameterType == D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE) {
 			// Force changes to the DescriptorTable
 			auto numDescriptor = rootParameter.DescriptorTable.NumDescriptorRanges;
@@ -139,8 +139,8 @@ void RootSignature::setRootSignatureDesc(const D3D12_ROOT_SIGNATURE_DESC &desc) 
 			for (std::size_t i = 0; i < numRanges; ++i) {
 				const auto &range = rootParameter.DescriptorTable.pDescriptorRanges[i];
 				auto index = getPerTableIndexByRangeType(range.RangeType);
-				_numDescriptorPerTable[index][i] += range.NumDescriptors;
-				_descriptorTableBitMask[index].set(i);
+				_numDescriptorPerTable[index][rootIndex] += range.NumDescriptors;
+				_descriptorTableBitMask[index].set(rootIndex);
 			}
 		}
 	}

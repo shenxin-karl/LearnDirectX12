@@ -18,9 +18,16 @@ CameraBase::CameraBase(const CameraDesc &desc) {
 	_farClip = desc.farClip;
 	_fov = desc.fov;
 	_aspect = desc.aspect;
+
+	assert(lengthSqr(_lookUp) > 0.f);
+	assert(lengthSqr(w) > 0.f);
+	assert(_fov > 1.f);
+	assert(_nearClip > 0.f);
+	assert(_farClip > _nearClip);
 }
 
 void CameraBase::updatePassCB(GPUStructCBPtr<d3dutil::PassCBType> pPassCB) const {
+	assert(pPassCB != nullptr);
 	auto pGPUPassCB = pPassCB->map();
 	pGPUPassCB->view = getView();
 	pGPUPassCB->invView = getInvView();

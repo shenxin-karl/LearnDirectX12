@@ -76,20 +76,20 @@ public:
 	template<typename T>
 	void setStructConstantBuffer(std::shared_ptr<StructConstantBuffer<T>> pStructConstantBuffer,
 		uint32 rootIndex,
-		uint32 offset) 
+		uint32 offset = 0) 
 	{
 		assert(pStructConstantBuffer != nullptr);
 		pStructConstantBuffer->updateConstantBuffer();
 		setConstantBuffer(pStructConstantBuffer->getConstantBuffer(), rootIndex, offset);
 	}
 /// draw function
-	void draw(uint32 vertCount, 
+	void drawInstanced(uint32 vertCount, 
 		uint32 instanceCount, 
 		uint32 startVertex, 
 		uint32 startInstance
 	);
 	
-	void drawIndex(uint32 indexCountPerInstance, 
+	void drawIndexdInstanced(uint32 indexCountPerInstance, 
 		uint32 instanceCount, 
 		uint32 startIndexLocation, 
 		uint32 startVertexLocation, 
@@ -116,7 +116,17 @@ private:
 		PSO           *pPSO;
 		RootSignature *pRootSignature;
 		VertexBuffer  *pVertexBuffers[kVertexBufferSlotCount];
+		Texture       *pTextures[AttachmentPoint::NumAttachmentPoints];
 		IndexBuffer   *pIndexBuffer;
+		RenderTarget  *pRenderTarget;
+		bool           isSetViewprot;
+		bool           isSetScissorRect;
+	public:
+		bool debugCheckDraw() const;
+		bool debugCheckDrawIndex() const;
+		bool checkVertexBuffer() const;
+		bool checkTextures() const;
+		void setRenderTarget(RenderTarget *pRenderTarget);
 	};
 	CommandListState _currentGPUState;
 };

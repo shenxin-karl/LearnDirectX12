@@ -12,6 +12,12 @@
 #include "CommandQueue.h"
 #include "RootSignature.h"
 
+#if defined(_DEBUG) || defined(DEBUG)
+#define DBG_CALL(f) f;
+#else
+#define DBG_CALL(f) nullptr;
+#endif
+
 namespace dx12lib {
 
 ID3D12GraphicsCommandList *CommandList::getD3DCommandList() const noexcept {
@@ -19,23 +25,30 @@ ID3D12GraphicsCommandList *CommandList::getD3DCommandList() const noexcept {
 }
 
 void CommandList::setViewports(const D3D12_VIEWPORT &viewport) {
+	_currentGPUState.isSetViewprot = true;
 	_pCommandList->RSSetViewports(1, &viewport);
 }
 
 void CommandList::setViewprots(const std::vector<D3D12_VIEWPORT> &viewports) {
+	assert(!viewports.empty());
+	_currentGPUState.isSetViewprot = true;
 	_pCommandList->RSSetViewports(static_cast<UINT>(viewports.size()), viewports.data());
 }
 
 void CommandList::setScissorRects(const D3D12_RECT &rect) {
+	_currentGPUState.isSetScissorRect = true;
 	_pCommandList->RSSetScissorRects(1, &rect);
 }
 
 void CommandList::setScissorRects(const std::vector<D3D12_RECT> &rects) {
+	assert(!rects.empty());
+	_currentGPUState.isSetScissorRect = true;
 	_pCommandList->RSSetScissorRects(static_cast<UINT>(rects.size()), rects.data());
 }
 
 void CommandList::setRenderTarget(std::shared_ptr<RenderTarget> pRenderTarget) {
 	assert(pRenderTarget != nullptr);
+	DBG_CALL(_currentGPUState.setRenderTarget(pRenderTarget.get()));
 	
 	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> renderTargetViews;
 	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> depthStencilViews;
@@ -77,6 +90,7 @@ void CommandList::setRenderTarget(std::shared_ptr<RenderTarget> pRenderTarget) {
 		depthStencilViews.push_back(pDepthStencilTexture->getDepthStencilView());
 	}
 
+	assert((renderTargetViews.size() + depthStencilViews.size()) != 0);
 	_pCommandList->OMSetRenderTargets(
 		static_cast<UINT>(renderTargetViews.size()),
 		renderTargetViews.data(),
@@ -161,6 +175,7 @@ CommandList::createConstantBuffer(std::size_t sizeInByte, const void *pData) {
 void CommandList::setVertexBuffer(std::shared_ptr<VertexBuffer> pVertBuffer, UINT slot /*= 0 */) {
 	assert(pVertBuffer != nullptr);
 	assert(slot < kVertexBufferSlotCount);
+	assert(_currentGPUState.pPSO != nullptr);
 	if (_currentGPUState.pVertexBuffers[slot] != pVertBuffer.get()) {
 		_currentGPUState.pVertexBuffers[slot] = pVertBuffer.get();
 		_pCommandList->IASetVertexBuffers(
@@ -174,6 +189,7 @@ void CommandList::setVertexBuffer(std::shared_ptr<VertexBuffer> pVertBuffer, UIN
 
 void CommandList::setIndexBuffer(std::shared_ptr<IndexBuffer> pIndexBuffer) {
 	assert(pIndexBuffer != nullptr);
+	assert(_currentGPUState.pPSO != nullptr);
 	if (_currentGPUState.pIndexBuffer != pIndexBuffer.get()) {
 		_currentGPUState.pIndexBuffer = pIndexBuffer.get();
 		_pCommandList->IASetIndexBuffer(RVPtr(pIndexBuffer->getIndexBufferView()));
@@ -182,6 +198,7 @@ void CommandList::setIndexBuffer(std::shared_ptr<IndexBuffer> pIndexBuffer) {
 
 void CommandList::setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuffer, uint32 rootIndex, uint32 offset){
 	assert(pConstantBuffer != nullptr);
+	assert(_currentGPUState.pRootSignature != nullptr);
 	_pDynamicDescriptorHeaps[0]->stageDescriptors(
 		rootIndex, 
 		offset, 
@@ -209,23 +226,25 @@ void CommandList::setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology) {
 	_pCommandList->IASetPrimitiveTopology(topology);
 }
 
-void CommandList::draw(uint32 vertCount, 
+void CommandList::drawInstanced(uint32 vertCount, 
 	uint32 instanceCount, 
 	uint32 startVertex, 
 	uint32 startInstance) 
 {
+	assert(_currentGPUState.debugCheckDraw());
 	flushResourceBarriers();
 	for (auto &pDynamicHeap : _pDynamicDescriptorHeaps)
 		pDynamicHeap->commitStagedDescriptorForDraw(shared_from_this());
 	_pCommandList->DrawInstanced(vertCount, instanceCount, startVertex, startInstance);
 }
 
-void CommandList::drawIndex(uint32 indexCountPerInstance, 
+void CommandList::drawIndexdInstanced(uint32 indexCountPerInstance, 
 	uint32 instanceCount, 
 	uint32 startIndexLocation, 
 	uint32 startVertexLocation, 
 	uint32 startInstanceLocation) 
 {
+	assert(_currentGPUState.debugCheckDrawIndex());
 	flushResourceBarriers();
 	for (auto &pDynamicHeap : _pDynamicDescriptorHeaps)
 		pDynamicHeap->commitStagedDescriptorForDraw(shared_from_this());
@@ -297,6 +316,42 @@ void CommandList::setRootSignature(std::shared_ptr<RootSignature> pRootSignature
 		setFunc(_pCommandList.Get(), pRootSignature->getRootSignature().Get());
 		for (auto &pHeap : _pDynamicDescriptorHeaps)
 			pHeap->parseRootSignature(pRootSignature);
+	}
+}
+
+bool CommandList::CommandListState::debugCheckDraw() const {
+	return pPSO != nullptr && pRootSignature != nullptr && pRenderTarget != nullptr && 
+		   isSetViewprot && isSetScissorRect && checkVertexBuffer() && checkTextures();
+}
+
+bool CommandList::CommandListState::debugCheckDrawIndex() const {
+	return pPSO != nullptr && pRootSignature != nullptr && pIndexBuffer != nullptr &&
+		pRenderTarget != nullptr && isSetViewprot && isSetScissorRect && checkVertexBuffer() &&
+		checkTextures();
+}
+
+bool CommandList::CommandListState::checkVertexBuffer() const {
+	for (auto *pVertexBuffer : pVertexBuffers) {
+		if (pVertexBuffers != nullptr)
+			return true;
+	}
+	return false;
+}
+
+bool CommandList::CommandListState::checkTextures() const {
+	for (auto *pTextures : pVertexBuffers) {
+		if (pTextures != nullptr)
+			return true;
+	}
+	return false;
+}
+
+void CommandList::CommandListState::setRenderTarget(RenderTarget *pRenderTarget) {
+	this->pRenderTarget = pRenderTarget;
+	for (std::size_t i = 0; i < AttachmentPoint::NumAttachmentPoints; ++i) {
+		pTextures[i] = nullptr;
+		if (auto pTexture = pRenderTarget->getTexture(static_cast<AttachmentPoint>(i)))
+			pTextures[i] = pTexture.get();
 	}
 }
 

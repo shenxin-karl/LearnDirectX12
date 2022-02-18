@@ -52,7 +52,7 @@ uint32 RenderTarget::getHeight() const noexcept {
 }
 
 DX::XMFLOAT2 RenderTarget::getRenderTargetSize() const noexcept {
-	return DX::XMFLOAT2(_size.x, _size.y);
+	return DX::XMFLOAT2(float(_size.x), float(_size.y));
 }
 
 DX::XMFLOAT2 RenderTarget::getInvRenderTargetSize() const noexcept {

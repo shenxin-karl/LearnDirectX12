@@ -67,8 +67,15 @@ void DynamicDescriptorHeap::stageDescriptors(size_t rootParameterIndex,
 		throw std::bad_alloc();
 
 	auto &descriptorTableCache = _descriptorTableCache[rootParameterIndex];
-	if ((offset + numDescripotrs) > descriptorTableCache._numDescriptors)
-		throw std::length_error("Number of descriptors exceeds the number of descriptors in the descriptor table.");
+	if ((offset + numDescripotrs) > descriptorTableCache._numDescriptors) {
+		std::stringstream sbuf;
+		sbuf << "Number of descriptors exceeds the number of descriptors in the descriptor table." << std::endl;
+		sbuf << "rootParameterIndex: " << rootParameterIndex << std::endl
+			 << "offset: " << offset << std::endl
+			 << "numDescriptors: " << numDescripotrs << std::endl
+			 << "descriptorTableCache._numDescriptors: " << descriptorTableCache._numDescriptors << std::endl;
+		throw std::length_error(sbuf.str());
+	}
 
 	D3D12_CPU_DESCRIPTOR_HANDLE *pDstDescriptor = (descriptorTableCache._pBaseHandle + offset);
 	bool dirty = false;
