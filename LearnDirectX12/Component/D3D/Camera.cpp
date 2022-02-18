@@ -1,5 +1,8 @@
-#include "Camera.h"
+#define NOMINMAX
 #include <algorithm>
+#include "Camera.h"
+#include "D3D/ShaderCommon.h"
+#include "InputSystem/Mouse.h"
 
 namespace d3dutil {
 
@@ -15,6 +18,19 @@ CameraBase::CameraBase(const CameraDesc &desc) {
 	_farClip = desc.farClip;
 	_fov = desc.fov;
 	_aspect = desc.aspect;
+}
+
+void CameraBase::updatePassCB(GPUStructCBPtr<d3dutil::PassCBType> pPassCB) const {
+	auto pGPUPassCB = pPassCB->map();
+	pGPUPassCB->view = getView();
+	pGPUPassCB->invView = getInvView();
+	pGPUPassCB->proj = getProj();
+	pGPUPassCB->invProj = getInvProj();
+	pGPUPassCB->viewProj = getViewProj();
+	pGPUPassCB->invViewProj = getInvViewProj();
+	pGPUPassCB->eyePos = _lookFrom;
+	pGPUPassCB->nearZ = _nearClip;
+	pGPUPassCB->farZ = _farClip;
 }
 
 CoronaCamera::CoronaCamera(const CameraDesc &desc) : CameraBase(desc) {
@@ -115,6 +131,36 @@ void CoronaCamera::setTheta(float theta) {
 
 void CoronaCamera::setRadiuse(float radius) {
 	_radius = radius;
+}
+
+void CoronaCamera::pollEvent(const com::MouseEvent &event) {
+	switch (event.state_) {
+	case com::MouseState::LPress: {
+		_isMouseLeftPress = true;
+		_lastMousePosition.x = event.x;
+		_lastMousePosition.y = event.y;
+		break;
+	}
+	case com::MouseState::LRelease: {
+		_isMouseLeftPress = false;
+		break;
+	}
+	case com::MouseState::Wheel: {
+		auto radius = std::max(0.1f, getRadius() - event.offset_ * _whellSensitivety);
+		setRadiuse(radius);
+		break;
+	}
+	case com::MouseState::Move: {
+		if (_isMouseLeftPress) {
+			float dx = static_cast<float>(event.x - _lastMousePosition.x) * _moveSensitivety;
+			float dy = static_cast<float>(event.y - _lastMousePosition.y) * _moveSensitivety;
+			setPhi(_phi + dy);
+			setTheta(_theta - dx);
+		}
+		_lastMousePosition = POINT(event.x, event.y);
+		break;
+	}
+	}
 }
 
 }

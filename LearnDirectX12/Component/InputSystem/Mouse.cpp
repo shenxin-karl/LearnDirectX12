@@ -9,32 +9,32 @@ void Mouse::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	int x = LOWORD(lParam);
 	int y = HIWORD(lParam);
 	bool isEvent = true;
-	Event mouseEvent ={ x, y, Invalid, 0.f };
+	MouseEvent mouseEvent ={ x, y, MouseState::Invalid, 0.f };
 	switch (msg) {
 	case WM_LBUTTONDOWN:
-		mouseEvent.state_ = LPress;
+		mouseEvent.state_ = MouseState::LPress;
 		break;
 	case WM_LBUTTONUP:
-		mouseEvent.state_ = LRelease;
+		mouseEvent.state_ = MouseState::LRelease;
 		break;
 	case WM_RBUTTONDOWN:
-		mouseEvent.state_ = RPress;
+		mouseEvent.state_ = MouseState::RPress;
 		break;
 	case WM_RBUTTONUP:
-		mouseEvent.state_ = RRelease;
+		mouseEvent.state_ = MouseState::RRelease;
 		break;
 	case WM_MOUSEMOVE:
-		mouseEvent.state_ = Move;
+		mouseEvent.state_ = MouseState::Move;
 		break;
 	case WM_MBUTTONDOWN:
-		mouseEvent.state_ = WheelDown;
+		mouseEvent.state_ = MouseState::WheelDown;
 		break;
 	case WM_MBUTTONUP:
-		mouseEvent.state_ = WheelUp;
+		mouseEvent.state_ = MouseState::WheelUp;
 		break;
 	case WM_MOUSEWHEEL:
 		mouseEvent.offset_ = GET_WHEEL_DELTA_WPARAM(wParam) / (float)WHEEL_DELTA;
-		mouseEvent.state_ = Wheel;
+		mouseEvent.state_ = MouseState::Wheel;
 		break;
 	default:
 		isEvent = false;
@@ -49,7 +49,7 @@ void Mouse::endTick(std::shared_ptr<GameTimer> pGameTimer) {
 		events_.pop();
 }
 
-Mouse::Event Mouse::getEvent() {
+MouseEvent Mouse::getEvent() {
 	if (events_.empty())
 		return {};
 
@@ -58,7 +58,7 @@ Mouse::Event Mouse::getEvent() {
 	return res;
 }
 
-Mouse::Event::operator bool() const {
+MouseEvent::operator bool() const {
 	return !isInvalid();
 }
 

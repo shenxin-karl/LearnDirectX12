@@ -25,9 +25,6 @@ struct ObjectCB {
 };
 
 struct RenderItem {
-	UINT _baseVertexLocation;
-	UINT _startIndexLocation;
-	UINT _indexCount;
 	std::shared_ptr<Mesh>     _pMesh;
 	GPUStructCBPtr<ObjectCB>  _pObjectCB;
 };
@@ -46,17 +43,14 @@ public:
 	virtual void onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 	virtual void onTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 private:
-	using GPUGameLightCBPtr = std::shared_ptr<dx12lib::StructConstantBuffer<d3dutil::LightCBType>>;
-	using GPUPassCBPtr = std::shared_ptr<dx12lib::StructConstantBuffer<d3dutil::PassCBType>>;
 	void buildPSO(dx12lib::CommandListProxy pCmdList);
 	void buildRenderItem(dx12lib::CommandListProxy pCmdList);
 	void buildGeometry(dx12lib::CommandListProxy pCmdList);
 	void buildMaterials();
 	void renderShapesPass(dx12lib::CommandListProxy pCmdList);
 	void pollEvent();
+	void updatePassCB(std::shared_ptr<com::GameTimer> pGameTimer);
 private:
-	POINT _lastMousePoint;
-	bool  _isLeftPress = false;
 	std::unique_ptr<d3dutil::CoronaCamera>  _pCamera;
 	std::shared_ptr<dx12lib::GraphicsPSO>   _pGraphicsPSO;
 	GPUStructCBPtr<d3dutil::LightCBType>    _pGameLightsCB;

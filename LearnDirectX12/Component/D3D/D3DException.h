@@ -1,5 +1,6 @@
 #pragma once
 #include "Exception/ExceptionBase.h"
+#define  NOMINMAX
 #include <Windows.h>
 
 namespace d3d {

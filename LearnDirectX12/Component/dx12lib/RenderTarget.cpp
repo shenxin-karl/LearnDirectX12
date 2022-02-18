@@ -51,8 +51,12 @@ uint32 RenderTarget::getHeight() const noexcept {
 	return _size.y;
 }
 
-DX::XMUINT2 RenderTarget::getSize() const noexcept {
-	return _size;
+DX::XMFLOAT2 RenderTarget::getRenderTargetSize() const noexcept {
+	return DX::XMFLOAT2(_size.x, _size.y);
+}
+
+DX::XMFLOAT2 RenderTarget::getInvRenderTargetSize() const noexcept {
+	return DX::XMFLOAT2(1.f / _size.x, 1.f / _size.y);
 }
 
 D3D12_VIEWPORT RenderTarget::getViewport(DX::XMFLOAT2 scale /*= { 1.f, 1.f }*/, 

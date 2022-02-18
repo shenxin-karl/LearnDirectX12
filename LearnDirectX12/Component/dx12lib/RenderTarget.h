@@ -36,7 +36,8 @@ public:
 	std::shared_ptr<Texture> getTexture(AttachmentPoint point) const;
 	uint32 getWidth() const noexcept;
 	uint32 getHeight() const noexcept;
-	DX::XMUINT2 getSize() const noexcept;
+	DX::XMFLOAT2 getRenderTargetSize() const noexcept;
+	DX::XMFLOAT2 getInvRenderTargetSize() const noexcept;
 
 	D3D12_VIEWPORT getViewport(DX::XMFLOAT2 scale = { 1.f, 1.f }, 
 		DX::XMFLOAT2 bias = { 0.f, 0.f }, 

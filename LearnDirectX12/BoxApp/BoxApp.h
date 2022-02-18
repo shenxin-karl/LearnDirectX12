@@ -36,8 +36,6 @@ protected:
 	virtual void onTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 private:
 	void pollEvent();
-	void updatePhiAndTheta(int x, int y);
-	void updateRadius(float offset);
 	void buildBoxGeometry(dx12lib::CommandListProxy pCmdList);
 	void renderBoxPass(dx12lib::CommandListProxy pCmdList);
 private:

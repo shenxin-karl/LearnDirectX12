@@ -7,42 +7,42 @@
 
 namespace com {
 
-class GameTimer;
-class Keyboard : public ITick {
+	enum class KeyState : int {
+		Pressed,
+		Released,
+		Invalid,
+	};
+
 	struct CharEvent {
-		enum State {
-			Pressed,
-			Invalid,
-		};
 		CharEvent() = default;
-		CharEvent(State state, unsigned char character);
+		CharEvent(KeyState state, unsigned char character);
 		unsigned char getCharacter() const;
-		State getState() const;
+		KeyState getState() const;
 		bool isPressed() const;
 		bool isInvalid() const;
 		explicit operator bool() const;
 	private:
-		State			state_ = State::Invalid;
+		KeyState		state_ = KeyState::Invalid;
 		unsigned char	character_ = 0;
 	};
+
 	struct KeyEvent {
-		enum State {
-			Pressed,
-			Released,
-			Invalid,
-		};
 		KeyEvent() = default;
-		KeyEvent(State state, unsigned char key);
+		KeyEvent(KeyState state, unsigned char key);
 		unsigned char getKey() const;
-		State getState() const;
+		KeyState getState() const;
 		bool isPressed() const;
 		bool isReleased() const;
 		bool isInvalid() const;
 		explicit operator bool() const;
 	private:
-		State		  state_ = State::Invalid;
+		KeyState      state_ = KeyState::Invalid;
 		unsigned char key_ = 0;				// Use the window's virtual button
 	};
+
+class GameTimer;
+class Keyboard : public ITick {
+
 public:
 	static constexpr int MaxKeyCodeSize_ = 0xff;
 	static constexpr int MaxQueueSize_ = 0xff;

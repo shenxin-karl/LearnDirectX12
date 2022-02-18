@@ -99,45 +99,8 @@ void BoxApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 }
 
 void BoxApp::pollEvent() {
-	while (auto event = _pInputSystem->mouse->getEvent()) {
-		switch (event.state_) {
-		case com::Mouse::State::LPress: {
-			_isMouseLeftPress = true;
-			_lastMousePosition.x = event.x;
-			_lastMousePosition.y = event.y;
-			break;
-		}
-		case com::Mouse::State::LRelease: {
-			_isMouseLeftPress = false;
-			break;
-		}
-		case com::Mouse::State::Wheel: {
-			updateRadius(event.offset_);
-			break;
-		}
-		case com::Mouse::State::Move: {
-			updatePhiAndTheta(event.x, event.y);
-			break;
-		}
-		}
-	}
-}
-
-void BoxApp::updatePhiAndTheta(int x, int y) {
-	if (_isMouseLeftPress) {
-		constexpr float sensitivety = 0.5f;
-		float dx = static_cast<float>(x - _lastMousePosition.x) * sensitivety;
-		float dy = static_cast<float>(y - _lastMousePosition.y) * sensitivety;
-		_pCamera->setPhi(_pCamera->getPhi() + dy);
-		_pCamera->setTheta(_pCamera->getTheta() - dx);
-	}
-	_lastMousePosition = POINT(x, y);
-}
-
-void BoxApp::updateRadius(float offset) {
-	constexpr float sensitivety = 0.1f;
-	auto radius = std::max(0.1f, _pCamera->getRadius() - offset * sensitivety);
-	_pCamera->setRadiuse(radius);
+	while (auto event = _pInputSystem->mouse->getEvent())
+		_pCamera->pollEvent(event);
 }
 
 void BoxApp::buildBoxGeometry(dx12lib::CommandListProxy pCmdList) {

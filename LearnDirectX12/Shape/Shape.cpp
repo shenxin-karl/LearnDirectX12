@@ -12,6 +12,8 @@
 #include "dx12lib/IndexBuffer.h"
 #include "dx12lib/RootSignature.h"
 #include "Geometry/GeometryGenerator.h"
+#include "InputSystem/InputSystem.h"
+#include "InputSystem/Mouse.h"
 
 Shape::Shape() {
 	_title = "Shape";
@@ -39,7 +41,7 @@ void Shape::onInitialize(dx12lib::CommandListProxy pCmdList) {
 }
 
 void Shape::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
-
+	updatePassCB(pGameTimer);
 }
 
 void Shape::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
@@ -74,7 +76,58 @@ void Shape::buildPSO(dx12lib::CommandListProxy pCmdList) {
 }
 
 void Shape::buildRenderItem(dx12lib::CommandListProxy pCmdList) {
-	
+	RenderItem boxItem;
+	ObjectCB boxObjCb;
+	boxObjCb.material = _materials["box"];
+	XMStoreFloat4x4(&boxObjCb.world, DX::XMMatrixScaling(2.f, 2.f, 2.f) * DX::XMMatrixTranslation(0.f, 0.5f, 0.f));
+	boxItem._pMesh = _geometrys["box"];
+	boxItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCB>(boxObjCb);
+	_renderItems.push_back(boxItem);
+
+	RenderItem gridItem;
+	ObjectCB gridObjCB;
+	gridObjCB.material = _materials["grid"];
+	gridObjCB.world = MathHelper::identity4x4();;
+	gridItem._pMesh = _geometrys["grid"];
+	gridItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCB>(gridObjCB);
+	_renderItems.push_back(gridItem);
+
+	for (std::size_t i = 0; i < 5; ++i) {
+		RenderItem leftCylRItem;
+		RenderItem rightCylRItem;
+		RenderItem leftSphereRItem;
+		RenderItem rightSphereRItem;
+
+		ObjectCB leftCylObjCB;
+		ObjectCB rightCylObjCB;
+		ObjectCB leftSphereObjCB;
+		ObjectCB rightSphereObjCB;
+
+		DX::XMStoreFloat4x4(&leftCylObjCB.world, DX::XMMatrixTranslation(-5.f, 1.5f, -10.f + i * 5.f));
+		DX::XMStoreFloat4x4(&rightCylObjCB.world, DX::XMMatrixTranslation(+5.f, 1.5f, -10.f + i * 5.f));
+		DX::XMStoreFloat4x4(&leftSphereObjCB.world, DX::XMMatrixTranslation(-5.f, 3.5f, -10.f + i * 5.f));
+		DX::XMStoreFloat4x4(&rightSphereObjCB.world, DX::XMMatrixTranslation(+5.f, 3.5f, -10.f + i * 5.f));
+
+		leftCylObjCB.material = _materials["cylinder"];
+		rightCylObjCB.material = _materials["cylinder"];
+		leftSphereObjCB.material = _materials["sphere"];
+		rightSphereObjCB.material = _materials["sphere"];
+
+		leftCylRItem._pMesh = _geometrys["cylinder"];
+		rightCylRItem._pMesh = _geometrys["cylinder"];
+		leftSphereRItem._pMesh = _geometrys["sphere"];
+		rightSphereRItem._pMesh = _geometrys["sphere"];
+
+		leftCylRItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCB>(leftCylObjCB);
+		rightCylRItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCB>(rightCylObjCB);
+		leftSphereRItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCB>(leftSphereObjCB);
+		rightSphereRItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCB>(rightSphereObjCB);
+
+		_renderItems.push_back(leftCylRItem);
+		_renderItems.push_back(rightCylRItem);
+		_renderItems.push_back(leftSphereRItem);
+		_renderItems.push_back(rightSphereRItem);
+	}
 }
 
 void Shape::buildGeometry(dx12lib::CommandListProxy pCmdList) {
@@ -152,5 +205,18 @@ void Shape::renderShapesPass(dx12lib::CommandListProxy pCmdList) {
 }
 
 void Shape::pollEvent() {
-
+	while (auto event = _pInputSystem->mouse->getEvent())
+		_pCamera->pollEvent(event);
 }
+
+void Shape::updatePassCB(std::shared_ptr<com::GameTimer> pGameTimer) {
+	_pCamera->update();
+	_pCamera->updatePassCB(_pPassCB);
+	auto pGPUPassCB = _pPassCB->map();
+	auto pRenderTarget = _pSwapChain->getRenderTarget();
+	pGPUPassCB->renderTargetSize = pRenderTarget->getRenderTargetSize();
+	pGPUPassCB->invRenderTargetSize = pRenderTarget->getInvRenderTargetSize();
+	pGPUPassCB->totalTime = pGameTimer->getTotalTime();
+	pGPUPassCB->deltaTime = pGameTimer->getDeltaTime();
+}
+

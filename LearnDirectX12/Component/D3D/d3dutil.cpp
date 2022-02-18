@@ -1,3 +1,4 @@
+#define  NOMINMAX
 #include <windows.h>
 #include <cassert>
 #include <d3dcompiler.h>
