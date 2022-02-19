@@ -19,7 +19,7 @@ Device::Device(std::shared_ptr<Adapter> pAdapter)
 Device::~Device() {
 }
 
-void Device::initialize() {
+void Device::initialize(const DeviceInitDesc &desc) {
 #if defined(DEBUG) || defined(_DEBUG)
 	{
 		WRL::ComPtr<ID3D12Debug> debugController;
@@ -27,6 +27,7 @@ void Device::initialize() {
 		debugController->EnableDebugLayer();
 	}
 #endif
+	_initDesc = desc;
 
 	HRESULT hr = D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&_pDevice));
 	if (FAILED(hr)) {
@@ -38,6 +39,19 @@ void Device::initialize() {
 			IID_PPV_ARGS(&_pDevice)
 		));
 	}
+
+	D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msQualityLevels;
+	msQualityLevels.Format = desc.backBufferFormat;	
+	msQualityLevels.SampleCount = 4;
+	msQualityLevels.Flags = D3D12_MULTISAMPLE_QUALITY_LEVELS_FLAG_NONE;
+	msQualityLevels.NumQualityLevels = 0;
+	ThrowIfFailed(_pDevice->CheckFeatureSupport(
+		D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS,
+		&msQualityLevels,
+		sizeof(msQualityLevels)
+	));
+	_4xMsaaQuality = msQualityLevels.NumQualityLevels;
+	assert(_4xMsaaQuality > 0 && "Unexpected MSAA quality level");
 
 	auto pDirectQueue = std::make_shared<CommandQueue>(weak_from_this(), D3D12_COMMAND_LIST_TYPE_DIRECT);
 	_pCommandQueueList[std::size_t(CommandQueueType::Direct)] = pDirectQueue;
@@ -60,16 +74,12 @@ void Device::destory() {
 		pCmdQueue->flushCommandQueue();
 }
 
-std::shared_ptr<SwapChain> Device::createSwapChain(
-		HWND hwnd,
-		DXGI_FORMAT backBufferFormat,
-		DXGI_FORMAT depthStencilFormat) const 
-{
+std::shared_ptr<SwapChain> Device::createSwapChain(HWND hwnd) const {
 	return std::make_shared<SwapChain>(
-		const_cast<Device*>(this)->weak_from_this(),
-		hwnd, 
-		backBufferFormat, 
-		depthStencilFormat
+		const_cast<Device *>(this)->weak_from_this(),
+		hwnd,
+		_initDesc.backBufferFormat,
+		_initDesc.depthStencilFormat
 	);
 }
 
@@ -108,6 +118,14 @@ DXGI_SAMPLE_DESC Device::getSampleDesc() const {
 		getSampleCount(),
 		getSampleQuality(),
 	};
+}
+
+void Device::set4xMsaaState(bool state) {
+	_4xMsaaState = true;
+}
+
+bool Device::get4xMsaaState() const {
+	return _4xMsaaState;
 }
 
 std::shared_ptr<Adapter> Device::getAdapter() const {

@@ -24,6 +24,8 @@ SwapChain::SwapChain(std::weak_ptr<Device> pDevice,
 
 	auto pSharedDevice = pDevice.lock();
 	_pSwapChain.Reset();
+
+	// Msaa swap chain is not supported 
 	DXGI_SWAP_CHAIN_DESC sd;
 	sd.BufferDesc.Width = width;
 	sd.BufferDesc.Height = height;
@@ -32,8 +34,8 @@ SwapChain::SwapChain(std::weak_ptr<Device> pDevice,
 	sd.BufferDesc.Format = backBufferFormat;
 	sd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 	sd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
-	sd.SampleDesc.Count = pSharedDevice->getSampleCount();
-	sd.SampleDesc.Quality = pSharedDevice->getSampleQuality();
+	sd.SampleDesc.Count = 1;
+	sd.SampleDesc.Quality = 0;
 	sd.OutputWindow = hwnd;
 	sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	sd.BufferCount = kSwapChainBufferCount;
@@ -50,9 +52,6 @@ SwapChain::SwapChain(std::weak_ptr<Device> pDevice,
 }
 
 void SwapChain::resize(CommandListProxy pCmdList, uint32 width, uint32 height) {
-	if (width == _width && height == _height)
-		return;
-
 	_pDepthStencilBuffer = nullptr;
 	for (auto &pTexture : _pSwapChainBuffer)
 		pTexture = nullptr;

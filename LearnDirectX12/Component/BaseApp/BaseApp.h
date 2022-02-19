@@ -36,11 +36,9 @@ protected:
 	virtual void onEndTick(std::shared_ptr<GameTimer> pGameTimer) {}
 	virtual void onResize(dx12lib::CommandListProxy pCmdList, int width, int height) {}
 protected:
-	int _width = 800;
-	int _height = 600;
+	int  _width = 800;
+	int  _height = 600;
 	std::string _title = "BaseApp";
-	DXGI_FORMAT _backBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
-	DXGI_FORMAT _depthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	std::shared_ptr<dx12lib::Adapter>   _pAdapter;
 	std::shared_ptr<dx12lib::Device>    _pDevice;
 	std::shared_ptr<dx12lib::SwapChain> _pSwapChain;

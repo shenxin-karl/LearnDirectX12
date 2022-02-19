@@ -2,7 +2,41 @@
 
 namespace d3dutil {
 
-	const CD3DX12_STATIC_SAMPLER_DESC &getPointWrapStaticSampler() {
+void Light::initAsDirectionLight(float3 direction, float3 strength) {
+	this->direction = normalize(direction);
+	this->strength = strength;
+	this->position = float3(0);
+	this->falloffStart = 0.f;
+	this->falloffEnd = 0.f;
+	this->spotPower = 0.f;
+}
+
+void Light::initAsPointLight(float3 position, float3 strength, float fallofStart, float fallofEnd) {
+	this->direction = float3(0);
+	this->strength = strength;
+	this->position = position;
+	this->falloffStart = fallofStart;
+	this->falloffEnd = fallofEnd;
+	this->spotPower = 0.f;
+}
+
+
+void Light::initAsSpotLight(float3 position, 
+	float3 direction, 
+	float3 strength, 
+	float fallofStart, 
+	float fallofEnd, 
+	float spotPower) 
+{
+	this->direction = normalize(direction);
+	this->strength = strength;
+	this->position = position;
+	this->falloffStart = fallofStart;
+	this->falloffEnd = fallofEnd;
+	this->spotPower = spotPower;
+}
+
+const CD3DX12_STATIC_SAMPLER_DESC &getPointWrapStaticSampler() {
 	static CD3DX12_STATIC_SAMPLER_DESC sampler(
 		0,
 		D3D12_FILTER_MIN_MAG_MIP_POINT,
@@ -10,7 +44,7 @@ namespace d3dutil {
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP
 	);
-	return sampler;
+return sampler;
 }
 
 const CD3DX12_STATIC_SAMPLER_DESC &getPointClampStaticSampler() {

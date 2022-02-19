@@ -40,7 +40,12 @@ void testStructConstantBuffer(std::shared_ptr<Device> pDevice) {
 int main(int argc, char *argv[]) {
 	std::shared_ptr<Adapter> pAdapter = std::make_shared<Adapter>();
 	std::shared_ptr<Device> pDevice = std::make_shared<Device>(pAdapter);
-	pDevice->initialize();
+
+	dx12lib::DeviceInitDesc desc = {
+		DXGI_FORMAT_R8G8B8A8_UNORM,
+		DXGI_FORMAT_D24_UNORM_S8_UINT,
+	};
+	pDevice->initialize(desc);
 	testDescriptorAllocator(pDevice);
 	testStructConstantBuffer(pDevice);
 	return 0;

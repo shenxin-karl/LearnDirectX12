@@ -3,13 +3,10 @@
 #include "Math/VectorHelper.h"
 #include "Math/MatrixHelper.h"
 #include "Math/MathHelper.h"
-#include "D3D/RenderItem.h"
-#include "D3D/FrameResource.h"
 #include <d3d12.h>
 #include <bitset>
 
-using namespace vec;
-using namespace mat;
+using namespace Math;
 
 struct LandVertex {
 	float3	position;

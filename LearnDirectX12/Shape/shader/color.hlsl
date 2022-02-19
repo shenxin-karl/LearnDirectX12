@@ -1,4 +1,6 @@
+#define USE_CARTOON_SHADING  
 #include "../../Component/D3D/shader/ShaderCommon.hlsl"
+#include "../../Component/D3D/shader/LightingUtil.hlsl"
 
 cbuffer CBPass : register(b0) {
 	PassCBType gPassCB;
@@ -34,7 +36,11 @@ VertexOut VS(VertexIn vin) {
 }
 
 float4 PS(VertexOut pin) : SV_Target { 
-	float3 N = normalize(pin.wnrm);
-	float3 color = N * 0.5f + 0.5f;
-	return float4(color, 1.0f);
+    float3 viewDir = gPassCB.eyePos - pin.wpos;
+    float3 result = float3(0, 0, 0);
+	result += ComputeDirectionLight(gLight.lights[0], gMaterial, pin.wnrm, viewDir);
+    result += ComputePointLight(gLight.lights[1], gMaterial, pin.wnrm, viewDir, pin.wpos);
+   result += ComputeSpotLight(gLight.lights[2], gMaterial, pin.wnrm, viewDir, pin.wpos);
+   result += gMaterial.diffuseAlbedo.rgb * gLight.ambientLight.rgb;
+    return float4(result, 1.f);
 }

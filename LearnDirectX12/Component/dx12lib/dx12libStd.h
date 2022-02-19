@@ -72,6 +72,8 @@ constexpr static std::size_t kDynamicDescriptorPerHeap = 32;
 constexpr static std::size_t kDynamicDescriptorHeapCount = 2;
 constexpr static std::size_t kVertexBufferSlotCount = 16;
 
+struct DeviceInitDesc;
+
 class Adapter;
 class CommandList;
 class CommandListProxy;

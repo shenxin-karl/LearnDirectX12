@@ -42,10 +42,12 @@ public:
 	virtual void onInitialize(dx12lib::CommandListProxy pCmdList) override;
 	virtual void onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 	virtual void onTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
+	virtual void onResize(dx12lib::CommandListProxy pCmdList, int width, int height) override;
 private:
 	void buildPSO(dx12lib::CommandListProxy pCmdList);
 	void buildRenderItem(dx12lib::CommandListProxy pCmdList);
 	void buildGeometry(dx12lib::CommandListProxy pCmdList);
+	void buildGameLight(dx12lib::CommandListProxy pCmdList);
 	void buildMaterials();
 	void renderShapesPass(dx12lib::CommandListProxy pCmdList);
 	void pollEvent();

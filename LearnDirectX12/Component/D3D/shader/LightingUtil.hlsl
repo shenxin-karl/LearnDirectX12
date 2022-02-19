@@ -1,33 +1,14 @@
 #ifndef __LIGHTING_UTIL_HLSL__
 #define __LIGHTING_UTIL_HLSL__
 
-/* macro defines:
- * USE_CARTOON_SHADING:    使用卡通着色
- * NUM_DIR_LIGHTS:         直接光照光源数量
- * NUM_POINT_LIGHTS:       点光源数量
- * NUM_SPOT_LIGHTS:        聚光灯数量
+/*
+开启卡通着色
+#define USE_CARTOON_SHADING  
 */
 
-#define MAX_LIGHTS 16
-struct Light {
-    float3  strength;
-    float   falloffStart;
-    float3  direction;
-    float   falloffEnd;
-    float3  position;
-    float   spotPower;
-};
-
-struct Material {
-    float4 diffuseAlbedo;
-    float3 fresnelR0;
-    float  shiness;
-    float  metallic;
-};
-
 #ifndef USE_CARTOON_SHADING
-    #define DIFF_SHADING_FACTOR(v) (v)
-    #define SPEC_SHADING_FACTOR(v) (v)
+    #define DIFF_SHADING_FACTOR(NdotL) (NdotL)
+    #define SPEC_SHADING_FACTOR(NdotH) (NdotH)
 #else
 
 float CarToonDiffShadingFactor(float NdotL) {
@@ -47,104 +28,106 @@ float CarToonSpecShadingFactor(float HdotN) {
     else
         return 0.8f;
 }
-    #define DIFF_SHADING_FACTOR(v) CarToonDiffShadingFactor(v)
-    #define SPEC_SHADING_FACTOR(v) CarToonSpecShadingFactor(v)
+    #define DIFF_SHADING_FACTOR(NdotL) CarToonDiffShadingFactor(NdotL)
+    #define SPEC_SHADING_FACTOR(NdotH) CarToonSpecShadingFactor(NdotH)
+#endif
+
+
+#ifndef _DECLARE_LIGHT_
+#define _DECLARE_LIGHT_
+struct Light {
+    float3 strength;        // 辐射强度
+    float  falloffStart;    // 点光源/聚光灯:衰减开始距离
+    float3 direction;       // 方向光/聚光灯:光源方向
+    float  falloffEnd;      // 点光源/聚光灯:衰减结束距离
+    float3 position;        // 点光源位置
+    float  spotPower;       // 聚光灯 pow 指数
+};
+#endif
+
+#ifndef _DECLARE_MATERIAL_
+#define _DECLARE_MATERIAL_
+struct Material {
+    float4 diffuseAlbedo;   // 反照率
+    float  roughness;       // 粗糙度
+    float  metallic;        // 金属度
+    float  pading0;         // 填充0
+    float  pading1;         // 填充1
+};
 #endif
 
 float CalcAttenuation(float d, float falloffStart, float falloffEnd) {
-    return saturate((falloffEnd - d) / ((falloffEnd - falloffStart)));
+    return 1.f - saturate((d - falloffStart) / (falloffEnd - falloffStart));
 }
 
-float CalcAttenuationSqr(float dis) {
-    return 1.0f / (dis * dis);
-}
-
-float3 SchlickFresnel(float3 R0, float3 H, float3 L) {
-    float cosIndicentAngle = saturate(dot(H, L));
-    float F0 = 1.0f - cosIndicentAngle;
-    float3 refectPercent = R0 + (1.0f - R0) * (F0*F0*F0*F0*F0);
-    return refectPercent;
+float3 SclickFresnel(float3 F0, float cosIncidenceAngle) {
+    float cosTh = 1.0 - cosIncidenceAngle;
+    return F0 + (1.f - F0) * (cosTh * cosTh * cosTh * cosTh * cosTh);
 }
 
 float3 BlinnPhong(float3 lightStrength, float3 L, float3 N, float3 V, Material mat) {
-    float  metallic = saturate(mat.metallic);
-    float3 diffuse  = mat.diffuseAlbedo.rgb * (1.0f - metallic);
-    float3 R0       = lerp(float3(0.04f, 0.04f, 0.04f), mat.fresnelR0, metallic);
-    
-    const float m = max(mat.shiness * 256.0f, 1.0f);
+    float m = max((1.f - mat.roughness) * 256.f, 1.f);
     float3 H = normalize(V + L);
-    float normalizeFactor = (m + 8.0f) / 8.0f;
-    float roughnessFactor = normalizeFactor * SPEC_SHADING_FACTOR(pow(saturate(dot(H, N)), m));
-    float3 fresnelFactor = SchlickFresnel(R0, H, L);
-    float3 specAlbedo = fresnelFactor * roughnessFactor;
-    specAlbedo = specAlbedo / (specAlbedo + 1.0f);
-    return (diffuse + specAlbedo) * lightStrength;
-}
-
-float3 ComputeDirectLight(Light light, Material mat, float3 N, float3 V) {
-    float3 L = -light.direction;
-    float NdotL = saturate(DIFF_SHADING_FACTOR(dot(L, N)));
-    float3 lightStrength = light.strength * NdotL;
-    return BlinnPhong(lightStrength, L, N, V, mat);
-}
-
-float3 ComputePointLight(Light light, Material mat, float3 wpos, float3 N, float3 V) {
-    float3 lightVec = light.position - wpos;
-    float d = length(lightVec);
-    if (d > light.falloffEnd)
-        return 0.0f;
-        
-    float3 L = lightVec / d;
-    float NdotL = saturate(DIFF_SHADING_FACTOR(dot(N, L)));
-    float3 lightStrength = light.strength * NdotL;
-    float att = CalcAttenuation(d, light.falloffStart, light.falloffEnd);
-    lightStrength *= att;
     
+    // Diffuse material R0 is 0.04
+    float3 F0 = lerp(float3(0.04f, 0.04f, 0.04f), mat.diffuseAlbedo.rgb, mat.metallic);
+    
+    float NdotH = saturate(dot(N, H));
+    float roughnessFactor = (m + 2.f) / 8.0 * pow(NdotH, m);
+    float3 freshnelFactor = SclickFresnel(F0, saturate(dot(H, L)));
+    float3 specAlbedo = SPEC_SHADING_FACTOR(roughnessFactor) * freshnelFactor;
+    
+    // If the material is metal, the diffuse reflection will be reduced
+    float3 diffAlbedo = mat.diffuseAlbedo.rgb * (1.f - mat.metallic);
+    
+    // Make sure it's between 0 and 1
+    specAlbedo = specAlbedo / (specAlbedo + 1.f);
+    return (diffAlbedo + specAlbedo) * lightStrength;
+}
+
+float3 ComputeDirectionLight(Light light, Material mat, float3 normal, float3 viewDir) {
+    float3 V = normalize(viewDir);
+    float3 N = normalize(normal);
+    float3 L = normalize(-light.direction);
+    float NdotL = DIFF_SHADING_FACTOR(saturate(dot(N, L)));
+    float3 lightStrength = light.strength * NdotL;
     return BlinnPhong(lightStrength, L, N, V, mat);
 }
 
-float3 ComputeSpotLight(Light light, Material mat, float3 wpos, float3 N, float3 V) {
-    float3 lightVec = light.position - wpos;
-    float d = length(lightVec);
-    if (d > light.falloffEnd)
-        return 0.0;
-        
-    float3 L = lightVec / d;
-    float NdotL = saturate(DIFF_SHADING_FACTOR(dot(N, L)));
-    float3 lightStrenght = light.strength * NdotL;
+float3 ComputePointLight(Light light, Material mat, float3 normal, float3 viewDir, float3 worldPosition) {
+    float3 lightVec = worldPosition - light.position;
+    float dis = length(lightVec);
+    if (dis > light.falloffEnd)
+        return 0.f;
+    
+    float3 V = normalize(viewDir);
+    float3 N = normalize(normal);
+    float3 L = lightVec / dis;
+    float NdotL = DIFF_SHADING_FACTOR(saturate(dot(N, L)));
+    float attenuation = CalcAttenuation(dis, light.falloffStart, light.falloffEnd);
+    float3 lightStrength = light.strength * NdotL * attenuation;
+    return BlinnPhong(lightStrength, L, N, V, mat);
+}
 
-    float att = CalcAttenuation(d, light.falloffStart, light.falloffEnd);
-    lightStrenght *= att;
+float3 ComputeSpotLight(Light light, Material mat, float3 normal, float3 viewDir, float3 worldPosition) {
+    float3 lightVec = light.position - worldPosition;
+    float dis = length(lightVec);
+    if (dis > light.falloffEnd)
+        return 0.f;
+        
+    float3 V = normalize(viewDir);
+    float3 N = normalize(normal);
+    float3 L = lightVec / dis;
+    float NdotL = DIFF_SHADING_FACTOR(saturate(dot(N, L)));
+    float3 lightStrength = light.strength * NdotL;
+    
+    float attenuation = CalcAttenuation(dis, light.falloffStart, light.falloffEnd);
+    lightStrength *= attenuation;
     
     float spotFactor = pow(saturate(dot(-L, light.direction)), light.spotPower);
-    lightStrenght *- spotFactor;
-    
-    return BlinnPhong(lightStrenght, L, N, V, mat);
-}
+    lightStrength *= spotFactor;
 
-#ifndef NUM_DIR_LIGHTS 
-    #define NUM_DIR_LIGHTS 1
-#endif
-
-float4 ComputeLighting(Light gLights[MAX_LIGHTS], Material mat, 
-                       float3 wpos, float3 N, float3 V, 
-                       float3 shadowFactor[MAX_LIGHTS]) {
-
-    float3 result = 0.0f;
-    int i = 0;
-#if defined(NUM_DIR_LIGHTS) && (NUM_DIR_LIGHTS > 0)
-    for ( ; i < NUM_DIR_LIGHTS; ++i)
-        result += shadowFactor[i] * ComputeDirectLight(gLights[i], mat, N, V);
-#endif
-#if defined(NUM_POINT_LIGHTS) && (NUM_POINT_LIGHTS > 0)
-    for ( ; i < NUM_DIR_LIGHTS+NUM_POINT_LIGHTS; ++i)
-        result += shadowFactor[i] * ComputePointLight(gLights[i], mat, wpos, N, V);
-#endif
-#if defined(NUM_SPOT_LIGHTS) && (NUM_SPOT_LIGHTS > 0)
-    for ( ; i < NUM_DIR_LIGHTS+NUM_POINT_LIGHTS+NUM_SPOT_LIGHTS; ++i)
-        result += shadowFactor[i] * ComputeSpotLight(gLights[int], mat, wpos, N, V);
-#endif
-    return float4(result, 0.0f);
+    return BlinnPhong(lightStrength, L, N, V, mat);
 }
 
 #endif

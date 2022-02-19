@@ -14,13 +14,24 @@ struct Light {
 	float   falloffEnd;		// 点光源/聚光灯衰减结束距离
 	float3  position;		// 点光源位置
 	float   spotPower;		// 聚光灯 pow 指数
+public:
+	void initAsDirectionLight(float3 direction, float3 strength);
+	void initAsPointLight(float3 position, float3 strength, float fallofStart, float fallofEnd);
+	void initAsSpotLight(float3 position, 
+		float3 direction, 
+		float3 strength, 
+		float fallofStart, 
+		float fallofEnd, 
+		float spotPower
+	);
 };
 
 struct Material {
-	float3 diffuseAlbedo;	// 反照率
-	float  roughness;		// 粗糙度
-	float3 fresnelR0;		// 菲涅尔系数
-	float  metallic;		// 金属度
+	float4 diffuseAlbedo;   // 反照率
+	float  roughness;       // 粗糙度
+	float  metallic;        // 金属度
+	float  pading0 = 0.f;   // 填充0
+	float  pading1 = 0.f;   // 填充1
 };
 
 struct PassCBType {
@@ -31,7 +42,7 @@ struct PassCBType {
 	float4x4 viewProj;
 	float4x4 invViewProj;
 	float3	 eyePos;	
-	float	 objectPad0;			// padding
+	float	 objectPad0 = 0.f;			// padding
 	float2	 renderTargetSize;
 	float2	 invRenderTargetSize;
 	float	 nearZ;

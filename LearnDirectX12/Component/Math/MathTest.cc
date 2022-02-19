@@ -2,7 +2,7 @@
 #include "VectorHelper.h"
 
 void float2Test() {
-	using namespace vec;
+	using namespace Math;
 	using namespace std;
 	float2 f1;
 	float2 f2(1);
@@ -37,7 +37,7 @@ void float2Test() {
 }
 
 void float3Test() {
-	using namespace vec;
+	using namespace Math;
 	using namespace std;
 	float3 f1;
 	float3 f2(1);
@@ -100,7 +100,7 @@ void float3Test() {
 }
 
 void float4Test() {
-	using namespace vec;
+	using namespace Math;
 	using namespace std;
 	float4 f1;
 	float4 f2(1);

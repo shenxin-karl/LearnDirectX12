@@ -15,28 +15,28 @@ int main() {
 			std::cout << charEvent.getCharacter() << std::endl;
 		while (auto mouseEvent = pInputSystem->mouse->getEvent()) {
 			switch (mouseEvent.state_) {
-			case com::Mouse::State::LPress:
+			case com::MouseState::LPress:
 				std::cout << std::format("LPress:({}, {})", mouseEvent.x, mouseEvent.y) << std::endl;
 				break;
-			case com::Mouse::State::LRelease:
+			case com::MouseState::LRelease:
 				std::cout << std::format("LRelease:({}, {})", mouseEvent.x, mouseEvent.y) << std::endl;
 				break;
-			case com::Mouse::State::RPress:
+			case com::MouseState::RPress:
 				std::cout << std::format("RPress:({}, {})", mouseEvent.x, mouseEvent.y) << std::endl;
 				break;
-			case com::Mouse::State::RRelease:
+			case com::MouseState::RRelease:
 				std::cout << std::format("RRelease:({}, {})", mouseEvent.x, mouseEvent.y) << std::endl;
 				break;
-			case com::Mouse::State::Move:
+			case com::MouseState::Move:
 				std::cout << std::format("Move:({}, {})", mouseEvent.x, mouseEvent.y) << std::endl;
 				break;
-			case com::Mouse::State::Wheel:
+			case com::MouseState::Wheel:
 				std::cout << std::format("Wheel:({})", mouseEvent.offset_) << std::endl;
 				break;
-			case com::Mouse::State::WheelDown:
+			case com::MouseState::WheelDown:
 				std::cout << std::format("WheelDown:({}, {})", mouseEvent.x, mouseEvent.y) << std::endl;
 				break;
-			case com::Mouse::State::WheelUp:
+			case com::MouseState::WheelUp:
 				std::cout << std::format("WheelUp:({}, {})", mouseEvent.x, mouseEvent.y) << std::endl;
 				break;
 			}

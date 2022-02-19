@@ -1,5 +1,5 @@
 #include "BaseApp.h"
-#include "InputSystem/Window.h"
+#include "InputSystem/window.h"
 #include "dx12lib/Adapter.h"
 #include "dx12lib/Device.h"
 #include "dx12lib/SwapChain.h"
@@ -16,8 +16,13 @@ void BaseApp::initialize() {
 
 	_pAdapter = std::make_shared<dx12lib::Adapter>();
 	_pDevice = std::make_shared<dx12lib::Device>(_pAdapter);
-	_pDevice->initialize();
-	_pSwapChain = _pDevice->createSwapChain(_pInputSystem->window->getHWND(), _backBufferFormat, _depthStencilFormat);
+
+	dx12lib::DeviceInitDesc desc = {
+		DXGI_FORMAT_R8G8B8A8_UNORM,
+		DXGI_FORMAT_D24_UNORM_S8_UINT,
+	};
+	_pDevice->initialize(desc);
+	_pSwapChain = _pDevice->createSwapChain(_pInputSystem->window->getHWND());
 	// first resize
 	auto pCmdQueue = _pDevice->getCommandQueue(dx12lib::CommandQueueType::Direct);
 	auto pCmdList = pCmdQueue->createCommandListProxy();
@@ -64,7 +69,7 @@ void BaseApp::endTick(std::shared_ptr<GameTimer> pGameTimer) {
 }
 
 void BaseApp::resize(int width, int height) {
-	if (width == _width || height == _height || width == 0 || height == 0)
+	if (width == 0 || height == 0)
 		return;
 
 	_width = width;

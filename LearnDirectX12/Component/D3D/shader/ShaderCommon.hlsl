@@ -1,6 +1,8 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
+#ifndef _DECLARE_LIGHT_
+#define _DECLARE_LIGHT_
 struct Light {
 	float3  strength;		// 辐射强度
 	float   falloffStart;	// 点光源/聚光灯衰减开始距离
@@ -9,13 +11,18 @@ struct Light {
 	float3  position;		// 点光源位置
 	float   spotPower;		// 聚光灯 pow 指数
 };
+#endif
 
+#ifndef _DECLARE_MATERIAL_
+#define _DECLARE_MATERIAL_
 struct Material {
-	float3 diffuseAlbedo;	// 反照率
-	float  roughness;		// 粗糙度
-	float3 fresnelR0;		// 菲涅尔系数
-	float  metallic;		// 金属度
+    float4 diffuseAlbedo;	// 反照率
+    float  roughness;		// 粗糙度
+    float  metallic;		// 金属度
+    float  pading0;			// 填充0
+    float  pading1;			// 填充1
 };
+#endif
 
 struct PassCBType {
 	float4x4 view;

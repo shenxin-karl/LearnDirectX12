@@ -8,7 +8,7 @@
 #include <string>
 
 using namespace com;
-using namespace vec;
+using namespace Math;
 using namespace HalfEdge;
 
 void halfEdgeTest() {
