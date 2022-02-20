@@ -69,10 +69,11 @@ public:
 /// bind gpu buffer
 	void setVertexBuffer(std::shared_ptr<VertexBuffer> pVertBuffer, UINT slot = 0);
 	void setIndexBuffer(std::shared_ptr<IndexBuffer> pIndexBuffer);
-	void setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuffer, uint32 rootIndex, uint32 offset = 0);
+	void setConstantBufferView(std::shared_ptr<ConstantBuffer> pConstantBuffer, uint32 rootIndex, uint32 offset = 0);
 	void setPipelineStateObject(std::shared_ptr<GraphicsPSO> pPipelineStateObject);
 	void setGrahicsRootSignature(std::shared_ptr<RootSignature> pRootSignature);
 	void setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology);
+	void setShaderResourceView(std::shared_ptr<Texture> pTexture, uint32 rootIndex, uint32 offset = 0);
 
 	template<typename T>
 	void setStructConstantBuffer(std::shared_ptr<StructConstantBuffer<T>> pStructConstantBuffer,
@@ -81,7 +82,7 @@ public:
 	{
 		assert(pStructConstantBuffer != nullptr);
 		pStructConstantBuffer->updateConstantBuffer();
-		setConstantBuffer(pStructConstantBuffer->getConstantBuffer(), rootIndex, offset);
+		setConstantBufferView(pStructConstantBuffer->getConstantBuffer(), rootIndex, offset);
 	}
 /// draw function
 	void drawInstanced(uint32 vertCount, 
@@ -96,6 +97,9 @@ public:
 		uint32 startVertexLocation, 
 		uint32 startInstanceLocation
 	);
+/// create dds texture
+	std::shared_ptr<Texture> createDDSTextureFromFile(const std::wstring &fileName);
+	std::shared_ptr<Texture> createDDSTextureFromMemory(const void *pData, std::size_t sizeInByte);
 private:
 	friend class CommandQueue;
 	friend class FrameResourceItem;
@@ -122,6 +126,7 @@ private:
 		RenderTarget  *pRenderTarget;
 		bool           isSetViewprot;
 		bool           isSetScissorRect;
+		D3D_PRIMITIVE_TOPOLOGY primitiveTopology = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
 	public:
 		bool debugCheckDraw() const;
 		bool debugCheckDrawIndex() const;

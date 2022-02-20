@@ -13,6 +13,7 @@
 #include "RootSignature.h"
 #include "MakeObejctTool.hpp"
 #include "DefaultBuffer.h"
+#include "DDSTextureLoader.h"
 
 #if defined(_DEBUG) || defined(DEBUG)
 #define DBG_CALL(f) f;
@@ -198,7 +199,7 @@ void CommandList::setIndexBuffer(std::shared_ptr<IndexBuffer> pIndexBuffer) {
 	}
 }
 
-void CommandList::setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuffer, uint32 rootIndex, uint32 offset){
+void CommandList::setConstantBufferView(std::shared_ptr<ConstantBuffer> pConstantBuffer, uint32 rootIndex, uint32 offset){
 	assert(pConstantBuffer != nullptr);
 	assert(_currentGPUState.pRootSignature != nullptr);
 	_pDynamicDescriptorHeaps[0]->stageDescriptors(
@@ -225,7 +226,22 @@ void CommandList::setGrahicsRootSignature(std::shared_ptr<RootSignature> pRootSi
 }
 
 void CommandList::setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology) {
-	_pCommandList->IASetPrimitiveTopology(topology);
+	if (_currentGPUState.primitiveTopology != topology) {
+		_currentGPUState.primitiveTopology = topology;
+		_pCommandList->IASetPrimitiveTopology(topology);
+	}
+}
+
+void CommandList::setShaderResourceView(std::shared_ptr<Texture> pTexture, uint32 rootIndex, uint32 offset /*= 0*/) {
+	assert(pTexture != nullptr);
+	assert(pTexture->checkSRVSupport());
+	assert(_currentGPUState.pRootSignature != nullptr);
+	_pDynamicDescriptorHeaps[0]->stageDescriptors(
+		rootIndex,
+		offset,
+		1,
+		pTexture->getShaderResourceView()
+	);
 }
 
 void CommandList::drawInstanced(uint32 vertCount, 
@@ -255,6 +271,40 @@ void CommandList::drawIndexdInstanced(uint32 indexCountPerInstance,
 		startIndexLocation, 
 		startVertexLocation, 
 		startIndexLocation
+	);
+}
+
+std::shared_ptr<Texture> CommandList::createDDSTextureFromFile(const std::wstring &fileName) {
+	WRL::ComPtr<ID3D12Resource> pTexture;
+	WRL::ComPtr<ID3D12Resource> pUploadHeap;
+	DirectX::CreateDDSTextureFromFile12(_pDevice.lock()->getD3DDevice(), 
+		_pCommandList.Get(), 
+		fileName.c_str(),
+		pTexture,
+		pUploadHeap
+	);
+	return std::make_shared<MakeTexture>(_pDevice, 
+		pTexture, 
+		pUploadHeap, 
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+	);
+}
+
+std::shared_ptr<dx12lib::Texture> CommandList::createDDSTextureFromMemory(const void *pData, std::size_t sizeInByte) 
+{
+	WRL::ComPtr<ID3D12Resource> pTexture;
+	WRL::ComPtr<ID3D12Resource> pUploadHeap;
+	DirectX::CreateDDSTextureFromMemory12(_pDevice.lock()->getD3DDevice(),
+		_pCommandList.Get(),
+		reinterpret_cast<const uint8_t *>(pData),
+		sizeInByte,
+		pTexture,
+		pUploadHeap
+	);
+	return std::make_shared<MakeTexture>(_pDevice,
+		pTexture,
+		pUploadHeap,
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
 	);
 }
 
@@ -312,7 +362,9 @@ void CommandList::reset() {
 		pDynamicDescriptorHeap->reset();
 }
 
-void CommandList::setRootSignature(std::shared_ptr<RootSignature> pRootSignature, const SetRootSignatureFunc &setFunc) {
+void CommandList::setRootSignature(std::shared_ptr<RootSignature> pRootSignature, 
+	const SetRootSignatureFunc &setFunc) 
+{
 	if (_currentGPUState.pRootSignature != pRootSignature.get()) {
 		_currentGPUState.pRootSignature = pRootSignature.get();
 		setFunc(_pCommandList.Get(), pRootSignature->getRootSignature().Get());
@@ -323,13 +375,14 @@ void CommandList::setRootSignature(std::shared_ptr<RootSignature> pRootSignature
 
 bool CommandList::CommandListState::debugCheckDraw() const {
 	return pPSO != nullptr && pRootSignature != nullptr && pRenderTarget != nullptr && 
-		   isSetViewprot && isSetScissorRect && checkVertexBuffer() && checkTextures();
+		   isSetViewprot && isSetScissorRect && checkVertexBuffer() && checkTextures() &&
+		   primitiveTopology != D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
 }
 
 bool CommandList::CommandListState::debugCheckDrawIndex() const {
 	return pPSO != nullptr && pRootSignature != nullptr && pIndexBuffer != nullptr &&
 		pRenderTarget != nullptr && isSetViewprot && isSetScissorRect && checkVertexBuffer() &&
-		checkTextures();
+		checkTextures() && primitiveTopology != D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
 }
 
 bool CommandList::CommandListState::checkVertexBuffer() const {

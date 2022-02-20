@@ -104,7 +104,7 @@ void SwapChain::updateBuffer(CommandListProxy pCmdList) {
 		name.append(std::to_wstring(i));
 		name.append(L"]");
 		pBuffer->SetName(name.c_str());
-		_pSwapChainBuffer[i] = std::make_shared<Texture>(_pDevice, pBuffer, nullptr);
+		_pSwapChainBuffer[i] = std::make_shared<MakeTexture>(_pDevice, pBuffer, nullptr);
 	}
 
 	D3D12_RESOURCE_DESC depthStencilDesc;

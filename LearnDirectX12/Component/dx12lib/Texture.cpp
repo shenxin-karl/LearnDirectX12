@@ -165,9 +165,25 @@ Texture::Texture(std::weak_ptr<Device> pDevice, WRL::ComPtr<ID3D12Resource> pRes
 	createViews();
 }
 
+Texture::Texture(std::weak_ptr<Device> pDevice, 
+	WRL::ComPtr<ID3D12Resource> pResource, 
+	WRL::ComPtr<ID3D12Resource> pUploadHeap,
+	D3D12_RESOURCE_STATES state)
+: Resource(pDevice.lock()->getD3DDevice(), pResource, state), _pUploaderHeap(pUploadHeap)
+{
+	_pDevice = pDevice;
+	auto desc = pResource->GetDesc();
+	_width = static_cast<uint32>(desc.Width);
+	_height = static_cast<uint32>(desc.Height);
+	_depthOrArraySize = desc.DepthOrArraySize;
+	initializeClearValue(nullptr);
+	createViews();
+}
+
 void Texture::initializeClearValue(const D3D12_CLEAR_VALUE *pClearValue) {
 	if (pClearValue != nullptr) {
 		_clearValue = *pClearValue;
+		_clearFlag = ClearFlag::Color | ClearFlag::Depth | ClearFlag::Stencil;
 	} else {
 		auto desc = getD3DResource()->GetDesc();
 		std::memset(&_clearValue.Color, 0, sizeof(_clearValue.Color));
@@ -175,7 +191,6 @@ void Texture::initializeClearValue(const D3D12_CLEAR_VALUE *pClearValue) {
 		_clearValue.DepthStencil.Depth = 1.f;
 		_clearValue.DepthStencil.Stencil = 0;
 	}
-	_clearFlag = ClearFlag::Color | ClearFlag::Depth | ClearFlag::Stencil;
 }
 
 void Texture::createViews() {
