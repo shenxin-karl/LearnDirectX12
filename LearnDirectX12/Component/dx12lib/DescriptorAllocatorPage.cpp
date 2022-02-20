@@ -49,6 +49,10 @@ uint32 DescriptorAllocatorPage::getFreeHandle() const {
 	return _numFreeHandle;
 }
 
+bool DescriptorAllocatorPage::hasSpace(uint32 numDescriptor) const {
+	return numDescriptor <= _numFreeHandle;
+}
+
 DescriptorAllocation DescriptorAllocatorPage::allocate(uint32 numDescriptor) {
 	std::lock_guard lock(_allocationMutex);
 	if (numDescriptor > _numFreeHandle)

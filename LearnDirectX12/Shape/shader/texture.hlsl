@@ -52,5 +52,5 @@ float4 PS(VertexOut pin) : SV_Target{
     
     result += ComputeDirectionLight(gLight.lights[0], mat, pin.wnrm, viewDir);
     result += (diffAlbedo * gLight.ambientLight).rgb;
-    return float4(result, gMaterial.diffuseAlbedo.a);
+    return float4(result, diffAlbedo.a);
 }

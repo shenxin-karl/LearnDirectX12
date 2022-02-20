@@ -41,6 +41,7 @@ void Shape::onInitialize(dx12lib::CommandListProxy pCmdList) {
 	buildColorPSO(pCmdList);
 	buildGameLight(pCmdList);
 	buildGeometry(pCmdList);
+	loadTextures(pCmdList);
 	buildMaterials();
 	buildRenderItem(pCmdList);
 }
@@ -68,8 +69,8 @@ void Shape::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		pRenderTarget->getTexture(dx12lib::Color0)->clearColor(DX::Colors::LightBlue);
 		pRenderTarget->getTexture(dx12lib::DepthStencil)->clearDepthStencil(1.0f, 0);
 		pCmdList->setRenderTarget(pRenderTarget);
-		//renderShapesPass(pCmdList);
 		renderSkullPass(pCmdList);
+		renderShapesPass(pCmdList);
 	}
 	pCmdQueue->executeCommandList(pCmdList);
 	pCmdQueue->signal(_pSwapChain);
@@ -142,7 +143,7 @@ void Shape::buildRenderItem(dx12lib::CommandListProxy pCmdList) {
 	ObjectCB boxObjCb;
 
 	// build Texture RenderItem
-	constexpr const char *pTexturePSOName = "TextureColor";
+	constexpr const char *pTexturePSOName = "TexturePSO";
 	auto &textureRenderItems = _renderItems[pTexturePSOName];
 
 	boxObjCb.material = _materials["boxMat"];
@@ -298,34 +299,38 @@ void Shape::buildGameLight(dx12lib::CommandListProxy pCmdList) {
 
 void Shape::buildMaterials() {
 	d3dutil::Material sphereMat;
-	sphereMat.diffuseAlbedo = float4(1.f, 0.f, 0.f, 1.0);
+	sphereMat.diffuseAlbedo = float4(DX::Colors::White);
 	sphereMat.roughness = 0.5f;
 	sphereMat.metallic = 0.5f;
 	_materials["sphereMat"] = sphereMat;
 
 	d3dutil::Material boxMat;
-	boxMat.diffuseAlbedo = float4(1.00f, 0.71f, 0.29f, 1.f);
+	boxMat.diffuseAlbedo = float4(DX::Colors::White);
 	boxMat.roughness = 1.0f;
 	boxMat.metallic = 0.f;
 	_materials["boxMat"] = boxMat;
 
 	d3dutil::Material gridMat;
-	gridMat.diffuseAlbedo = float4(0.3f, 0.3f, 0.3f, 1.f);
+	gridMat.diffuseAlbedo = float4(DX::Colors::White);
 	gridMat.roughness = 1.f;
 	gridMat.metallic = 0.1f;
 	_materials["gridMat"] = gridMat;
 
 	d3dutil::Material cylinderMat;
-	cylinderMat.diffuseAlbedo = float4(0.56f, 0.57f, 1.0f, 1.f);
+	cylinderMat.diffuseAlbedo = float4(DX::Colors::White);
 	cylinderMat.roughness = 1.f;
 	cylinderMat.metallic = 0.f;
 	_materials["cylinderMat"] = cylinderMat;
 
 	d3dutil::Material skullMat;
-	skullMat.diffuseAlbedo = float4(DX::Colors::White);
+	skullMat.diffuseAlbedo = float4(DX::Colors::Gold);
 	skullMat.roughness = 0.8f;
 	skullMat.metallic = 0.2f;
 	_materials["skullMat"] = skullMat;
+}
+
+void Shape::loadTextures(dx12lib::CommandListProxy pCmdList) {
+	_textureMap["bricks.dds"] = pCmdList->createDDSTextureFromFile(L"resource/bricks.dds");
 }
 
 void Shape::renderShapesPass(dx12lib::CommandListProxy pCmdList) {
@@ -333,15 +338,17 @@ void Shape::renderShapesPass(dx12lib::CommandListProxy pCmdList) {
 	auto pPSO = _PSOMap[passPSOName];
 	pCmdList->setPipelineStateObject(pPSO);
 
-	pCmdList->setStructConstantBuffer(_pPassCB, ShapeShaderCBType::CBPass);
-	pCmdList->setStructConstantBuffer(_pGameLightsCB, ShapeShaderCBType::CBLight);
+	pCmdList->setStructConstantBuffer(_pPassCB, ShapeRootParameType::CBPass);
+	pCmdList->setStructConstantBuffer(_pGameLightsCB, ShapeRootParameType::CBLight);
+	auto pAlbedoMap = _textureMap["bricks.dds"];
+	pCmdList->setShaderResourceView(pAlbedoMap, ShapeRootParameType::SRAlbedo);
 
 	auto psoRenderItems = _renderItems[passPSOName];
 	for (auto &rItem : psoRenderItems) {
 		pCmdList->setVertexBuffer(rItem._pMesh->_pVertexBuffer);
 		pCmdList->setIndexBuffer(rItem._pMesh->_pIndexBuffer);
 		pCmdList->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		pCmdList->setStructConstantBuffer(rItem._pObjectCB, ShapeShaderCBType::CBObject);
+		pCmdList->setStructConstantBuffer(rItem._pObjectCB, ShapeRootParameType::CBObject);
 		pCmdList->drawIndexdInstanced(
 			rItem._pMesh->_pIndexBuffer->getIndexCount(), 1, 0,
 			0, 0
@@ -354,14 +361,14 @@ void Shape::renderSkullPass(dx12lib::CommandListProxy pCmdList) {
 	auto pPSO = _PSOMap[passPSOName];
 
 	pCmdList->setPipelineStateObject(pPSO);
-	pCmdList->setStructConstantBuffer(_pPassCB, ShapeShaderCBType::CBPass);
-	pCmdList->setStructConstantBuffer(_pGameLightsCB, ShapeShaderCBType::CBLight);
+	pCmdList->setStructConstantBuffer(_pPassCB, ShapeRootParameType::CBPass);
+	pCmdList->setStructConstantBuffer(_pGameLightsCB, ShapeRootParameType::CBLight);
 	auto psoRenderItems = _renderItems[passPSOName];
 	auto &rItem = psoRenderItems[0];
 	pCmdList->setVertexBuffer(rItem._pMesh->_pVertexBuffer);
 	pCmdList->setIndexBuffer(rItem._pMesh->_pIndexBuffer);
 	pCmdList->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	pCmdList->setStructConstantBuffer(rItem._pObjectCB, ShapeShaderCBType::CBObject);
+	pCmdList->setStructConstantBuffer(rItem._pObjectCB, ShapeRootParameType::CBObject);
 	pCmdList->drawIndexdInstanced(
 		rItem._pMesh->_pIndexBuffer->getIndexCount(), 1, 0,
 		0, 0

@@ -31,19 +31,18 @@ struct ObjectCB {
 };
 
 struct RenderItem {
-	std::shared_ptr<Mesh>     _pMesh;
-	GPUStructCBPtr<ObjectCB>  _pObjectCB;
+	std::shared_ptr<Mesh> _pMesh;
+	GPUStructCBPtr<ObjectCB> _pObjectCB;
 };
 
-enum ShapeShaderCBType : UINT {
+enum ShapeRootParameType : UINT {
 	CBPass   = 0,
 	CBLight  = 1,
 	CBObject = 2,
+	SRAlbedo = 3,
 };
 
-enum ShapeShaderSRType : UINT { 
-	SRAlbedo = 0,
-};
+
 
 class Shape : public com::BaseApp {
 public:
@@ -60,6 +59,7 @@ private:
 	void buildGeometry(dx12lib::CommandListProxy pCmdList);
 	void buildGameLight(dx12lib::CommandListProxy pCmdList);
 	void buildMaterials();
+	void loadTextures(dx12lib::CommandListProxy pCmdList);
 	void renderShapesPass(dx12lib::CommandListProxy pCmdList);
 	void renderSkullPass(dx12lib::CommandListProxy pCmdList);
 	void pollEvent();
@@ -72,4 +72,5 @@ private:
 	std::unordered_map<std::string, std::shared_ptr<Mesh>> _geometrys;
 	std::unordered_map<std::string, std::vector<RenderItem>> _renderItems;
 	std::unordered_map<std::string, std::shared_ptr<dx12lib::GraphicsPSO>> _PSOMap;
+	std::unordered_map<std::string, std::shared_ptr<dx12lib::Texture>> _textureMap;
 };

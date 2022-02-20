@@ -36,7 +36,7 @@ Microsoft::WRL::ComPtr<ID3DBlob> compileShader(
 	);
 
 	if (FAILED(hr)) {
-		OutputDebugStringA(static_cast<char *>(errors->GetBufferPointer()));
+		OutputDebugString(static_cast<char *>(errors->GetBufferPointer()));
 		ThrowIfFailed(hr);
 	}
 	return byteCode;

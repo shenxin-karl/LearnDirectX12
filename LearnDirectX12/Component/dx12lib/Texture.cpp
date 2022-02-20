@@ -216,7 +216,7 @@ void Texture::createViews() {
 			_depthStencilView.getCPUHandle()
 		);
 	}
-	if ((desc.Flags & D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE) != 0 && checkSRVSupport()) {
+	if (checkSRVSupport()) {
 		_shaderResourceView = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 		pSharedDevice->getD3DDevice()->CreateShaderResourceView(
 			pResource.Get(),
