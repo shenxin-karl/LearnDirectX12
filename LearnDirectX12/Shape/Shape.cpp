@@ -37,7 +37,8 @@ void Shape::onInitialize(dx12lib::CommandListProxy pCmdList) {
 	};
 	_pCamera = std::make_unique<d3dutil::CoronaCamera>(cameraDesc);
 	_pPassCB = pCmdList->createStructConstantBuffer<d3dutil::PassCBType>();
-	buildPSO(pCmdList);
+	buildTexturePSO(pCmdList);
+	buildColorPSO(pCmdList);
 	buildGameLight(pCmdList);
 	buildGeometry(pCmdList);
 	buildMaterials();
@@ -67,7 +68,8 @@ void Shape::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		pRenderTarget->getTexture(dx12lib::Color0)->clearColor(DX::Colors::LightBlue);
 		pRenderTarget->getTexture(dx12lib::DepthStencil)->clearDepthStencil(1.0f, 0);
 		pCmdList->setRenderTarget(pRenderTarget);
-		renderShapesPass(pCmdList);
+		//renderShapesPass(pCmdList);
+		renderSkullPass(pCmdList);
 	}
 	pCmdQueue->executeCommandList(pCmdList);
 	pCmdQueue->signal(_pSwapChain);
@@ -77,17 +79,18 @@ void Shape::onResize(dx12lib::CommandListProxy pCmdList, int width, int height) 
 	_pCamera->_aspect = float(width) / float(height);
 }
 
-void Shape::buildPSO(dx12lib::CommandListProxy pCmdList) {
-	dx12lib::RootSignatureDescHelper rootDesc;
-	rootDesc.reset(3);
+void Shape::buildTexturePSO(dx12lib::CommandListProxy pCmdList) {
+	dx12lib::RootSignatureDescHelper rootDesc(d3dutil::getStaticSamplers());
+	rootDesc.reset(4);
 	rootDesc[0].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 	rootDesc[1].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
 	rootDesc[2].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2);
+	rootDesc[3].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 	auto pRootSignature = _pDevice->createRootSignature(rootDesc);
 
-	_pGraphicsPSO = _pDevice->createGraphicsPSO("ColorPSO");
-	_pGraphicsPSO->setRootSignature(pRootSignature);
-	_pGraphicsPSO->setRenderTargetFormat(
+	auto pPSO = _pDevice->createGraphicsPSO("TexturePSO");
+	pPSO->setRootSignature(pRootSignature);
+	pPSO->setRenderTargetFormat(
 		_pSwapChain->getRenderTargetFormat(),
 		_pSwapChain->getDepthStencilFormat(),
 		_pDevice->getSampleCount(),
@@ -97,21 +100,56 @@ void Shape::buildPSO(dx12lib::CommandListProxy pCmdList) {
 	std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout = {
 		dx12lib::VInputLayoutDescHelper(&ShapeVertex::position, "POSITION", DXGI_FORMAT_R32G32B32_FLOAT),
 		dx12lib::VInputLayoutDescHelper(&ShapeVertex::normal, "NORMAL", DXGI_FORMAT_R32G32B32_FLOAT),
+		dx12lib::VInputLayoutDescHelper(&ShapeVertex::texcoord, "TEXCOORD", DXGI_FORMAT_R32G32_FLOAT),
 	};
-	_pGraphicsPSO->setInputLayout(inputLayout);
-	_pGraphicsPSO->setVertexShader(d3dutil::compileShader(L"shader/color.hlsl", nullptr, "VS", "vs_5_0"));
-	_pGraphicsPSO->setPixelShader(d3dutil::compileShader(L"shader/color.hlsl", nullptr, "PS", "ps_5_0"));
-	_pGraphicsPSO->finalize(_pDevice);
+	pPSO->setInputLayout(inputLayout);
+	pPSO->setVertexShader(d3dutil::compileShader(L"shader/texture.hlsl", nullptr, "VS", "vs_5_0"));
+	pPSO->setPixelShader(d3dutil::compileShader(L"shader/texture.hlsl", nullptr, "PS", "ps_5_0"));
+	pPSO->finalize(_pDevice);
+	_PSOMap["TexturePSO"] = pPSO;
+}
+
+void Shape::buildColorPSO(dx12lib::CommandListProxy pCmdList) {
+	dx12lib::RootSignatureDescHelper rootDesc;
+	rootDesc.reset(3);
+	rootDesc[0].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+	rootDesc[1].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+	rootDesc[2].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2);
+	auto pRootSignature = _pDevice->createRootSignature(rootDesc);
+
+	auto pPSO = _pDevice->createGraphicsPSO("ColorPSO");
+	pPSO->setRootSignature(pRootSignature);
+	pPSO->setRenderTargetFormat(
+		_pSwapChain->getRenderTargetFormat(),
+		_pSwapChain->getDepthStencilFormat(),
+		_pDevice->getSampleCount(),
+		_pDevice->getSampleQuality()
+	);
+
+	std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout = {
+		dx12lib::VInputLayoutDescHelper(&SkullVertex::position, "POSITION", DXGI_FORMAT_R32G32B32_FLOAT),
+		dx12lib::VInputLayoutDescHelper(&SkullVertex::normal, "NORMAL", DXGI_FORMAT_R32G32B32_FLOAT),
+	};
+	pPSO->setInputLayout(inputLayout);
+	pPSO->setVertexShader(d3dutil::compileShader(L"shader/color.hlsl", nullptr, "VS", "vs_5_0"));
+	pPSO->setPixelShader(d3dutil::compileShader(L"shader/color.hlsl", nullptr, "PS", "ps_5_0"));
+	pPSO->finalize(_pDevice);
+	_PSOMap["ColorPSO"] = pPSO;
 }
 
 void Shape::buildRenderItem(dx12lib::CommandListProxy pCmdList) {
 	RenderItem boxItem;
 	ObjectCB boxObjCb;
+
+	// build Texture RenderItem
+	constexpr const char *pTexturePSOName = "TextureColor";
+	auto &textureRenderItems = _renderItems[pTexturePSOName];
+
 	boxObjCb.material = _materials["boxMat"];
 	XMStoreFloat4x4(&boxObjCb.world, DX::XMMatrixScaling(2.f, 2.f, 2.f) * DX::XMMatrixTranslation(0.f, 0.5f, 0.f));
 	boxItem._pMesh = _geometrys["box"];
 	boxItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCB>(boxObjCb);
-	_renderItems.push_back(boxItem);
+	textureRenderItems.push_back(boxItem);
 
 	RenderItem gridItem;
 	ObjectCB gridObjCB;
@@ -119,7 +157,7 @@ void Shape::buildRenderItem(dx12lib::CommandListProxy pCmdList) {
 	gridObjCB.world = MathHelper::identity4x4();;
 	gridItem._pMesh = _geometrys["grid"];
 	gridItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCB>(gridObjCB);
-	_renderItems.push_back(gridItem);
+	textureRenderItems.push_back(gridItem);
 
 	for (std::size_t i = 0; i < 5; ++i) {
 		RenderItem leftCylRItem;
@@ -152,11 +190,23 @@ void Shape::buildRenderItem(dx12lib::CommandListProxy pCmdList) {
 		leftSphereRItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCB>(leftSphereObjCB);
 		rightSphereRItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCB>(rightSphereObjCB);
 
-		_renderItems.push_back(leftCylRItem);
-		_renderItems.push_back(rightCylRItem);
-		_renderItems.push_back(leftSphereRItem);
-		_renderItems.push_back(rightSphereRItem);
+		textureRenderItems.push_back(leftCylRItem);
+		textureRenderItems.push_back(rightCylRItem);
+		textureRenderItems.push_back(leftSphereRItem);
+		textureRenderItems.push_back(rightSphereRItem);
 	}
+
+	// build Color RenderItem
+	constexpr const char *pColorPSOName = "ColorPSO";
+	auto &colorRenderItems = _renderItems[pColorPSOName];
+	RenderItem skullItem;
+	ObjectCB skullObjCB;
+	skullObjCB.material = _materials["skullMat"];
+	XMStoreFloat4x4(&skullObjCB.world, 
+		DX::XMMatrixMultiply(DX::XMMatrixScaling(0.5f, 0.5f, 0.5f), DX::XMMatrixTranslation(0.f, 1.0f, 0.f)));
+	skullItem._pMesh = _geometrys["skull"];
+	skullItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCB>(skullObjCB);
+	colorRenderItems.push_back(skullItem);
 }
 
 void Shape::buildGeometry(dx12lib::CommandListProxy pCmdList) {
@@ -165,6 +215,7 @@ void Shape::buildGeometry(dx12lib::CommandListProxy pCmdList) {
 	com::MeshData grid = gen.createGrid(20.f, 30.f, 60, 40);
 	com::MeshData sphere = gen.createSphere(0.5f, 3);
 	com::MeshData cylinder = gen.createCylinder(0.5f, 0.3f, 3.f, 20, 20);
+	com::MeshData skull = gen.loadObjFile("resource/skull.obj");
 
 	auto buildShapeMesh = [&](const com::MeshData &mesh) {
 		std::vector<ShapeVertex> vertices;
@@ -172,7 +223,7 @@ void Shape::buildGeometry(dx12lib::CommandListProxy pCmdList) {
 		vertices.reserve(mesh.vertices.size());
 		indices.reserve(mesh.indices.size());
 		std::transform(mesh.vertices.begin(), mesh.vertices.end(), std::back_inserter(vertices), [](auto &v) {
-			return ShapeVertex(v.position, v.normal);
+			return ShapeVertex(v.position, v.normal, v.texcoord);
 		});
 		std::transform(mesh.indices.begin(), mesh.indices.end(), std::back_inserter(indices), [](auto &i) {
 			return static_cast<std::uint16_t>(i);
@@ -192,10 +243,36 @@ void Shape::buildGeometry(dx12lib::CommandListProxy pCmdList) {
 		return pMesh;
 	};
 
+	auto buildSkullMesh = [&](const com::MeshData &mesh) {
+		std::vector<SkullVertex> vertices;
+		std::vector<std::uint16_t> indices;
+		vertices.reserve(mesh.vertices.size());
+		indices.reserve(mesh.indices.size());
+		std::transform(mesh.vertices.begin(), mesh.vertices.end(), std::back_inserter(vertices), [](auto &v) {
+			return SkullVertex(v.position, v.normal);
+		});
+		std::transform(mesh.indices.begin(), mesh.indices.end(), std::back_inserter(indices), [](auto &i) {
+			return static_cast<std::uint16_t>(i);
+		});
+		std::shared_ptr<Mesh> pMesh = std::make_shared<Mesh>();
+		pMesh->_pVertexBuffer = pCmdList->createVertexBuffer(
+			vertices.data(),
+			sizeof(SkullVertex) * vertices.size(),
+			sizeof(SkullVertex)
+		);
+		pMesh->_pIndexBuffer = pCmdList->createIndexBuffer(
+			indices.data(),
+			sizeof(std::uint16_t) * indices.size(),
+			DXGI_FORMAT_R16_UINT
+		);
+		return pMesh;
+	};
+
 	_geometrys["box"] = buildShapeMesh(box);
 	_geometrys["grid"] = buildShapeMesh(grid);
 	_geometrys["sphere"] = buildShapeMesh(sphere);
 	_geometrys["cylinder"] = buildShapeMesh(cylinder);
+	_geometrys["skull"] = buildSkullMesh(skull);
 }
 
 
@@ -207,16 +284,16 @@ void Shape::buildGameLight(dx12lib::CommandListProxy pCmdList) {
 	pGPUGameLightCB->spotLightCount = 0;
 	pGPUGameLightCB->ambientLight = float4(0.1f, 0.1f, 0.1f, 1.f);
 
-	pGPUGameLightCB->lights[0].initAsDirectionLight(float3(3, -6, 3), float3(1.f, 0.1, 0.1));
-	pGPUGameLightCB->lights[1].initAsPointLight(float3(5, 6, 7), float3(0.1f, 1.f, 0.1f), 0.f, 30.f);
-	pGPUGameLightCB->lights[2].initAsSpotLight(
-		float3(0, 10, 0),
-		float3(0, -1, 0),
-		float3(0.1f, 0.1f, 1.f),
-		0,
-		20,
-		2
-	);
+	pGPUGameLightCB->lights[0].initAsDirectionLight(float3(3, -6, 3), float3(1.f));
+	//pGPUGameLightCB->lights[1].initAsPointLight(float3(5, 6, 7), float3(0.1f, 1.f, 0.1f), 0.f, 30.f);
+	//pGPUGameLightCB->lights[2].initAsSpotLight(
+	//	float3(0, 10, 0),
+	//	float3(0, -1, 0),
+	//	float3(0.1f, 0.1f, 1.f),
+	//	0,
+	//	20,
+	//	2
+	//);
 }
 
 void Shape::buildMaterials() {
@@ -228,8 +305,8 @@ void Shape::buildMaterials() {
 
 	d3dutil::Material boxMat;
 	boxMat.diffuseAlbedo = float4(1.00f, 0.71f, 0.29f, 1.f);
-	boxMat.roughness = 0.3f;
-	boxMat.metallic = 1.f;
+	boxMat.roughness = 1.0f;
+	boxMat.metallic = 0.f;
 	_materials["boxMat"] = boxMat;
 
 	d3dutil::Material gridMat;
@@ -243,13 +320,24 @@ void Shape::buildMaterials() {
 	cylinderMat.roughness = 1.f;
 	cylinderMat.metallic = 0.f;
 	_materials["cylinderMat"] = cylinderMat;
+
+	d3dutil::Material skullMat;
+	skullMat.diffuseAlbedo = float4(DX::Colors::White);
+	skullMat.roughness = 0.8f;
+	skullMat.metallic = 0.2f;
+	_materials["skullMat"] = skullMat;
 }
 
 void Shape::renderShapesPass(dx12lib::CommandListProxy pCmdList) {
-	pCmdList->setPipelineStateObject(_pGraphicsPSO);
+	const std::string passPSOName = "TexturePSO";
+	auto pPSO = _PSOMap[passPSOName];
+	pCmdList->setPipelineStateObject(pPSO);
+
 	pCmdList->setStructConstantBuffer(_pPassCB, ShapeShaderCBType::CBPass);
 	pCmdList->setStructConstantBuffer(_pGameLightsCB, ShapeShaderCBType::CBLight);
-	for (auto &rItem : _renderItems) {
+
+	auto psoRenderItems = _renderItems[passPSOName];
+	for (auto &rItem : psoRenderItems) {
 		pCmdList->setVertexBuffer(rItem._pMesh->_pVertexBuffer);
 		pCmdList->setIndexBuffer(rItem._pMesh->_pIndexBuffer);
 		pCmdList->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -259,6 +347,25 @@ void Shape::renderShapesPass(dx12lib::CommandListProxy pCmdList) {
 			0, 0
 		);
 	}
+}
+
+void Shape::renderSkullPass(dx12lib::CommandListProxy pCmdList) {
+	const std::string passPSOName = "ColorPSO";
+	auto pPSO = _PSOMap[passPSOName];
+
+	pCmdList->setPipelineStateObject(pPSO);
+	pCmdList->setStructConstantBuffer(_pPassCB, ShapeShaderCBType::CBPass);
+	pCmdList->setStructConstantBuffer(_pGameLightsCB, ShapeShaderCBType::CBLight);
+	auto psoRenderItems = _renderItems[passPSOName];
+	auto &rItem = psoRenderItems[0];
+	pCmdList->setVertexBuffer(rItem._pMesh->_pVertexBuffer);
+	pCmdList->setIndexBuffer(rItem._pMesh->_pIndexBuffer);
+	pCmdList->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	pCmdList->setStructConstantBuffer(rItem._pObjectCB, ShapeShaderCBType::CBObject);
+	pCmdList->drawIndexdInstanced(
+		rItem._pMesh->_pIndexBuffer->getIndexCount(), 1, 0,
+		0, 0
+	);
 }
 
 void Shape::pollEvent() {

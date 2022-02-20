@@ -12,6 +12,12 @@ using namespace Math;
 struct ShapeVertex {
 	float3 position;
 	float3 normal;
+	float2 texcoord;
+};
+
+struct SkullVertex {
+	float3 position;
+	float3 normal;
 };
 
 struct Mesh {
@@ -35,6 +41,10 @@ enum ShapeShaderCBType : UINT {
 	CBObject = 2,
 };
 
+enum ShapeShaderSRType : UINT { 
+	SRAlbedo = 0,
+};
+
 class Shape : public com::BaseApp {
 public:
 	Shape();
@@ -44,20 +54,22 @@ public:
 	virtual void onTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 	virtual void onResize(dx12lib::CommandListProxy pCmdList, int width, int height) override;
 private:
-	void buildPSO(dx12lib::CommandListProxy pCmdList);
+	void buildTexturePSO(dx12lib::CommandListProxy pCmdList);
+	void buildColorPSO(dx12lib::CommandListProxy pCmdList);
 	void buildRenderItem(dx12lib::CommandListProxy pCmdList);
 	void buildGeometry(dx12lib::CommandListProxy pCmdList);
 	void buildGameLight(dx12lib::CommandListProxy pCmdList);
 	void buildMaterials();
 	void renderShapesPass(dx12lib::CommandListProxy pCmdList);
+	void renderSkullPass(dx12lib::CommandListProxy pCmdList);
 	void pollEvent();
 	void updatePassCB(std::shared_ptr<com::GameTimer> pGameTimer);
 private:
 	std::unique_ptr<d3dutil::CoronaCamera>  _pCamera;
-	std::shared_ptr<dx12lib::GraphicsPSO>   _pGraphicsPSO;
 	GPUStructCBPtr<d3dutil::LightCBType>    _pGameLightsCB;
 	GPUStructCBPtr<d3dutil::PassCBType>     _pPassCB;
-	std::vector<RenderItem>                 _renderItems;
+	std::unordered_map<std::string, d3dutil::Material> _materials;
 	std::unordered_map<std::string, std::shared_ptr<Mesh>> _geometrys;
-	std::unordered_map<std::string, d3dutil::Material>     _materials;
+	std::unordered_map<std::string, std::vector<RenderItem>> _renderItems;
+	std::unordered_map<std::string, std::shared_ptr<dx12lib::GraphicsPSO>> _PSOMap;
 };
