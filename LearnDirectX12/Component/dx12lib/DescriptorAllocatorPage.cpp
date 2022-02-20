@@ -59,7 +59,7 @@ DescriptorAllocation DescriptorAllocatorPage::allocate(uint32 numDescriptor) {
 	if (iter == _freeListBySize.end())
 		return {};
 
-	auto &&[size, offsetIt] = *iter;
+	auto [size, offsetIt] = *iter;
 	UINT offset = static_cast<UINT>(offsetIt->first);
 	auto descriptor = _baseDescriptor;
 	descriptor.Offset(offset, _descriptorHandleIncrementSize);
@@ -107,7 +107,7 @@ uint32 DescriptorAllocatorPage::computeOffset(D3D12_CPU_DESCRIPTOR_HANDLE handle
 }
 
 void DescriptorAllocatorPage::addNewBlock(std::size_t offset, std::size_t numDescriptor) {
-	auto &&[offsetIt, flag] = _freeListByOffset.emplace(offset, FreeBlockInfo{ numDescriptor });
+	auto [offsetIt, flag] = _freeListByOffset.emplace(offset, FreeBlockInfo{ numDescriptor });
 	auto sizeIt = _freeListBySize.emplace(numDescriptor, offsetIt);
 	offsetIt->second.sizeIter = sizeIt;
 	assert(flag);
@@ -126,7 +126,7 @@ void DescriptorAllocatorPage::freeBlock(std::size_t offset, std::size_t numDescr
 		auto prevOffsetIt = nextOffsetIt;
 		--prevOffsetIt;
 		if (prevOffsetIt->first + prevOffsetIt->second.size == offset) {	// Is a continuous block  
-			newOffset -= prevOffsetIt->first;
+			newOffset = prevOffsetIt->first;
 			newSize += prevOffsetIt->second.size;
 			_freeListBySize.erase(prevOffsetIt->second.sizeIter);
 			_freeListByOffset.erase(prevOffsetIt);
@@ -135,10 +135,11 @@ void DescriptorAllocatorPage::freeBlock(std::size_t offset, std::size_t numDescr
 
 	// try merge next block
 	if (nextOffsetIt != _freeListByOffset.end()) {
-		if ((offset + numDescriptor == nextOffsetIt->first))				// Is a continuous block  
+		if ((offset + numDescriptor == nextOffsetIt->first)) {			// Is a continuous block  
 			newSize += nextOffsetIt->second.size;
-		_freeListBySize.erase(nextOffsetIt->second.sizeIter);
-		_freeListByOffset.erase(nextOffsetIt);
+			_freeListBySize.erase(nextOffsetIt->second.sizeIter);
+			_freeListByOffset.erase(nextOffsetIt);
+		}
 	}
 
 	addNewBlock(newOffset, newSize);
