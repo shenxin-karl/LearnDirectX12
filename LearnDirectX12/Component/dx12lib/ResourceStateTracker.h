@@ -4,8 +4,9 @@
 namespace dx12lib {
 	
 class ResourceStateTracker {
-public:
+protected:
 	ResourceStateTracker() = default;
+public:
 	~ResourceStateTracker() = default;
 	void resourceBarrier(const D3D12_RESOURCE_BARRIER &barrier);
 	void transitionResource(ID3D12Resource *pResource, 

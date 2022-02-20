@@ -104,16 +104,19 @@ D3D12_CLEAR_VALUE *Texture::getClearValue() {
 }
 
 void Texture::clearColor(DX::XMVECTORF32 color) {
+	assert(checkRTVSupport());
 	memcpy(&_clearValue.Color, &color, sizeof(_clearValue.Color));
 	_clearFlag |= ClearFlag::Color;
 }
 
 void Texture::clearDepth(float depth) {
+	assert(checkDSVSupport());
 	_clearValue.DepthStencil.Depth = depth;
 	_clearFlag |= ClearFlag::Depth;
 }
 
 void Texture::clearStencil(UINT stencil) {
+	assert(checkDSVSupport());
 	_clearValue.DepthStencil.Stencil = stencil;
 	_clearFlag |= ClearFlag::Stencil;
 }

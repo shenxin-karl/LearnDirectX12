@@ -14,6 +14,7 @@ public:
 	DescriptorAllocation &operator=(DescriptorAllocation &&other) noexcept;
 	~DescriptorAllocation();
 	friend void swap(DescriptorAllocation &lhs, DescriptorAllocation &rhs) noexcept;
+protected:
 	DescriptorAllocation(D3D12_CPU_DESCRIPTOR_HANDLE handle,
 		uint32 numHandle,
 		uint32 handleSize,

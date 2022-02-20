@@ -30,6 +30,9 @@ IndexBuffer::IndexBuffer(IndexBuffer &&other) noexcept : IndexBuffer() {
 	swap(*this, other);
 }
 
+IndexBuffer::~IndexBuffer() {
+}
+
 D3D12_INDEX_BUFFER_VIEW IndexBuffer::getIndexBufferView() const noexcept {
 	return {
 		_pGPUBuffer->getAddress(),

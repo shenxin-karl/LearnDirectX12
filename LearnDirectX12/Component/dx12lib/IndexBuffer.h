@@ -2,10 +2,11 @@
 #include "dx12libStd.h"
 #include "IResource.h"
 #include <memory>
+
 namespace dx12lib {
 
 class IndexBuffer : public IResource {
-public:
+protected:
 	IndexBuffer();
 	IndexBuffer(std::weak_ptr<Device> pDevice, 
 		std::shared_ptr<CommandList> pCmdList, 
@@ -13,10 +14,11 @@ public:
 		uint32 sizeInByte, 
 		DXGI_FORMAT format
 	);
+public:
 	IndexBuffer(const IndexBuffer &) = delete;
 	IndexBuffer(IndexBuffer &&other) noexcept;
 	IndexBuffer &operator=(IndexBuffer &&other) noexcept;
-	~IndexBuffer() = default;
+	~IndexBuffer();
 	friend void swap(IndexBuffer &lhs, IndexBuffer &rhs) noexcept;
 	D3D12_INDEX_BUFFER_VIEW getIndexBufferView() const noexcept;
 	DXGI_FORMAT getIndexFormat() const noexcept;

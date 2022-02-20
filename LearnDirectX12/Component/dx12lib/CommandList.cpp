@@ -11,6 +11,8 @@
 #include "VertexBuffer.h"
 #include "CommandQueue.h"
 #include "RootSignature.h"
+#include "MakeObejctTool.hpp"
+#include "DefaultBuffer.h"
 
 #if defined(_DEBUG) || defined(DEBUG)
 #define DBG_CALL(f) f;
@@ -139,7 +141,7 @@ void CommandList::aliasBarrier(const IResource *pResourceBefore /*= nullptr*/,
 
 std::shared_ptr<VertexBuffer> 
 CommandList::createVertexBuffer(const void *pData, std::size_t sizeInByte, std::size_t stride) {
-	return std::make_shared<VertexBuffer>(_pDevice, 
+	return std::make_shared<MakeVertexBuffer>(_pDevice, 
 		shared_from_this(), 
 		pData, 
 		uint32(sizeInByte), 
@@ -149,7 +151,7 @@ CommandList::createVertexBuffer(const void *pData, std::size_t sizeInByte, std::
 
 std::shared_ptr<IndexBuffer> 
 CommandList::createIndexBuffer(const void *pData, std::size_t sizeInByte, DXGI_FORMAT indexFormat) {
-	return std::make_shared<IndexBuffer>(_pDevice, 
+	return std::make_shared<MakeIndexBuffer>(_pDevice, 
 		shared_from_this(), 
 		pData, 
 		uint32(sizeInByte),
@@ -169,7 +171,7 @@ CommandList::createConstantBuffer(std::size_t sizeInByte, const void *pData) {
 		uint32(sizeInByte),
 		pData
 	};
-	return std::make_shared<ConstantBuffer>(desc);
+	return std::make_shared<MakeConstantBuffer>(desc);
 }
 
 void CommandList::setVertexBuffer(std::shared_ptr<VertexBuffer> pVertBuffer, UINT slot /*= 0 */) {
@@ -275,10 +277,10 @@ CommandList::CommandList(std::weak_ptr<FrameResourceItem> pFrameResourceItem) {
 		IID_PPV_ARGS(&_pCommandList)
 	));
 
-	_pResourceStateTracker = std::make_unique<ResourceStateTracker>();
+	_pResourceStateTracker = std::make_unique<MakeResourceStateTracker>();
 
 	for (std::size_t i = 0; i < kDynamicDescriptorHeapCount; ++i) {
-		_pDynamicDescriptorHeaps[i] = std::make_unique<DynamicDescriptorHeap>(
+		_pDynamicDescriptorHeaps[i] = std::make_unique<MakeDynamicDescriptorHeap>(
 			_pDevice,
 			static_cast<D3D12_DESCRIPTOR_HEAP_TYPE>(i),
 			static_cast<uint32>(kDynamicDescriptorPerHeap)

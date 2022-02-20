@@ -3,6 +3,7 @@
 #include "DescriptorAllocator.h"
 #include "DescriptorAllocatorPage.h"
 #include "DescriptorAllocation.h"
+#include "MakeObejctTool.hpp"
 
 namespace dx12lib {
 
@@ -22,7 +23,7 @@ DescriptorAllocation DescriptorAllocator::allocate(uint32 numDescriptor) {
 }
 
 std::shared_ptr<DescriptorAllocatorPage> DescriptorAllocator::createAllocatorPage() {
-	auto pPage = std::make_shared<DescriptorAllocatorPage>(
+	auto pPage = std::make_shared<MakeDescriptorAllocatorPage>(
 		_pDevice,
 		_heapType,
 		_numDescriptorPreHeap

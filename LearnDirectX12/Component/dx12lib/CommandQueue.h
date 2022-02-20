@@ -6,8 +6,9 @@
 namespace dx12lib {
 
 class CommandQueue {
-public:
+protected:
 	CommandQueue(std::weak_ptr<Device> pDevice, D3D12_COMMAND_LIST_TYPE queueType);
+public:
 	CommandQueue(const CommandQueue &) = delete;
 	ID3D12CommandQueue *getD3D12CommandQueue() const;
 	uint64 signal(std::shared_ptr<SwapChain> pSwapChain);

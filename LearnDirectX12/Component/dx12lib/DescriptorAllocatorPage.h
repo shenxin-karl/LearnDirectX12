@@ -12,7 +12,7 @@ public:
 	DescriptorAllocatorPage &operator=(const DescriptorAllocatorPage &) = delete;
 	DescriptorAllocatorPage &operator=(DescriptorAllocatorPage &&other) noexcept;
 	friend void swap(DescriptorAllocatorPage &lhs, DescriptorAllocatorPage &rhs) noexcept;
-
+protected:
 	DescriptorAllocatorPage(std::weak_ptr<Device> pDevice, 
 		D3D12_DESCRIPTOR_HEAP_TYPE heapType, 
 		uint32 numDescriptorPreHeap
@@ -30,6 +30,7 @@ private:
 	void freeBlock(std::size_t offset, std::size_t numDescriptor);
 private:
 	friend class Device;
+	friend class DescriptorAllocator;
 	struct FreeBlockInfo;
 	using OffsetType = std::size_t;
 	using SizeType = std::size_t;

@@ -15,8 +15,9 @@ struct ConstantBufferDesc {
 };
 
 class ConstantBuffer {
-public:
+protected:
 	ConstantBuffer(const ConstantBufferDesc &desc);
+public:
 	ConstantBuffer(const ConstantBuffer &) = delete;
 	ConstantBuffer &operator=(const ConstantBuffer &) = delete;
 	void updateConstantBuffer(const void *pData, uint32 sizeInByte, uint32 offset = 0);

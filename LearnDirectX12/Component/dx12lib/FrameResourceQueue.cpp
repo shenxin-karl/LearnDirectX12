@@ -1,6 +1,7 @@
 #include "CommandList.h"
 #include "FrameResourceQueue.h"
 #include "Device.h"
+#include "MakeObejctTool.hpp"
 
 namespace dx12lib {
 
@@ -19,12 +20,12 @@ void FrameResourceItem::setFence(uint64 fence) noexcept {
 CommandListProxy FrameResourceItem::createCommandListProxy() {
 	std::shared_ptr<CommandList> pCmdList;
 	if (!_availableCmdList.tryPop(pCmdList)) {
-		pCmdList = std::make_shared<CommandList>(weak_from_this());
+		pCmdList = std::make_shared<MakeCommandList>(weak_from_this());
 		_cmdListPool.push(pCmdList);
 		pCmdList->close();
 	}
 	pCmdList->reset();
-	return CommandListProxy(pCmdList);
+	return MakeCommandListProxy(pCmdList);
 }
 
 void FrameResourceItem::releaseCommandList(std::shared_ptr<CommandList> pCommandList) {
@@ -49,7 +50,7 @@ FrameResourceQueue::FrameResourceQueue(std::weak_ptr<Device> pDevice, D3D12_COMM
 {
 	_frameResourceItemCount = cmdListType == D3D12_COMMAND_LIST_TYPE_DIRECT ? kFrameResourceCount : 1;
 	for (uint32 i = 0; i < _frameResourceItemCount; ++i)
-		_frameResourceQueue[i] = std::make_shared<FrameResourceItem>(pDevice, cmdListType);
+		_frameResourceQueue[i] = std::make_shared<MakeFrameResourceItem>(pDevice, cmdListType);
 }
 
 CommandListProxy FrameResourceQueue::createCommandListProxy() {

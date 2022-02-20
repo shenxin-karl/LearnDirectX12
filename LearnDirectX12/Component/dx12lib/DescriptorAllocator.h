@@ -12,6 +12,7 @@ public:
 	D3D12_DESCRIPTOR_HEAP_TYPE getHeapType() const noexcept;
 	using DescriptorHeapPool = std::vector<std::shared_ptr<DescriptorAllocatorPage>>;
 	std::shared_ptr<DescriptorAllocatorPage> createAllocatorPage();
+protected:
 	DescriptorAllocator(std::weak_ptr<Device> pDevice, D3D12_DESCRIPTOR_HEAP_TYPE heapType, uint32 numDescriptorPreHeap);
 private:
 	uint32					    _numDescriptorPreHeap;

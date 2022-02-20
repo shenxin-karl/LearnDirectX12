@@ -9,6 +9,7 @@
 #include "DescriptorAllocation.h"
 #include "RootSignature.h"
 #include "PipelineStateObject.h"
+#include "MakeObejctTool.hpp"
 
 namespace dx12lib {
 	
@@ -53,15 +54,15 @@ void Device::initialize(const DeviceInitDesc &desc) {
 	_4xMsaaQuality = msQualityLevels.NumQualityLevels;
 	assert(_4xMsaaQuality > 0 && "Unexpected MSAA quality level");
 
-	auto pDirectQueue = std::make_shared<CommandQueue>(weak_from_this(), D3D12_COMMAND_LIST_TYPE_DIRECT);
+	auto pDirectQueue = std::make_shared<MakeCommandQueue>(weak_from_this(), D3D12_COMMAND_LIST_TYPE_DIRECT);
 	_pCommandQueueList[std::size_t(CommandQueueType::Direct)] = pDirectQueue;
-	auto pComputeQueue = std::make_shared<CommandQueue>(weak_from_this(), D3D12_COMMAND_LIST_TYPE_COMPUTE);
+	auto pComputeQueue = std::make_shared<MakeCommandQueue>(weak_from_this(), D3D12_COMMAND_LIST_TYPE_COMPUTE);
 	_pCommandQueueList[std::size_t(CommandQueueType::Compute)] = pComputeQueue;
-	auto pCopyQueue = std::make_shared<CommandQueue>(weak_from_this(), D3D12_COMMAND_LIST_TYPE_COMPUTE);
+	auto pCopyQueue = std::make_shared<MakeCommandQueue>(weak_from_this(), D3D12_COMMAND_LIST_TYPE_COMPUTE);
 	_pCommandQueueList[std::size_t(CommandQueueType::Copy)] = pCopyQueue;
 
 	for (std::size_t i = 0; i < D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES; ++i) {
-		_pDescriptorAllocators[i] = std::make_unique<DescriptorAllocator>(
+		_pDescriptorAllocators[i] = std::make_unique<MakeDescriptorAllocator>(
 			weak_from_this(),
 			static_cast<D3D12_DESCRIPTOR_HEAP_TYPE>(i),
 			50
@@ -75,7 +76,7 @@ void Device::destory() {
 }
 
 std::shared_ptr<SwapChain> Device::createSwapChain(HWND hwnd) const {
-	return std::make_shared<SwapChain>(
+	return std::make_shared<MakeSwapChain>(
 		const_cast<Device *>(this)->weak_from_this(),
 		hwnd,
 		_initDesc.backBufferFormat,
@@ -84,15 +85,15 @@ std::shared_ptr<SwapChain> Device::createSwapChain(HWND hwnd) const {
 }
 
 std::shared_ptr<RootSignature> Device::createRootSignature(const D3D12_ROOT_SIGNATURE_DESC &desc) {
-	return std::make_shared<RootSignature>(weak_from_this(), desc);
+	return std::make_shared<MakeRootSignature>(weak_from_this(), desc);
 }
 
 std::shared_ptr<RootSignature> Device::createRootSignature(const RootSignatureDescHelper &desc) {
-	return std::make_shared<RootSignature>(weak_from_this(), desc.getRootSignatureDesc());
+	return std::make_shared<MakeRootSignature>(weak_from_this(), desc.getRootSignatureDesc());
 }
 
 std::shared_ptr<GraphicsPSO> Device::createGraphicsPSO(const std::string &name) {
-	return std::make_shared<GraphicsPSO>(name);
+	return std::make_shared<MakeGraphicsPSO>(name);
 }
 
 DescriptorAllocation Device::allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32 numDescriptors /*= 1*/) {

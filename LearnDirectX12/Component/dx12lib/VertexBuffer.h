@@ -6,11 +6,12 @@
 namespace dx12lib {
 
 class VertexBuffer : public IResource {
-public:
+protected:
 	VertexBuffer();
 	VertexBuffer(std::weak_ptr<Device> pDevice, std::shared_ptr<CommandList> pCmdList, 
 		const void *pData, uint32 sizeInByte, uint32 stride
 	);
+public:
 	VertexBuffer(const VertexBuffer &) = delete;
 	VertexBuffer(VertexBuffer &&other) noexcept;
 	VertexBuffer &operator=(VertexBuffer &&other) noexcept;

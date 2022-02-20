@@ -10,8 +10,9 @@ class CommandList;
 class FrameResourceItem;
 class CommandListProxy;
 class FrameResourceItem : public std::enable_shared_from_this<FrameResourceItem> {
-public:
+protected:
 	FrameResourceItem(std::weak_ptr<Device> pDevice, D3D12_COMMAND_LIST_TYPE cmdListType);
+public:
 	FrameResourceItem(const FrameResourceItem &) = delete;
 	FrameResourceItem &operator=(const FrameResourceItem &) = delete;
 	uint64 getFence() const noexcept;
@@ -30,8 +31,9 @@ private:
 };
 
 class FrameResourceQueue {
-public:
+protected:
 	FrameResourceQueue(std::weak_ptr<Device> pDevice, D3D12_COMMAND_LIST_TYPE cmdListType);
+public:
 	CommandListProxy createCommandListProxy();
 	uint32 getMaxFrameResourceCount() const noexcept;
 	std::atomic_uint32_t &getCurrentFrameResourceIndexRef();

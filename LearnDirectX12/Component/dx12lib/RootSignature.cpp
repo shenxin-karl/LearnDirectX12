@@ -32,6 +32,11 @@ RootSignatureDescHelper::RootSignatureDescHelper(const std::vector<D3D12_STATIC_
 : _staticSamplers(staticSamplers), _flag(flag) {
 }
 
+RootSignatureDescHelper::RootSignatureDescHelper(const std::array<CD3DX12_STATIC_SAMPLER_DESC, 6> &staticSamplers,
+	D3D12_ROOT_SIGNATURE_FLAGS flag /*= D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT */) 
+: _staticSamplers(staticSamplers.begin(), staticSamplers.end()), _flag(flag) {
+}
+
 void RootSignatureDescHelper::addRootParameter(const RootParameter &parame) {
 	_rootParameterInfos.push_back(parame);
 }

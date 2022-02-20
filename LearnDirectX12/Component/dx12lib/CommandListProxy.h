@@ -7,8 +7,9 @@ class CommandList;
 class FrameResourceItem;
 
 class CommandListProxy {
-public:
+protected:
 	CommandListProxy(std::shared_ptr<CommandList> pCmdList);
+public:
 	CommandList *operator->();
 	CommandList &operator*();
 	const CommandList *operator->() const;

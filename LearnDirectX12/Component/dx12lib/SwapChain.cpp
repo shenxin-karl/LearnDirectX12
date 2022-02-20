@@ -5,6 +5,7 @@
 #include "CommandList.h"
 #include "Texture.h"
 #include "RenderTarget.h"
+#include "MakeObejctTool.hpp"
 #include <string>
 
 namespace dx12lib {
@@ -57,7 +58,7 @@ void SwapChain::resize(CommandListProxy pCmdList, uint32 width, uint32 height) {
 		pTexture = nullptr;
 
 	_currentBackBufferIndex = 0;
-	_pRenderTarget = std::make_shared<RenderTarget>(width, height);
+	_pRenderTarget = std::make_shared<MakeRenderTarget>(width, height);
 	_width = std::max(width, uint32(1));
 	_height = std::max(height, uint32(1));
 
@@ -122,7 +123,7 @@ void SwapChain::updateBuffer(CommandListProxy pCmdList) {
 	optClear.Format = _depthStendilFormat;
 	optClear.DepthStencil.Depth = 1.f;
 	optClear.DepthStencil.Stencil = 0;
-	_pDepthStencilBuffer = std::make_shared<Texture>(_pDevice, depthStencilDesc, &optClear);
+	_pDepthStencilBuffer = std::make_shared<MakeTexture>(_pDevice, depthStencilDesc, &optClear);
 	_pDepthStencilBuffer->getD3DResource()->SetName(L"DepthStencilBuffer");
 	pCmdList->transitionBarrier(_pDepthStencilBuffer, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 

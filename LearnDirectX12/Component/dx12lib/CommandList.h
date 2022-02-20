@@ -7,8 +7,9 @@
 namespace dx12lib {
 
 class CommandList : public std::enable_shared_from_this<CommandList> {
-public:
+protected:
 	CommandList(std::weak_ptr<FrameResourceItem> pFrameResourceItem);
+public:
 	~CommandList();
 	ID3D12GraphicsCommandList *getD3DCommandList() const noexcept;
 /// viewport scissorRect

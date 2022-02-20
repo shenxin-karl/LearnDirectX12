@@ -5,12 +5,13 @@
 namespace dx12lib {
 
 class SwapChain {
-public:
+protected:
 	SwapChain(std::weak_ptr<Device> pDevice, 
 		HWND hwnd, 
 		DXGI_FORMAT backBufferFormat,
 		DXGI_FORMAT depthStencilFormat
 	);
+public:
 	void resize(CommandListProxy pCmdList, uint32 width, uint32 height);
 	DXGI_FORMAT getRenderTargetFormat() const;
 	DXGI_FORMAT getDepthStencilFormat() const;

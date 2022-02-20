@@ -6,9 +6,10 @@
 namespace dx12lib {
 
 class RenderTarget {
+protected:
 	constexpr static std::size_t kAttachmentPointSize = static_cast<std::size_t>(AttachmentPoint::NumAttachmentPoints);
-public:
 	RenderTarget(uint32 width, uint32 height);
+public:
 	RenderTarget(const RenderTarget &) = delete;
 	RenderTarget(RenderTarget &&) = default;
 	RenderTarget &operator=(const RenderTarget &) = delete;

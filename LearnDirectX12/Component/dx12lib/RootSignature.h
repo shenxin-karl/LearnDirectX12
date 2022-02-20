@@ -27,6 +27,9 @@ public:
 	RootSignatureDescHelper(const std::vector<D3D12_STATIC_SAMPLER_DESC> &staticSamplers,
 		D3D12_ROOT_SIGNATURE_FLAGS flag = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
 	);
+	RootSignatureDescHelper(const std::array<CD3DX12_STATIC_SAMPLER_DESC, 6> &staticSamplers,
+		D3D12_ROOT_SIGNATURE_FLAGS flag = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
+	);
 	RootSignatureDescHelper(const RootSignatureDescHelper &) = delete;
 	RootSignatureDescHelper &operator=(const RootSignatureDescHelper &) = delete;
 	void addRootParameter(const RootParameter &parame);
@@ -41,8 +44,9 @@ private:
 };
 
 class RootSignature {
-public:
+protected:
 	RootSignature(std::weak_ptr<Device> pDevice, const D3D12_ROOT_SIGNATURE_DESC &desc);
+public:
 	const D3D12_ROOT_SIGNATURE_DESC &getRootSignatureDesc() const;
 	std::bitset<kMaxDescriptorTables> getDescriptorTableBitMask(D3D12_DESCRIPTOR_HEAP_TYPE heapType);
 	uint32 getNumDescriptorsByType(D3D12_DESCRIPTOR_HEAP_TYPE type, std::size_t rootParameterIndex) const;
