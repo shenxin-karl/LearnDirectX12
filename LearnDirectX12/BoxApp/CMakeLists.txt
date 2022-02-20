@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.8)	
 project(BoxApp)
 
+# 开启多线程编译 和 使用 c++latest 版本
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /std:c++latest")
+
 option(USE_SOLUTION_FOLDERS "使用资源管理器文件夹" ON)
 option(GROUP_BY_EXPLORER ON) 							# 开启分组
 

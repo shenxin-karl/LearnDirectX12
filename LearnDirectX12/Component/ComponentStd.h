@@ -1,19 +1,12 @@
 #pragma once
 #include <Windows.h>
 #include <source_location>
-#include <comdef.h>
 #include <sstream>
+#include "D3D/D3DException.h"
 
 inline void ThrowIfFailed(HRESULT hr, const std::source_location &sl = std::source_location::current()) {
-	if (FAILED(hr)) {
-		_com_error err(hr);
-		std::stringstream sbuf;
-		sbuf << "[file]: " << sl.file_name() << std::endl;
-		sbuf << "[line]: " << sl.line() << std::endl;
-		sbuf << "[function]: " << sl.function_name() << std::endl;
-		sbuf << "[message]: " << err.ErrorMessage();
-		throw std::exception(sbuf.str().c_str());
-	}
+	if (FAILED(hr))
+		throw d3d::D3DException(hr, sl.file_name(), sl.line());
 }
 
 #define USE_RVPTR_FUNC_IMPL

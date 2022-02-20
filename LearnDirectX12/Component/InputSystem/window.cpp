@@ -192,7 +192,7 @@ LRESULT Window::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			if (minimized_) {
 				paused_ = false;
 				minimized_ = false;
-				resizeCallback_(width_, height_);
+				resizeDirty_ = true; 
 			} else if (maximized_) {
 				paused_ = false;
 				maximized_ = false;
@@ -235,7 +235,7 @@ Window::WindowClass::WindowClass() : hInstance_(GetModuleHandle(nullptr)) {
 	wc.hInstance = hInstance_;
 	wc.hIcon = LoadIcon(0, IDI_APPLICATION);
 	wc.hCursor = LoadCursor(0, IDC_ARROW);
-	wc.hbrBackground = static_cast<HBRUSH>(GetStockObject(NULL_BRUSH));
+	wc.hbrBackground = nullptr; //;tatic_cast<HBRUSH>(GetStockObject(NULL_BRUSH));
 	wc.lpszMenuName = nullptr;
 	wc.lpszClassName = getClassName();
 	wc.hIconSm = nullptr;

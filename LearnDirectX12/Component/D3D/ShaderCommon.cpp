@@ -20,7 +20,6 @@ void Light::initAsPointLight(float3 position, float3 strength, float fallofStart
 	this->spotPower = 0.f;
 }
 
-
 void Light::initAsSpotLight(float3 position, 
 	float3 direction, 
 	float3 strength, 

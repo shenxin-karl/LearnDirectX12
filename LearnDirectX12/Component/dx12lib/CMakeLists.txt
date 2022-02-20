@@ -23,11 +23,16 @@ set_target_properties("dx12lib" PROPERTIES FOLDER "Component")
 target_include_directories(dx12lib PUBLIC 
 	${PROJECT_COMPONENT_DIR}/
 	${CMAKE_CURRENT_SOURCE_DIR}/
+	${CMAKE_CURRENT_SOURCE_DIR}/../
 )
 
 target_link_libraries(dx12lib PUBLIC 
 	d3dcompiler
 	D3D12
 	dxgi
+	Exception
+	D3D
 )
 
+# 开启多线程编译 和 使用 c++latest 版本
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /std:c++latest")
