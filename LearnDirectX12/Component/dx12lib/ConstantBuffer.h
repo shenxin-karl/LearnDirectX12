@@ -29,7 +29,7 @@ public:
 	uint32 getFrameIndex() const;
 private:
 	uint32                            _bufferSize;
-	std::atomic_uint32_t             &_frameIndex;
+	const std::atomic_uint32_t        &_frameIndex;
 	std::unique_ptr<UploadBuffer>     _pGPUBuffer;
 	std::vector<DescriptorAllocation> _CBV;
 };

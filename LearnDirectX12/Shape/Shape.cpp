@@ -36,6 +36,7 @@ void Shape::onInitialize(dx12lib::CommandListProxy pCmdList) {
 		float(_width) / float(_height),
 	};
 	_pCamera = std::make_unique<d3dutil::CoronaCamera>(cameraDesc);
+	_pCamera->_whellSensitivety = 1.f;
 	_pPassCB = pCmdList->createStructConstantBuffer<d3dutil::PassCBType>();
 	buildTexturePSO(pCmdList);
 	buildColorPSO(pCmdList);
@@ -69,8 +70,8 @@ void Shape::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		pRenderTarget->getTexture(dx12lib::Color0)->clearColor(DX::Colors::LightBlue);
 		pRenderTarget->getTexture(dx12lib::DepthStencil)->clearDepthStencil(1.0f, 0);
 		pCmdList->setRenderTarget(pRenderTarget);
-		renderSkullPass(pCmdList);
 		renderShapesPass(pCmdList);
+		renderSkullPass(pCmdList);
 	}
 	pCmdQueue->executeCommandList(pCmdList);
 	pCmdQueue->signal(_pSwapChain);

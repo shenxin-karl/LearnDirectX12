@@ -306,7 +306,7 @@ MeshData GometryGenerator::createBox(float width, float height, float depth, uin
 		if (auto iter = newVert.find(edge); iter != newVert.end())
 			return iter->second;
 
-		vertices.push_back(middlePoint(vertices[edge.v0], vertices[edge.v1]));
+		vertices.push_back(middleVertex(vertices[edge.v0], vertices[edge.v1]));
 		auto idx = static_cast<uint32>(vertices.size() - 1);
 		newVert.insert(std::make_pair(edge, idx));
 		return idx;
@@ -395,11 +395,18 @@ MeshData GometryGenerator::createSphere(float radius, uint32 numSubdivisions) co
 			indices.insert(indices.end(), { newIdx0, newIdx1, newIdx2 });
 		}
 	}
+
+	using namespace Math;
+	const float PI = 3.141592654f;
+	float2 invATan = { 0.5f / PI, 1 / PI };
 	for (auto &vert : vertices) {
 		float3 n = normalize(vert.position);
 		float3 point = n * radius;
 		float u = std::atan2(n.z, n.x);
 		float v = std::asin(n.y);
+		float2 texcoord(u, v);
+		texcoord *= invATan;
+		texcoord += 0.5f;
 		vert.position = point;
 		vert.texcoord = float2(u, v);
 	}

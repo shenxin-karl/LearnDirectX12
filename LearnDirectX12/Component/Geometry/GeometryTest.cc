@@ -163,7 +163,7 @@ void loopBetaTest() {
 
 void createShapeTest() {
 	com::GometryGenerator gen;
-	auto mesh = gen.createSphere(10, 7);
+	auto mesh = gen.createSphere(10, 3);
 	mesh.save("createShapeTest.obj");
 }
 
@@ -238,9 +238,9 @@ int main() {
 	//saveObjTest();
 	//createBoxTest();
 	//createCylinderTest();
-	loopSubdivisionTest();
+	//loopSubdivisionTest();
 	//loopBetaTest();
-	//createShapeTest();
+	createShapeTest();
 	//createGridTest();
 	//loadObject();
 	//convertTxtModelToObjFile("skull.txt", "skull.obj");

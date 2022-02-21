@@ -308,6 +308,13 @@ std::shared_ptr<dx12lib::Texture> CommandList::createDDSTextureFromMemory(const 
 	);
 }
 
+void CommandList::setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) {
+	if (_currentGPUState.pDescriptorHeaps[heapType] != pHeap.Get()) {
+		_currentGPUState.pDescriptorHeaps[heapType] = pHeap.Get();
+		bindDescriptorHeaps();
+	}
+}
+
 CommandList::CommandList(std::weak_ptr<FrameResourceItem> pFrameResourceItem) {
 	auto pSharedFrameResourceItem = pFrameResourceItem.lock();
 	_cmdListType = pSharedFrameResourceItem->getCommandListType();
@@ -371,6 +378,19 @@ void CommandList::setRootSignature(std::shared_ptr<RootSignature> pRootSignature
 		for (auto &pHeap : _pDynamicDescriptorHeaps)
 			pHeap->parseRootSignature(pRootSignature);
 	}
+}
+
+void CommandList::bindDescriptorHeaps() {
+	UINT numDescriptors = 0;
+	ID3D12DescriptorHeap *pHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES] = { nullptr };
+	for (std::size_t i = 0; i < D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES; ++i) {
+		if (auto *pHeap = _currentGPUState.pDescriptorHeaps[i]) {
+			pHeaps[numDescriptors] = pHeap;
+			++numDescriptors;
+		}
+	}
+	if (numDescriptors > 0)
+		_pCommandList->SetDescriptorHeaps(numDescriptors, pHeaps);
 }
 
 bool CommandList::CommandListState::debugCheckDraw() const {

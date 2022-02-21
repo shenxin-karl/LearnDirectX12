@@ -114,7 +114,7 @@ void DynamicDescriptorHeap::commitDescriptorTables(std::shared_ptr<CommandList> 
 		_currentCPUDescriptorHandle = _pCurrentDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 		_currentGPUDescriptorHandle = _pCurrentDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 		_numFreeHandles = _numDescriptorsPerHeap;
-		pD3DCommandList->SetDescriptorHeaps(1, RVPtr(_pCurrentDescriptorHeap.Get()));
+		pCmdList->setDescriptorHeap(_heapType, _pCurrentDescriptorHeap.Get());
 	}
 
 	auto *pD3DDevice = _pDevice.lock()->getD3DDevice();
@@ -128,7 +128,7 @@ void DynamicDescriptorHeap::commitDescriptorTables(std::shared_ptr<CommandList> 
 		UINT pDstDescriptorRangeSizes[] = { numDescriptors };
 		pD3DDevice->CopyDescriptors(
 			1, pDstDescriptorRangeStarts, pDstDescriptorRangeSizes, 
-			1, pSrcHandle, nullptr, 
+			numDescriptors, pSrcHandle, nullptr,
 			_heapType
 		);
 

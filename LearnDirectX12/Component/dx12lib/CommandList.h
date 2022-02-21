@@ -100,6 +100,8 @@ public:
 /// create dds texture
 	std::shared_ptr<Texture> createDDSTextureFromFile(const std::wstring &fileName);
 	std::shared_ptr<Texture> createDDSTextureFromMemory(const void *pData, std::size_t sizeInByte);
+/// bind descriptor
+	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap);
 private:
 	friend class CommandQueue;
 	friend class FrameResourceItem;
@@ -109,6 +111,7 @@ private:
 
 	using SetRootSignatureFunc = std::function<void(ID3D12GraphicsCommandList *, ID3D12RootSignature *)>;
 	void setRootSignature(std::shared_ptr<RootSignature> pRootSignature, const SetRootSignatureFunc &setFunc);
+	void bindDescriptorHeaps();
 private:
 	D3D12_COMMAND_LIST_TYPE                 _cmdListType;
 	std::weak_ptr<Device>                   _pDevice;
@@ -127,6 +130,7 @@ private:
 		bool           isSetViewprot;
 		bool           isSetScissorRect;
 		D3D_PRIMITIVE_TOPOLOGY primitiveTopology = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
+		ID3D12DescriptorHeap *pDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES];
 	public:
 		bool debugCheckDraw() const;
 		bool debugCheckDrawIndex() const;
