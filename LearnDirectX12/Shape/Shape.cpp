@@ -215,7 +215,7 @@ void Shape::buildGeometry(dx12lib::CommandListProxy pCmdList) {
 	com::GometryGenerator gen;
 	com::MeshData box = gen.createBox(1.5f, 0.5f, 1.5f, 3);
 	com::MeshData grid = gen.createGrid(20.f, 30.f, 60, 40);
-	com::MeshData sphere = gen.createSphere(0.5f, 3);
+	com::MeshData sphere = gen.createSphere(0.5f, 20, 20);
 	com::MeshData cylinder = gen.createCylinder(0.5f, 0.3f, 3.f, 20, 20);
 	com::MeshData skull = gen.loadObjFile("resource/skull.obj");
 

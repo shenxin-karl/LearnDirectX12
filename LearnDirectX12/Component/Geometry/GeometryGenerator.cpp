@@ -415,6 +415,41 @@ MeshData GometryGenerator::createSphere(float radius, uint32 numSubdivisions) co
 	return mesh;
 }
 
+
+com::MeshData GometryGenerator::createSphere(float radius, std::size_t sliceCount, std::size_t stackCount) const {
+	MeshData mesh;
+	mesh.vertices.reserve((sliceCount+1) * (stackCount+1));
+	mesh.indices.reserve(sliceCount * stackCount * 2 * 3);
+	float phiStep = DX::XM_PI / float(stackCount);
+	float thetaStep = DX::XM_2PI / float(sliceCount);
+	for (std::size_t i = 0; i <= stackCount; ++i) {
+		for (std::size_t j = 0; j <= sliceCount; ++j) {
+			float phi = DX::XM_PI - (phiStep * i);
+			float theta = j * thetaStep;
+			float cosPhi = std::cos(phi); float sinPhi = std::sin(phi);
+			float cosTh = std::cos(theta); float sinTh = std::sin(theta);
+			float3 N = { sinPhi*cosTh, cosPhi, sinPhi*sinTh };
+			float3 point = N * radius;
+			float2 texcoord = { float(j) / float(sliceCount), float(i) / float(stackCount) };
+			mesh.vertices.emplace_back(point, texcoord, N);
+		}
+	}
+
+	std::size_t sliceVertCount = sliceCount + 1;
+	for (std::size_t i = 0; i < stackCount; ++i) {
+		for (std::size_t j = 0; j < sliceCount; ++j) {
+			mesh.indices.push_back(uint32((i+0) * sliceVertCount + (j+0)));
+			mesh.indices.push_back(uint32((i+1) * sliceVertCount + (j+0)));
+			mesh.indices.push_back(uint32((i+1) * sliceVertCount + (j+1)));
+			mesh.indices.push_back(uint32((i+0) * sliceVertCount + (j+0)));
+			mesh.indices.push_back(uint32((i+1) * sliceVertCount + (j+1)));
+			mesh.indices.push_back(uint32((i+0) * sliceVertCount + (j+1)));
+		}
+	}
+	generateTangent(mesh);
+	return mesh;
+}
+
 MeshData GometryGenerator::createGrid(float width, float depth, uint32 m, uint32 n) const {
 	std::vector<Vertex> vertices;
 	float left = -0.5f * width;
