@@ -46,8 +46,6 @@ void BoxApp::onInitialize(dx12lib::CommandListProxy pCmdList) {
 	_pGraphicsPSO->setRenderTargetFormats(
 		1, RVPtr(_pSwapChain->getRenderTargetFormat()),
 		_pSwapChain->getDepthStencilFormat(),
-		_pDevice->getSampleCount(),
-		_pDevice->getSampleQuality()
 	);
 
 	// input layout

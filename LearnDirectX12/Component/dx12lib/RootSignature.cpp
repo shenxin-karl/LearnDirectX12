@@ -56,7 +56,7 @@ D3D12_ROOT_SIGNATURE_DESC RootSignatureDescHelper::getRootSignatureDesc() const 
 	return rootDesc;
 }
 
-void RootSignatureDescHelper::reset(std::size_t num, D3D12_SHADER_VISIBILITY visibility) {
+void RootSignatureDescHelper::resize(std::size_t num, D3D12_SHADER_VISIBILITY visibility) {
 	_rootParameters.clear();
 	for (std::size_t i = 0; i < num; ++i)
 		_rootParameterInfos.push_back(RootParameter(visibility));
