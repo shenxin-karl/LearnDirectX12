@@ -105,7 +105,7 @@ void Shape::buildTexturePSO(dx12lib::CommandListProxy pCmdList) {
 	pPSO->setInputLayout(inputLayout);
 	pPSO->setVertexShader(d3dutil::compileShader(L"shader/texture.hlsl", nullptr, "VS", "vs_5_0"));
 	pPSO->setPixelShader(d3dutil::compileShader(L"shader/texture.hlsl", nullptr, "PS", "ps_5_0"));
-	pPSO->finalize(_pDevice);
+	pPSO->finalize();
 	_PSOMap["TexturePSO"] = pPSO;
 }
 
@@ -131,7 +131,7 @@ void Shape::buildColorPSO(dx12lib::CommandListProxy pCmdList) {
 	pPSO->setInputLayout(inputLayout);
 	pPSO->setVertexShader(d3dutil::compileShader(L"shader/color.hlsl", nullptr, "VS", "vs_5_0"));
 	pPSO->setPixelShader(d3dutil::compileShader(L"shader/color.hlsl", nullptr, "PS", "ps_5_0"));
-	pPSO->finalize(_pDevice);
+	pPSO->finalize();
 	_PSOMap["ColorPSO"] = pPSO;
 }
 

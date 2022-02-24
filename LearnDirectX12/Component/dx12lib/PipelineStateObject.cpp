@@ -1,10 +1,11 @@
 #include "PipelineStateObject.h"
 #include "RootSignature.h"
 #include "Device.h"
+#include "MakeObejctTool.hpp"
 
 namespace dx12lib {
 
-PSO::PSO(const std::string &name) : _name(name) {
+PSO::PSO(std::weak_ptr<Device> pDevice, const std::string &name) : _name(name) {
 }
 
 void PSO::setRootSignature(std::shared_ptr<RootSignature> pRootSignature) {
@@ -24,7 +25,7 @@ const std::string &PSO::getName() const {
 	return _name;
 }
 
-GraphicsPSO::GraphicsPSO(const std::string &name) : PSO(name) {
+GraphicsPSO::GraphicsPSO(std::weak_ptr<Device> pDevice, const std::string &name) : PSO(pDevice, name) {
 	/// graphics pipeline static object has default state
 	std::memset(&_psoDesc, 0, sizeof(_psoDesc));
 	_psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
@@ -156,13 +157,13 @@ void GraphicsPSO::setDomainShader(const D3D12_SHADER_BYTECODE &bytecode) {
 	setDomainShader(bytecode.pShaderBytecode, bytecode.BytecodeLength);
 }
 
-void GraphicsPSO::finalize(std::weak_ptr<Device> pDevice) {
+void GraphicsPSO::finalize() {
 	if (!_dirty)
 		return;
 	
 	assert(_pRootSignature != nullptr);
 	_psoDesc.pRootSignature = _pRootSignature->getRootSignature().Get();
-	ThrowIfFailed(pDevice.lock()->getD3DDevice()->CreateGraphicsPipelineState(
+	ThrowIfFailed(_pDevice.lock()->getD3DDevice()->CreateGraphicsPipelineState(
 		&_psoDesc,
 		IID_PPV_ARGS(&_pPSO)
 	));
@@ -170,7 +171,7 @@ void GraphicsPSO::finalize(std::weak_ptr<Device> pDevice) {
 }
 
 std::shared_ptr<PSO> GraphicsPSO::clone(const std::string &name) {
-	auto pRes = std::make_shared<GraphicsPSO>(name);
+	auto pRes = std::make_shared<MakeGraphicsPSO>(_pDevice, name);
 	pRes->_dirty = this->_dirty;
 	pRes->_pPSO = this->_pPSO;
 	pRes->_psoDesc = this->_psoDesc;

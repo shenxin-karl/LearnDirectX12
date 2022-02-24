@@ -47,7 +47,8 @@ private:
 private:
 	void buildCamera();
 	void buildConstantBuffer(dx12lib::CommandListProxy pCmdList);
-	void buildPSO(dx12lib::CommandListProxy pCmdList);
+	void buildLandPSO(dx12lib::CommandListProxy pCmdList);
+	void buildWaterPSO(dx12lib::CommandListProxy pCmdList);
 	void buildGeometrys(dx12lib::CommandListProxy pCmdList);
 	void loadTextures(dx12lib::CommandListProxy pCmdList);
 	void buildMaterials();

@@ -80,7 +80,7 @@ std::shared_ptr<RootSignature> Device::createRootSignature(const RootSignatureDe
 }
 
 std::shared_ptr<GraphicsPSO> Device::createGraphicsPSO(const std::string &name) {
-	return std::make_shared<MakeGraphicsPSO>(name);
+	return std::make_shared<MakeGraphicsPSO>(weak_from_this(), name);
 }
 
 DescriptorAllocation Device::allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32 numDescriptors /*= 1*/) {

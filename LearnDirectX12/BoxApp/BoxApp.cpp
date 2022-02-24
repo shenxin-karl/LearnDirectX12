@@ -45,7 +45,7 @@ void BoxApp::onInitialize(dx12lib::CommandListProxy pCmdList) {
 	_pGraphicsPSO->setRootSignature(pRootSignature);
 	_pGraphicsPSO->setRenderTargetFormats(
 		1, RVPtr(_pSwapChain->getRenderTargetFormat()),
-		_pSwapChain->getDepthStencilFormat(),
+		_pSwapChain->getDepthStencilFormat()
 	);
 
 	// input layout
@@ -54,7 +54,7 @@ void BoxApp::onInitialize(dx12lib::CommandListProxy pCmdList) {
 		dx12lib::VInputLayoutDescHelper(&Vertex::color, "COLOR", DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0),
 	};
 	_pGraphicsPSO->setInputLayout(inputLayout);
-	_pGraphicsPSO->finalize(_pDevice);
+	_pGraphicsPSO->finalize();
 
 	buildBoxGeometry(pCmdList);
 }

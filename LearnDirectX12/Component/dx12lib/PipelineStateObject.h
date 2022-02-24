@@ -36,14 +36,14 @@ using IInputLayoutDescHepler = InputLayoutDescHelper<InputLayoutType::InstanceDa
 
 class PSO {
 public:
-	explicit PSO(const std::string &name);
+	explicit PSO(std::weak_ptr<Device> pDevice, const std::string &name);
 	PSO(const PSO &) = delete;
 	PSO &operator=(const PSO &) = delete;
 	void setRootSignature(std::shared_ptr<RootSignature> pRootSignature);
 	std::shared_ptr<RootSignature> getRootSignature() const;
 	WRL::ComPtr<ID3D12PipelineState> getPipelineStateObject() const;
 	const std::string &getName() const;
-	virtual void finalize(std::weak_ptr<Device> pDevice) = 0;
+	virtual void finalize() = 0;
 	virtual std::shared_ptr<PSO> clone(const std::string &name) = 0;
 	virtual ~PSO() = default;
 protected:
@@ -51,11 +51,11 @@ protected:
 	std::string                      _name;
 	std::shared_ptr<RootSignature>   _pRootSignature;
 	WRL::ComPtr<ID3D12PipelineState> _pPSO;
+	std::weak_ptr<Device>            _pDevice;
 };
 
 class GraphicsPSO : public PSO {
 public:
-	explicit GraphicsPSO(const std::string &name);
 	void setBlendState(const D3D12_BLEND_DESC &blendDesc);
 	void setRasterizerState(const D3D12_RASTERIZER_DESC &rasterizerDesc);
 	void setDepthStencilState(const D3D12_DEPTH_STENCIL_DESC &depthStencilDesc);
@@ -85,8 +85,10 @@ public:
 	void setHullShader(const D3D12_SHADER_BYTECODE &bytecode);
 	void setDomainShader(const D3D12_SHADER_BYTECODE &bytecode);
 	bool isDirty() const;
-	virtual void finalize(std::weak_ptr<Device> pDevice) override;
+	virtual void finalize() override;
 	virtual std::shared_ptr<PSO> clone(const std::string &name) override;
+protected:
+	explicit GraphicsPSO(std::weak_ptr<Device> pDevice, const std::string &name);
 private:
 	D3D12_SHADER_BYTECODE cacheBytecode(const std::string &name, const void *pData, size_t size);
 	D3D12_SHADER_BYTECODE cacheBytecode(const std::string &name, WRL::ComPtr<ID3DBlob> pBytecode);
