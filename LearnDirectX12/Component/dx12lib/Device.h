@@ -31,7 +31,6 @@ public:
 	UINT getSampleCount() const;
 	UINT getSampleQuality() const;
 	DXGI_SAMPLE_DESC getSampleDesc() const;
-	void set4xMsaaState(bool state);
 	bool get4xMsaaState() const;
 public:
 	std::shared_ptr<Adapter> getAdapter() const;
@@ -43,8 +42,6 @@ private:
 	std::shared_ptr<CommandQueue>        _pCommandQueueList[kComandQueueTypeCount];
 	std::unique_ptr<DescriptorAllocator> _pDescriptorAllocators[D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES];
 	DeviceInitDesc				         _initDesc;
-	UINT _4xMsaaQuality = 0;
-	UINT _4xMsaaState = false;
 };
 
 }

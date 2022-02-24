@@ -41,19 +41,6 @@ void Device::initialize(const DeviceInitDesc &desc) {
 		));
 	}
 
-	D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msQualityLevels;
-	msQualityLevels.Format = desc.backBufferFormat;	
-	msQualityLevels.SampleCount = 4;
-	msQualityLevels.Flags = D3D12_MULTISAMPLE_QUALITY_LEVELS_FLAG_NONE;
-	msQualityLevels.NumQualityLevels = 0;
-	ThrowIfFailed(_pDevice->CheckFeatureSupport(
-		D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS,
-		&msQualityLevels,
-		sizeof(msQualityLevels)
-	));
-	_4xMsaaQuality = msQualityLevels.NumQualityLevels;
-	assert(_4xMsaaQuality > 0 && "Unexpected MSAA quality level");
-
 	auto pDirectQueue = std::make_shared<MakeCommandQueue>(weak_from_this(), D3D12_COMMAND_LIST_TYPE_DIRECT);
 	_pCommandQueueList[std::size_t(CommandQueueType::Direct)] = pDirectQueue;
 	auto pComputeQueue = std::make_shared<MakeCommandQueue>(weak_from_this(), D3D12_COMMAND_LIST_TYPE_COMPUTE);
@@ -107,11 +94,11 @@ void Device::releaseStaleDescriptor() {
 }
 
 UINT Device::getSampleCount() const {
-	return _4xMsaaState ? 4 : 1;
+	return 1;
 }
 
 UINT Device::getSampleQuality() const {
-	return _4xMsaaState ? (_4xMsaaQuality-1) : 0;
+	return 0;
 }
 
 DXGI_SAMPLE_DESC Device::getSampleDesc() const {
@@ -121,12 +108,8 @@ DXGI_SAMPLE_DESC Device::getSampleDesc() const {
 	};
 }
 
-void Device::set4xMsaaState(bool state) {
-	_4xMsaaState = true;
-}
-
 bool Device::get4xMsaaState() const {
-	return _4xMsaaState;
+	return false;
 }
 
 std::shared_ptr<Adapter> Device::getAdapter() const {

@@ -61,18 +61,9 @@ public:
 	void setDepthStencilState(const D3D12_DEPTH_STENCIL_DESC &depthStencilDesc);
 	void setSampleMask(UINT sampleMask);
 	void setPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE primitiveType);
-	void setDepthTargetFormat(DXGI_FORMAT DSVFormat, UINT msaaCount = 1, UINT massQuality = 1);
-	void setRenderTargetFormat(DXGI_FORMAT RTVFormat, 
-		DXGI_FORMAT DSVFormat, 
-		UINT MsaaCount = 1, 
-		UINT MsaaQuality = 1
-	);
-	void setRenderTargetFormats(UINT numRTVFormat, 
-		const DXGI_FORMAT *pRTVFormat, 
-		DXGI_FORMAT DSVFormat,
-		UINT MsaaCount = 1, 
-		UINT MsaaQuality = 0
-	);
+	void setDepthTargetFormat(DXGI_FORMAT DSVFormat);
+	void setRenderTargetFormat(DXGI_FORMAT RTVFormat, DXGI_FORMAT DSVFormat);
+	void setRenderTargetFormats(UINT numRTVFormat, const DXGI_FORMAT *pRTVFormat, DXGI_FORMAT DSVFormat);
 	void setInputLayout(const std::vector<D3D12_INPUT_ELEMENT_DESC> &inputLayout);
 	void setPrimitiveRestart(D3D12_INDEX_BUFFER_STRIP_CUT_VALUE IBProps);
 	

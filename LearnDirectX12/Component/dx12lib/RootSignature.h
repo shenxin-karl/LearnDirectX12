@@ -34,7 +34,7 @@ public:
 	RootSignatureDescHelper &operator=(const RootSignatureDescHelper &) = delete;
 	void addRootParameter(const RootParameter &parame);
 	D3D12_ROOT_SIGNATURE_DESC getRootSignatureDesc() const;
-	void reset(std::size_t num, D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_ALL);
+	void resize(std::size_t num, D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_ALL);
 	RootParameter &operator[](std::size_t index);
 private:
 	std::vector<RootParameter>					_rootParameterInfos;

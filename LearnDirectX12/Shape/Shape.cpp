@@ -83,7 +83,7 @@ void Shape::onResize(dx12lib::CommandListProxy pCmdList, int width, int height) 
 
 void Shape::buildTexturePSO(dx12lib::CommandListProxy pCmdList) {
 	dx12lib::RootSignatureDescHelper rootDesc(d3dutil::getStaticSamplers());
-	rootDesc.reset(4);
+	rootDesc.resize(4);
 	rootDesc[0].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 	rootDesc[1].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
 	rootDesc[2].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2);
@@ -94,9 +94,7 @@ void Shape::buildTexturePSO(dx12lib::CommandListProxy pCmdList) {
 	pPSO->setRootSignature(pRootSignature);
 	pPSO->setRenderTargetFormat(
 		_pSwapChain->getRenderTargetFormat(),
-		_pSwapChain->getDepthStencilFormat(),
-		_pDevice->getSampleCount(),
-		_pDevice->getSampleQuality()
+		_pSwapChain->getDepthStencilFormat()
 	);
 
 	std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout = {
@@ -113,7 +111,7 @@ void Shape::buildTexturePSO(dx12lib::CommandListProxy pCmdList) {
 
 void Shape::buildColorPSO(dx12lib::CommandListProxy pCmdList) {
 	dx12lib::RootSignatureDescHelper rootDesc;
-	rootDesc.reset(3);
+	rootDesc.resize(3);
 	rootDesc[0].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 	rootDesc[1].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
 	rootDesc[2].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2);
@@ -123,9 +121,7 @@ void Shape::buildColorPSO(dx12lib::CommandListProxy pCmdList) {
 	pPSO->setRootSignature(pRootSignature);
 	pPSO->setRenderTargetFormat(
 		_pSwapChain->getRenderTargetFormat(),
-		_pSwapChain->getDepthStencilFormat(),
-		_pDevice->getSampleCount(),
-		_pDevice->getSampleQuality()
+		_pSwapChain->getDepthStencilFormat()
 	);
 
 	std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout = {

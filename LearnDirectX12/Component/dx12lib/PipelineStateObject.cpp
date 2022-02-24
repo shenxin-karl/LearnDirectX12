@@ -59,19 +59,15 @@ void GraphicsPSO::setPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE primiti
 	_dirty = true;
 }
 
-void GraphicsPSO::setDepthTargetFormat(DXGI_FORMAT DSVFormat, UINT msaaCount /*= 1*/, UINT massQuality /*= 1*/) {
-	setRenderTargetFormats(0, nullptr, DSVFormat, msaaCount, massQuality);
+void GraphicsPSO::setDepthTargetFormat(DXGI_FORMAT DSVFormat) {
+	setRenderTargetFormats(0, nullptr, DSVFormat);
 }
 
-void GraphicsPSO::setRenderTargetFormat(DXGI_FORMAT RTVFormat, DXGI_FORMAT DSVFormat, UINT MsaaCount /*= 1*/, UINT MsaaQuality /*= 1 */) {
-	setRenderTargetFormats(1, &RTVFormat, DSVFormat, MsaaCount, MsaaQuality);
+void GraphicsPSO::setRenderTargetFormat(DXGI_FORMAT RTVFormat, DXGI_FORMAT DSVFormat) {
+	setRenderTargetFormats(1, &RTVFormat, DSVFormat);
 }
 
-void GraphicsPSO::setRenderTargetFormats(UINT numRTVFormat, 
-	const DXGI_FORMAT *pRTVFormat,
-	DXGI_FORMAT DSVFormat, 
-	UINT MsaaCount /*= 1*/, 
-	UINT MsaaQuality /*= 0 */) 
+void GraphicsPSO::setRenderTargetFormats(UINT numRTVFormat, const DXGI_FORMAT *pRTVFormat, DXGI_FORMAT DSVFormat) 
 {
 	assert((numRTVFormat != 0 && pRTVFormat != nullptr) || (numRTVFormat == 0));
 	for (UINT i = 0; i < numRTVFormat; ++i) {
@@ -83,8 +79,8 @@ void GraphicsPSO::setRenderTargetFormats(UINT numRTVFormat,
 		_psoDesc.RTVFormats[i] = DXGI_FORMAT_UNKNOWN;
 	_psoDesc.NumRenderTargets = numRTVFormat;
 	_psoDesc.DSVFormat = DSVFormat;
-	_psoDesc.SampleDesc.Count = MsaaCount;
-	_psoDesc.SampleDesc.Quality = MsaaQuality;
+	_psoDesc.SampleDesc.Count = 1;
+	_psoDesc.SampleDesc.Quality = 0;
 	_dirty = true;
 }
 
