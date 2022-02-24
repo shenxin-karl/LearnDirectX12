@@ -34,6 +34,7 @@ public:
 	virtual const float4x4 &getInvProj() const = 0;
 	virtual const float4x4 &getInvViewProj() const = 0;
 	void updatePassCB(GPUStructCBPtr<d3dutil::PassCBType> pPassCB) const;
+	void updatePassCB(d3dutil::PassCBType &passCB) const;
 public:
 	float3 _lookFrom;
 	float3 _lookUp;

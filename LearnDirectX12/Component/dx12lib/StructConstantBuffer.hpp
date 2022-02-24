@@ -26,6 +26,12 @@ public:
 	const T *operator->() const {
 		return _ptr;
 	}
+	T &operator*() {
+		return *_ptr;
+	}
+	const T &operator*() const {
+		return *_ptr;
+	}
 	explicit operator bool() const noexcept {
 		return _ptr != nullptr;
 	}

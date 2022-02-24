@@ -108,10 +108,30 @@ void LandAndWater::buildLandPSO(dx12lib::CommandListProxy pCmdList) {
 	};
 	pLandPSO->setInputLayout(inputLayout);
 	pLandPSO->finalize();
-	_psoMap["LandPso"] = pLandPSO;
+	_psoMap["LandPSO"] = pLandPSO;
 }
 
 void LandAndWater::buildWaterPSO(dx12lib::CommandListProxy pCmdList) {
-
+	dx12lib::RootSignatureDescHelper desc;
+	desc.resize(3);
+	desc[0].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+	desc[1].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+	desc[2].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2);
+	auto pRootSignature = _pDevice->createRootSignature(desc);
+	auto pWaterPSO = _pDevice->createGraphicsPSO("WaterPSO");
+	pWaterPSO->setRootSignature(pRootSignature);
+	pWaterPSO->setVertexShader(d3dutil::compileShader(L"shader/water.hlsl", nullptr, "VS", "vs_5_0"));
+	pWaterPSO->setPixelShader(d3dutil::compileShader(L"shader/water.hlsl", nullptr, "PS", "ps_5_0"));
+	pWaterPSO->setRenderTargetFormat(
+		_pSwapChain->getRenderTargetFormat(),
+		_pSwapChain->getDepthStencilFormat()
+	);
+	std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout = {
+	dx12lib::VInputLayoutDescHelper(&WaterVertex::position, "POSITION", DXGI_FORMAT_R32G32B32_FLOAT),
+	dx12lib::VInputLayoutDescHelper(&WaterVertex::normal, "NORMAL", DXGI_FORMAT_R32G32B32_FLOAT),
+	};
+	pWaterPSO->setInputLayout(inputLayout);
+	pWaterPSO->finalize();
+	_psoMap["WaterPSO"] = pWaterPSO;
 }
 

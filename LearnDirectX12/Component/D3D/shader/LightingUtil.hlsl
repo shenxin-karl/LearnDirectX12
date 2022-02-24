@@ -88,7 +88,7 @@ float3 BlinnPhong(float3 lightStrength, float3 L, float3 N, float3 V, Material m
 float3 ComputeDirectionLight(Light light, Material mat, float3 normal, float3 viewDir) {
     float3 V = normalize(viewDir);
     float3 N = normalize(normal);
-    float3 L = normalize(-light.direction);
+    float3 L = -light.direction;
     float NdotL = DIFF_SHADING_FACTOR(saturate(dot(N, L)));
     float3 lightStrength = light.strength * NdotL;
     return BlinnPhong(lightStrength, L, N, V, mat);

@@ -29,15 +29,19 @@ CameraBase::CameraBase(const CameraDesc &desc) {
 void CameraBase::updatePassCB(GPUStructCBPtr<d3dutil::PassCBType> pPassCB) const {
 	assert(pPassCB != nullptr);
 	auto pGPUPassCB = pPassCB->map();
-	pGPUPassCB->view = getView();
-	pGPUPassCB->invView = getInvView();
-	pGPUPassCB->proj = getProj();
-	pGPUPassCB->invProj = getInvProj();
-	pGPUPassCB->viewProj = getViewProj();
-	pGPUPassCB->invViewProj = getInvViewProj();
-	pGPUPassCB->eyePos = _lookFrom;
-	pGPUPassCB->nearZ = _nearClip;
-	pGPUPassCB->farZ = _farClip;
+	updatePassCB(*pGPUPassCB);
+}
+
+void CameraBase::updatePassCB(d3dutil::PassCBType &passCB) const {
+	passCB.view = getView();
+	passCB.invView = getInvView();
+	passCB.proj = getProj();
+	passCB.invProj = getInvProj();
+	passCB.viewProj = getViewProj();
+	passCB.invViewProj = getInvViewProj();
+	passCB.eyePos = _lookFrom;
+	passCB.nearZ = _nearClip;
+	passCB.farZ = _farClip;
 }
 
 CoronaCamera::CoronaCamera(const CameraDesc &desc) : CameraBase(desc) {
