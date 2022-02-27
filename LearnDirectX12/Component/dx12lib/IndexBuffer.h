@@ -31,7 +31,7 @@ private:
 	uint32                         _indexBufferByteSize;
 	DXGI_FORMAT                    _indexFormat;
 	std::unique_ptr<DefaultBuffer> _pGPUBuffer;
-	WRL::ComPtr<ID3DBlob>          _pCPUBuffer;
+	//WRL::ComPtr<ID3DBlob>          _pCPUBuffer;
 };
 
 }

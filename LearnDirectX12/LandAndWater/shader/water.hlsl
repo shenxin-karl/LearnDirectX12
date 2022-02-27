@@ -1,10 +1,11 @@
+// #define USE_CARTOON_SHADING  
 #include "../../Component/D3D/shader/ShaderCommon.hlsl"
 #include "../../Component/D3D/shader/LightingUtil.hlsl"
 
 struct WaterParame {
     float  length;      // 波长
     float  omega;       // 角频率
-    float  speed;       // 波数; 相常数表示法 
+    float  speed;       // 波速; 相常数表示法 
     float  amplitude;   // 振幅
     float3 direction;   // 方向
     float  steep;       // 陡峭度
@@ -12,7 +13,6 @@ struct WaterParame {
 
 cbuffer CPassCB : register(b0) {
     PassCBType   gPass;
-    WaterParame  gWaterParames[4];
 };
 
 cbuffer CLightCB : register(b1) {  
@@ -21,7 +21,13 @@ cbuffer CLightCB : register(b1) {
 
 cbuffer CObjectCB : register(b2) {
     float4x4 gWorld;
+    float4x4 gNormalMat;
+    float4x4 gMatTransfrom;
     Material gMaterial;
+};
+
+cbuffer CWaterParameCB : register(b3) {
+    WaterParame gWaterParames[4];
 };
 
 struct VertexIn {
@@ -38,7 +44,7 @@ struct VertexOut {
 void MakeWaveImpl(float3 wpos, WaterParame waveParame, out float3 pos, out float3 nrm) {
     float WA    = waveParame.omega * waveParame.amplitude;
     float QA    = waveParame.steep * waveParame.amplitude;
-    float theta = waveParame.omega * dot(waveParame.direction.xz, wpos.xz) + waveParame.speed * gPass.totalTime;
+    float theta = dot(waveParame.omega * waveParame.direction.xz, wpos.xz) + waveParame.speed * gPass.totalTime;
     float sinTh = sin(theta);
     float cosTh = cos(theta);
     float3 position = {
@@ -55,20 +61,18 @@ void MakeWaveImpl(float3 wpos, WaterParame waveParame, out float3 pos, out float
     nrm = normal;
 }
 
+
 void MakeWave(inout float3 wpos, inout float3 wnrm) {
     float3 worldPosition = wpos;
-    wpos = float3(0.0, 0.0, 0.0);
-    wnrm = float3(0.0, 0.0, 0.0);
+    wpos = float3(worldPosition.x, 0.0, worldPosition.z);
+    wnrm = float3(0.0, 1.0, 0.0);
     for (int i = 0; i < 4; ++i) {
-        float3 wavePosRet;
-        float3 waveNrmRet;
-        MakeWaveImpl(worldPosition, gWaterParames[i], wavePosRet, waveNrmRet);
-        wpos += wavePosRet;
-        wnrm += waveNrmRet;
+        float3 wavePos;
+        float3 waveNrm;
+        MakeWaveImpl(worldPosition, gWaterParames[i], wavePos, waveNrm);
+        wpos += wavePos;
+        wnrm -= waveNrm;
     }
-    
-    wpos = float3(wpos.x, 0.0, wpos.z) + worldPosition;
-    wnrm = float3(0.0, 1.0, 0.0) = wnrm;
 }
 
 VertexOut VS(VertexIn vin) {
@@ -77,16 +81,16 @@ VertexOut VS(VertexIn vin) {
     float3 wnrm = vin.normal;
     MakeWave(wpos, wnrm);
     VertexOut vout;
-    vout.SVPosition = mul(gPass.viewProj, worldPosition);
+    vout.SVPosition = mul(gPass.viewProj, float4(wpos, 1.0));
     vout.wpos = wpos;
     vout.wnrm = wnrm;
     return vout;
 }
 
 float4 PS(VertexOut pin) : SV_Target {
-    float4 result  = { 0.0, 0.0, 0.0, 0.0 };
+    float3 result  = { 0.0, 0.0, 0.0 };
     float3 viewDir = gPass.eyePos - pin.wpos;
     result += ComputeDirectionLight(gLight.lights[0], gMaterial, pin.wnrm, viewDir);
     result += gMaterial.diffuseAlbedo * gLight.ambientLight;
-    return result;
+    return float4(result, gMaterial.diffuseAlbedo.a);
 }

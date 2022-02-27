@@ -16,8 +16,8 @@ IndexBuffer::IndexBuffer(std::weak_ptr<Device> pDevice,
 : _indexFormat(format), _indexBufferByteSize(sizeInByte) 
 {
 	assert(getIndexStrideByFormat(format) != 0 && "invalid index type");
-	ThrowIfFailed(D3DCreateBlob(sizeInByte, &_pCPUBuffer));
-	memcpy(_pCPUBuffer->GetBufferPointer(), pData, sizeInByte);
+	//ThrowIfFailed(D3DCreateBlob(sizeInByte, &_pCPUBuffer));
+	//memcpy(_pCPUBuffer->GetBufferPointer(), pData, sizeInByte);
 	_pGPUBuffer = std::make_unique<DefaultBuffer>(
 		pDevice.lock()->getD3DDevice(), 
 		pCmdList->getD3DCommandList(), 
@@ -90,7 +90,7 @@ IndexBuffer &IndexBuffer::operator=(IndexBuffer &&other) noexcept {
 void swap(IndexBuffer &lhs, IndexBuffer &rhs) noexcept {
 	using std::swap;
 	swap(lhs._pGPUBuffer, rhs._pGPUBuffer);
-	swap(lhs._pCPUBuffer, rhs._pCPUBuffer);
+	//swap(lhs._pCPUBuffer, rhs._pCPUBuffer);
 	swap(lhs._indexFormat, rhs._indexFormat);
 	swap(lhs._indexBufferByteSize, rhs._indexBufferByteSize);
 }

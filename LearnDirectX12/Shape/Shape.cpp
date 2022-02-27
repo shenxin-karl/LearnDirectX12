@@ -282,7 +282,7 @@ void Shape::buildGameLight(dx12lib::CommandListProxy pCmdList) {
 	pGPUGameLightCB->spotLightCount = 0;
 	pGPUGameLightCB->ambientLight = float4(0.1f, 0.1f, 0.1f, 1.f);
 
-	pGPUGameLightCB->lights[0].initAsDirectionLight(float3(3, -6, 3), float3(1.f));
+	pGPUGameLightCB->lights[0].initAsDirectionLight(float3(-3, 6, -3), float3(1.f));
 	//pGPUGameLightCB->lights[1].initAsPointLight(float3(5, 6, 7), float3(0.1f, 1.f, 0.1f), 0.f, 30.f);
 	//pGPUGameLightCB->lights[2].initAsSpotLight(
 	//	float3(0, 10, 0),

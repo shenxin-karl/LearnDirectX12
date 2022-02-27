@@ -17,8 +17,8 @@ VertexBuffer::VertexBuffer(std::weak_ptr<Device> pDevice, std::shared_ptr<Comman
 		pData, 
 		sizeInByte
 	);
-	ThrowIfFailed(D3DCreateBlob(sizeInByte, &_pCPUBuffer));
-	memcpy(_pCPUBuffer->GetBufferPointer(), pData, sizeInByte);
+	//ThrowIfFailed(D3DCreateBlob(sizeInByte, &_pCPUBuffer));
+	//memcpy(_pCPUBuffer->GetBufferPointer(), pData, sizeInByte);
 }
 
 VertexBuffer::VertexBuffer(VertexBuffer &&other) noexcept : VertexBuffer() {
@@ -33,9 +33,9 @@ D3D12_VERTEX_BUFFER_VIEW VertexBuffer::getVertexBufferView() const noexcept {
 	};
 }
 
-WRL::ComPtr<ID3DBlob> VertexBuffer::getCPUBuffer() const noexcept {
-	return _pCPUBuffer;
-}
+//WRL::ComPtr<ID3DBlob> VertexBuffer::getCPUBuffer() const noexcept {
+//	return _pCPUBuffer;
+//}
 
 uint32 VertexBuffer::getVertexBufferSize() const noexcept {
 	return _bufferByteSize;
@@ -72,7 +72,7 @@ void swap(VertexBuffer &lhs, VertexBuffer &rhs) noexcept {
 	swap(lhs._bufferByteSize, rhs._bufferByteSize);
 	swap(lhs._vertexStride, rhs._vertexStride);
 	swap(lhs._pGPUBuffer, rhs._pGPUBuffer);
-	swap(lhs._pCPUBuffer, rhs._pCPUBuffer);
+	//swap(lhs._pCPUBuffer, rhs._pCPUBuffer);
 }
 
 }

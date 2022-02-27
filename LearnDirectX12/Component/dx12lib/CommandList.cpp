@@ -283,6 +283,7 @@ std::shared_ptr<Texture> CommandList::createDDSTextureFromFile(const std::wstrin
 		pTexture,
 		pUploadHeap
 	);
+	assert(pTexture != nullptr && pUploadHeap != nullptr);
 	return std::make_shared<MakeTexture>(_pDevice, 
 		pTexture, 
 		pUploadHeap, 
@@ -301,6 +302,7 @@ std::shared_ptr<dx12lib::Texture> CommandList::createDDSTextureFromMemory(const 
 		pTexture,
 		pUploadHeap
 	);
+	assert(pTexture != nullptr && pUploadHeap != nullptr);
 	return std::make_shared<MakeTexture>(_pDevice,
 		pTexture,
 		pUploadHeap,

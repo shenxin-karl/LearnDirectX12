@@ -16,6 +16,59 @@
 #include "dx12lib/IndexBuffer.h"
 #include "dx12lib/RootSignature.h"
 #include "dx12lib/PipelineStateObject.h"
+#include "Geometry/GeometryGenerator.h"
+#include <DirectXColors.h>
+
+void WaterParame::init(const WaterParameDesc &desc) {
+	_length = desc.length;
+	_omega = DX::XM_2PI / desc.length;
+	_speed = desc.speed * _omega;
+	_amplitude = desc.amplitude;
+	_direction = normalize(float3(desc.direction.x, 0.f, desc.direction.z));
+	_steep = std::clamp(desc.steep, 0.f, 1.f) / (_omega * _amplitude * kMaxWaterParameCount);
+}
+
+MeshVertex::MeshVertex(const com::Vertex &vert) {
+	position = vert.position;
+	normal = vert.normal;
+	texcoord = vert.texcoord;
+}
+
+WaterVertex::WaterVertex(const com::Vertex &vert) {
+	position = vert.position;
+	normal = vert.normal;
+}
+
+static float3 getHillPosition(const float3 &position) {
+	float x = position.x;
+	float z = position.z;
+	return {
+		position.x,
+		0.3f * (z * std::sin(0.1f * x) + x * std::cos(0.1f * z)),
+		position.z
+	};
+}
+
+static float3 getHillNormal(const float3 &position) {
+	float x = position.x;
+	float z = position.z;
+	return {
+		-0.03f * z * std::cos(0.1f * x) - 0.3f * std::cos(0.1f * z),
+		1.f,
+		-0.3f * std::sin(0.1f * x) + 0.03f * x * std::sin(0.1f * z),
+	};
+}
+
+static com::MeshData createLandMesh() {
+	com::GometryGenerator gen;
+	auto grid = gen.createGrid(160.f, 160.f, 50, 50);
+	for (auto &vert : grid.vertices) {
+		float3 position = vert.position;
+		vert.position = getHillPosition(position);
+		vert.normal = getHillNormal(position);
+	}
+	return grid;
+}
 
 LandAndWater::LandAndWater() {
 	_title = "LandAndWater";
@@ -27,7 +80,8 @@ LandAndWater::~LandAndWater() {
 void LandAndWater::onInitialize(dx12lib::CommandListProxy pCmdList) {
 	buildCamera();
 	buildConstantBuffer(pCmdList);
-	buildLandPSO(pCmdList);
+	buildTexturePSO(pCmdList);
+	buildWaterPSO(pCmdList);
 	buildGeometrys(pCmdList);
 	loadTextures(pCmdList);
 	buildMaterials();
@@ -41,7 +95,26 @@ void LandAndWater::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 }
 
 void LandAndWater::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
-	// todo
+	auto pCmdQueue = _pDevice->getCommandQueue(dx12lib::CommandQueueType::Direct);
+	auto pCmdList = pCmdQueue->createCommandListProxy();
+	auto pRenderTarget = _pSwapChain->getRenderTarget();
+	pCmdList->setViewports(pRenderTarget->getViewport());
+	pCmdList->setScissorRects(pRenderTarget->getScissiorRect());
+	{
+		dx12lib::RenderTargetTransitionBarrier barrierGuard = {
+			pCmdList,
+			pRenderTarget,
+			D3D12_RESOURCE_STATE_RENDER_TARGET,
+			D3D12_RESOURCE_STATE_PRESENT,
+		};
+		pRenderTarget->getTexture(dx12lib::Color0)->clearColor(DX::Colors::LightSkyBlue);
+		pRenderTarget->getTexture(dx12lib::DepthStencil)->clearDepthStencil(1.f, 0);
+		pCmdList->setRenderTarget(pRenderTarget);
+		renderTexturePass(pCmdList);
+		renderWaterPass(pCmdList);
+	}
+	pCmdQueue->executeCommandList(pCmdList);
+	pCmdQueue->signal(_pSwapChain);
 }
 
 void LandAndWater::onResize(dx12lib::CommandListProxy pCmdList, int width, int height) {
@@ -63,60 +136,128 @@ void LandAndWater::updateConstantBuffer(std::shared_ptr<com::GameTimer> pGameTim
 	pGPUPassCB->totalTime = pGameTimer->getTotalTime();
 }
 
+
+void LandAndWater::renderTexturePass(dx12lib::CommandListProxy pCmdList) {
+	std::string_view passName = "TexturePSO";
+	auto pPSO = _psoMap[passName.data()];
+	pCmdList->setPipelineStateObject(pPSO);
+	pCmdList->setStructConstantBuffer(_pPassCB, CBPass);
+	pCmdList->setStructConstantBuffer(_pLightCB, CBLight);
+
+	auto &renderItems = _renderItemMap[passName.data()];
+	pCmdList->setPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	for (auto &rItem : renderItems) {
+		pCmdList->setVertexBuffer(rItem._pMesh->_pVertexBuffer);
+		pCmdList->setIndexBuffer(rItem._pMesh->_pIndexBuffer);
+		pCmdList->setStructConstantBuffer(rItem._pConstantBuffer, CBObject);
+		pCmdList->setShaderResourceView(rItem._pAlbedoMap, SRAlbedo);
+		pCmdList->drawIndexdInstanced(
+			rItem._pMesh->_pIndexBuffer->getIndexCount(), 1,
+			0, 0, 0
+		);
+	}
+}
+
+void LandAndWater::renderWaterPass(dx12lib::CommandListProxy pCmdList) {
+	std::string_view passName = "WaterPSO";
+	auto pPSO = _psoMap[passName.data()];
+	pCmdList->setPipelineStateObject(pPSO);
+	pCmdList->setStructConstantBuffer(_pPassCB, CBPass);
+	pCmdList->setStructConstantBuffer(_pLightCB, CBLight);
+	pCmdList->setStructConstantBuffer(_pWaterCB, CBWater);
+	pCmdList->setPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	auto &renderItems = _renderItemMap[passName.data()];
+	for (auto &rItem : renderItems) {
+		pCmdList->setVertexBuffer(rItem._pMesh->_pVertexBuffer);
+		pCmdList->setIndexBuffer(rItem._pMesh->_pIndexBuffer);
+		pCmdList->setStructConstantBuffer(rItem._pConstantBuffer, CBObject);
+		pCmdList->drawIndexdInstanced(
+			rItem._pMesh->_pIndexBuffer->getIndexCount(), 1,
+			0, 0, 0
+		);
+	}
+}
+
 void LandAndWater::buildCamera() {
 	d3dutil::CameraDesc desc = {
-		float3(10, 10, 10),
+		float3(40, 40, 40),
 		float3(0, 1, 0),
 		float3(0, 0, 0),
 		45.f,
 		0.1f,
-		100.f,
+		500.f,
 		float(_width) / float(_height),
 	};
 	_pCamera = std::make_unique<d3dutil::CoronaCamera>(desc);
+	_pCamera->_whellSensitivety = 1.f;
 }
 
 void LandAndWater::buildConstantBuffer(dx12lib::CommandListProxy pCmdList) {
 	_pPassCB = pCmdList->createStructConstantBuffer<d3dutil::PassCBType>();
 	_pLightCB = pCmdList->createStructConstantBuffer<d3dutil::LightCBType>();
+	_pWaterCB = pCmdList->createStructConstantBuffer<WaterCBType>();
 	auto pGPULightCB = _pLightCB->map();
 	pGPULightCB->ambientLight = float4(0.1f, 0.1f, 0.1f, 1.f);
 	pGPULightCB->directLightCount = 1;
 	pGPULightCB->lights[0].initAsDirectionLight(float3(0.2, 0.8, 0.2), float3(1.f));
+	auto pGPUWaterCB = _pWaterCB->map();
+	WaterParameDesc wpDesc0 = {
+		30.f,
+		3,
+		1.f,
+		float3(-3, -5, 7),
+		0.6f,
+	};
+	WaterParameDesc wpDesc1 = wpDesc0;
+	wpDesc1.length = 30.f;
+	wpDesc1.amplitude = 0.21f;
+	wpDesc1.steep = 1.f;
+	WaterParameDesc wpDesc2 = wpDesc0;
+	wpDesc2.direction = normalize(float3(+0.5f, 0.f, +0.4f));
+	WaterParameDesc wpDesc3 = wpDesc0;
+	wpDesc3.direction = normalize(float3(-0.9f, 0.f, -0.3f));
+	wpDesc3.length = 40.f;
+	wpDesc3.steep = 0.9f;
+	pGPUWaterCB->waterParames[0].init(wpDesc0);
+	pGPUWaterCB->waterParames[1].init(wpDesc1);
+	pGPUWaterCB->waterParames[2].init(wpDesc2);
+	pGPUWaterCB->waterParames[3].init(wpDesc3);
 }
 
-void LandAndWater::buildLandPSO(dx12lib::CommandListProxy pCmdList) {
+void LandAndWater::buildTexturePSO(dx12lib::CommandListProxy pCmdList) {
 	dx12lib::RootSignatureDescHelper desc(d3dutil::getStaticSamplers());
 	desc.resize(4);
 	desc[0].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);	// cbv
 	desc[1].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
 	desc[2].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2);
-	desc[2].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);	// srv
+	desc[3].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);	// srv
 	auto pRootSignature = _pDevice->createRootSignature(desc);
-	auto pLandPSO = _pDevice->createGraphicsPSO("landPSO");
-	pLandPSO->setRootSignature(pRootSignature);
-	pLandPSO->setVertexShader(d3dutil::compileShader(L"shader/land.hlsl", nullptr, "VS", "vs_5_0"));
-	pLandPSO->setPixelShader(d3dutil::compileShader(L"shader/land.hlsl", nullptr, "PS", "ps_5_0"));
-	pLandPSO->setRenderTargetFormat(
+	auto pTexturePSO = _pDevice->createGraphicsPSO("TexturePSO");
+	pTexturePSO->setRootSignature(pRootSignature);
+	pTexturePSO->setVertexShader(d3dutil::compileShader(L"shader/texture.hlsl", nullptr, "VS", "vs_5_0"));
+	pTexturePSO->setPixelShader(d3dutil::compileShader(L"shader/texture.hlsl", nullptr, "PS", "ps_5_0"));
+	pTexturePSO->setRenderTargetFormat(
 		_pSwapChain->getRenderTargetFormat(),
 		_pSwapChain->getDepthStencilFormat()
 	);
 	std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout = {
-		dx12lib::VInputLayoutDescHelper(&LandVertex::position, "POSITION", DXGI_FORMAT_R32G32B32_FLOAT),
-		dx12lib::VInputLayoutDescHelper(&LandVertex::normal, "NORMAL", DXGI_FORMAT_R32G32B32_FLOAT),
-		dx12lib::VInputLayoutDescHelper(&LandVertex::texcoord, "TEXCOORD", DXGI_FORMAT_R32G32_FLOAT),
+		dx12lib::VInputLayoutDescHelper(&MeshVertex::position, "POSITION", DXGI_FORMAT_R32G32B32_FLOAT),
+		dx12lib::VInputLayoutDescHelper(&MeshVertex::normal, "NORMAL", DXGI_FORMAT_R32G32B32_FLOAT),
+		dx12lib::VInputLayoutDescHelper(&MeshVertex::texcoord, "TEXCOORD", DXGI_FORMAT_R32G32_FLOAT),
 	};
-	pLandPSO->setInputLayout(inputLayout);
-	pLandPSO->finalize();
-	_psoMap["LandPSO"] = pLandPSO;
+	pTexturePSO->setInputLayout(inputLayout);
+	pTexturePSO->finalize();
+	_psoMap["TexturePSO"] = pTexturePSO;
 }
 
 void LandAndWater::buildWaterPSO(dx12lib::CommandListProxy pCmdList) {
-	dx12lib::RootSignatureDescHelper desc;
-	desc.resize(3);
+	dx12lib::RootSignatureDescHelper desc(d3dutil::getStaticSamplers());
+	desc.resize(4);
 	desc[0].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 	desc[1].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
 	desc[2].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2);
+	desc[3].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 3);
 	auto pRootSignature = _pDevice->createRootSignature(desc);
 	auto pWaterPSO = _pDevice->createGraphicsPSO("WaterPSO");
 	pWaterPSO->setRootSignature(pRootSignature);
@@ -127,11 +268,101 @@ void LandAndWater::buildWaterPSO(dx12lib::CommandListProxy pCmdList) {
 		_pSwapChain->getDepthStencilFormat()
 	);
 	std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout = {
-	dx12lib::VInputLayoutDescHelper(&WaterVertex::position, "POSITION", DXGI_FORMAT_R32G32B32_FLOAT),
-	dx12lib::VInputLayoutDescHelper(&WaterVertex::normal, "NORMAL", DXGI_FORMAT_R32G32B32_FLOAT),
+		dx12lib::VInputLayoutDescHelper(&WaterVertex::position, "POSITION", DXGI_FORMAT_R32G32B32_FLOAT),
+		dx12lib::VInputLayoutDescHelper(&WaterVertex::normal, "NORMAL", DXGI_FORMAT_R32G32B32_FLOAT),
 	};
 	pWaterPSO->setInputLayout(inputLayout);
 	pWaterPSO->finalize();
 	_psoMap["WaterPSO"] = pWaterPSO;
+}
+
+
+void LandAndWater::buildGeometrys(dx12lib::CommandListProxy pCmdList) {
+	com::GometryGenerator gen;
+	_geometryMap["boxGeo"] = d3dutil::MakeMeshHelper<MeshVertex>::build(
+		pCmdList,
+		gen.createBox(1.5f, 1.5f, 1.5f, 3)
+	);
+	_geometryMap["gridGeo"] = d3dutil::MakeMeshHelper<WaterVertex>::build(
+		pCmdList, 
+		gen.createGrid(160.f, 160.f, 50, 50)
+	);
+	_geometryMap["landGeo"] = d3dutil::MakeMeshHelper<MeshVertex>::build(
+		pCmdList,
+		createLandMesh()
+	);
+}
+
+void LandAndWater::loadTextures(dx12lib::CommandListProxy pCmdList) {
+	_textureMap["grass.dds"] = pCmdList->createDDSTextureFromFile(L"resources/grass.dds");
+	_textureMap["WoodCrate02.dds"] = pCmdList->createDDSTextureFromFile(L"resources/WoodCrate02.dds");
+}
+
+void LandAndWater::buildMaterials() {
+	d3dutil::Material landMat = {
+		float4(DX::Colors::White),
+		1.0f,
+		0.0f,
+	};
+	d3dutil::Material waterMat = {
+		float4(DX::Colors::LightSkyBlue),
+		0.9f,
+		0.4f,
+	};
+	d3dutil::Material boxMat = {
+		float4(DX::Colors::LightBlue),
+		0.5f,
+		0.2f,
+	};
+
+	_materialMap["landMat"] = landMat;
+	_materialMap["waterMat"] = waterMat;
+	_materialMap["boxMat"] = boxMat;
+}
+
+void LandAndWater::buildRenderItems(dx12lib::CommandListProxy pCmdList) {
+	auto pBoxMesh = _geometryMap["boxGeo"];
+	auto boxMat = _materialMap["boxMat"];
+	CBObjectType boxOBjectCB;
+	boxOBjectCB.material = boxMat;
+	auto boxWorldMat = DX::XMMatrixMultiply(
+		DX::XMMatrixScaling(5.f, 5.f, 5.f),
+		DX::XMMatrixTranslation(0.f, 5.f, 0.f)
+	);
+	DX::XMStoreFloat4x4(&boxOBjectCB.world, boxWorldMat);
+	boxOBjectCB.normalMat = MathHelper::identity4x4();
+	boxOBjectCB.matTransfrom = MathHelper::identity4x4();
+	RenderItem boxRItem;
+	boxRItem._pMesh = pBoxMesh;
+	boxRItem._pConstantBuffer = pCmdList->createStructConstantBuffer<CBObjectType>(boxOBjectCB);
+	boxRItem._pAlbedoMap = _textureMap["WoodCrate02.dds"];
+
+	auto pLandMesh = _geometryMap["landGeo"];
+	auto landMat = _materialMap["landMat"];
+	CBObjectType landOBjectCB;
+	landOBjectCB.material = landMat;
+	auto landMatTransfrom = DX::XMMatrixScaling(5.f, 5.f, 1.f);
+	DX::XMStoreFloat4x4(&landOBjectCB.matTransfrom, landMatTransfrom);
+	landOBjectCB.world = MathHelper::identity4x4();
+	landOBjectCB.normalMat = MathHelper::identity4x4();
+	RenderItem landRItem;
+	landRItem._pMesh = pLandMesh;
+	landRItem._pConstantBuffer = pCmdList->createStructConstantBuffer<CBObjectType>(landOBjectCB);
+	landRItem._pAlbedoMap = _textureMap["grass.dds"];
+
+	auto pWaterMesh = _geometryMap["gridGeo"];
+	auto waterMat = _materialMap["waterMat"];
+	CBObjectType waterOBjectCB;
+	waterOBjectCB.material = waterMat;
+	waterOBjectCB.world = MathHelper::identity4x4();
+	waterOBjectCB.normalMat = MathHelper::identity4x4();
+	waterOBjectCB.matTransfrom = MathHelper::identity4x4();
+	RenderItem waterRItem;
+	waterRItem._pMesh = pWaterMesh;
+	waterRItem._pConstantBuffer = pCmdList->createStructConstantBuffer<CBObjectType>(waterOBjectCB);
+
+	_renderItemMap["TexturePSO"].push_back(boxRItem);
+	_renderItemMap["TexturePSO"].push_back(landRItem);
+	_renderItemMap["WaterPSO"].push_back(waterRItem);
 }
 

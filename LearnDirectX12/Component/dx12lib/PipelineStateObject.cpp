@@ -26,6 +26,7 @@ const std::string &PSO::getName() const {
 }
 
 GraphicsPSO::GraphicsPSO(std::weak_ptr<Device> pDevice, const std::string &name) : PSO(pDevice, name) {
+	_pDevice = pDevice;
 	/// graphics pipeline static object has default state
 	std::memset(&_psoDesc, 0, sizeof(_psoDesc));
 	_psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);

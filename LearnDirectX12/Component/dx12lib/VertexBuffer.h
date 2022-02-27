@@ -18,7 +18,7 @@ public:
 	~VertexBuffer() = default;
 	friend void swap(VertexBuffer &lhs, VertexBuffer &rhs) noexcept;
 	D3D12_VERTEX_BUFFER_VIEW getVertexBufferView() const noexcept;
-	WRL::ComPtr<ID3DBlob> getCPUBuffer() const noexcept;
+	//WRL::ComPtr<ID3DBlob> getCPUBuffer() const noexcept;
 	uint32 getVertexBufferSize() const noexcept;
 	uint32 getVertexStride() const noexcept;
 	uint32 getVertexCount() const noexcept;
@@ -27,7 +27,7 @@ public:
 private:
 	uint32                         _bufferByteSize;
 	uint32                         _vertexStride;
-	WRL::ComPtr<ID3DBlob>          _pCPUBuffer;
+	//WRL::ComPtr<ID3DBlob>          _pCPUBuffer;
 	std::unique_ptr<DefaultBuffer> _pGPUBuffer;
 };
 
