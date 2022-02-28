@@ -42,13 +42,17 @@ struct PassCBType {
 	float4x4 viewProj;
 	float4x4 invViewProj;
 	float3	 eyePos;	
-	float	 objectPad0 = 0.f;			// padding
+	float	 cbPerPassPad0 = 0.f;			// padding
 	float2	 renderTargetSize;
 	float2	 invRenderTargetSize;
 	float	 nearZ;
 	float	 farZ;
 	float	 totalTime;
 	float	 deltaTime;
+	float4   fogColor;						
+	float    fogStart;
+	float    fogRange;
+	float2   cbPerPassPad1;
 };
 
 constexpr std::size_t kMaxLightCount = 16;
