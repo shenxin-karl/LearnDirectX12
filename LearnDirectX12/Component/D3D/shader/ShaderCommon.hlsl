@@ -32,7 +32,7 @@ struct PassCBType {
 	float4x4 viewProj;
 	float4x4 invViewProj;
 	float3	 eyePos;
-    	float	 cbPerPassPad0; // padding
+    float	 cbPerPassPad0; // padding
 	float2	 renderTargetSize;
 	float2	 invRenderTargetSize;
 	float	 nearZ;
@@ -41,7 +41,7 @@ struct PassCBType {
 	float	 deltaTime;
 	float4   fogColor;
 	float    fogStart;
-	float    fogRange;
+    float    fogEnd;
 	float2   cbPerPassPad1;
 };
 

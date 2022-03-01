@@ -30,8 +30,8 @@ SwapChain::SwapChain(std::weak_ptr<Device> pDevice,
 	DXGI_SWAP_CHAIN_DESC sd;
 	sd.BufferDesc.Width = width;
 	sd.BufferDesc.Height = height;
-	sd.BufferDesc.RefreshRate.Denominator = 1;
-	sd.BufferDesc.RefreshRate.Numerator = 60;
+	sd.BufferDesc.RefreshRate.Denominator = 60;
+	sd.BufferDesc.RefreshRate.Numerator = 1;
 	sd.BufferDesc.Format = backBufferFormat;
 	sd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 	sd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
@@ -40,6 +40,7 @@ SwapChain::SwapChain(std::weak_ptr<Device> pDevice,
 	sd.OutputWindow = hwnd;
 	sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	sd.BufferCount = kSwapChainBufferCount;
+	sd.Windowed = true;
 	sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 

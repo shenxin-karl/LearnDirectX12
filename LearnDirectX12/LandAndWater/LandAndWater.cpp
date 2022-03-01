@@ -108,7 +108,10 @@ void LandAndWater::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 			D3D12_RESOURCE_STATE_RENDER_TARGET,
 			D3D12_RESOURCE_STATE_PRESENT,
 		};
-		pRenderTarget->getTexture(dx12lib::Color0)->clearColor(DX::Colors::LightSkyBlue);
+
+		auto pGPUPassCB = _pPassCB->cmap();
+		const auto &color = pGPUPassCB->fogColor;
+		pRenderTarget->getTexture(dx12lib::Color0)->clearColor({ color.x, color.y, color.z, color.w });
 		pRenderTarget->getTexture(dx12lib::DepthStencil)->clearDepthStencil(1.f, 0);
 		pCmdList->setRenderTarget(pRenderTarget);
 		renderTexturePass(pCmdList);
@@ -213,13 +216,21 @@ void LandAndWater::buildCamera() {
 		float(_width) / float(_height),
 	};
 	_pCamera = std::make_unique<d3dutil::CoronaCamera>(desc);
-	_pCamera->_whellSensitivety = 1.f;
+	_pCamera->_whellSensitivety = 5.f;
 }
 
 void LandAndWater::buildConstantBuffer(dx12lib::CommandListProxy pCmdList) {
 	_pPassCB = pCmdList->createStructConstantBuffer<d3dutil::PassCBType>();
 	_pLightCB = pCmdList->createStructConstantBuffer<d3dutil::LightCBType>();
 	_pWaterCB = pCmdList->createStructConstantBuffer<WaterCBType>();
+
+	// init pass fog constant buffer
+	auto pGPUPassCB = _pPassCB->map();
+	pGPUPassCB->fogColor = float4(0.7f, 0.7f, 0.7f, 1.f);
+	pGPUPassCB->fogStart = 5.f;
+	pGPUPassCB->fogEnd = 150.f;
+
+	// init light constant buffer
 	auto pGPULightCB = _pLightCB->map();
 	pGPULightCB->ambientLight = float4(0.1f, 0.1f, 0.1f, 1.f);
 	pGPULightCB->directLightCount = 1;
@@ -232,6 +243,8 @@ void LandAndWater::buildConstantBuffer(dx12lib::CommandListProxy pCmdList) {
 		float3(-3, -5, 7),
 		0.6f,
 	};
+
+	// init water constant buffer
 	WaterParameDesc wpDesc1 = wpDesc0;
 	wpDesc1.length = 30.f;
 	wpDesc1.amplitude = 0.21f;

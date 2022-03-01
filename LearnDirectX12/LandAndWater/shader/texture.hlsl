@@ -54,6 +54,8 @@ float4 PS(VertexOut pin) : SV_Target {
     float3 result = { 0.0, 0.0, 0.0 };
     result += ComputeDirectionLight(gLight.lights[0], mat, pin.wnrm, viewDir);
     result += (diffuseAlbedo * gLight.ambientLight).rgb;
-    return float4(result, diffuseAlbedo.a);
-
+    
+    float dis = distance(pin.wpos, gPass.eyePos);
+    float fogFactor = CalcFogAttenuation(dis, gPass.fogStart, gPass.fogEnd);
+    return lerp(float4(result, 1.0), gPass.fogColor, fogFactor);
 }

@@ -77,7 +77,7 @@ public:
 	}
 
 	MappedPtr<const T> cmap() const {
-		return MappedPtr<const T>(_buffer);
+		return MappedPtr<const T>(&_buffer);
 	}
 
 	void setDirty() {

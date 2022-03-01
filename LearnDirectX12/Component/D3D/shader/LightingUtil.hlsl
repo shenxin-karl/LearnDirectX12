@@ -57,7 +57,11 @@ struct Material {
 #endif
 
 float CalcAttenuation(float d, float falloffStart, float falloffEnd) {
-    return 1.f - saturate((d - falloffStart) / (falloffEnd - falloffStart));
+    return 1.0 - saturate((d - falloffStart) / (falloffEnd - falloffStart));
+}
+
+float CalcFogAttenuation(float d, float fogStart, float fogEnd) {
+    return saturate((d - fogStart) / (fogEnd - fogStart));
 }
 
 float3 SclickFresnel(float3 F0, float cosIncidenceAngle) {

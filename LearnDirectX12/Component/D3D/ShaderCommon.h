@@ -51,7 +51,7 @@ struct PassCBType {
 	float	 deltaTime;
 	float4   fogColor;						
 	float    fogStart;
-	float    fogRange;
+	float    fogEnd;
 	float2   cbPerPassPad1;
 };
 
