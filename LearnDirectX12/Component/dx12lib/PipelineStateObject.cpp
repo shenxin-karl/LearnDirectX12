@@ -178,6 +178,7 @@ std::shared_ptr<PSO> GraphicsPSO::clone(const std::string &name) {
 	pRes->_psoDesc = this->_psoDesc;
 	pRes->_pRootSignature = this->_pRootSignature;
 	pRes->_shaderBytecodeCache = this->_shaderBytecodeCache;
+	pRes->_pInputLayout = this->_pInputLayout;
 	return std::static_pointer_cast<PSO>(pRes);
 }
 

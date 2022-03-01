@@ -82,6 +82,7 @@ void LandAndWater::onInitialize(dx12lib::CommandListProxy pCmdList) {
 	buildConstantBuffer(pCmdList);
 	buildTexturePSO(pCmdList);
 	buildWaterPSO(pCmdList);
+	buildClipPSO(pCmdList);
 	buildGeometrys(pCmdList);
 	loadTextures(pCmdList);
 	buildMaterials();
@@ -111,6 +112,7 @@ void LandAndWater::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		pRenderTarget->getTexture(dx12lib::DepthStencil)->clearDepthStencil(1.f, 0);
 		pCmdList->setRenderTarget(pRenderTarget);
 		renderTexturePass(pCmdList);
+		renderWireBoxPass(pCmdList);
 		renderWaterPass(pCmdList);
 	}
 	pCmdQueue->executeCommandList(pCmdList);
@@ -145,7 +147,7 @@ void LandAndWater::renderTexturePass(dx12lib::CommandListProxy pCmdList) {
 	pCmdList->setStructConstantBuffer(_pLightCB, CBLight);
 
 	auto &renderItems = _renderItemMap[passName.data()];
-	pCmdList->setPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	pCmdList->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	for (auto &rItem : renderItems) {
 		pCmdList->setVertexBuffer(rItem._pMesh->_pVertexBuffer);
 		pCmdList->setIndexBuffer(rItem._pMesh->_pIndexBuffer);
@@ -165,13 +167,34 @@ void LandAndWater::renderWaterPass(dx12lib::CommandListProxy pCmdList) {
 	pCmdList->setStructConstantBuffer(_pPassCB, CBPass);
 	pCmdList->setStructConstantBuffer(_pLightCB, CBLight);
 	pCmdList->setStructConstantBuffer(_pWaterCB, CBWater);
-	pCmdList->setPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	pCmdList->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	auto &renderItems = _renderItemMap[passName.data()];
 	for (auto &rItem : renderItems) {
 		pCmdList->setVertexBuffer(rItem._pMesh->_pVertexBuffer);
 		pCmdList->setIndexBuffer(rItem._pMesh->_pIndexBuffer);
 		pCmdList->setStructConstantBuffer(rItem._pConstantBuffer, CBObject);
+		pCmdList->drawIndexdInstanced(
+			rItem._pMesh->_pIndexBuffer->getIndexCount(), 1,
+			0, 0, 0
+		);
+	}
+}
+
+void LandAndWater::renderWireBoxPass(dx12lib::CommandListProxy pCmdList) {
+	std::string_view passName = "ClipPSO";
+	auto pPSO = _psoMap[passName.data()];
+	pCmdList->setPipelineStateObject(pPSO);
+	pCmdList->setStructConstantBuffer(_pPassCB, CBPass);
+	pCmdList->setStructConstantBuffer(_pLightCB, CBLight);
+
+	auto &renderItems = _renderItemMap[passName.data()];
+	pCmdList->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	for (auto &rItem : renderItems) {
+		pCmdList->setVertexBuffer(rItem._pMesh->_pVertexBuffer);
+		pCmdList->setIndexBuffer(rItem._pMesh->_pIndexBuffer);
+		pCmdList->setStructConstantBuffer(rItem._pConstantBuffer, CBObject);
+		pCmdList->setShaderResourceView(rItem._pAlbedoMap, SRAlbedo);
 		pCmdList->drawIndexdInstanced(
 			rItem._pMesh->_pIndexBuffer->getIndexCount(), 1,
 			0, 0, 0
@@ -276,6 +299,19 @@ void LandAndWater::buildWaterPSO(dx12lib::CommandListProxy pCmdList) {
 	_psoMap["WaterPSO"] = pWaterPSO;
 }
 
+void LandAndWater::buildClipPSO(dx12lib::CommandListProxy pCmdList) {
+	auto pClipPSO = std::static_pointer_cast<dx12lib::GraphicsPSO>(_psoMap["TexturePSO"]->clone("ClipPSO"));
+	pClipPSO->setVertexShader(d3dutil::compileShader(L"shader/clip.hlsl", nullptr, "VS", "vs_5_0"));
+	pClipPSO->setPixelShader(d3dutil::compileShader(L"shader/clip.hlsl", nullptr, "PS", "ps_5_0"));
+
+	// disable cull
+	CD3DX12_RASTERIZER_DESC rasterizerDesc(D3D12_DEFAULT);
+	rasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
+	pClipPSO->setRasterizerState(rasterizerDesc);
+
+	pClipPSO->finalize();
+	_psoMap["ClipPSO"] = pClipPSO;
+}
 
 void LandAndWater::buildGeometrys(dx12lib::CommandListProxy pCmdList) {
 	com::GometryGenerator gen;
@@ -296,6 +332,7 @@ void LandAndWater::buildGeometrys(dx12lib::CommandListProxy pCmdList) {
 void LandAndWater::loadTextures(dx12lib::CommandListProxy pCmdList) {
 	_textureMap["grass.dds"] = pCmdList->createDDSTextureFromFile(L"resources/grass.dds");
 	_textureMap["WoodCrate02.dds"] = pCmdList->createDDSTextureFromFile(L"resources/WoodCrate02.dds");
+	_textureMap["WireFence.dds"] = pCmdList->createDDSTextureFromFile(L"resources/WireFence.dds");
 }
 
 void LandAndWater::buildMaterials() {
@@ -335,7 +372,7 @@ void LandAndWater::buildRenderItems(dx12lib::CommandListProxy pCmdList) {
 	RenderItem boxRItem;
 	boxRItem._pMesh = pBoxMesh;
 	boxRItem._pConstantBuffer = pCmdList->createStructConstantBuffer<CBObjectType>(boxOBjectCB);
-	boxRItem._pAlbedoMap = _textureMap["WoodCrate02.dds"];
+	boxRItem._pAlbedoMap = _textureMap["WireFence.dds"];
 
 	auto pLandMesh = _geometryMap["landGeo"];
 	auto landMat = _materialMap["landMat"];
@@ -361,7 +398,7 @@ void LandAndWater::buildRenderItems(dx12lib::CommandListProxy pCmdList) {
 	waterRItem._pMesh = pWaterMesh;
 	waterRItem._pConstantBuffer = pCmdList->createStructConstantBuffer<CBObjectType>(waterOBjectCB);
 
-	_renderItemMap["TexturePSO"].push_back(boxRItem);
+	_renderItemMap["ClipPSO"].push_back(boxRItem);
 	_renderItemMap["TexturePSO"].push_back(landRItem);
 	_renderItemMap["WaterPSO"].push_back(waterRItem);
 }

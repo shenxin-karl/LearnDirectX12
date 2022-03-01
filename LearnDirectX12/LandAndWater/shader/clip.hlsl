@@ -33,13 +33,14 @@ VertexOut VS(VertexIn vin) {
     VertexOut vout;
     float4 worldPosition = mul(gWorld, float4(vin.position, 1.0));
     vout.SVPosition = mul(gPass.viewProj, worldPosition);
+    vout.wpos       = worldPosition.xyz;
     vout.wnrm       = mul(gNormalMat, float4(vin.normal, 1.0)).xyz;
     vout.texcoord   = mul(gMatTransfrom, float4(vin.texcoord, 0.0, 0.0)).xy;
     return vout;
 }
 
 Texture2D gDiffuseMap : register(t0);
-float4 PS(VertexOut pin) : SV_Target{
+float4 PS(VertexOut pin) : SV_Target {
     float4 diffuseAlbedo = gDiffuseMap.Sample(gSamAnisotropicClamp, pin.texcoord);
     clip(diffuseAlbedo.a - 0.1);
     Material mat = {

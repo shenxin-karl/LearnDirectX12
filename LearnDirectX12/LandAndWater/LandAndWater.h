@@ -87,11 +87,13 @@ private:
 	void updateConstantBuffer(std::shared_ptr<com::GameTimer> pGameTimer);
 	void renderTexturePass(dx12lib::CommandListProxy pCmdList);
 	void renderWaterPass(dx12lib::CommandListProxy pCmdList);
+	void renderWireBoxPass(dx12lib::CommandListProxy pCmdList);
 private:
 	void buildCamera();
 	void buildConstantBuffer(dx12lib::CommandListProxy pCmdList);
 	void buildTexturePSO(dx12lib::CommandListProxy pCmdList);
 	void buildWaterPSO(dx12lib::CommandListProxy pCmdList);
+	void buildClipPSO(dx12lib::CommandListProxy pCmdList);
 	void buildGeometrys(dx12lib::CommandListProxy pCmdList);
 	void loadTextures(dx12lib::CommandListProxy pCmdList);
 	void buildMaterials();
