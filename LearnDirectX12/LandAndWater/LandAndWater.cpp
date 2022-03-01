@@ -1,6 +1,7 @@
 #include "LandAndWater.h"
 #include "GameTimer/GameTimer.h"
-#include "d3d/Camera.h"
+#include "D3D/Camera.h"
+#include "D3D/D3DDescHelper.h"
 #include "InputSystem/window.h"
 #include "InputSystem/Keyboard.h"
 #include "InputSystem/Mouse.h"
@@ -237,24 +238,26 @@ void LandAndWater::buildConstantBuffer(dx12lib::CommandListProxy pCmdList) {
 	pGPULightCB->lights[0].initAsDirectionLight(float3(0.2, 0.8, 0.2), float3(1.f));
 	auto pGPUWaterCB = _pWaterCB->map();
 	WaterParameDesc wpDesc0 = {
-		30.f,
-		3,
-		1.f,
+		20.f,
+		4,
+		0.4f,
 		float3(-3, -5, 7),
 		0.6f,
 	};
 
 	// init water constant buffer
 	WaterParameDesc wpDesc1 = wpDesc0;
-	wpDesc1.length = 30.f;
-	wpDesc1.amplitude = 0.21f;
+	wpDesc1.length = 20.f;
+	wpDesc1.speed = 8;
+	wpDesc1.amplitude = 0.41f;
 	wpDesc1.steep = 1.f;
 	WaterParameDesc wpDesc2 = wpDesc0;
 	wpDesc2.direction = normalize(float3(+0.5f, 0.f, +0.4f));
 	WaterParameDesc wpDesc3 = wpDesc0;
 	wpDesc3.direction = normalize(float3(-0.9f, 0.f, -0.3f));
-	wpDesc3.length = 40.f;
-	wpDesc3.steep = 0.9f;
+	wpDesc3.length = 26.f;
+	wpDesc3.speed = 10;
+	wpDesc3.steep = 0.6f;
 	pGPUWaterCB->waterParames[0].init(wpDesc0);
 	pGPUWaterCB->waterParames[1].init(wpDesc1);
 	pGPUWaterCB->waterParames[2].init(wpDesc2);
@@ -308,6 +311,12 @@ void LandAndWater::buildWaterPSO(dx12lib::CommandListProxy pCmdList) {
 		dx12lib::VInputLayoutDescHelper(&WaterVertex::normal, "NORMAL", DXGI_FORMAT_R32G32B32_FLOAT),
 	};
 	pWaterPSO->setInputLayout(inputLayout);
+
+	// blend enable
+	CD3DX12_BLEND_DESC blendDesc(D3D12_DEFAULT);
+	blendDesc.RenderTarget[0] = d3dutil::RenderTargetBlendDescHelper(d3dutil::RenderTargetBlendPreset::ALPHA);
+	pWaterPSO->setBlendState(blendDesc);
+
 	pWaterPSO->finalize();
 	_psoMap["WaterPSO"] = pWaterPSO;
 }
@@ -355,9 +364,9 @@ void LandAndWater::buildMaterials() {
 		0.0f,
 	};
 	d3dutil::Material waterMat = {
-		float4(DX::Colors::LightSkyBlue),
+		float4(DX::Colors::LightGreen),
 		0.9f,
-		0.4f,
+		0.7f,
 	};
 	d3dutil::Material boxMat = {
 		float4(DX::Colors::LightBlue),

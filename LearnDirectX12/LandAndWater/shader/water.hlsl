@@ -95,5 +95,6 @@ float4 PS(VertexOut pin) : SV_Target {
     
     float dis = distance(pin.wpos, gPass.eyePos);
     float fogFactor = CalcFogAttenuation(dis, gPass.fogStart, gPass.fogEnd);
-    return lerp(float4(result, 1.0), gPass.fogColor, fogFactor);
+    float3 finalColor = lerp(result, gPass.fogColor.rgb, fogFactor);
+    return float4(finalColor, 0.5);
 }
