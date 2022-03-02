@@ -96,4 +96,31 @@ void RenderTargetBlendDescHelper::initBlendOpRevAlpha() {
 	this->BlendOpAlpha = D3D12_BLEND_OP_ADD;
 }
 
+DepthStencilOpDescHelper::DepthStencilOpDescHelper(DepthStendilOpPreset preset, D3D12_COMPARISON_FUNC func) {
+	this->StencilFunc = func;
+	this->StencilFailOp = D3D12_STENCIL_OP_KEEP;
+	this->StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+	switch (preset) {
+	case d3dutil::DepthStendilOpPreset::SP_REPLACE:
+		this->StencilPassOp = D3D12_STENCIL_OP_REPLACE;
+		break;
+	case d3dutil::DepthStendilOpPreset::SP_KEEP:
+		this->StencilPassOp = D3D12_STENCIL_OP_KEEP;
+		break;
+	case d3dutil::DepthStendilOpPreset::SP_ZERO:
+		this->StencilPassOp = D3D12_STENCIL_OP_ZERO;
+		break;
+	case d3dutil::DepthStendilOpPreset::SP_INCR:
+		this->StencilPassOp = D3D12_STENCIL_OP_INCR;
+		break;
+	case d3dutil::DepthStendilOpPreset::SP_DECR:
+		this->StencilPassOp = D3D12_STENCIL_OP_DECR;
+		break;
+	default:
+		assert(false);
+		break;
+	}
+}
+
+
 }

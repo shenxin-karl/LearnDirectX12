@@ -16,7 +16,6 @@ enum class RenderTargetBlendPreset {
 };
 
 struct RenderTargetBlendDescHelper : public D3D12_RENDER_TARGET_BLEND_DESC {
-public:
 	RenderTargetBlendDescHelper(RenderTargetBlendPreset preset);
 private:
 	void initBlendOpAdd();
@@ -26,6 +25,20 @@ private:
 	void initBlendOpEnable();
 	void initBlendOpAlpha();
 	void initBlendOpRevAlpha();
+};
+
+
+// SP: depth stencil success
+enum class DepthStendilOpPreset {
+	SP_REPLACE,
+	SP_KEEP,
+	SP_ZERO,
+	SP_INCR,
+	SP_DECR,
+};
+
+struct DepthStencilOpDescHelper : public D3D12_DEPTH_STENCILOP_DESC {
+	DepthStencilOpDescHelper(DepthStendilOpPreset preset, D3D12_COMPARISON_FUNC func = D3D12_COMPARISON_FUNC_ALWAYS);
 };
 
 }
