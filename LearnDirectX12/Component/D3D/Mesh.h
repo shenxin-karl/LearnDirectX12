@@ -12,9 +12,54 @@
 
 namespace d3d {
 
-struct Mesh {
+// 如果 count 是 -1 表示无效 submesh
+// 如果 startIndexLocation 是 -1, 表示为没有索引
+struct SubMesh {
+	std::string   _name;
+	std::uint32_t _count;				
+	std::uint32_t _startIndexLocation;
+	std::uint32_t _baseVertexLocation;
+public:
+	explicit operator bool() const;
+	void drawInstanced(dx12lib::CommandListProxy pCmdList,
+		std::uint32_t instanceCount = 1, 
+		std::uint32_t startInstanceLocation = 0
+	) const;
+
+	void drawIndexdInstanced(dx12lib::CommandListProxy pCmdList, 
+		std::uint32_t instanceCount = 1, 
+		std::uint32_t startInstanceLocation = 0
+	) const;
+};
+
+class Mesh {
 	std::shared_ptr<dx12lib::VertexBuffer> _pVertexBuffer;
 	std::shared_ptr<dx12lib::IndexBuffer>  _pIndexBuffer;
+	std::vector<SubMesh> _subMeshs;
+public:
+	Mesh &operator=(const Mesh &) = delete;
+	Mesh(const Mesh &) = delete;
+	Mesh(std::shared_ptr<dx12lib::VertexBuffer> pVertexBuffer,
+		std::shared_ptr<dx12lib::IndexBuffer> pIndexBuffer,
+		const std::vector<SubMesh> &subMeshs
+	);
+
+	std::shared_ptr<dx12lib::VertexBuffer> getVertexBuffer() const;
+	std::shared_ptr<dx12lib::IndexBuffer> getIndexBuffer() const;
+	
+	using iteraotr = std::vector<SubMesh>::const_iterator;
+	iteraotr begin() const;
+	iteraotr end() const;
+
+	void drawInstanced(dx12lib::CommandListProxy pCmdList,
+		std::uint32_t instanceCount = 1,
+		std::uint32_t startInstanceLocation = 0
+	) const;
+
+	void drawIndexdInstanced(dx12lib::CommandListProxy pCmdList,
+		std::uint32_t instanceCount = 1,
+		std::uint32_t startInstanceLocation = 0
+	) const;
 };
 
 enum class MeshIndexType {
@@ -22,7 +67,6 @@ enum class MeshIndexType {
 	UINT16 = DXGI_FORMAT_R16_UINT,
 	UINT32 = DXGI_FORMAT_R32_UINT,
 };
-
 
 template<MeshIndexType IndexType>
 using MeshIndexTypeToIntegerType_t = std::conditional_t<(IndexType == MeshIndexType::UINT8),
@@ -33,11 +77,7 @@ using MeshIndexTypeToIntegerType_t = std::conditional_t<(IndexType == MeshIndexT
 	>
 >;
 
-
 template<typename T, MeshIndexType IndexType = MeshIndexType::UINT16>
-struct MakeMeshHelper;
-
-template<typename T, MeshIndexType IndexType>
 struct MakeMeshHelper {
 	static std::shared_ptr<dx12lib::VertexBuffer> 
 	buildVertexBuffer(dx12lib::CommandListProxy pCmdList, const com::MeshData &mesh) {
@@ -99,38 +139,44 @@ struct MakeMeshHelper {
 		return nullptr;
 	}
 
-	static std::shared_ptr<Mesh> build(dx12lib::CommandListProxy pCmdList, const com::MeshData &mesh) {
-		std::shared_ptr<Mesh> pMesh = std::make_shared<Mesh>();
-		pMesh->_pVertexBuffer = buildVertexBuffer(pCmdList, mesh);
-		pMesh->_pIndexBuffer = buildIndexBuffer(pCmdList, mesh);
-		return pMesh;
+	static std::shared_ptr<Mesh> build(dx12lib::CommandListProxy pCmdList, 
+		const com::MeshData &mesh, 
+		const std::string &name = "") 
+	{
+		std::uint32_t count = -1;
+		std::uint32_t vertCount = std::uint32_t(mesh.vertices.size());
+		std::uint32_t indexCount = std::uint32_t(mesh.indices.size());
+		if (!mesh.indices.empty() || !mesh.vertices.empty())
+			count = (mesh.indices.empty()) ? vertCount : indexCount;
+
+		assert(count != -1);
+		auto pVertexBuffer = buildVertexBuffer(pCmdList, mesh);
+		auto pIndexBuffer = buildIndexBuffer(pCmdList, mesh);
+		SubMesh submesh = { name, count, 0, 0 };
+		return std::make_shared<Mesh>(
+			pVertexBuffer,
+			pIndexBuffer,
+			std::vector<SubMesh>({ submesh })
+		);
 	}
 };
 
-struct SubMesh {
-	UINT indexCount;
-	UINT startIndexLocation;
-	UINT baseVertexLocation;
-};
-
-struct UnionMesh : public Mesh {
-	UnionMesh(std::shared_ptr<dx12lib::VertexBuffer> pVertexBuffer,
-		std::shared_ptr<dx12lib::IndexBuffer> pIndexBuffer,
-		const std::unordered_map<std::string, SubMesh> &subMeshs
-	);
-	UnionMesh(const UnionMesh &) = delete;
-	UnionMesh &operator=(const UnionMesh &) = delete;
-	bool hasSubMesh(const std::string &name, SubMesh &subMesh) const;
-public:
-	const std::unordered_map<std::string, SubMesh> _subMeshs;
-};
 
 template<typename T, MeshIndexType IndexType = MeshIndexType::UINT16>
 struct MakeUnionMeshHelper {
 	void appendMesh(const std::string &name, const com::MeshData &mesh) {
+		std::uint32_t count = -1;
+		std::uint32_t vertCount = std::uint32_t(mesh.vertices.size());
+		std::uint32_t indexCount = std::uint32_t(mesh.indices.size());
+		if (!mesh.indices.empty() || !mesh.vertices.empty())
+			count = (mesh.indices.empty()) ? vertCount : indexCount;
+
 		assert(_subMeshs.find(name) == _subMeshs.end());
+		assert(count != -1);
+
 		SubMesh subMesh = {
-			static_csat<UINT>(mesh.indices.size()),
+			name,
+			count,
 			static_cast<UINT>(_indices.size()),
 			static_cast<UINT>(_vertices.size()),
 		};
@@ -139,7 +185,7 @@ struct MakeUnionMeshHelper {
 		_subMeshs.emplace(name, subMesh);
 	}
 
-	std::shared_ptr<UnionMesh> build(dx12lib::CommandListProxy pCmdList) const {
+	std::shared_ptr<Mesh> build(dx12lib::CommandListProxy pCmdList) const {
 		auto pVertexBuffer = pCmdList->createVertexBuffer(
 			_vertices.data(),
 			sizeof(T) * _vertices.size(),
@@ -151,10 +197,14 @@ struct MakeUnionMeshHelper {
 			reinterpret_cast<DXGI_FORMAT>(IndexType)
 		);
 
-		return std::make_shared<UnionMesh>(
+		std::vector<SubMesh> submesh;
+		submesh.reserve(_subMeshs.size());
+		submesh.insert(_subMeshs.begin(), _subMeshs.end());
+
+		return std::make_shared<Mesh>(
 			pVertexBuffer,
 			pIndexBuffer,
-			_subMeshs
+			submesh
 		);
 	}
 private:

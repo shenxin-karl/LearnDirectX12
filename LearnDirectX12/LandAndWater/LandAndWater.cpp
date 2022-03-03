@@ -153,14 +153,11 @@ void LandAndWater::renderTexturePass(dx12lib::CommandListProxy pCmdList) {
 	auto &renderItems = _renderItemMap[passName.data()];
 	pCmdList->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	for (auto &rItem : renderItems) {
-		pCmdList->setVertexBuffer(rItem._pMesh->_pVertexBuffer);
-		pCmdList->setIndexBuffer(rItem._pMesh->_pIndexBuffer);
+		pCmdList->setVertexBuffer(rItem._pMesh->getVertexBuffer());
+		pCmdList->setIndexBuffer(rItem._pMesh->getIndexBuffer());
 		pCmdList->setStructConstantBuffer(rItem._pConstantBuffer, CBObject);
 		pCmdList->setShaderResourceView(rItem._pAlbedoMap, SRAlbedo);
-		pCmdList->drawIndexdInstanced(
-			rItem._pMesh->_pIndexBuffer->getIndexCount(), 1,
-			0, 0, 0
-		);
+		rItem._pMesh->drawIndexdInstanced(pCmdList);
 	}
 }
 
@@ -175,13 +172,10 @@ void LandAndWater::renderWaterPass(dx12lib::CommandListProxy pCmdList) {
 
 	auto &renderItems = _renderItemMap[passName.data()];
 	for (auto &rItem : renderItems) {
-		pCmdList->setVertexBuffer(rItem._pMesh->_pVertexBuffer);
-		pCmdList->setIndexBuffer(rItem._pMesh->_pIndexBuffer);
+		pCmdList->setVertexBuffer(rItem._pMesh->getVertexBuffer());
+		pCmdList->setIndexBuffer(rItem._pMesh->getIndexBuffer());
 		pCmdList->setStructConstantBuffer(rItem._pConstantBuffer, CBObject);
-		pCmdList->drawIndexdInstanced(
-			rItem._pMesh->_pIndexBuffer->getIndexCount(), 1,
-			0, 0, 0
-		);
+		rItem._pMesh->drawIndexdInstanced(pCmdList);
 	}
 }
 
@@ -195,14 +189,11 @@ void LandAndWater::renderWireBoxPass(dx12lib::CommandListProxy pCmdList) {
 	auto &renderItems = _renderItemMap[passName.data()];
 	pCmdList->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	for (auto &rItem : renderItems) {
-		pCmdList->setVertexBuffer(rItem._pMesh->_pVertexBuffer);
-		pCmdList->setIndexBuffer(rItem._pMesh->_pIndexBuffer);
+		pCmdList->setVertexBuffer(rItem._pMesh->getVertexBuffer());
+		pCmdList->setIndexBuffer(rItem._pMesh->getIndexBuffer());
 		pCmdList->setStructConstantBuffer(rItem._pConstantBuffer, CBObject);
 		pCmdList->setShaderResourceView(rItem._pAlbedoMap, SRAlbedo);
-		pCmdList->drawIndexdInstanced(
-			rItem._pMesh->_pIndexBuffer->getIndexCount(), 1,
-			0, 0, 0
-		);
+		rItem._pMesh->drawIndexdInstanced(pCmdList);
 	}
 }
 

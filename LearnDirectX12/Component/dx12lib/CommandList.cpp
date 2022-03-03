@@ -246,20 +246,20 @@ void CommandList::setShaderResourceView(std::shared_ptr<Texture> pTexture, uint3
 
 void CommandList::drawInstanced(uint32 vertCount, 
 	uint32 instanceCount, 
-	uint32 startVertex, 
-	uint32 startInstance) 
+	uint32 baseVertexLocation,
+	uint32 startInstanceLocation)
 {
 	assert(_currentGPUState.debugCheckDraw());
 	flushResourceBarriers();
 	for (auto &pDynamicHeap : _pDynamicDescriptorHeaps)
 		pDynamicHeap->commitStagedDescriptorForDraw(shared_from_this());
-	_pCommandList->DrawInstanced(vertCount, instanceCount, startVertex, startInstance);
+	_pCommandList->DrawInstanced(vertCount, instanceCount, baseVertexLocation, startInstanceLocation);
 }
 
 void CommandList::drawIndexdInstanced(uint32 indexCountPerInstance, 
 	uint32 instanceCount, 
 	uint32 startIndexLocation, 
-	uint32 startVertexLocation, 
+	uint32 baseVertexLocation, 
 	uint32 startInstanceLocation) 
 {
 	assert(_currentGPUState.debugCheckDrawIndex());
@@ -269,7 +269,7 @@ void CommandList::drawIndexdInstanced(uint32 indexCountPerInstance,
 	_pCommandList->DrawIndexedInstanced(indexCountPerInstance, 
 		instanceCount, 
 		startIndexLocation, 
-		startVertexLocation, 
+		baseVertexLocation,
 		startIndexLocation
 	);
 }

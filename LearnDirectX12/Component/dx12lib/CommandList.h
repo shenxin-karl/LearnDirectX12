@@ -87,14 +87,14 @@ public:
 /// draw function
 	void drawInstanced(uint32 vertCount, 
 		uint32 instanceCount, 
-		uint32 startVertex, 
-		uint32 startInstance
+		uint32 baseVertexLocation,
+		uint32 startInstanceLocation
 	);
 	
 	void drawIndexdInstanced(uint32 indexCountPerInstance, 
 		uint32 instanceCount, 
 		uint32 startIndexLocation, 
-		uint32 startVertexLocation, 
+		uint32 baseVertexLocation,
 		uint32 startInstanceLocation
 	);
 /// create dds texture
