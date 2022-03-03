@@ -13,7 +13,7 @@
 using namespace Math;
 
 enum RenderLayer : std::size_t {
-	Opaque  = 0,
+	Opaque = 0,
 	Mirrors,
 	Reflected,
 	Transparent,
@@ -39,16 +39,23 @@ public:
 	~MirrorApp();
 public:
 	virtual void onInitialize(dx12lib::CommandListProxy pCmdList) override;
-	virtual void onDistory() override;
 	virtual void onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 	virtual void onTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
-	virtual void onEndTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 	virtual void onResize(dx12lib::CommandListProxy pCmdList, int width, int height) override;
+private:
+	void drawRenderItems(dx12lib::CommandListProxy pCmdList, RenderLayer layer);
+	void buildCamera();
+	void buildConstantBuffers(dx12lib::CommandListProxy pCmdList);
+	void loadTextures(dx12lib::CommandListProxy pCmdList);
+	void buildMaterials();
+	void buildMeshs(dx12lib::CommandListProxy pCmdList);
+	void buildPSOs();
+	void buildRenderItems();
 private:
 	std::unique_ptr<d3d::CoronaCamera> _pCamera;
 	GPUStructCBPtr<d3d::PassCBType>    _pPassCB;
 	GPUStructCBPtr<d3d::LightCBType>   _pLightCB;
-	std::map<std::string, d3d::Material> materialMap;
+	std::map<std::string, d3d::Material> _materialMap;
 	std::map<std::string, std::shared_ptr<d3d::Mesh>> _meshMap;
 	std::map<std::string, std::shared_ptr<dx12lib::Texture>> _textureMap;
 	std::map<RenderLayer, std::shared_ptr<dx12lib::GraphicsPSO>> _psoMap;
