@@ -5,7 +5,7 @@
 #include "ComponentStd.h"
 
 
-namespace d3dutil {
+namespace d3d {
 
 namespace WRL = Microsoft::WRL;
 using uint32 = std::uint32_t;

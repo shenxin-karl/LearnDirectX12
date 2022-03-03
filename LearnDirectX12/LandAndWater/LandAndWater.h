@@ -64,11 +64,11 @@ struct CBObjectType {
 	float4x4          world;
 	float4x4          normalMat;
 	float4x4          matTransfrom;
-	d3dutil::Material material;
+	d3d::Material material;
 };
 
 struct RenderItem {
-	std::shared_ptr<d3dutil::Mesh>	  _pMesh;
+	std::shared_ptr<d3d::Mesh>	  _pMesh;
 	GPUStructCBPtr<CBObjectType>      _pConstantBuffer;
 	std::shared_ptr<dx12lib::Texture> _pAlbedoMap;
 };
@@ -99,12 +99,12 @@ private:
 	void buildMaterials();
 	void buildRenderItems(dx12lib::CommandListProxy pCmdList);
 private:
-	std::unique_ptr<d3dutil::CoronaCamera> _pCamera;
-	GPUStructCBPtr<d3dutil::PassCBType>    _pPassCB;
-	GPUStructCBPtr<d3dutil::LightCBType>   _pLightCB;
+	std::unique_ptr<d3d::CoronaCamera> _pCamera;
+	GPUStructCBPtr<d3d::PassCBType>    _pPassCB;
+	GPUStructCBPtr<d3d::LightCBType>   _pLightCB;
 	GPUStructCBPtr<WaterCBType>            _pWaterCB;
-	std::map<std::string, d3dutil::Material> _materialMap;
-	std::map<std::string, std::shared_ptr<d3dutil::Mesh>> _geometryMap;
+	std::map<std::string, d3d::Material> _materialMap;
+	std::map<std::string, std::shared_ptr<d3d::Mesh>> _geometryMap;
 	std::map<std::string, std::shared_ptr<dx12lib::Texture>> _textureMap;
 	std::map<std::string, std::shared_ptr<dx12lib::GraphicsPSO>> _psoMap;
 	std::map<std::string, std::vector<RenderItem>> _renderItemMap;

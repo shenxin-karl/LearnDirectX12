@@ -207,7 +207,7 @@ void LandAndWater::renderWireBoxPass(dx12lib::CommandListProxy pCmdList) {
 }
 
 void LandAndWater::buildCamera() {
-	d3dutil::CameraDesc desc = {
+	d3d::CameraDesc desc = {
 		float3(40, 40, 40),
 		float3(0, 1, 0),
 		float3(0, 0, 0),
@@ -216,13 +216,13 @@ void LandAndWater::buildCamera() {
 		500.f,
 		float(_width) / float(_height),
 	};
-	_pCamera = std::make_unique<d3dutil::CoronaCamera>(desc);
+	_pCamera = std::make_unique<d3d::CoronaCamera>(desc);
 	_pCamera->_whellSensitivety = 5.f;
 }
 
 void LandAndWater::buildConstantBuffer(dx12lib::CommandListProxy pCmdList) {
-	_pPassCB = pCmdList->createStructConstantBuffer<d3dutil::PassCBType>();
-	_pLightCB = pCmdList->createStructConstantBuffer<d3dutil::LightCBType>();
+	_pPassCB = pCmdList->createStructConstantBuffer<d3d::PassCBType>();
+	_pLightCB = pCmdList->createStructConstantBuffer<d3d::LightCBType>();
 	_pWaterCB = pCmdList->createStructConstantBuffer<WaterCBType>();
 
 	// init pass fog constant buffer
@@ -265,7 +265,7 @@ void LandAndWater::buildConstantBuffer(dx12lib::CommandListProxy pCmdList) {
 }
 
 void LandAndWater::buildTexturePSO(dx12lib::CommandListProxy pCmdList) {
-	dx12lib::RootSignatureDescHelper desc(d3dutil::getStaticSamplers());
+	dx12lib::RootSignatureDescHelper desc(d3d::getStaticSamplers());
 	desc.resize(4);
 	desc[0].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);	// cbv
 	desc[1].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
@@ -274,8 +274,8 @@ void LandAndWater::buildTexturePSO(dx12lib::CommandListProxy pCmdList) {
 	auto pRootSignature = _pDevice->createRootSignature(desc);
 	auto pTexturePSO = _pDevice->createGraphicsPSO("TexturePSO");
 	pTexturePSO->setRootSignature(pRootSignature);
-	pTexturePSO->setVertexShader(d3dutil::compileShader(L"shader/texture.hlsl", nullptr, "VS", "vs_5_0"));
-	pTexturePSO->setPixelShader(d3dutil::compileShader(L"shader/texture.hlsl", nullptr, "PS", "ps_5_0"));
+	pTexturePSO->setVertexShader(d3d::compileShader(L"shader/texture.hlsl", nullptr, "VS", "vs_5_0"));
+	pTexturePSO->setPixelShader(d3d::compileShader(L"shader/texture.hlsl", nullptr, "PS", "ps_5_0"));
 	pTexturePSO->setRenderTargetFormat(
 		_pSwapChain->getRenderTargetFormat(),
 		_pSwapChain->getDepthStencilFormat()
@@ -291,7 +291,7 @@ void LandAndWater::buildTexturePSO(dx12lib::CommandListProxy pCmdList) {
 }
 
 void LandAndWater::buildWaterPSO(dx12lib::CommandListProxy pCmdList) {
-	dx12lib::RootSignatureDescHelper desc(d3dutil::getStaticSamplers());
+	dx12lib::RootSignatureDescHelper desc(d3d::getStaticSamplers());
 	desc.resize(4);
 	desc[0].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 	desc[1].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
@@ -300,8 +300,8 @@ void LandAndWater::buildWaterPSO(dx12lib::CommandListProxy pCmdList) {
 	auto pRootSignature = _pDevice->createRootSignature(desc);
 	auto pWaterPSO = _pDevice->createGraphicsPSO("WaterPSO");
 	pWaterPSO->setRootSignature(pRootSignature);
-	pWaterPSO->setVertexShader(d3dutil::compileShader(L"shader/water.hlsl", nullptr, "VS", "vs_5_0"));
-	pWaterPSO->setPixelShader(d3dutil::compileShader(L"shader/water.hlsl", nullptr, "PS", "ps_5_0"));
+	pWaterPSO->setVertexShader(d3d::compileShader(L"shader/water.hlsl", nullptr, "VS", "vs_5_0"));
+	pWaterPSO->setPixelShader(d3d::compileShader(L"shader/water.hlsl", nullptr, "PS", "ps_5_0"));
 	pWaterPSO->setRenderTargetFormat(
 		_pSwapChain->getRenderTargetFormat(),
 		_pSwapChain->getDepthStencilFormat()
@@ -314,7 +314,7 @@ void LandAndWater::buildWaterPSO(dx12lib::CommandListProxy pCmdList) {
 
 	// blend enable
 	CD3DX12_BLEND_DESC blendDesc(D3D12_DEFAULT);
-	blendDesc.RenderTarget[0] = d3dutil::RenderTargetBlendDescHelper(d3dutil::RenderTargetBlendPreset::ALPHA);
+	blendDesc.RenderTarget[0] = d3d::RenderTargetBlendDescHelper(d3d::RenderTargetBlendPreset::ALPHA);
 	pWaterPSO->setBlendState(blendDesc);
 
 	pWaterPSO->finalize();
@@ -323,8 +323,8 @@ void LandAndWater::buildWaterPSO(dx12lib::CommandListProxy pCmdList) {
 
 void LandAndWater::buildClipPSO(dx12lib::CommandListProxy pCmdList) {
 	auto pClipPSO = std::static_pointer_cast<dx12lib::GraphicsPSO>(_psoMap["TexturePSO"]->clone("ClipPSO"));
-	pClipPSO->setVertexShader(d3dutil::compileShader(L"shader/clip.hlsl", nullptr, "VS", "vs_5_0"));
-	pClipPSO->setPixelShader(d3dutil::compileShader(L"shader/clip.hlsl", nullptr, "PS", "ps_5_0"));
+	pClipPSO->setVertexShader(d3d::compileShader(L"shader/clip.hlsl", nullptr, "VS", "vs_5_0"));
+	pClipPSO->setPixelShader(d3d::compileShader(L"shader/clip.hlsl", nullptr, "PS", "ps_5_0"));
 
 	// disable cull
 	CD3DX12_RASTERIZER_DESC rasterizerDesc(D3D12_DEFAULT);
@@ -337,15 +337,15 @@ void LandAndWater::buildClipPSO(dx12lib::CommandListProxy pCmdList) {
 
 void LandAndWater::buildGeometrys(dx12lib::CommandListProxy pCmdList) {
 	com::GometryGenerator gen;
-	_geometryMap["boxGeo"] = d3dutil::MakeMeshHelper<MeshVertex>::build(
+	_geometryMap["boxGeo"] = d3d::MakeMeshHelper<MeshVertex>::build(
 		pCmdList,
 		gen.createBox(1.5f, 1.5f, 1.5f, 3)
 	);
-	_geometryMap["gridGeo"] = d3dutil::MakeMeshHelper<WaterVertex>::build(
+	_geometryMap["gridGeo"] = d3d::MakeMeshHelper<WaterVertex>::build(
 		pCmdList, 
 		gen.createGrid(160.f, 160.f, 50, 50)
 	);
-	_geometryMap["landGeo"] = d3dutil::MakeMeshHelper<MeshVertex>::build(
+	_geometryMap["landGeo"] = d3d::MakeMeshHelper<MeshVertex>::build(
 		pCmdList,
 		createLandMesh()
 	);
@@ -358,17 +358,17 @@ void LandAndWater::loadTextures(dx12lib::CommandListProxy pCmdList) {
 }
 
 void LandAndWater::buildMaterials() {
-	d3dutil::Material landMat = {
+	d3d::Material landMat = {
 		float4(DX::Colors::White),
 		1.0f,
 		0.0f,
 	};
-	d3dutil::Material waterMat = {
+	d3d::Material waterMat = {
 		float4(DX::Colors::LightGreen),
 		0.9f,
 		0.7f,
 	};
-	d3dutil::Material boxMat = {
+	d3d::Material boxMat = {
 		float4(DX::Colors::LightBlue),
 		0.5f,
 		0.2f,

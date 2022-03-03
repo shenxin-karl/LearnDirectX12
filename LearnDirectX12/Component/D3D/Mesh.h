@@ -10,7 +10,7 @@
 #include "dx12lib/CommandListProxy.h"
 #include "dx12lib/CommandList.h"
 
-namespace d3dutil {
+namespace d3d {
 
 struct Mesh {
 	std::shared_ptr<dx12lib::VertexBuffer> _pVertexBuffer;
@@ -62,7 +62,7 @@ struct MakeMeshHelper {
 	static std::shared_ptr<dx12lib::IndexBuffer>
 	buildIndexBuffer(dx12lib::CommandListProxy pCmdList, const com::MeshData &mesh) {
 		switch (IndexType) {
-		case d3dutil::MeshIndexType::UINT8: {
+		case d3d::MeshIndexType::UINT8: {
 			std::vector<std::uint8_t> indices;
 			indices.reserve(mesh.indices.size());
 			indices.insert(indices.end(), mesh.indices.begin(), mesh.indices.end());
@@ -73,7 +73,7 @@ struct MakeMeshHelper {
 			);
 			break;
 		}
-		case d3dutil::MeshIndexType::UINT16: {
+		case d3d::MeshIndexType::UINT16: {
 			std::vector<std::uint16_t> indices;
 			indices.reserve(mesh.indices.size());
 			indices.insert(indices.end(), mesh.indices.begin(), mesh.indices.end());
@@ -84,7 +84,7 @@ struct MakeMeshHelper {
 			);
 			break;
 		}
-		case d3dutil::MeshIndexType::UINT32: {
+		case d3d::MeshIndexType::UINT32: {
 			return pCmdList->createIndexBuffer(
 				mesh.indices.data(),
 				sizeof(std::uint32_t) * mesh.indices.size(),
@@ -93,7 +93,7 @@ struct MakeMeshHelper {
 			break;
 		}
 		default:
-			assert(false && "error d3dutil::MeshIndexType type");
+			assert(false && "error d3d::MeshIndexType type");
 			break;
 		}
 		return nullptr;

@@ -40,7 +40,7 @@ private:
 	void renderBoxPass(dx12lib::CommandListProxy pCmdList);
 private:
 	std::shared_ptr<dx12lib::GraphicsPSO>  _pGraphicsPSO;
-	std::unique_ptr<d3dutil::CoronaCamera> _pCamera;
+	std::unique_ptr<d3d::CoronaCamera>     _pCamera;
 	GPUStructCBPtr<WVMConstantBuffer>      _pMVPConstantBuffer;
 	std::unique_ptr<BoxMesh>               _pBoxMesh;
 	float    _theta = 0.f;

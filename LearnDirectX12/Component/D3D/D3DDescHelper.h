@@ -3,7 +3,7 @@
 #include <functional>
 
 
-namespace d3dutil {
+namespace d3d {
 
 // render target blend helper
 enum class RenderTargetBlendPreset {

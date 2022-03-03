@@ -28,6 +28,7 @@ LIST(APPEND allSubDir "Component")
 list(APPEND allSubDir "BoxApp")
 list(APPEND allSubDir "Shape")
 list(APPEND allSubDir "LandAndWater")
+list(APPEND allSubDir "Mirror")
 
 foreach(dirname ${allSubDir})
 	add_subdirectory(${dirname})

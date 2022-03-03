@@ -1,21 +1,21 @@
 #include "D3DDescHelper.h"
 #include <cassert>
 
-namespace d3dutil {
+namespace d3d {
 
 RenderTargetBlendDescHelper::RenderTargetBlendDescHelper(RenderTargetBlendPreset preset) {
 	switch (preset)
 	{
-	case d3dutil::RenderTargetBlendPreset::ADD:
+	case d3d::RenderTargetBlendPreset::ADD:
 		initBlendOpAdd();
 		break;
-	case d3dutil::RenderTargetBlendPreset::SUBTRACT:
+	case d3d::RenderTargetBlendPreset::SUBTRACT:
 		initBlendOpSubtract();
 		break;
-	case d3dutil::RenderTargetBlendPreset::REV_SUBTRACT:
+	case d3d::RenderTargetBlendPreset::REV_SUBTRACT:
 		initBlendOpRevSubtract();
 		break;
-	case d3dutil::RenderTargetBlendPreset::MULTIPILES:
+	case d3d::RenderTargetBlendPreset::MULTIPILES:
 		initBlendOpMultipiles();
 		break;
 	case RenderTargetBlendPreset::ALPHA:
@@ -88,6 +88,7 @@ void RenderTargetBlendDescHelper::initBlendOpAlpha() {
 }
 
 void RenderTargetBlendDescHelper::initBlendOpRevAlpha() {
+	initBlendOpEnable();
 	this->SrcBlend = D3D12_BLEND_INV_SRC_ALPHA;
 	this->DestBlend = D3D12_BLEND_SRC_ALPHA;
 	this->BlendOp = D3D12_BLEND_OP_ADD;
@@ -101,19 +102,19 @@ DepthStencilOpDescHelper::DepthStencilOpDescHelper(DepthStendilOpPreset preset, 
 	this->StencilFailOp = D3D12_STENCIL_OP_KEEP;
 	this->StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
 	switch (preset) {
-	case d3dutil::DepthStendilOpPreset::SP_REPLACE:
+	case d3d::DepthStendilOpPreset::SP_REPLACE:
 		this->StencilPassOp = D3D12_STENCIL_OP_REPLACE;
 		break;
-	case d3dutil::DepthStendilOpPreset::SP_KEEP:
+	case d3d::DepthStendilOpPreset::SP_KEEP:
 		this->StencilPassOp = D3D12_STENCIL_OP_KEEP;
 		break;
-	case d3dutil::DepthStendilOpPreset::SP_ZERO:
+	case d3d::DepthStendilOpPreset::SP_ZERO:
 		this->StencilPassOp = D3D12_STENCIL_OP_ZERO;
 		break;
-	case d3dutil::DepthStendilOpPreset::SP_INCR:
+	case d3d::DepthStendilOpPreset::SP_INCR:
 		this->StencilPassOp = D3D12_STENCIL_OP_INCR;
 		break;
-	case d3dutil::DepthStendilOpPreset::SP_DECR:
+	case d3d::DepthStendilOpPreset::SP_DECR:
 		this->StencilPassOp = D3D12_STENCIL_OP_DECR;
 		break;
 	default:

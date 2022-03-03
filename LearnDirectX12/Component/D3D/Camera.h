@@ -10,7 +10,7 @@ enum class MouseState;
 
 }
 
-namespace d3dutil {
+namespace d3d {
 
 using namespace Math;
 
@@ -33,8 +33,8 @@ public:
 	virtual	const float4x4 &getInvView() const = 0;
 	virtual const float4x4 &getInvProj() const = 0;
 	virtual const float4x4 &getInvViewProj() const = 0;
-	void updatePassCB(GPUStructCBPtr<d3dutil::PassCBType> pPassCB) const;
-	void updatePassCB(d3dutil::PassCBType &passCB) const;
+	void updatePassCB(GPUStructCBPtr<d3d::PassCBType> pPassCB) const;
+	void updatePassCB(d3d::PassCBType &passCB) const;
 public:
 	float3 _lookFrom;
 	float3 _lookUp;

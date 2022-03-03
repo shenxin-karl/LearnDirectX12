@@ -1,7 +1,7 @@
 #include "Mesh.h"
 
 
-namespace d3dutil {
+namespace d3d {
 
 UnionMesh::UnionMesh(std::shared_ptr<dx12lib::VertexBuffer> pVertexBuffer, 
 	std::shared_ptr<dx12lib::IndexBuffer> pIndexBuffer, 

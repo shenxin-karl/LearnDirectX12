@@ -3,7 +3,7 @@
 #include "D3Dx12.h"
 #include <array>
 
-namespace d3dutil {
+namespace d3d {
 
 using namespace Math;
 

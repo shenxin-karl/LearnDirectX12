@@ -1,6 +1,6 @@
 #include "ShaderCommon.h"
 
-namespace d3dutil {
+namespace d3d {
 
 void Light::initAsDirectionLight(float3 direction, float3 strength) {
 	this->direction = normalize(direction);

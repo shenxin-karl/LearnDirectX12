@@ -6,7 +6,7 @@
 #include "D3DX12.h"
 #include "D3DException.h"
 
-namespace d3dutil {
+namespace d3d {
 
 Microsoft::WRL::ComPtr<ID3DBlob> compileShader(
 	const std::wstring		&fileName, 

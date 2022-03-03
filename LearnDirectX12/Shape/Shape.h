@@ -27,7 +27,7 @@ struct Mesh {
 
 struct ObjectCB {
 	float4x4          world;
-	d3dutil::Material material;
+	d3d::Material material;
 };
 
 struct RenderItem {
@@ -65,10 +65,10 @@ private:
 	void pollEvent();
 	void updatePassCB(std::shared_ptr<com::GameTimer> pGameTimer);
 private:
-	std::unique_ptr<d3dutil::CoronaCamera>  _pCamera;
-	GPUStructCBPtr<d3dutil::LightCBType>    _pGameLightsCB;
-	GPUStructCBPtr<d3dutil::PassCBType>     _pPassCB;
-	std::unordered_map<std::string, d3dutil::Material> _materials;
+	std::unique_ptr<d3d::CoronaCamera>  _pCamera;
+	GPUStructCBPtr<d3d::LightCBType>    _pGameLightsCB;
+	GPUStructCBPtr<d3d::PassCBType>     _pPassCB;
+	std::unordered_map<std::string, d3d::Material> _materials;
 	std::unordered_map<std::string, std::shared_ptr<Mesh>> _geometrys;
 	std::unordered_map<std::string, std::vector<RenderItem>> _renderItems;
 	std::unordered_map<std::string, std::shared_ptr<dx12lib::GraphicsPSO>> _PSOMap;

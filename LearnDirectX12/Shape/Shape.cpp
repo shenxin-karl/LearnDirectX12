@@ -26,7 +26,7 @@ Shape::~Shape() {
 }
 
 void Shape::onInitialize(dx12lib::CommandListProxy pCmdList) {
-	d3dutil::CameraDesc cameraDesc = {
+	d3d::CameraDesc cameraDesc = {
 		float3(10, 10, 10),
 		float3(0, 1, 0),
 		float3(0, 0, 0),
@@ -35,9 +35,9 @@ void Shape::onInitialize(dx12lib::CommandListProxy pCmdList) {
 		100.f,
 		float(_width) / float(_height),
 	};
-	_pCamera = std::make_unique<d3dutil::CoronaCamera>(cameraDesc);
+	_pCamera = std::make_unique<d3d::CoronaCamera>(cameraDesc);
 	_pCamera->_whellSensitivety = 1.f;
-	_pPassCB = pCmdList->createStructConstantBuffer<d3dutil::PassCBType>();
+	_pPassCB = pCmdList->createStructConstantBuffer<d3d::PassCBType>();
 	buildTexturePSO(pCmdList);
 	buildColorPSO(pCmdList);
 	buildGameLight(pCmdList);
@@ -82,7 +82,7 @@ void Shape::onResize(dx12lib::CommandListProxy pCmdList, int width, int height) 
 }
 
 void Shape::buildTexturePSO(dx12lib::CommandListProxy pCmdList) {
-	dx12lib::RootSignatureDescHelper rootDesc(d3dutil::getStaticSamplers());
+	dx12lib::RootSignatureDescHelper rootDesc(d3d::getStaticSamplers());
 	rootDesc.resize(4);
 	rootDesc[0].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 	rootDesc[1].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
@@ -103,8 +103,8 @@ void Shape::buildTexturePSO(dx12lib::CommandListProxy pCmdList) {
 		dx12lib::VInputLayoutDescHelper(&ShapeVertex::texcoord, "TEXCOORD", DXGI_FORMAT_R32G32_FLOAT),
 	};
 	pPSO->setInputLayout(inputLayout);
-	pPSO->setVertexShader(d3dutil::compileShader(L"shader/texture.hlsl", nullptr, "VS", "vs_5_0"));
-	pPSO->setPixelShader(d3dutil::compileShader(L"shader/texture.hlsl", nullptr, "PS", "ps_5_0"));
+	pPSO->setVertexShader(d3d::compileShader(L"shader/texture.hlsl", nullptr, "VS", "vs_5_0"));
+	pPSO->setPixelShader(d3d::compileShader(L"shader/texture.hlsl", nullptr, "PS", "ps_5_0"));
 	pPSO->finalize();
 	_PSOMap["TexturePSO"] = pPSO;
 }
@@ -129,8 +129,8 @@ void Shape::buildColorPSO(dx12lib::CommandListProxy pCmdList) {
 		dx12lib::VInputLayoutDescHelper(&SkullVertex::normal, "NORMAL", DXGI_FORMAT_R32G32B32_FLOAT),
 	};
 	pPSO->setInputLayout(inputLayout);
-	pPSO->setVertexShader(d3dutil::compileShader(L"shader/color.hlsl", nullptr, "VS", "vs_5_0"));
-	pPSO->setPixelShader(d3dutil::compileShader(L"shader/color.hlsl", nullptr, "PS", "ps_5_0"));
+	pPSO->setVertexShader(d3d::compileShader(L"shader/color.hlsl", nullptr, "VS", "vs_5_0"));
+	pPSO->setPixelShader(d3d::compileShader(L"shader/color.hlsl", nullptr, "PS", "ps_5_0"));
 	pPSO->finalize();
 	_PSOMap["ColorPSO"] = pPSO;
 }
@@ -275,7 +275,7 @@ void Shape::buildGeometry(dx12lib::CommandListProxy pCmdList) {
 
 
 void Shape::buildGameLight(dx12lib::CommandListProxy pCmdList) {
-	_pGameLightsCB = pCmdList->createStructConstantBuffer<d3dutil::LightCBType>();
+	_pGameLightsCB = pCmdList->createStructConstantBuffer<d3d::LightCBType>();
 	auto pGPUGameLightCB = _pGameLightsCB->map();
 	pGPUGameLightCB->directLightCount = 1;
 	pGPUGameLightCB->pointLightCount = 1;
@@ -295,31 +295,31 @@ void Shape::buildGameLight(dx12lib::CommandListProxy pCmdList) {
 }
 
 void Shape::buildMaterials() {
-	d3dutil::Material sphereMat;
+	d3d::Material sphereMat;
 	sphereMat.diffuseAlbedo = float4(DX::Colors::White);
 	sphereMat.roughness = 0.5f;
 	sphereMat.metallic = 0.5f;
 	_materials["sphereMat"] = sphereMat;
 
-	d3dutil::Material boxMat;
+	d3d::Material boxMat;
 	boxMat.diffuseAlbedo = float4(DX::Colors::White);
 	boxMat.roughness = 1.0f;
 	boxMat.metallic = 0.f;
 	_materials["boxMat"] = boxMat;
 
-	d3dutil::Material gridMat;
+	d3d::Material gridMat;
 	gridMat.diffuseAlbedo = float4(DX::Colors::White);
 	gridMat.roughness = 1.f;
 	gridMat.metallic = 0.1f;
 	_materials["gridMat"] = gridMat;
 
-	d3dutil::Material cylinderMat;
+	d3d::Material cylinderMat;
 	cylinderMat.diffuseAlbedo = float4(DX::Colors::White);
 	cylinderMat.roughness = 1.f;
 	cylinderMat.metallic = 0.f;
 	_materials["cylinderMat"] = cylinderMat;
 
-	d3dutil::Material skullMat;
+	d3d::Material skullMat;
 	skullMat.diffuseAlbedo = float4(DX::Colors::Gold);
 	skullMat.roughness = 0.8f;
 	skullMat.metallic = 0.2f;
