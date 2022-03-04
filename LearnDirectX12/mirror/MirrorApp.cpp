@@ -46,15 +46,40 @@ void MirrorApp::onResize(dx12lib::CommandListProxy pCmdList, int width, int heig
 }
 
 void MirrorApp::drawRenderItems(dx12lib::CommandListProxy pCmdList, RenderLayer layer) {
-
+	auto pPSO = _psoMap[layer];
+	pCmdList->setPipelineStateObject(pPSO);
+	pCmdList->setStructConstantBuffer(_pPassCB, CBPass);
+	pCmdList->setStructConstantBuffer(_pLightCB, CBLight);
+	for (auto &rItem : _renderItems[layer]) {
+		pCmdList->setVertexBuffer(rItem._pMesh->getVertexBuffer());
+		pCmdList->setIndexBuffer(rItem._pMesh->getIndexBuffer());
+		pCmdList->setStructConstantBuffer(rItem._pObjectCB, CBObject);
+		pCmdList->setShaderResourceView(rItem._pAlbedoMap, SRAlbedo);
+		rItem._pMesh->drawIndexdInstanced(pCmdList);
+	}
 }
 
 void MirrorApp::buildCamera() {
-
+	d3d::CameraDesc cameraDesc = {
+		float3(1, 1, -1) * 20.f,
+		float3(0, 1, 0),
+		float3(0, 0, 0),
+		45.f,
+		0.1f,
+		1000.f,
+		float(_width) / float(_height)
+	};
+	_pCamera = std::make_unique<d3d::CoronaCamera>(cameraDesc);
+	_pCamera->_whellSensitivety = 5.f;
 }
 
 void MirrorApp::buildConstantBuffers(dx12lib::CommandListProxy pCmdList) {
-
+	_pPassCB = pCmdList->createStructConstantBuffer<d3d::PassCBType>();
+	_pLightCB = pCmdList->createStructConstantBuffer<d3d::LightCBType>();
+	auto pGPULightCb = _pLightCB->map();
+	pGPULightCb->ambientLight = float4(0.1f, 0.1f, 0.1f, 1.f);
+	pGPULightCb->directLightCount = 1;
+	pGPULightCb->lights[0].initAsDirectionLight(float3(3, 3, 3), float3(1.f));
 }
 
 void MirrorApp::loadTextures(dx12lib::CommandListProxy pCmdList) {

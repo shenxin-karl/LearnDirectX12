@@ -57,10 +57,10 @@ struct PassCBType {
 
 constexpr std::size_t kMaxLightCount = 16;
 struct LightCBType {
-	int      directLightCount;
-	int      pointLightCount;
-	int      spotLightCount;
-	int      objectPad0;
+	int      directLightCount = 0;
+	int      pointLightCount  = 0;
+	int      spotLightCount   = 0;
+	int      objectPad0       = 0;
 	float4	 ambientLight;
 	Light    lights[kMaxLightCount];
 };
