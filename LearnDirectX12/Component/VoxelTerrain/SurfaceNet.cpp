@@ -76,7 +76,7 @@ decltype(auto) getQuadIndices(std::size_t i, const std::array<float, 4> &edgeSdf
 	float origin = edgeSdfs[ORIGIN];
 	switch (i) {
 	case 0:
-		return (edgeSdfs[Z_AXIST] >= origin) ? kNeighborQuadIndices[i] : kRevNeighborQuadIndices[i];
+		return (edgeSdfs[Z_AXIST] > origin) ? kNeighborQuadIndices[i] : kRevNeighborQuadIndices[i];
 	case 1:
 		return (edgeSdfs[X_AXIST] > origin) ? kNeighborQuadIndices[i] : kRevNeighborQuadIndices[i];
 	case 2:
@@ -205,23 +205,19 @@ com::MeshData surfaceNet(const std::function<float(int, int, int)> &implicitFunc
 		return (x >= bx || y >= by || z >= bz);
 	};
 	
-	int3 neighborVoxelPosition[7];				// 体素的位置
 	std::size_t neigborVoxelVertexIndex[7];		// 体素生成的顶点索引
 	bool isVoxelActivate[7];					// 体素是否被激活
-
 	for (auto [cubeIndex, vertIndex] : activateVoxelMap) {
 		auto [x, y, z] = getXYZFromIdx(cubeIndex);
 		if (isBoundaryCube(x, y, z))
 			continue;
 
 		int3 currentPostion = int3(x, y, z);
-		neighborVoxelPosition[0] = currentPostion;
 		neigborVoxelVertexIndex[0] = vertIndex;
 		isVoxelActivate[0] = true;
 		for (std::size_t i = 1; i < 7; ++i) {
 			auto corrnerPos = currentPostion + kNeighborGridPosition[i];
 			auto cubeIndex = getVoxelIndex(corrnerPos);
-			neighborVoxelPosition[i] = corrnerPos;
 			isVoxelActivate[i] = false;
 			if (auto iter = activateVoxelMap.find(cubeIndex); iter != activateVoxelMap.end()) {
 				isVoxelActivate[i] = true;
