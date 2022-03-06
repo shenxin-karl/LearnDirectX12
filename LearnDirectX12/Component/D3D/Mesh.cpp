@@ -40,6 +40,11 @@ Mesh::Mesh(std::shared_ptr<dx12lib::VertexBuffer> pVertexBuffer,
 : _pVertexBuffer(pVertexBuffer), _pIndexBuffer(pIndexBuffer), _subMeshs(subMeshs) {
 }
 
+
+void Mesh::appendSubMesh(const SubMesh &submesh) {
+	_subMeshs.emplace_back(submesh);
+}
+
 std::shared_ptr<dx12lib::VertexBuffer> Mesh::getVertexBuffer() const {
 	return _pVertexBuffer;
 }
@@ -72,6 +77,17 @@ void Mesh::drawIndexdInstanced(dx12lib::CommandListProxy pCmdList,
 {
 	for (auto &submesh : *this)
 		submesh.drawIndexdInstanced(pCmdList, instanceCount, startInstanceLocation);
+}
+
+SubMesh Mesh::getSubmesh(const std::string &name) const {
+	SubMesh res;
+	for (const auto &submesh : *this) {
+		if (submesh._name == name) {
+			res = submesh;
+			break;
+		}
+	}
+	return res;
 }
 
 }

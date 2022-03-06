@@ -35,9 +35,16 @@ struct ObjectCBType {
 };
 
 struct RenderItem {
-	std::shared_ptr<d3d::Mesh> pMesh;
+	std::shared_ptr<d3d::Mesh> _pMesh;
 	GPUStructCBPtr<ObjectCBType> _pObjectCB;
 	std::shared_ptr<dx12lib::Texture> _pAlbedoMap;
+	d3d::SubMesh _submesh;
+};
+
+struct Vertex {
+	float3 position;
+	float3 normal;
+	float2 texcoord;
 };
 
 class MirrorApp : public com::BaseApp {
@@ -57,7 +64,7 @@ private:
 	void buildMaterials();
 	void buildMeshs(dx12lib::CommandListProxy pCmdList);
 	void buildPSOs();
-	void buildRenderItems();
+	void buildRenderItems(dx12lib::CommandListProxy pCmdList);
 private:
 	std::unique_ptr<d3d::CoronaCamera> _pCamera;
 	GPUStructCBPtr<d3d::PassCBType>    _pPassCB;

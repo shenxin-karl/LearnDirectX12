@@ -41,8 +41,10 @@ public:
 	Mesh(const Mesh &) = delete;
 	Mesh(std::shared_ptr<dx12lib::VertexBuffer> pVertexBuffer,
 		std::shared_ptr<dx12lib::IndexBuffer> pIndexBuffer,
-		const std::vector<SubMesh> &subMeshs
+		const std::vector<SubMesh> &subMeshs = {}
 	);
+
+	void appendSubMesh(const SubMesh &submesh);
 
 	std::shared_ptr<dx12lib::VertexBuffer> getVertexBuffer() const;
 	std::shared_ptr<dx12lib::IndexBuffer> getIndexBuffer() const;
@@ -60,6 +62,8 @@ public:
 		std::uint32_t instanceCount = 1,
 		std::uint32_t startInstanceLocation = 0
 	) const;
+
+	SubMesh getSubmesh(const std::string &name) const;
 };
 
 enum class MeshIndexType {
