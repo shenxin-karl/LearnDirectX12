@@ -58,6 +58,24 @@ bool MeshData::save(const std::string &path) const {
 	return true;
 }
 
+
+bool MeshData::savePTS(const std::string &path) const {
+	if (vertices.empty())
+		return false;
+
+	std::fstream fout(path, std::ios::out);
+	if (!fout.is_open())
+		return false;
+
+	for (const auto &vert : vertices) {
+		const auto &position = vert.position;
+		fout << position.x << ' ' 
+			 << position.y << ' ' 
+			 << position.z << std::endl;
+	}
+	fout.close();
+}
+
 void swap(MeshData& lhs, MeshData& rhs) noexcept {
 	using std::swap;
 	swap(lhs.vertices, rhs.vertices);
