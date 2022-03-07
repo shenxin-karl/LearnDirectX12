@@ -22,8 +22,8 @@ enum RenderLayer : std::size_t {
 };
 
 enum RootParame : std::uint32_t {
-	CBObject = 0,
-	SRAlbedo = 1,
+	SRAlbedo = 0,
+	CBObject = 1,
 	CBPass   = 2,
 	CBLight  = 3,
 };
@@ -63,7 +63,7 @@ private:
 	void loadTextures(dx12lib::CommandListProxy pCmdList);
 	void buildMaterials();
 	void buildMeshs(dx12lib::CommandListProxy pCmdList);
-	void buildPSOs();
+	void buildPSOs(dx12lib::CommandListProxy pCmdList);
 	void buildRenderItems(dx12lib::CommandListProxy pCmdList);
 private:
 	std::unique_ptr<d3d::CoronaCamera> _pCamera;

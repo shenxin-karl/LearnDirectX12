@@ -14,6 +14,7 @@
 #include "InputSystem/Keyboard.h"
 #include "InputSystem/window.h"
 #include "GameTimer/GameTimer.h"
+#include "D3D/D3DDescHelper.h"
 
 MirrorApp::MirrorApp() {
 	_title = "Mirror";
@@ -191,7 +192,75 @@ void MirrorApp::buildMeshs(dx12lib::CommandListProxy pCmdList) {
 	_meshMap["roomGeo"] = buildRoomMesh(pCmdList);
 }
 
-void MirrorApp::buildPSOs() {
+void MirrorApp::buildPSOs(dx12lib::CommandListProxy pCmdList) {
+	dx12lib::RootSignatureDescHelper desc(d3d::getStaticSamplers());
+	desc.resize(4);
+	desc[0].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);	// SRV
+	desc[1].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);	// CBV
+	desc[2].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+	desc[3].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2);
+	auto pRootSignature = _pDevice->createRootSignature(desc);
+	auto pRenderTarget = _pSwapChain->getRenderTarget();
+	auto pOpaquePSO = _pDevice->createGraphicsPSO("OpaquePSO");
+	pOpaquePSO->setRootSignature(pRootSignature);
+	pOpaquePSO->setRenderTargetFormat(
+		_pSwapChain->getRenderTargetFormat(),
+		_pSwapChain->getDepthStencilFormat()
+	);
+
+	std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout = {
+		dx12lib::VInputLayoutDescHelper(&Vertex::position, "POSITION", DXGI_FORMAT_R32G32B32_FLOAT),
+		dx12lib::VInputLayoutDescHelper(&Vertex::normal, "NORMAL", DXGI_FORMAT_R32G32B32_FLOAT),
+		dx12lib::VInputLayoutDescHelper(&Vertex::texcoord, "TEXCOORD", DXGI_FORMAT_R32G32_FLOAT),
+	};
+	pOpaquePSO->setInputLayout(inputLayout);
+	pOpaquePSO->setVertexShader(d3d::compileShader(L"shader/default.hlsl", nullptr, "VS", "vs_5_0"));
+	pOpaquePSO->setPixelShader(d3d::compileShader(L"shader/default.hlsl", nullptr, "PS", "ps_5_0"));
+	pOpaquePSO->finalize();
+	
+	auto pTransparentPSO = std::static_pointer_cast<dx12lib::GraphicsPSO>(pOpaquePSO->clone("TransparentPSO"));
+	CD3DX12_BLEND_DESC blendDesc(D3D12_DEFAULT);
+	blendDesc.RenderTarget[0] = d3d::RenderTargetBlendDescHelper(d3d::RenderTargetBlendPreset::ALPHA);
+	pTransparentPSO->setBlendState(blendDesc);
+	pTransparentPSO->finalize();
+
+	auto pMirrorPSO = std::static_pointer_cast<dx12lib::GraphicsPSO>(pOpaquePSO->clone("MirrorPSO"));
+	D3D12_DEPTH_STENCIL_DESC mirrorDSS;
+	mirrorDSS.DepthEnable = TRUE;
+	mirrorDSS.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+	mirrorDSS.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+	mirrorDSS.StencilEnable = TRUE;
+	mirrorDSS.StencilReadMask = 0xff;
+	mirrorDSS.StencilWriteMask = 0xff;
+	mirrorDSS.FrontFace = d3d::DepthStencilOpDescHelper(d3d::DepthStendilOpPreset::SP_REPLACE);
+	mirrorDSS.BackFace = d3d::DepthStencilOpDescHelper(d3d::DepthStendilOpPreset::SP_REPLACE);
+	D3D12_BLEND_DESC mirrorBD;
+	mirrorBD.RenderTarget[0].RenderTargetWriteMask = 0;
+	pMirrorPSO->setBlendState(mirrorBD);
+	pMirrorPSO->setDepthStencilState(mirrorDSS);
+	pMirrorPSO->finalize();
+
+	auto pReflectedPSO = std::static_pointer_cast<dx12lib::GraphicsPSO>(pOpaquePSO->clone("ReflectedPSO"));
+	CD3DX12_BLEND_DESC reflectedBlendDesc(D3D12_DEFAULT);
+	reflectedBlendDesc.RenderTarget[0] = d3d::RenderTargetBlendDescHelper(d3d::RenderTargetBlendPreset::ALPHA);
+	D3D12_DEPTH_STENCIL_DESC reflectedDDS = mirrorDSS;
+	reflectedDDS.FrontFace = d3d::DepthStencilOpDescHelper(d3d::DepthStendilOpPreset::SP_ZERO, D3D12_COMPARISON_FUNC_EQUAL);
+	reflectedDDS.BackFace = d3d::DepthStencilOpDescHelper(d3d::DepthStendilOpPreset::SP_ZERO, D3D12_COMPARISON_FUNC_EQUAL);
+	CD3DX12_RASTERIZER_DESC reflectedRasterizerDesc(D3D12_DEFAULT);
+	reflectedRasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
+	reflectedRasterizerDesc.FrontCounterClockwise = TRUE;
+	pReflectedPSO->setBlendState(reflectedBlendDesc);
+	pReflectedPSO->setDepthStencilState(reflectedDDS);
+	pReflectedPSO->setRasterizerState(reflectedRasterizerDesc);
+	pReflectedPSO->finalize();
+
+	auto pShadowPSO = std::static_pointer_cast<dx12lib::GraphicsPSO>(pTransparentPSO->clone("ShadowPSO"));
+	// todo ´ýÍêÉÆ
+
+	_psoMap[RenderLayer::Opaque] = pOpaquePSO;
+	_psoMap[RenderLayer::Mirrors] = pMirrorPSO;
+	_psoMap[RenderLayer::Transparent] = pTransparentPSO;
+	_psoMap[RenderLayer::Reflected] = pReflectedPSO;
 
 }
 
