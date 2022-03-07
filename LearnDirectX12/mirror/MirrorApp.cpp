@@ -208,6 +208,48 @@ void MirrorApp::buildRenderItems(dx12lib::CommandListProxy pCmdList) {
 	floorRItem._submesh = pRoomGeo->getSubmesh("floor");
 	_renderItems[RenderLayer::Opaque].push_back(floorRItem);
 
+	RenderItem wallsRItem;
+	ObjectCBType wallObjectCB;
+	wallObjectCB.matWorld = Math::MathHelper::identity4x4();
+	wallObjectCB.matNormal = Math::MathHelper::identity4x4();
+	wallObjectCB.material = _materialMap["bricksMat"];
+	wallsRItem._pAlbedoMap = _textureMap["bricks3.dds"];
+	wallsRItem._pMesh = pRoomGeo;
+	wallsRItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCBType>(wallObjectCB);
+	wallsRItem._submesh = pRoomGeo->getSubmesh("wall");
+	_renderItems[RenderLayer::Opaque].push_back(wallsRItem);
+
+	RenderItem skullRItem;
+	ObjectCBType skullObjectCB;
+	skullObjectCB.matWorld = Math::MathHelper::identity4x4();
+	skullObjectCB.matNormal = Math::MathHelper::identity4x4();
+	skullObjectCB.material = _materialMap["skullMat"];
+	skullRItem._pMesh = _meshMap["skullGeo"];
+	skullRItem._submesh = skullRItem._pMesh->getSubmesh("skull");
+	skullRItem._pAlbedoMap = _textureMap["white1x1.dds"];
+	skullRItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCBType>(skullObjectCB);
+
+	RenderItem reflectedSkullRItem = skullRItem;
+	reflectedSkullRItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCBType>(skullObjectCB);
+	_renderItems[RenderLayer::Reflected].push_back(reflectedSkullRItem);
+
+	RenderItem shadowedSkullRItem = skullRItem;
+	ObjectCBType shadowSkullCB = skullObjectCB;
+	shadowSkullCB.material = _materialMap["shadowMat"];
+	shadowedSkullRItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCBType>(shadowSkullCB);
+	_renderItems[RenderLayer::Shadow].push_back(shadowedSkullRItem);
+
+	RenderItem mirrorRItem;
+	ObjectCBType mirrorObjectCB;
+	mirrorObjectCB.material = _materialMap["icemirrorMat"];
+	mirrorObjectCB.matWorld = Math::MathHelper::identity4x4();
+	mirrorObjectCB.matNormal = Math::MathHelper::identity4x4();
+	mirrorRItem._pAlbedoMap = _textureMap["ice.dds"];
+	mirrorRItem._pMesh = pRoomGeo;
+	mirrorRItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCBType>(mirrorObjectCB);
+	mirrorRItem._submesh = pRoomGeo->getSubmesh("mirror");
+	_renderItems[RenderLayer::Mirrors].push_back(mirrorRItem);
+	_renderItems[RenderLayer::Transparent].push_back(mirrorRItem);
 }
 
 

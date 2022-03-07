@@ -41,6 +41,9 @@ VertexOut VS(VertexIn vin) {
 Texture2D gDiffuseMap : register(t0);
 float4 PS(VertexOut pin) : SV_Target {
     float4 diffuseAlbedo = gDiffuseMap.Sample(gSamAnisotropicWrap, pin.texcoord);
+#ifdef ALPHA_TEST 
+    clip(diffuseAlbedo.a - 0.1);
+#endif
     Material mat = { diffuseAlbedo, gMaterial.roughness, gMaterial.metallic, 0, 0 };
     float3 result = { 0, 0, 0 };
     float3 viewDir = gPass.eyePos - pin.position;
