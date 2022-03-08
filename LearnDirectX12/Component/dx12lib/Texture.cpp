@@ -130,12 +130,6 @@ void Texture::clearDepthStencil(float depth, UINT stencil) {
 	clearStencil(stencil);
 }
 
-void Texture::clearColorDepthStencil(DX::XMVECTORF32 color, float depth, UINT stencil) {
-	clearColor(color);
-	clearDepth(depth);
-	clearStencil(stencil);
-}
-
 ClearFlag Texture::getClearFlag() const {
 	return _clearFlag;
 }

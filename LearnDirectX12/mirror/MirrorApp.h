@@ -77,4 +77,7 @@ private:
 	std::map<std::string, std::shared_ptr<dx12lib::Texture>> _textureMap;
 	std::map<RenderLayer, std::shared_ptr<dx12lib::GraphicsPSO>> _psoMap;
 	std::vector<RenderItem> _renderItems[RenderLayer::Count];
+
+	float3 _skullTranslation = { 0.0f, 1.0f, -5.0f };
+	GPUStructCBPtr<ObjectCBType> _pSkullObjectCB;
 };

@@ -84,6 +84,9 @@ public:
 		pStructConstantBuffer->updateConstantBuffer();
 		setConstantBufferView(pStructConstantBuffer->getConstantBuffer(), rootIndex, offset);
 	}
+
+	void setStencilRef(UINT stencilRef);
+
 /// draw function
 	void drawInstanced(uint32 vertCount, 
 		uint32 instanceCount, 
@@ -129,6 +132,7 @@ private:
 		RenderTarget  *pRenderTarget;
 		bool           isSetViewprot;
 		bool           isSetScissorRect;
+		UINT           stencilRef;
 		D3D_PRIMITIVE_TOPOLOGY primitiveTopology = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
 		ID3D12DescriptorHeap *pDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES];
 	public:

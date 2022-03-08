@@ -10,9 +10,11 @@
 #include "dx12lib/IndexBuffer.h"
 #include "dx12lib/PipelineStateObject.h"
 #include "dx12lib/RootSignature.h"
+#include "dx12lib/CommandQueue.h"
 #include "InputSystem/InputSystem.h"
 #include "InputSystem/Keyboard.h"
 #include "InputSystem/window.h"
+#include "InputSystem/Mouse.h"
 #include "GameTimer/GameTimer.h"
 #include "D3D/D3DDescHelper.h"
 
@@ -43,11 +45,52 @@ void MirrorApp::onInitialize(dx12lib::CommandListProxy pCmdList) {
 }
 
 void MirrorApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
+	while (auto event = _pInputSystem->mouse->getEvent()) {
+		_pCamera->pollEvent(event);
+	}
 
+	_pCamera->update();
+	_pCamera->updatePassCB(_pPassCB);
+	auto pGPUPassCB = _pPassCB->map();
+	auto pRenderTarget = _pSwapChain->getRenderTarget();
+	pGPUPassCB->renderTargetSize = pRenderTarget->getRenderTargetSize();
+	pGPUPassCB->invRenderTargetSize = pRenderTarget->getInvRenderTargetSize();
+	pGPUPassCB->deltaTime = pGameTimer->getDeltaTime();
+	pGPUPassCB->totalTime = pGameTimer->getTotalTime();
+	pGPUPassCB->fogColor = float4(0.f);
+	pGPUPassCB->fogStart = 0.f;
+	pGPUPassCB->fogEnd = 0.f;
+	pGPUPassCB->cbPerPassPad0 = 0.f;
 }
 
 void MirrorApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
+	auto pCmdQueue = _pDevice->getCommandQueue(dx12lib::CommandQueueType::Direct);
+	auto pCmdList = pCmdQueue->createCommandListProxy();
+	auto pRenderTarget = _pSwapChain->getRenderTarget();
+	pCmdList->setViewports(pRenderTarget->getViewport());
+	pCmdList->setScissorRects(pRenderTarget->getScissiorRect());
+	{
+		dx12lib::RenderTargetTransitionBarrier barrierGuard = {
+			pCmdList,
+			pRenderTarget,
+			D3D12_RESOURCE_STATE_RENDER_TARGET,
+			D3D12_RESOURCE_STATE_PRESENT,
+		};
+		pRenderTarget->getTexture(dx12lib::Color0)->clearColor(DX::Colors::LightSkyBlue);
+		pRenderTarget->getTexture(dx12lib::DepthStencil)->clearDepthStencil(1.f, 0);
+		pCmdList->setRenderTarget(pRenderTarget);
 
+		// draw opaque
+		drawRenderItems(pCmdList, RenderLayer::Opaque);
+
+		// mark stencil 
+		pCmdList->setStencilRef(1);
+		drawRenderItems(pCmdList, RenderLayer::Mirrors);
+
+		drawRenderItems(pCmdList, RenderLayer::Reflected);
+	}
+	pCmdQueue->executeCommandList(pCmdList);
+	pCmdQueue->signal(_pSwapChain);
 }
 
 void MirrorApp::onResize(dx12lib::CommandListProxy pCmdList, int width, int height) {
@@ -59,18 +102,19 @@ void MirrorApp::drawRenderItems(dx12lib::CommandListProxy pCmdList, RenderLayer 
 	pCmdList->setPipelineStateObject(pPSO);
 	pCmdList->setStructConstantBuffer(_pPassCB, CBPass);
 	pCmdList->setStructConstantBuffer(_pLightCB, CBLight);
+	pCmdList->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	for (auto &rItem : _renderItems[layer]) {
 		pCmdList->setVertexBuffer(rItem._pMesh->getVertexBuffer());
 		pCmdList->setIndexBuffer(rItem._pMesh->getIndexBuffer());
 		pCmdList->setStructConstantBuffer(rItem._pObjectCB, CBObject);
 		pCmdList->setShaderResourceView(rItem._pAlbedoMap, SRAlbedo);
-		rItem._pMesh->drawIndexdInstanced(pCmdList);
+		rItem._submesh.drawIndexdInstanced(pCmdList);
 	}
 }
 
 void MirrorApp::buildCamera() {
 	d3d::CameraDesc cameraDesc = {
-		float3(1, 1, -1) * 20.f,
+		float3(-1, 1, -1) * 10.f,
 		float3(0, 1, 0),
 		float3(0, 0, 0),
 		45.f,
@@ -79,7 +123,7 @@ void MirrorApp::buildCamera() {
 		float(_width) / float(_height)
 	};
 	_pCamera = std::make_unique<d3d::CoronaCamera>(cameraDesc);
-	_pCamera->_whellSensitivety = 5.f;
+	_pCamera->_whellSensitivety = 2.f;
 }
 
 void MirrorApp::buildConstantBuffers(dx12lib::CommandListProxy pCmdList) {
@@ -88,7 +132,7 @@ void MirrorApp::buildConstantBuffers(dx12lib::CommandListProxy pCmdList) {
 	auto pGPULightCb = _pLightCB->map();
 	pGPULightCb->ambientLight = float4(0.1f, 0.1f, 0.1f, 1.f);
 	pGPULightCb->directLightCount = 1;
-	pGPULightCb->lights[0].initAsDirectionLight(float3(3, 3, 3), float3(1.f));
+	pGPULightCb->lights[0].initAsDirectionLight(float3(0, 1, -1), float3(1.f));
 }
 
 void MirrorApp::loadTextures(dx12lib::CommandListProxy pCmdList) {
@@ -101,7 +145,7 @@ void MirrorApp::loadTextures(dx12lib::CommandListProxy pCmdList) {
 void MirrorApp::buildMaterials() {
 	d3d::Material skullMat;
 	skullMat.diffuseAlbedo = float4(DX::Colors::White);
-	skullMat.roughness = 0.3f;
+	skullMat.roughness = 0.5f;
 	skullMat.metallic = 0.5f;
 
 	d3d::Material floorMat;
@@ -251,12 +295,15 @@ void MirrorApp::buildPSOs(dx12lib::CommandListProxy pCmdList) {
 	auto pReflectedPSO = std::static_pointer_cast<dx12lib::GraphicsPSO>(pOpaquePSO->clone("ReflectedPSO"));
 	CD3DX12_BLEND_DESC reflectedBlendDesc(D3D12_DEFAULT);
 	reflectedBlendDesc.RenderTarget[0] = d3d::RenderTargetBlendDescHelper(d3d::RenderTargetBlendPreset::ALPHA);
-	D3D12_DEPTH_STENCIL_DESC reflectedDDS = mirrorDSS;
-	reflectedDDS.FrontFace = d3d::DepthStencilOpDescHelper(d3d::DepthStendilOpPreset::SP_ZERO, D3D12_COMPARISON_FUNC_EQUAL);
-	reflectedDDS.BackFace = d3d::DepthStencilOpDescHelper(d3d::DepthStendilOpPreset::SP_ZERO, D3D12_COMPARISON_FUNC_EQUAL);
+	CD3DX12_DEPTH_STENCIL_DESC reflectedDDS(D3D12_DEFAULT);
+	reflectedDDS.StencilEnable = TRUE;
+	reflectedDDS.StencilReadMask = 0Xff;
+	reflectedDDS.StencilWriteMask = 0xff;
+	reflectedDDS.FrontFace = d3d::DepthStencilOpDescHelper(d3d::DepthStendilOpPreset::SP_KEEP, D3D12_COMPARISON_FUNC_EQUAL);
+	reflectedDDS.BackFace = d3d::DepthStencilOpDescHelper(d3d::DepthStendilOpPreset::SP_KEEP, D3D12_COMPARISON_FUNC_EQUAL);
 	CD3DX12_RASTERIZER_DESC reflectedRasterizerDesc(D3D12_DEFAULT);
 	reflectedRasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
-	reflectedRasterizerDesc.FrontCounterClockwise = TRUE;
+	reflectedRasterizerDesc.FrontCounterClockwise = true;
 	pReflectedPSO->setBlendState(reflectedBlendDesc);
 	pReflectedPSO->setDepthStencilState(reflectedDDS);
 	pReflectedPSO->setRasterizerState(reflectedRasterizerDesc);
@@ -307,17 +354,30 @@ void MirrorApp::buildRenderItems(dx12lib::CommandListProxy pCmdList) {
 
 	RenderItem skullRItem;
 	ObjectCBType skullObjectCB;
-	skullObjectCB.matWorld = Math::MathHelper::identity4x4();
+	XMMATRIX skullRotate = XMMatrixRotationY(0.5f * DX::XM_PI);
+	XMMATRIX skullScale = XMMatrixScaling(0.45f, 0.45f, 0.45f);
+	XMMATRIX skullOffset = XMMatrixTranslation(_skullTranslation.x, _skullTranslation.y, _skullTranslation.z);
+	XMMATRIX skullWorld = skullRotate * skullScale * skullOffset;
+	DX::XMStoreFloat4x4(&skullObjectCB.matWorld, skullWorld);
 	skullObjectCB.matNormal = Math::MathHelper::identity4x4();
 	skullObjectCB.material = _materialMap["skullMat"];
 	skullRItem._pMesh = _meshMap["skullGeo"];
 	skullRItem._submesh = skullRItem._pMesh->getSubmesh("skull");
 	skullRItem._pAlbedoMap = _textureMap["white1x1.dds"];
 	skullRItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCBType>(skullObjectCB);
+	_pSkullObjectCB = skullRItem._pObjectCB;
 	_renderItems[RenderLayer::Opaque].push_back(skullRItem);
 
+
+	XMVECTOR mirrorPlane = DX::XMVectorSet(0.f, 0.f, 1.f, 0.f);
+	XMMATRIX matMirrorPlaneRelfect = DX::XMMatrixReflect(mirrorPlane);
+	ObjectCBType reflectedSkullCB = skullObjectCB;
+	XMMATRIX reflectSkullWorld = skullWorld * matMirrorPlaneRelfect;
+	DX::XMStoreFloat4x4(&reflectedSkullCB.matWorld, reflectSkullWorld);
+	auto det = DX::XMMatrixDeterminant(reflectSkullWorld);
+	DX::XMStoreFloat4x4(&reflectedSkullCB.matNormal, DX::XMMatrixTranspose(DX::XMMatrixInverse(&det, reflectSkullWorld)));
 	RenderItem reflectedSkullRItem = skullRItem;
-	reflectedSkullRItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCBType>(skullObjectCB);
+	reflectedSkullRItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCBType>(reflectedSkullCB);
 	_renderItems[RenderLayer::Reflected].push_back(reflectedSkullRItem);
 
 	RenderItem shadowedSkullRItem = skullRItem;
@@ -338,5 +398,3 @@ void MirrorApp::buildRenderItems(dx12lib::CommandListProxy pCmdList) {
 	_renderItems[RenderLayer::Mirrors].push_back(mirrorRItem);
 	_renderItems[RenderLayer::Transparent].push_back(mirrorRItem);
 }
-
-

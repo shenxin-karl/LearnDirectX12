@@ -53,7 +53,6 @@ public:
 	void clearStencil(UINT stencil);
 	void setClearFlag(ClearFlag flag);
 	void clearDepthStencil(float depth, UINT stencil);
-	void clearColorDepthStencil(DX::XMVECTORF32 color, float depth, UINT stencil);
 	ClearFlag getClearFlag() const;
 private:
 	void initializeClearValue(const D3D12_CLEAR_VALUE *pClearValue);

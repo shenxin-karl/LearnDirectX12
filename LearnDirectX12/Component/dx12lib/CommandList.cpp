@@ -244,6 +244,13 @@ void CommandList::setShaderResourceView(std::shared_ptr<Texture> pTexture, uint3
 	);
 }
 
+void CommandList::setStencilRef(UINT stencilRef) {
+	if (stencilRef != _currentGPUState.stencilRef) {
+		_currentGPUState.stencilRef = stencilRef;
+		_pCommandList->OMSetStencilRef(stencilRef);
+	}
+}
+
 void CommandList::drawInstanced(uint32 vertCount, 
 	uint32 instanceCount, 
 	uint32 baseVertexLocation,
