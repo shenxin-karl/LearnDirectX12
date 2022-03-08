@@ -16,6 +16,14 @@
 #include "GameTimer/GameTimer.h"
 #include "D3D/D3DDescHelper.h"
 
+Vertex::Vertex(const com::Vertex &vertex)
+: position(vertex.position), normal(vertex.normal), texcoord(vertex.texcoord) {
+}
+
+Vertex::Vertex(const float3 &position, const float3 &normal, const float2 &texcoord)
+: position(position), normal(normal), texcoord(texcoord) {
+}
+
 MirrorApp::MirrorApp() {
 	_title = "Mirror";
 }
@@ -30,8 +38,8 @@ void MirrorApp::onInitialize(dx12lib::CommandListProxy pCmdList) {
 	loadTextures(pCmdList);
 	buildMaterials();
 	buildMeshs(pCmdList);
-	buildPSOs();
-	buildRenderItems();
+	buildPSOs(pCmdList);
+	buildRenderItems(pCmdList);
 }
 
 void MirrorApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
@@ -225,7 +233,7 @@ void MirrorApp::buildPSOs(dx12lib::CommandListProxy pCmdList) {
 	pTransparentPSO->finalize();
 
 	auto pMirrorPSO = std::static_pointer_cast<dx12lib::GraphicsPSO>(pOpaquePSO->clone("MirrorPSO"));
-	D3D12_DEPTH_STENCIL_DESC mirrorDSS;
+	CD3DX12_DEPTH_STENCIL_DESC mirrorDSS(D3D12_DEFAULT);
 	mirrorDSS.DepthEnable = TRUE;
 	mirrorDSS.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
 	mirrorDSS.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
@@ -234,7 +242,7 @@ void MirrorApp::buildPSOs(dx12lib::CommandListProxy pCmdList) {
 	mirrorDSS.StencilWriteMask = 0xff;
 	mirrorDSS.FrontFace = d3d::DepthStencilOpDescHelper(d3d::DepthStendilOpPreset::SP_REPLACE);
 	mirrorDSS.BackFace = d3d::DepthStencilOpDescHelper(d3d::DepthStendilOpPreset::SP_REPLACE);
-	D3D12_BLEND_DESC mirrorBD;
+	CD3DX12_BLEND_DESC mirrorBD(D3D12_DEFAULT);
 	mirrorBD.RenderTarget[0].RenderTargetWriteMask = 0;
 	pMirrorPSO->setBlendState(mirrorBD);
 	pMirrorPSO->setDepthStencilState(mirrorDSS);
@@ -255,13 +263,22 @@ void MirrorApp::buildPSOs(dx12lib::CommandListProxy pCmdList) {
 	pReflectedPSO->finalize();
 
 	auto pShadowPSO = std::static_pointer_cast<dx12lib::GraphicsPSO>(pTransparentPSO->clone("ShadowPSO"));
-	// todo ´ýÍêÉÆ
+	CD3DX12_DEPTH_STENCIL_DESC shadowDDS(D3D12_DEFAULT);
+	shadowDDS.DepthEnable = true;
+	shadowDDS.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	shadowDDS.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+	shadowDDS.StencilReadMask = 0xff;
+	shadowDDS.StencilWriteMask = 0xff;
+	shadowDDS.FrontFace = d3d::DepthStencilOpDescHelper(d3d::DepthStendilOpPreset::SP_KEEP, D3D12_COMPARISON_FUNC_EQUAL);
+	shadowDDS.BackFace = d3d::DepthStencilOpDescHelper(d3d::DepthStendilOpPreset::SP_KEEP, D3D12_COMPARISON_FUNC_EQUAL);
+	pShadowPSO->setDepthStencilState(shadowDDS);
+	pShadowPSO->finalize();
 
 	_psoMap[RenderLayer::Opaque] = pOpaquePSO;
 	_psoMap[RenderLayer::Mirrors] = pMirrorPSO;
 	_psoMap[RenderLayer::Transparent] = pTransparentPSO;
 	_psoMap[RenderLayer::Reflected] = pReflectedPSO;
-
+	_psoMap[RenderLayer::Shadow] = pShadowPSO;
 }
 
 void MirrorApp::buildRenderItems(dx12lib::CommandListProxy pCmdList) {
@@ -297,6 +314,7 @@ void MirrorApp::buildRenderItems(dx12lib::CommandListProxy pCmdList) {
 	skullRItem._submesh = skullRItem._pMesh->getSubmesh("skull");
 	skullRItem._pAlbedoMap = _textureMap["white1x1.dds"];
 	skullRItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCBType>(skullObjectCB);
+	_renderItems[RenderLayer::Opaque].push_back(skullRItem);
 
 	RenderItem reflectedSkullRItem = skullRItem;
 	reflectedSkullRItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCBType>(skullObjectCB);

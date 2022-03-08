@@ -45,6 +45,9 @@ struct Vertex {
 	float3 position;
 	float3 normal;
 	float2 texcoord;
+public:
+	Vertex(const com::Vertex &vertex);
+	Vertex(const float3 &position, const float3 &normal, const float2 &texcoord);
 };
 
 class MirrorApp : public com::BaseApp {

@@ -156,11 +156,13 @@ struct MakeMeshHelper {
 		assert(count != -1);
 		auto pVertexBuffer = buildVertexBuffer(pCmdList, mesh);
 		auto pIndexBuffer = buildIndexBuffer(pCmdList, mesh);
-		SubMesh submesh = { name, count, 0, 0 };
+		std::vector<SubMesh> submeshs;
+		if (!name.empty())
+			submeshs.emplace_back(name, count, std::uint32_t(0), std::uint32_t(0));
 		return std::make_shared<Mesh>(
 			pVertexBuffer,
 			pIndexBuffer,
-			std::vector<SubMesh>({ submesh })
+			submeshs
 		);
 	}
 };
