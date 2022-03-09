@@ -74,6 +74,7 @@ bool MeshData::savePTS(const std::string &path) const {
 			 << position.z << std::endl;
 	}
 	fout.close();
+	return true;
 }
 
 void swap(MeshData& lhs, MeshData& rhs) noexcept {

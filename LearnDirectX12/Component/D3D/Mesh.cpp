@@ -1,5 +1,6 @@
 #include "Mesh.h"
-
+#include "dx12lib/VertexBuffer.h"
+#include "dx12lib/IndexBuffer.h"
 
 namespace d3d {
 
@@ -40,7 +41,6 @@ Mesh::Mesh(std::shared_ptr<dx12lib::VertexBuffer> pVertexBuffer,
 : _pVertexBuffer(pVertexBuffer), _pIndexBuffer(pIndexBuffer), _subMeshs(subMeshs) {
 }
 
-
 void Mesh::appendSubMesh(const SubMesh &submesh) {
 	_subMeshs.emplace_back(submesh);
 }
@@ -66,8 +66,15 @@ void Mesh::drawInstanced(dx12lib::CommandListProxy pCmdList,
 	std::uint32_t instanceCount /*= 1*/, 
 	std::uint32_t startInstanceLocation /*= 0 */) const 
 {
-	for (auto &submesh : *this)
-		submesh.drawInstanced(pCmdList, instanceCount, startInstanceLocation);
+	if (!_subMeshs.empty()) {
+		for (auto &submesh : *this)
+			submesh.drawInstanced(pCmdList, instanceCount, startInstanceLocation);
+	} else {
+		pCmdList->drawInstanced(
+			_pVertexBuffer->getVertexCount(),
+			instanceCount, 0, startInstanceLocation
+		);
+	}
 }
 
 
@@ -75,8 +82,15 @@ void Mesh::drawIndexdInstanced(dx12lib::CommandListProxy pCmdList,
 	std::uint32_t instanceCount /*= 1*/, 
 	std::uint32_t startInstanceLocation /*= 0 */) const 
 {
-	for (auto &submesh : *this)
-		submesh.drawIndexdInstanced(pCmdList, instanceCount, startInstanceLocation);
+	if (_subMeshs.empty()) {
+		for (auto &submesh : *this)
+			submesh.drawIndexdInstanced(pCmdList, instanceCount, startInstanceLocation);
+	} else {
+		pCmdList->drawIndexdInstanced(
+			_pIndexBuffer->getIndexCount(),
+			instanceCount, 0, 0, startInstanceLocation
+		);
+	}
 }
 
 SubMesh Mesh::getSubmesh(const std::string &name) const {

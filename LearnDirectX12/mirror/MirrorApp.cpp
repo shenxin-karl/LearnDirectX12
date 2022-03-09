@@ -1,3 +1,4 @@
+#include <iostream>
 #include "MirrorApp.h"
 #include "dx12lib/Device.h"
 #include "dx12lib/SwapChain.h"
@@ -96,12 +97,21 @@ void MirrorApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		pCmdList->setStencilRef(1);
 		drawRenderItems(pCmdList, RenderLayer::Mirrors);
 
+		// draw 
 		pPSO = _psoMap[RenderLayer::Reflected];
 		pCmdList->setPipelineStateObject(pPSO);
 		pCmdList->setStructConstantBuffer(_pPassCB, CBPass);
 		pCmdList->setStructConstantBuffer(_pReflectedLightCB, CBLight);
 		pCmdList->setStencilRef(1);
 		drawRenderItems(pCmdList, RenderLayer::Reflected);
+
+		// draw 
+		pPSO = _psoMap[RenderLayer::Transparent];
+		pCmdList->setPipelineStateObject(pPSO);
+		pCmdList->setStructConstantBuffer(_pPassCB, CBPass);
+		pCmdList->setStructConstantBuffer(_pLightCB, CBLight);
+		pCmdList->setStencilRef(0);
+		drawRenderItems(pCmdList, RenderLayer::Transparent);
 	}
 	pCmdQueue->executeCommandList(pCmdList);
 	pCmdQueue->signal(_pSwapChain);
@@ -140,19 +150,24 @@ void MirrorApp::buildConstantBuffers(dx12lib::CommandListProxy pCmdList) {
 	_pPassCB = pCmdList->createStructConstantBuffer<d3d::PassCBType>();
 	_pLightCB = pCmdList->createStructConstantBuffer<d3d::LightCBType>();
 	_pReflectedLightCB = pCmdList->createStructConstantBuffer<d3d::LightCBType>();
-	auto pGPULightCb = _pLightCB->map();
+	auto pGPULightCB = _pLightCB->map();
 	float3 directionLight = float3(0, 1, -1);
-	pGPULightCb->ambientLight = float4(0.1f, 0.1f, 0.1f, 1.f);
-	pGPULightCb->directLightCount = 1;
-	pGPULightCb->lights[0].initAsDirectionLight(directionLight, float3(1.f));
+	pGPULightCB->ambientLight = float4(0.1f, 0.1f, 0.1f, 1.f);
+	pGPULightCB->directLightCount = 3;
+	pGPULightCB->lights[0].initAsDirectionLight(-float3(0.57735f, -0.57735f, 0.57735f), float3(0.6f, 0.6f, 0.6f));
+	pGPULightCB->lights[1].initAsDirectionLight(-float3(-0.57735f, -0.57735f, 0.57735f), float3(0.3f, 0.3f, 0.3f));
+	pGPULightCB->lights[2].initAsDirectionLight(-float3(0.0f, -0.707f, -0.707f), float3(0.15f, 0.15f, 0.15f));
 
 	using namespace DirectX;
 	XMVECTOR mirrorPlane = XMVectorSet(0.f, 0.f, 1.f, 0.f);
 	XMMATRIX mirrorReflected = XMMatrixReflect(mirrorPlane);
 	auto pGPUReflectedLightCB = _pReflectedLightCB->map();
-	*pGPUReflectedLightCB = *pGPULightCb;
-	auto reflectedDirectionLight = XMVector3TransformNormal(directionLight.toVec(), mirrorReflected);
-	pGPUReflectedLightCB->lights[0].initAsDirectionLight(float3(reflectedDirectionLight), float3(1.f));
+	*pGPUReflectedLightCB = *pGPULightCB;
+	for (std::size_t i = 0; i < pGPUReflectedLightCB->directLightCount; ++i) {
+		float3 directionLight = pGPULightCB->lights[i].direction;
+		auto reflectedDirectionLight = XMVector3TransformNormal(directionLight.toVec(), mirrorReflected);
+		pGPUReflectedLightCB->lights[i].direction = float3(XMVector3Normalize(reflectedDirectionLight));
+	}
 }
 
 void MirrorApp::loadTextures(dx12lib::CommandListProxy pCmdList) {
@@ -165,8 +180,8 @@ void MirrorApp::loadTextures(dx12lib::CommandListProxy pCmdList) {
 void MirrorApp::buildMaterials() {
 	d3d::Material skullMat;
 	skullMat.diffuseAlbedo = float4(DX::Colors::White);
-	skullMat.roughness = 0.5f;
-	skullMat.metallic = 0.5f;
+	skullMat.roughness = 0.3f;
+	skullMat.metallic = 0.2f;
 
 	d3d::Material floorMat;
 	floorMat.diffuseAlbedo = float4(DX::Colors::White);
@@ -319,8 +334,8 @@ void MirrorApp::buildPSOs(dx12lib::CommandListProxy pCmdList) {
 	reflectedDDS.StencilEnable = TRUE;
 	reflectedDDS.StencilReadMask = 0Xff;
 	reflectedDDS.StencilWriteMask = 0xff;
-	reflectedDDS.FrontFace = d3d::DepthStencilOpDescHelper(d3d::DepthStendilOpPreset::SP_KEEP);
-	reflectedDDS.BackFace = d3d::DepthStencilOpDescHelper(d3d::DepthStendilOpPreset::SP_KEEP);
+	reflectedDDS.FrontFace = d3d::DepthStencilOpDescHelper(d3d::DepthStendilOpPreset::SP_KEEP, D3D12_COMPARISON_FUNC_EQUAL);
+	reflectedDDS.BackFace = d3d::DepthStencilOpDescHelper(d3d::DepthStendilOpPreset::SP_KEEP, D3D12_COMPARISON_FUNC_EQUAL);
 	CD3DX12_RASTERIZER_DESC reflectedRasterizerDesc(D3D12_DEFAULT);
 	reflectedRasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
 	reflectedRasterizerDesc.FrontCounterClockwise = true;

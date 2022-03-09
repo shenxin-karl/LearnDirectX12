@@ -330,15 +330,18 @@ void LandAndWater::buildGeometrys(dx12lib::CommandListProxy pCmdList) {
 	com::GometryGenerator gen;
 	_geometryMap["boxGeo"] = d3d::MakeMeshHelper<MeshVertex>::build(
 		pCmdList,
-		gen.createBox(1.5f, 1.5f, 1.5f, 3)
+		gen.createBox(1.5f, 1.5f, 1.5f, 3),
+		"boxGeo"
 	);
 	_geometryMap["gridGeo"] = d3d::MakeMeshHelper<WaterVertex>::build(
 		pCmdList, 
-		gen.createGrid(160.f, 160.f, 50, 50)
+		gen.createGrid(160.f, 160.f, 50, 50),
+		"gridGeo"
 	);
 	_geometryMap["landGeo"] = d3d::MakeMeshHelper<MeshVertex>::build(
 		pCmdList,
-		createLandMesh()
+		createLandMesh(),
+		"landGeo"
 	);
 }
 
