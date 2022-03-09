@@ -61,6 +61,7 @@ void MirrorApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	pGPUPassCB->fogStart = 0.f;
 	pGPUPassCB->fogEnd = 0.f;
 	pGPUPassCB->cbPerPassPad0 = 0.f;
+
 }
 
 void MirrorApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
@@ -81,12 +82,25 @@ void MirrorApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		pCmdList->setRenderTarget(pRenderTarget);
 
 		// draw opaque
+		auto pPSO = _psoMap[RenderLayer::Opaque];
+		pCmdList->setPipelineStateObject(pPSO);
+		pCmdList->setStructConstantBuffer(_pPassCB, CBPass);
+		pCmdList->setStructConstantBuffer(_pLightCB, CBLight);
 		drawRenderItems(pCmdList, RenderLayer::Opaque);
 
 		// mark stencil 
+		pPSO = _psoMap[RenderLayer::Mirrors];
+		pCmdList->setPipelineStateObject(pPSO);
+		pCmdList->setStructConstantBuffer(_pPassCB, CBPass);
+		pCmdList->setStructConstantBuffer(_pLightCB, CBLight);
 		pCmdList->setStencilRef(1);
 		drawRenderItems(pCmdList, RenderLayer::Mirrors);
 
+		pPSO = _psoMap[RenderLayer::Reflected];
+		pCmdList->setPipelineStateObject(pPSO);
+		pCmdList->setStructConstantBuffer(_pPassCB, CBPass);
+		pCmdList->setStructConstantBuffer(_pReflectedLightCB, CBLight);
+		pCmdList->setStencilRef(1);
 		drawRenderItems(pCmdList, RenderLayer::Reflected);
 	}
 	pCmdQueue->executeCommandList(pCmdList);
@@ -98,10 +112,6 @@ void MirrorApp::onResize(dx12lib::CommandListProxy pCmdList, int width, int heig
 }
 
 void MirrorApp::drawRenderItems(dx12lib::CommandListProxy pCmdList, RenderLayer layer) {
-	auto pPSO = _psoMap[layer];
-	pCmdList->setPipelineStateObject(pPSO);
-	pCmdList->setStructConstantBuffer(_pPassCB, CBPass);
-	pCmdList->setStructConstantBuffer(_pLightCB, CBLight);
 	pCmdList->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	for (auto &rItem : _renderItems[layer]) {
 		pCmdList->setVertexBuffer(rItem._pMesh->getVertexBuffer());
@@ -129,10 +139,20 @@ void MirrorApp::buildCamera() {
 void MirrorApp::buildConstantBuffers(dx12lib::CommandListProxy pCmdList) {
 	_pPassCB = pCmdList->createStructConstantBuffer<d3d::PassCBType>();
 	_pLightCB = pCmdList->createStructConstantBuffer<d3d::LightCBType>();
+	_pReflectedLightCB = pCmdList->createStructConstantBuffer<d3d::LightCBType>();
 	auto pGPULightCb = _pLightCB->map();
+	float3 directionLight = float3(0, 1, -1);
 	pGPULightCb->ambientLight = float4(0.1f, 0.1f, 0.1f, 1.f);
 	pGPULightCb->directLightCount = 1;
-	pGPULightCb->lights[0].initAsDirectionLight(float3(0, 1, -1), float3(1.f));
+	pGPULightCb->lights[0].initAsDirectionLight(directionLight, float3(1.f));
+
+	using namespace DirectX;
+	XMVECTOR mirrorPlane = XMVectorSet(0.f, 0.f, 1.f, 0.f);
+	XMMATRIX mirrorReflected = XMMatrixReflect(mirrorPlane);
+	auto pGPUReflectedLightCB = _pReflectedLightCB->map();
+	*pGPUReflectedLightCB = *pGPULightCb;
+	auto reflectedDirectionLight = XMVector3TransformNormal(directionLight.toVec(), mirrorReflected);
+	pGPUReflectedLightCB->lights[0].initAsDirectionLight(float3(reflectedDirectionLight), float3(1.f));
 }
 
 void MirrorApp::loadTextures(dx12lib::CommandListProxy pCmdList) {
@@ -299,8 +319,8 @@ void MirrorApp::buildPSOs(dx12lib::CommandListProxy pCmdList) {
 	reflectedDDS.StencilEnable = TRUE;
 	reflectedDDS.StencilReadMask = 0Xff;
 	reflectedDDS.StencilWriteMask = 0xff;
-	reflectedDDS.FrontFace = d3d::DepthStencilOpDescHelper(d3d::DepthStendilOpPreset::SP_KEEP, D3D12_COMPARISON_FUNC_EQUAL);
-	reflectedDDS.BackFace = d3d::DepthStencilOpDescHelper(d3d::DepthStendilOpPreset::SP_KEEP, D3D12_COMPARISON_FUNC_EQUAL);
+	reflectedDDS.FrontFace = d3d::DepthStencilOpDescHelper(d3d::DepthStendilOpPreset::SP_KEEP);
+	reflectedDDS.BackFace = d3d::DepthStencilOpDescHelper(d3d::DepthStendilOpPreset::SP_KEEP);
 	CD3DX12_RASTERIZER_DESC reflectedRasterizerDesc(D3D12_DEFAULT);
 	reflectedRasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
 	reflectedRasterizerDesc.FrontCounterClockwise = true;

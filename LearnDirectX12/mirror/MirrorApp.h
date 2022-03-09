@@ -72,6 +72,7 @@ private:
 	std::unique_ptr<d3d::CoronaCamera> _pCamera;
 	GPUStructCBPtr<d3d::PassCBType>    _pPassCB;
 	GPUStructCBPtr<d3d::LightCBType>   _pLightCB;
+	GPUStructCBPtr<d3d::LightCBType>   _pReflectedLightCB;
 	std::map<std::string, d3d::Material> _materialMap;
 	std::map<std::string, std::shared_ptr<d3d::Mesh>> _meshMap;
 	std::map<std::string, std::shared_ptr<dx12lib::Texture>> _textureMap;
