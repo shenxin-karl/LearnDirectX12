@@ -112,6 +112,13 @@ void MirrorApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		pCmdList->setStructConstantBuffer(_pLightCB, CBLight);
 		pCmdList->setStencilRef(0);
 		drawRenderItems(pCmdList, RenderLayer::Transparent);
+
+		pPSO = _psoMap[RenderLayer::Shadow];
+		pCmdList->setPipelineStateObject(pPSO);
+		pCmdList->setStructConstantBuffer(_pPassCB, CBPass);
+		pCmdList->setStructConstantBuffer(_pLightCB, CBLight);
+		pCmdList->setStencilRef(0);
+		drawRenderItems(pCmdList, RenderLayer::Shadow);
 	}
 	pCmdQueue->executeCommandList(pCmdList);
 	pCmdQueue->signal(_pSwapChain);
@@ -205,7 +212,7 @@ void MirrorApp::buildMaterials() {
 
 	d3d::Material shadowMat;
 	shadowMat.diffuseAlbedo = float4(0.0f, 0.0f, 0.0f, 0.5f);
-	shadowMat.metallic = 0.001f;
+	shadowMat.metallic = 0.00f;
 	shadowMat.roughness = 0.0f;
 
 	_materialMap["skullMat"] = skullMat;
@@ -349,10 +356,11 @@ void MirrorApp::buildPSOs(dx12lib::CommandListProxy pCmdList) {
 	shadowDDS.DepthEnable = true;
 	shadowDDS.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
 	shadowDDS.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+	shadowDDS.StencilEnable = true;
 	shadowDDS.StencilReadMask = 0xff;
 	shadowDDS.StencilWriteMask = 0xff;
-	shadowDDS.FrontFace = d3d::DepthStencilOpDescHelper(d3d::DepthStendilOpPreset::SP_KEEP, D3D12_COMPARISON_FUNC_EQUAL);
-	shadowDDS.BackFace = d3d::DepthStencilOpDescHelper(d3d::DepthStendilOpPreset::SP_KEEP, D3D12_COMPARISON_FUNC_EQUAL);
+	shadowDDS.FrontFace = d3d::DepthStencilOpDescHelper(d3d::DepthStendilOpPreset::SP_INCR, D3D12_COMPARISON_FUNC_EQUAL);
+	shadowDDS.BackFace = d3d::DepthStencilOpDescHelper(d3d::DepthStendilOpPreset::SP_INCR, D3D12_COMPARISON_FUNC_EQUAL);
 	pShadowPSO->setDepthStencilState(shadowDDS);
 	pShadowPSO->finalize();
 
@@ -392,7 +400,7 @@ void MirrorApp::buildRenderItems(dx12lib::CommandListProxy pCmdList) {
 	XMMATRIX skullRotate = XMMatrixRotationY(0.5f * DX::XM_PI);
 	XMMATRIX skullScale = XMMatrixScaling(0.45f, 0.45f, 0.45f);
 	XMMATRIX skullOffset = XMMatrixTranslation(_skullTranslation.x, _skullTranslation.y, _skullTranslation.z);
-	XMMATRIX skullWorld = skullRotate * skullScale * skullOffset;
+	XMMATRIX skullWorld = skullScale * skullRotate * skullOffset;
 	DX::XMStoreFloat4x4(&skullObjectCB.matWorld, skullWorld);
 	skullObjectCB.matNormal = Math::MathHelper::identity4x4();
 	skullObjectCB.material = _materialMap["skullMat"];
@@ -417,6 +425,19 @@ void MirrorApp::buildRenderItems(dx12lib::CommandListProxy pCmdList) {
 
 	RenderItem shadowedSkullRItem = skullRItem;
 	ObjectCBType shadowSkullCB = skullObjectCB;
+	auto mainLightDirection = _pLightCB->cmap()->lights[0].direction;
+	XMVECTOR shadowPlane = XMVectorSet(0.0f, 1.0f, 0.0f, _skullTranslation.y * 2); // xz plane
+	XMVECTOR toMainLight = mainLightDirection.toVec();
+	XMMATRIX S = XMMatrixShadow(shadowPlane, toMainLight);
+	XMMATRIX shadowOffsetY = XMMatrixTranslation(0.0f, 0.001f, 0.0f);
+	XMStoreFloat4x4(&shadowSkullCB.matWorld, shadowOffsetY * S * skullWorld);
+	auto matZero = XMMatrixSet(
+		0.f, 0.f, 0.f, 0.f,
+		0.f, 0.f, 0.f, 0.f,
+		0.f, 0.f, 0.f, 0.f,
+		0.f, 0.f, 0.f, 0.f
+	);
+	XMStoreFloat4x4(&shadowSkullCB.matNormal, matZero);
 	shadowSkullCB.material = _materialMap["shadowMat"];
 	shadowedSkullRItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCBType>(shadowSkullCB);
 	_renderItems[RenderLayer::Shadow].push_back(shadowedSkullRItem);
