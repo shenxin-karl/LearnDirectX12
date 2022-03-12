@@ -82,7 +82,7 @@ void Mesh::drawIndexdInstanced(dx12lib::CommandListProxy pCmdList,
 	std::uint32_t instanceCount /*= 1*/, 
 	std::uint32_t startInstanceLocation /*= 0 */) const 
 {
-	if (_subMeshs.empty()) {
+	if (!_subMeshs.empty()) {
 		for (auto &submesh : *this)
 			submesh.drawIndexdInstanced(pCmdList, instanceCount, startInstanceLocation);
 	} else {

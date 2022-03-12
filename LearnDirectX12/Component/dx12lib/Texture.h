@@ -58,16 +58,17 @@ private:
 	void initializeClearValue(const D3D12_CLEAR_VALUE *pClearValue);
 	void createViews();
 private:
-	DescriptorAllocation                _renderTargetView;
-	DescriptorAllocation                _depthStencilView;
-	DescriptorAllocation                _shaderResourceView;
-	std::weak_ptr<Device>               _pDevice;
-	D3D12_CLEAR_VALUE                   _clearValue;
-	WRL::ComPtr<ID3D12Resource>         _pUploaderHeap;
-	uint32    _width;
-	uint32    _height;
-	uint32    _depthOrArraySize;
-	ClearFlag _clearFlag;
+	DescriptorAllocation        _renderTargetView;
+	DescriptorAllocation        _depthStencilView;
+	DescriptorAllocation        _shaderResourceView;
+	std::weak_ptr<Device>       _pDevice;
+	D3D12_CLEAR_VALUE           _clearValue;
+	WRL::ComPtr<ID3D12Resource> _pUploaderHeap;
+	ClearFlag					_clearFlag;
+	uint32						_width;
+	uint32						_height;
+	uint32						_depthOrArraySize;
+	D3D12_RESOURCE_DIMENSION	_dimension;
 };
 
 }

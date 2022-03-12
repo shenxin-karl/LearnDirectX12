@@ -10,7 +10,7 @@
 
 using namespace Math;
 namespace com {
-struct Vertex;
+	struct Vertex;
 }
 
 struct WaterParameDesc {
@@ -53,6 +53,11 @@ public:
 	MeshVertex(const com::Vertex &vert);
 };
 
+struct BillBoardVertex {
+	float3 position;
+	float2 size;
+};
+
 struct WaterVertex {
 	float3 position;
 	float3 normal;
@@ -64,11 +69,11 @@ struct CBObjectType {
 	float4x4          world;
 	float4x4          normalMat;
 	float4x4          matTransfrom;
-	d3d::Material material;
+	d3d::Material	  material;
 };
 
 struct RenderItem {
-	std::shared_ptr<d3d::Mesh>	  _pMesh;
+	std::shared_ptr<d3d::Mesh>	      _pMesh;
 	GPUStructCBPtr<CBObjectType>      _pConstantBuffer;
 	std::shared_ptr<dx12lib::Texture> _pAlbedoMap;
 };
@@ -85,16 +90,20 @@ public:
 private:
 	void pollEvent();
 	void updateConstantBuffer(std::shared_ptr<com::GameTimer> pGameTimer);
-	void renderTexturePass(dx12lib::CommandListProxy pCmdList);
 	void renderWaterPass(dx12lib::CommandListProxy pCmdList);
-	void renderWireBoxPass(dx12lib::CommandListProxy pCmdList);
+	void drawOpaqueRenderItems(dx12lib::CommandListProxy pCmdList, 
+		const std::string &passName,
+		D3D_PRIMITIVE_TOPOLOGY primitiveType
+	);
 private:
 	void buildCamera();
 	void buildConstantBuffer(dx12lib::CommandListProxy pCmdList);
 	void buildTexturePSO(dx12lib::CommandListProxy pCmdList);
 	void buildWaterPSO(dx12lib::CommandListProxy pCmdList);
 	void buildClipPSO(dx12lib::CommandListProxy pCmdList);
+	void buildTreeBillboardPSO(dx12lib::CommandListProxy pCmdList);
 	void buildGeometrys(dx12lib::CommandListProxy pCmdList);
+	void buildTreeBillBoards(dx12lib::CommandListProxy pCmdList);
 	void loadTextures(dx12lib::CommandListProxy pCmdList);
 	void buildMaterials();
 	void buildRenderItems(dx12lib::CommandListProxy pCmdList);

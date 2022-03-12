@@ -85,6 +85,7 @@ public:
 	void setHullShader(const D3D12_SHADER_BYTECODE &bytecode);
 	void setDomainShader(const D3D12_SHADER_BYTECODE &bytecode);
 	bool isDirty() const;
+	const D3D12_GRAPHICS_PIPELINE_STATE_DESC &getDesc() const;
 	virtual void finalize() override;
 	virtual std::shared_ptr<PSO> clone(const std::string &name) override;
 protected:

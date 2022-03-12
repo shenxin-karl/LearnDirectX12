@@ -66,6 +66,8 @@ void MakeWave(inout float3 wpos, inout float3 wnrm) {
     float3 worldPosition = wpos;
     wpos = float3(worldPosition.x, 0.0, worldPosition.z);
     wnrm = float3(0.0, 1.0, 0.0);
+    
+    [unroll(4)]
     for (int i = 0; i < 4; ++i) {
         float3 wavePos;
         float3 waveNrm;
@@ -91,8 +93,9 @@ float4 PS(VertexOut pin) : SV_Target {
     float3 result  = { 0.0, 0.0, 0.0 };
     float3 viewDir = gPass.eyePos - pin.wpos;
     result += ComputeDirectionLight(gLight.lights[0], gMaterial, pin.wnrm, viewDir);
+    result += ComputeDirectionLight(gLight.lights[1], gMaterial, pin.wnrm, viewDir);
+    result += ComputeDirectionLight(gLight.lights[2], gMaterial, pin.wnrm, viewDir);
     result += gMaterial.diffuseAlbedo * gLight.ambientLight;
-    
     float dis = distance(pin.wpos, gPass.eyePos);
     float fogFactor = CalcFogAttenuation(dis, gPass.fogStart, gPass.fogEnd);
     float3 finalColor = lerp(result, gPass.fogColor.rgb, fogFactor);

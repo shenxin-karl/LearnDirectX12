@@ -143,6 +143,7 @@ Texture::Texture(std::weak_ptr<Device> pDevice, const D3D12_RESOURCE_DESC &desc,
 	_width = static_cast<uint32>(desc.Width);
 	_height = static_cast<uint32>(desc.Height);
 	_depthOrArraySize = desc.DepthOrArraySize;
+	_dimension = desc.Dimension;
 	createViews();
 }
 
@@ -152,6 +153,7 @@ Texture::Texture(std::weak_ptr<Device> pDevice, WRL::ComPtr<ID3D12Resource> pRes
 {
 	_pDevice = pDevice;
 	auto desc = pResource->GetDesc();
+	_dimension = desc.Dimension;
 	_width = static_cast<uint32>(desc.Width);
 	_height = static_cast<uint32>(desc.Height);
 	_depthOrArraySize = desc.DepthOrArraySize;
@@ -167,6 +169,7 @@ Texture::Texture(std::weak_ptr<Device> pDevice,
 {
 	_pDevice = pDevice;
 	auto desc = pResource->GetDesc();
+	_dimension = desc.Dimension;
 	_width = static_cast<uint32>(desc.Width);
 	_height = static_cast<uint32>(desc.Height);
 	_depthOrArraySize = desc.DepthOrArraySize;

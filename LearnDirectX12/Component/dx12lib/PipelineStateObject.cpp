@@ -126,6 +126,10 @@ bool GraphicsPSO::isDirty() const {
 	return _dirty;
 }
 
+const D3D12_GRAPHICS_PIPELINE_STATE_DESC &GraphicsPSO::getDesc() const {
+	return _psoDesc;
+}
+
 void GraphicsPSO::setVertexShader(WRL::ComPtr<ID3DBlob> pBytecode) {
 	_psoDesc.VS = cacheBytecode("VS", pBytecode);
 }
