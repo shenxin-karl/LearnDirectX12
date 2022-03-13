@@ -25,6 +25,10 @@ const std::string &PSO::getName() const {
 	return _name;
 }
 
+bool PSO::isDirty() const {
+	return _dirty;
+}
+
 GraphicsPSO::GraphicsPSO(std::weak_ptr<Device> pDevice, const std::string &name) : PSO(pDevice, name) {
 	_pDevice = pDevice;
 	/// graphics pipeline static object has default state
@@ -122,10 +126,6 @@ void GraphicsPSO::setDomainShader(const void *pBinary, size_t size) {
 	_psoDesc.DS = cacheBytecode("DS", pBinary, size);
 }
 
-bool GraphicsPSO::isDirty() const {
-	return _dirty;
-}
-
 const D3D12_GRAPHICS_PIPELINE_STATE_DESC &GraphicsPSO::getDesc() const {
 	return _psoDesc;
 }
@@ -207,6 +207,47 @@ D3D12_SHADER_BYTECODE GraphicsPSO::cacheBytecode(const std::string &name, WRL::C
 	_dirty = true;
 	_shaderBytecodeCache[name] = pBytecode;
 	return { pBytecode->GetBufferPointer(), pBytecode->GetBufferSize() };
+}
+
+/* ****************************************************************************************** */
+
+void ComputePSO::setComputeShader(const void *pBinary, size_t size) {
+	WRL::ComPtr<ID3DBlob> pBuffer;
+	ThrowIfFailed(D3DCreateBlob(size, &pBuffer));
+	std::memcpy(pBuffer->GetBufferPointer(), pBinary, size);
+	setComputeShader(pBuffer);
+}
+
+void ComputePSO::setComputeShader(const D3D12_SHADER_BYTECODE &Binary) {
+	WRL::ComPtr<ID3DBlob> pBuffer;
+	ThrowIfFailed(D3DCreateBlob(Binary.BytecodeLength, &pBuffer));
+	std::memcpy(pBuffer->GetBufferPointer(), Binary.pShaderBytecode, Binary.BytecodeLength);
+	setComputeShader(pBuffer);
+}
+
+void ComputePSO::setComputeShader(WRL::ComPtr<ID3DBlob> pBytecode) {
+	_dirty = true;
+	_psoDesc.CS = { pBytecode->GetBufferPointer(), pBytecode->GetBufferSize() };
+	_pCSShaderBytecode = pBytecode;
+}
+
+std::shared_ptr<PSO> ComputePSO::clone(const std::string &name) {
+	auto pRes = std::make_shared<MakeComputePSO>(_pDevice, name);
+	pRes->_psoDesc = _psoDesc;
+	pRes->_pCSShaderBytecode = _pCSShaderBytecode;
+	return pRes;
+}
+
+void ComputePSO::finalize() {
+	auto pDevice = _pDevice.lock()->getD3DDevice();
+	ThrowIfFailed(pDevice->CreateComputePipelineState(&_psoDesc, IID_PPV_ARGS(&_pPSO)));
+	_dirty = false;
+}
+
+ComputePSO::ComputePSO(std::weak_ptr<Device> pDevice, const std::string &name)
+: PSO(pDevice, name) 
+{
+	std::memset(&_psoDesc, 0, sizeof(_psoDesc));
 }
 
 }

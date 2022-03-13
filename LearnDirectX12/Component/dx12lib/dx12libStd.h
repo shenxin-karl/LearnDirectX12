@@ -100,5 +100,8 @@ class RootSignature;
 class PSO;
 class GraphicsPSO;
 class ComputePSO;
+class CommandContext;
+class GrahpicsContext;
+class ComputeContext;
 
 }

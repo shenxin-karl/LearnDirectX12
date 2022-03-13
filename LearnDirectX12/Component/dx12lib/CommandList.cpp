@@ -14,12 +14,22 @@
 #include "MakeObejctTool.hpp"
 #include "DefaultBuffer.h"
 #include "DDSTextureLoader.h"
+#include <iostream>
 
 #if defined(_DEBUG) || defined(DEBUG)
 #define DBG_CALL(f) f;
 #else
 #define DBG_CALL(f) nullptr;
 #endif
+
+template<typename T0, typename T1>
+bool StateCMove(T0 &&dest, T1 &&src) {
+	if (dest == src)
+		return false;
+
+	dest = src;
+	return true;
+}
 
 namespace dx12lib {
 
@@ -179,8 +189,7 @@ void CommandList::setVertexBuffer(std::shared_ptr<VertexBuffer> pVertBuffer, UIN
 	assert(pVertBuffer != nullptr);
 	assert(slot < kVertexBufferSlotCount);
 	assert(_currentGPUState.pPSO != nullptr);
-	if (_currentGPUState.pVertexBuffers[slot] != pVertBuffer.get()) {
-		_currentGPUState.pVertexBuffers[slot] = pVertBuffer.get();
+	if (StateCMove(_currentGPUState.pVertexBuffers[slot], pVertBuffer.get())) {
 		_pCommandList->IASetVertexBuffers(
 			slot,
 			1,
@@ -193,13 +202,14 @@ void CommandList::setVertexBuffer(std::shared_ptr<VertexBuffer> pVertBuffer, UIN
 void CommandList::setIndexBuffer(std::shared_ptr<IndexBuffer> pIndexBuffer) {
 	assert(pIndexBuffer != nullptr);
 	assert(_currentGPUState.pPSO != nullptr);
-	if (_currentGPUState.pIndexBuffer != pIndexBuffer.get()) {
-		_currentGPUState.pIndexBuffer = pIndexBuffer.get();
+	if (StateCMove(_currentGPUState.pIndexBuffer, pIndexBuffer.get()))
 		_pCommandList->IASetIndexBuffer(RVPtr(pIndexBuffer->getIndexBufferView()));
-	}
 }
 
-void CommandList::setConstantBufferView(std::shared_ptr<ConstantBuffer> pConstantBuffer, uint32 rootIndex, uint32 offset){
+void CommandList::setConstantBufferView(std::shared_ptr<ConstantBuffer> pConstantBuffer, 
+	uint32 rootIndex, 
+	uint32 offset)
+{
 	assert(pConstantBuffer != nullptr);
 	assert(_currentGPUState.pRootSignature != nullptr);
 	_pDynamicDescriptorHeaps[0]->stageDescriptors(
@@ -213,12 +223,10 @@ void CommandList::setConstantBufferView(std::shared_ptr<ConstantBuffer> pConstan
 void CommandList::setPipelineStateObject(std::shared_ptr<GraphicsPSO> pPipelineStateObject) {
 	assert(pPipelineStateObject != nullptr);
 	assert(!pPipelineStateObject->isDirty());
-	if (_currentGPUState.pPSO == pPipelineStateObject.get())
-		return;
-
-	setGrahicsRootSignature(pPipelineStateObject->getRootSignature());
-	_currentGPUState.pPSO = pPipelineStateObject.get();
-	_pCommandList->SetPipelineState(pPipelineStateObject->getPipelineStateObject().Get());
+	if (StateCMove(_currentGPUState.pPSO, pPipelineStateObject.get())) {
+		setGrahicsRootSignature(pPipelineStateObject->getRootSignature());
+		_pCommandList->SetPipelineState(pPipelineStateObject->getPipelineStateObject().Get());
+	}
 }
 
 void CommandList::setGrahicsRootSignature(std::shared_ptr<RootSignature> pRootSignature) {
@@ -298,7 +306,8 @@ std::shared_ptr<Texture> CommandList::createDDSTextureFromFile(const std::wstrin
 	);
 }
 
-std::shared_ptr<dx12lib::Texture> CommandList::createDDSTextureFromMemory(const void *pData, std::size_t sizeInByte) 
+std::shared_ptr<dx12lib::Texture> CommandList::createDDSTextureFromMemory(const void *pData, 
+	std::size_t sizeInByte) 
 {
 	WRL::ComPtr<ID3D12Resource> pTexture;
 	WRL::ComPtr<ID3D12Resource> pUploadHeap;
@@ -317,12 +326,42 @@ std::shared_ptr<dx12lib::Texture> CommandList::createDDSTextureFromMemory(const 
 	);
 }
 
-void CommandList::setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) {
+void CommandList::setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, 
+	WRL::ComPtr<ID3D12DescriptorHeap> pHeap) 
+{
 	if (_currentGPUState.pDescriptorHeaps[heapType] != pHeap.Get()) {
 		_currentGPUState.pDescriptorHeaps[heapType] = pHeap.Get();
 		bindDescriptorHeaps();
 	}
 }
+
+/**************************************************************************************************/
+
+void CommandList::dispatch(size_t GroupCountX, size_t GroupCountY, size_t GroupCountZ) {
+	flushResourceBarriers();
+	for (auto &pDynamicHeap : _pDynamicDescriptorHeaps)
+		pDynamicHeap->commitStagedDescriptorForDraw(shared_from_this());
+	_pCommandList->Dispatch(
+		static_cast<UINT>(GroupCountX), 
+		static_cast<UINT>(GroupCountY), 
+		static_cast<UINT>(GroupCountZ)
+	);
+}
+
+void CommandList::setComputeRootSignature(std::shared_ptr<RootSignature> pRootSignature) {
+	setRootSignature(pRootSignature, &ID3D12GraphicsCommandList::SetComputeRootSignature);
+}
+
+void CommandList::setPipelineStateObject(std::shared_ptr<ComputePSO> pPipelineStateObject) {
+	assert(pPipelineStateObject != nullptr);
+	assert(!pPipelineStateObject->isDirty());
+	if (StateCMove(_currentGPUState.pPSO, pPipelineStateObject.get())) {
+		setComputeRootSignature(pPipelineStateObject->getRootSignature());
+		_pCommandList->SetPipelineState(pPipelineStateObject->getPipelineStateObject().Get());
+	}
+}
+
+/**************************************************************************************************/
 
 CommandList::CommandList(std::weak_ptr<FrameResourceItem> pFrameResourceItem) {
 	auto pSharedFrameResourceItem = pFrameResourceItem.lock();
@@ -355,6 +394,13 @@ CommandList::CommandList(std::weak_ptr<FrameResourceItem> pFrameResourceItem) {
 }
 
 CommandList::~CommandList() {
+}
+
+void CommandList::copyResource(Texture &dest, Texture &src) {
+	_pCommandList->CopyResource(
+		dest.getD3DResource().Get(),
+		src.getD3DResource().Get()
+	);
 }
 
 void CommandList::close() {
@@ -402,17 +448,39 @@ void CommandList::bindDescriptorHeaps() {
 		_pCommandList->SetDescriptorHeaps(numDescriptors, pHeaps);
 }
 
+#define CheckState(ret, message)			\
+do {										\
+	if (!(ret)) {							\
+		std::cerr << message << std::endl;	\
+		assert(false);						\
+		return false;						\
+	}										\
+} while (false)
 bool CommandList::CommandListState::debugCheckDraw() const {
 	return pPSO != nullptr && pRootSignature != nullptr && pRenderTarget != nullptr && 
 		   isSetViewprot && isSetScissorRect && checkVertexBuffer() && checkTextures() &&
 		   primitiveTopology != D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
+
+	CheckState(pPSO != nullptr, "PipelineStateObject not set");
+	CheckState(dynamic_cast<GraphicsPSO *>(pPSO), "PipelineStateObject cast to GraphicsPSO failed!");
+	CheckState(pRootSignature != nullptr, "RootSignature not set");
+	CheckState(pRenderTarget != nullptr, "RenderTarget not set");
+	CheckState(isSetViewprot, "Viewprot not set");
+	CheckState(isSetScissorRect, "ScissorRect not set");
+	CheckState(checkVertexBuffer(), "No bound vertex buffer");
+	CheckState(checkTextures(), "No binding render textures");
+	CheckState(primitiveTopology != D3D_PRIMITIVE_TOPOLOGY_UNDEFINED, "unknow primitive topology");
+	return true;
 }
 
 bool CommandList::CommandListState::debugCheckDrawIndex() const {
-	return pPSO != nullptr && pRootSignature != nullptr && pIndexBuffer != nullptr &&
-		pRenderTarget != nullptr && isSetViewprot && isSetScissorRect && checkVertexBuffer() &&
-		checkTextures() && primitiveTopology != D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
+	if (!debugCheckDraw())
+		return false;
+
+	CheckState(pIndexBuffer != nullptr, "No bound index buffer");
+	return true;
 }
+#undef CheckState
 
 bool CommandList::CommandListState::checkVertexBuffer() const {
 	for (auto *pVertexBuffer : pVertexBuffers) {

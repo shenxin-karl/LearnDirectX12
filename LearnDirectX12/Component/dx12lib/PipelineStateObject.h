@@ -43,6 +43,7 @@ public:
 	std::shared_ptr<RootSignature> getRootSignature() const;
 	WRL::ComPtr<ID3D12PipelineState> getPipelineStateObject() const;
 	const std::string &getName() const;
+	bool isDirty() const;
 	virtual void finalize() = 0;
 	virtual std::shared_ptr<PSO> clone(const std::string &name) = 0;
 	virtual ~PSO() = default;
@@ -84,7 +85,6 @@ public:
 	void setGeometryShader(const D3D12_SHADER_BYTECODE &bytecode);
 	void setHullShader(const D3D12_SHADER_BYTECODE &bytecode);
 	void setDomainShader(const D3D12_SHADER_BYTECODE &bytecode);
-	bool isDirty() const;
 	const D3D12_GRAPHICS_PIPELINE_STATE_DESC &getDesc() const;
 	virtual void finalize() override;
 	virtual std::shared_ptr<PSO> clone(const std::string &name) override;
@@ -99,5 +99,19 @@ private:
 	std::map<std::string, WRL::ComPtr<ID3DBlob>>  _shaderBytecodeCache;
 };
 
+
+class ComputePSO : public PSO {
+public:
+	void setComputeShader(const void *pBinary, size_t size);
+	void setComputeShader(const D3D12_SHADER_BYTECODE &Binary);
+	void setComputeShader(WRL::ComPtr<ID3DBlob> pBytecode);
+	std::shared_ptr<PSO> clone(const std::string &name) override;
+	void finalize() override;
+protected:
+	ComputePSO(std::weak_ptr<Device> pDevice, const std::string &name);
+private:
+	D3D12_COMPUTE_PIPELINE_STATE_DESC _psoDesc;
+	WRL::ComPtr<ID3DBlob>             _pCSShaderBytecode;
+};
 
 }
