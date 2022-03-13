@@ -103,5 +103,8 @@ class ComputePSO;
 class CommandContext;
 class GrahpicsContext;
 class ComputeContext;
+class StructedBuffer;
+class UnorderedAccessBuffer;
+class ReadbackBuffer;
 
 }

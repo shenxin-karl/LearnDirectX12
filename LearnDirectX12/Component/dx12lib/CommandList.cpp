@@ -340,7 +340,7 @@ void CommandList::setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType,
 void CommandList::dispatch(size_t GroupCountX, size_t GroupCountY, size_t GroupCountZ) {
 	flushResourceBarriers();
 	for (auto &pDynamicHeap : _pDynamicDescriptorHeaps)
-		pDynamicHeap->commitStagedDescriptorForDraw(shared_from_this());
+		pDynamicHeap->commitStagedDescriptorForDispatch(shared_from_this());
 	_pCommandList->Dispatch(
 		static_cast<UINT>(GroupCountX), 
 		static_cast<UINT>(GroupCountY), 

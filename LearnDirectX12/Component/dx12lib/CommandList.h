@@ -94,6 +94,17 @@ public:
 	void dispatch(size_t GroupCountX = 1, size_t GroupCountY = 1, size_t GroupCountZ = 1) override;
 	void setComputeRootSignature(std::shared_ptr<RootSignature> pRootSignature) override;
 	void setPipelineStateObject(std::shared_ptr<ComputePSO> pPipelineStateObject) override;
+	std::shared_ptr<StructedBuffer> createStructedBuffer(const void *pData, std::size_t sizeInByte) override;
+	std::shared_ptr<UnorderedAccessBuffer> createUnorderedAccessBuffer(std::size_t sizeInByte) override;
+	std::shared_ptr<ReadbackBuffer> createReadbackBuffer(std::size_t sizeInByte) override;
+	void setStructedBuffer(std::shared_ptr<StructedBuffer> pStructedBuffer, 
+		uint32 rootIndex, 
+		uint32 offset = 0
+	) override;
+	void setUnorderedAccessBuffer(std::shared_ptr<UnorderedAccessBuffer> pBuffer, 
+		uint32 rootIndex, 
+		uint32 offset = 0
+	) override;
 private:
 	friend class CommandQueue;
 	friend class FrameResourceItem;

@@ -31,5 +31,8 @@ using MakeDynamicDescriptorHeap = _MakeObjectTool<DynamicDescriptorHeap>;
 using MakeRootSignature = _MakeObjectTool<RootSignature>;
 using MakeGraphicsPSO = _MakeObjectTool<GraphicsPSO>;
 using MakeComputePSO = _MakeObjectTool<ComputePSO>;
+using MakeStructedBuffer = _MakeObjectTool<StructedBuffer>;
+using MakeUnorderedAccessBuffer = _MakeObjectTool<UnorderedAccessBuffer>;
+using MakeReadBackBuffer = _MakeObjectTool<ReadbackBuffer>;
 
 }
