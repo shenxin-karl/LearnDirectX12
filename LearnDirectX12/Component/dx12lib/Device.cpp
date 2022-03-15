@@ -112,6 +112,10 @@ bool Device::get4xMsaaState() const {
 	return false;
 }
 
+const dx12lib::DeviceInitDesc &Device::getDesc() const {
+	return _initDesc;
+}
+
 std::shared_ptr<Adapter> Device::getAdapter() const {
 	return _pAdapter;
 }

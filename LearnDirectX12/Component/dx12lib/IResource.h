@@ -8,7 +8,16 @@ namespace dx12lib {
 class IResource {
 public:
 	virtual WRL::ComPtr<ID3D12Resource> getD3DResource() const = 0;
+	virtual uint64 getWidth() const = 0;
+	virtual uint64 getHeight() const = 0;
+	virtual uint64 getDepth() const = 0;
 	virtual ~IResource() = default;
+	ResourceType getResourceType() const {  return _resourceType; }
+protected:
+	IResource() = default;
+	IResource(const IResource &) = delete;
+	IResource &operator=(const IResource &) = delete;
+	ResourceType _resourceType = ResourceType::Unknow;
 };
 
 class Resource : public IResource {

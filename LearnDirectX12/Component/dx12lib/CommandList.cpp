@@ -37,6 +37,51 @@ ID3D12GraphicsCommandList *CommandList::getD3DCommandList() const noexcept {
 	return _pCommandList.Get();
 }
 
+void CommandList::copyResource(IResource &dest, IResource &src) {
+	transitionBarrier(dest, D3D12_RESOURCE_STATE_COPY_DEST);
+	transitionBarrier(dest, D3D12_RESOURCE_STATE_COPY_SOURCE);
+	_pCommandList->CopyResource(
+		dest.getD3DResource().Get(),
+		src.getD3DResource().Get()
+	);
+}
+
+void CommandList::transitionBarrier(const IResource &resource,
+	D3D12_RESOURCE_STATES state, UINT subResource /*= D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES*/,
+	bool flushBarrier /*= false */) {
+	_pResourceStateTracker->transitionResource(resource, state, subResource);
+	if (flushBarrier)
+		flushResourceBarriers();
+}
+
+void CommandList::transitionBarrier(const IResource *pResource,
+	D3D12_RESOURCE_STATES state,
+	UINT subResource /*= D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES*/,
+	bool flushBarrier /*= false */) {
+	transitionBarrier(*pResource, state, subResource, flushBarrier);
+}
+
+void CommandList::transitionBarrier(std::shared_ptr<IResource> pResource,
+	D3D12_RESOURCE_STATES state,
+	UINT subResource /*= D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES*/,
+	bool flushBarrier /*= false */) {
+	transitionBarrier(pResource.get(), state, subResource, flushBarrier);
+}
+
+void CommandList::aliasBarrier(const IResource *pResourceBefore /*= nullptr*/,
+	const IResource *pResourceAfter /*= nullptr*/,
+	bool flushBarrier /*= false */) {
+	_pResourceStateTracker->aliasBarrier(pResourceBefore, pResourceAfter);
+	if (flushBarrier)
+		flushResourceBarriers();
+}
+
+void CommandList::flushResourceBarriers() {
+	_pResourceStateTracker->flushResourceBarriers(shared_from_this());
+}
+
+/*************************************************************************************************/
+
 void CommandList::setViewports(const D3D12_VIEWPORT &viewport) {
 	_currentGPUState.isSetViewprot = true;
 	_pCommandList->RSSetViewports(1, &viewport);
@@ -110,44 +155,6 @@ void CommandList::setRenderTarget(std::shared_ptr<RenderTarget> pRenderTarget) {
 		static_cast<UINT>(depthStencilViews.size()),
 		depthStencilViews.data()
 	);
-}
-
-void CommandList::flushResourceBarriers() {
-	_pResourceStateTracker->flushResourceBarriers(shared_from_this());
-}	
-
-void CommandList::transitionBarrier(const IResource &resource, 
-	D3D12_RESOURCE_STATES state, UINT subResource /*= D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES*/,
-	bool flushBarrier /*= false */) 
-{
-	_pResourceStateTracker->transitionResource(resource, state, subResource);
-	if (flushBarrier)
-		flushResourceBarriers();
-}
-
-void CommandList::transitionBarrier(const IResource *pResource, 
-	D3D12_RESOURCE_STATES state, 
-	UINT subResource /*= D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES*/,
-	bool flushBarrier /*= false */) 
-{
-	transitionBarrier(*pResource, state, subResource, flushBarrier);
-}
-
-void CommandList::transitionBarrier(std::shared_ptr<IResource> pResource, 
-	D3D12_RESOURCE_STATES state, 
-	UINT subResource /*= D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES*/, 
-	bool flushBarrier /*= false */) 
-{
-	transitionBarrier(pResource.get(), state, subResource, flushBarrier);
-}
-
-void CommandList::aliasBarrier(const IResource *pResourceBefore /*= nullptr*/,
-	const IResource *pResourceAfter /*= nullptr*/, 
-	bool flushBarrier /*= false */) 
-{
-	_pResourceStateTracker->aliasBarrier(pResourceBefore, pResourceAfter);
-	if (flushBarrier)
-		flushResourceBarriers();
 }
 
 std::shared_ptr<VertexBuffer> 
@@ -227,6 +234,32 @@ void CommandList::setPipelineStateObject(std::shared_ptr<GraphicsPSO> pPipelineS
 		setGrahicsRootSignature(pPipelineStateObject->getRootSignature());
 		_pCommandList->SetPipelineState(pPipelineStateObject->getPipelineStateObject().Get());
 	}
+}
+
+std::shared_ptr<StructedBuffer> CommandList::createStructedBuffer(const void *pData, std::size_t sizeInByte) {
+	return nullptr;
+}
+
+std::shared_ptr<UnorderedAccessBuffer> CommandList::createUnorderedAccessBuffer(std::size_t sizeInByte) {
+	return nullptr;
+}
+
+std::shared_ptr<ReadbackBuffer> CommandList::createReadbackBuffer(std::size_t sizeInByte) {
+	return nullptr;
+}
+
+void CommandList::setStructedBuffer(std::shared_ptr<StructedBuffer> pStructedBuffer, 
+	uint32 rootIndex, 
+	uint32 offset /*= 0 */)
+{
+
+}
+
+void CommandList::setUnorderedAccessBuffer(std::shared_ptr<UnorderedAccessBuffer> pBuffer, 
+	uint32 rootIndex, 
+	uint32 offset /*= 0 */) 
+{
+
 }
 
 void CommandList::setGrahicsRootSignature(std::shared_ptr<RootSignature> pRootSignature) {
@@ -396,12 +429,6 @@ CommandList::CommandList(std::weak_ptr<FrameResourceItem> pFrameResourceItem) {
 CommandList::~CommandList() {
 }
 
-void CommandList::copyResource(Texture &dest, Texture &src) {
-	_pCommandList->CopyResource(
-		dest.getD3DResource().Get(),
-		src.getD3DResource().Get()
-	);
-}
 
 void CommandList::close() {
 	flushResourceBarriers();

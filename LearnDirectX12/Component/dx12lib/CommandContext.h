@@ -13,7 +13,11 @@ struct NonCopyable {
 
 class CommandContext : public NonCopyable {
 public:
-	virtual void copyResource(Texture &Dest, Texture &Src) = 0;
+	virtual void copyResource(IResource &Dest, IResource &Src) = 0;
+	virtual void transitionBarrier(const IResource &resource, D3D12_RESOURCE_STATES state, UINT subResource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, bool flushBarrier = false) = 0;
+	virtual void transitionBarrier(const IResource *pResource, D3D12_RESOURCE_STATES state, UINT subResource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, bool flushBarrier = false) = 0;
+	virtual void transitionBarrier(std::shared_ptr<IResource> pResource, D3D12_RESOURCE_STATES state, UINT subResource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, bool flushBarrier = false) = 0;
+	virtual void aliasBarrier(const IResource *pResourceBefore = nullptr, const IResource *pResourceAfter = nullptr, bool flushBarrier = false) = 0;
 	virtual ID3D12GraphicsCommandList *getD3DCommandList() const noexcept = 0;
 	virtual	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) = 0;
 	virtual void flushResourceBarriers() = 0;

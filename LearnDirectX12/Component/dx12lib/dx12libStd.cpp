@@ -19,4 +19,12 @@ CommandQueueType toCommandQueueType(D3D12_COMMAND_LIST_TYPE type) {
 	}
 }
 
+ResourceType operator|(const ResourceType &lhs, const ResourceType &rhs) {
+	return ResourceType(std::size_t(lhs) | std::size_t(rhs));
+}
+
+bool operator&(const ResourceType &lhs, const ResourceType &rhs) {
+	return std::size_t(lhs) & std::size_t(rhs);
+}
+
 }

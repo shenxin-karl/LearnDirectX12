@@ -12,36 +12,35 @@ protected:
 	CommandList(std::weak_ptr<FrameResourceItem> pFrameResourceItem);
 public:
 	~CommandList();
-	void copyResource(Texture &dest, Texture &src) override;
 	ID3D12GraphicsCommandList *getD3DCommandList() const noexcept override;
+	void copyResource(IResource &dest, IResource &src) override;
+	/// resource barrier
+	void transitionBarrier(const IResource &resource,
+		D3D12_RESOURCE_STATES state,
+		UINT subResource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
+		bool flushBarrier = false
+	) override;
+	void transitionBarrier(const IResource *pResource,
+		D3D12_RESOURCE_STATES state,
+		UINT subResource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
+		bool flushBarrier = false
+	) override;
+	void transitionBarrier(std::shared_ptr<IResource> pResource,
+		D3D12_RESOURCE_STATES state,
+		UINT subResource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
+		bool flushBarrier = false
+	) override;
+	void aliasBarrier(const IResource *pResourceBefore = nullptr,
+		const IResource *pResourceAfter = nullptr,
+		bool flushBarrier = false
+	) override;
+	void flushResourceBarriers() override;
 /// viewport scissorRect
 	void setViewports(const D3D12_VIEWPORT &viewport) override;
 	void setViewprots(const std::vector<D3D12_VIEWPORT> &viewports) override;
 	void setScissorRects(const D3D12_RECT &rect) override;
 	void setScissorRects(const std::vector<D3D12_RECT> &rects) override;
-
 	void setRenderTarget(std::shared_ptr<RenderTarget> pRenderTarget) override;
-	void flushResourceBarriers() override;
-/// resource barrier
-	void transitionBarrier(const IResource &resource, 
-		D3D12_RESOURCE_STATES state,
-		UINT subResource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
-		bool flushBarrier = false
-	);
-	void transitionBarrier(const IResource *pResource, 
-		D3D12_RESOURCE_STATES state, 
-		UINT subResource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
-		bool flushBarrier = false
-	);
-	void transitionBarrier(std::shared_ptr<IResource> pResource,
-		D3D12_RESOURCE_STATES state,
-		UINT subResource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
-		bool flushBarrier = false
-	);
-	void aliasBarrier(const IResource *pResourceBefore = nullptr,
-		const IResource *pResourceAfter = nullptr,
-		bool flushBarrier = false
-	);
 /// create gpu buffer
 	std::shared_ptr<VertexBuffer> createVertexBuffer(
 		const void *pData,
@@ -57,7 +56,6 @@ public:
 
 	std::shared_ptr<ConstantBuffer> createConstantBuffer(std::size_t sizeInByte, const void *pData) override;
 
-	
 /// bind gpu buffer
 	void setVertexBuffer(std::shared_ptr<VertexBuffer> pVertBuffer, UINT slot = 0) override;
 	void setIndexBuffer(std::shared_ptr<IndexBuffer> pIndexBuffer) override;
@@ -122,6 +120,10 @@ private:
 	WRL::ComPtr<ID3D12CommandAllocator>     _pCmdListAlloc;
 	std::unique_ptr<ResourceStateTracker>   _pResourceStateTracker;
 	std::unique_ptr<DynamicDescriptorHeap>  _pDynamicDescriptorHeaps[kDynamicDescriptorHeapCount];
+private:	// ReadBackBuffer Item
+	struct ReadbackBufferItem {
+
+	};
 private:
 	struct CommandListState {
 		PSO           *pPSO;

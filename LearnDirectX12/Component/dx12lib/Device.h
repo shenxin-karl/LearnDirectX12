@@ -32,6 +32,7 @@ public:
 	UINT getSampleQuality() const;
 	DXGI_SAMPLE_DESC getSampleDesc() const;
 	bool get4xMsaaState() const;
+	const DeviceInitDesc &getDesc() const;
 public:
 	std::shared_ptr<Adapter> getAdapter() const;
 	std::shared_ptr<CommandQueue> getCommandQueue(CommandQueueType type) const;
