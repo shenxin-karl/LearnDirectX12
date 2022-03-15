@@ -3,9 +3,10 @@
 #include "Adapter.h"
 #include "CommandQueue.h"
 #include "CommandList.h"
-#include "Texture.h"
 #include "RenderTarget.h"
 #include "MakeObejctTool.hpp"
+#include "RenderTargetBuffer.h"
+#include "DepthStencilBuffer.h"
 #include <string>
 
 namespace dx12lib {
@@ -86,14 +87,14 @@ DXGI_FORMAT SwapChain::getDepthStencilFormat() const {
 void SwapChain::present() {
 	ThrowIfFailed(_pSwapChain->Present(0, 0));
 	_currentBackBufferIndex = (_currentBackBufferIndex + 1) % kSwapChainBufferCount;
-	_pRenderTarget->attachTexture(AttachmentPoint::Color0, getCurrentBackBuffer());
+	_pRenderTarget->attachRenderTargetBuffer(AttachmentPoint::Color0, getCurrentBackBuffer());
 }
 
 std::shared_ptr<RenderTarget> SwapChain::getRenderTarget() const {
 	return _pRenderTarget;
 }
 
-std::shared_ptr<Texture> SwapChain::getCurrentBackBuffer() const {
+std::shared_ptr<RenderTargetBuffer> SwapChain::getCurrentBackBuffer() const {
 	return _pSwapChainBuffer[_currentBackBufferIndex];
 }
 
@@ -105,7 +106,7 @@ void SwapChain::updateBuffer(CommandListProxy pCmdList) {
 		name.append(std::to_wstring(i));
 		name.append(L"]");
 		pBuffer->SetName(name.c_str());
-		_pSwapChainBuffer[i] = std::make_shared<MakeTexture>(_pDevice, pBuffer, nullptr);
+		_pSwapChainBuffer[i] = std::make_shared<MakeRenderTargetBuffer>(_pDevice, pBuffer, nullptr);
 	}
 
 	D3D12_RESOURCE_DESC depthStencilDesc;
@@ -124,12 +125,11 @@ void SwapChain::updateBuffer(CommandListProxy pCmdList) {
 	optClear.Format = _depthStendilFormat;
 	optClear.DepthStencil.Depth = 1.f;
 	optClear.DepthStencil.Stencil = 0;
-	_pDepthStencilBuffer = std::make_shared<MakeTexture>(_pDevice, depthStencilDesc, &optClear);
+	_pDepthStencilBuffer = std::make_shared<MakeDepthStencilBuffer>(_pDevice, depthStencilDesc, &optClear);
 	_pDepthStencilBuffer->getD3DResource()->SetName(L"DepthStencilBuffer");
 	pCmdList->transitionBarrier(_pDepthStencilBuffer, D3D12_RESOURCE_STATE_DEPTH_WRITE);
-
-	_pRenderTarget->attachTexture(AttachmentPoint::Color0, getCurrentBackBuffer());
-	_pRenderTarget->attachTexture(AttachmentPoint::DepthStencil, _pDepthStencilBuffer);
+	_pRenderTarget->attachRenderTargetBuffer(AttachmentPoint::Color0, getCurrentBackBuffer());
+	_pRenderTarget->attachDepthStencilBuffer(_pDepthStencilBuffer);
 }
 
 }

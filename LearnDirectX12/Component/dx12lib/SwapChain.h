@@ -18,20 +18,20 @@ public:
 	void present();
 	std::shared_ptr<RenderTarget> getRenderTarget() const;
 private:
-	std::shared_ptr<Texture> getCurrentBackBuffer() const;
+	std::shared_ptr<RenderTargetBuffer> getCurrentBackBuffer() const;
 	void updateBuffer(CommandListProxy pCmdList);
 private:
-	HWND                          _hwnd;
-	uint32	                      _width;
-	uint32                        _height;
-	DXGI_FORMAT                   _renderTargetFormat;
-	DXGI_FORMAT                   _depthStendilFormat;
-	std::size_t                   _currentBackBufferIndex;
-	std::weak_ptr<Device>         _pDevice;
-	std::shared_ptr<Texture>      _pSwapChainBuffer[kSwapChainBufferCount];
-	std::shared_ptr<Texture>      _pDepthStencilBuffer;
-	std::shared_ptr<RenderTarget> _pRenderTarget;
-	WRL::ComPtr<IDXGISwapChain>   _pSwapChain;
+	HWND	_hwnd;
+	uint32	_width;
+	uint32	_height;
+	DXGI_FORMAT	_renderTargetFormat;
+	DXGI_FORMAT	_depthStendilFormat;
+	std::size_t	_currentBackBufferIndex;
+	std::weak_ptr<Device>				_pDevice;
+	WRL::ComPtr<IDXGISwapChain>			_pSwapChain;
+	std::shared_ptr<RenderTarget>		_pRenderTarget;
+	std::shared_ptr<RenderTargetBuffer> _pSwapChainBuffer[kSwapChainBufferCount];
+	std::shared_ptr<DepthStencilBuffer> _pDepthStencilBuffer;
 };
 
 }

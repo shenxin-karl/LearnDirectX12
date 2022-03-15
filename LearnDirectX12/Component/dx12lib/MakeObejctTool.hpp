@@ -21,8 +21,6 @@ using MakeDescriptorAllocatorPage= _MakeObjectTool<DescriptorAllocatorPage>;
 using MakeDescriptorAllocator = _MakeObjectTool<DescriptorAllocator>;
 using MakeFrameResourceItem = _MakeObjectTool<FrameResourceItem>;
 using MakeFrameResourceQueue = _MakeObjectTool<FrameResourceQueue>;
-using MakeIndexBuffer = _MakeObjectTool<IndexBuffer>;
-using MakeVertexBuffer = _MakeObjectTool<VertexBuffer>;
 using MakeRenderTarget = _MakeObjectTool<RenderTarget>;
 using MakeSwapChain = _MakeObjectTool<SwapChain>;
 using MakeTexture = _MakeObjectTool<Texture>;
@@ -31,8 +29,13 @@ using MakeDynamicDescriptorHeap = _MakeObjectTool<DynamicDescriptorHeap>;
 using MakeRootSignature = _MakeObjectTool<RootSignature>;
 using MakeGraphicsPSO = _MakeObjectTool<GraphicsPSO>;
 using MakeComputePSO = _MakeObjectTool<ComputePSO>;
-using MakeStructedBuffer = _MakeObjectTool<StructedBuffer>;
+
+using MakeIndexBuffer = _MakeObjectTool<IndexBuffer>;
+using MakeVertexBuffer = _MakeObjectTool<VertexBuffer>;
+using MakeRenderTargetBuffer = _MakeObjectTool<RenderTargetBuffer>;
+using MakeDepthStencilBuffer = _MakeObjectTool<DepthStencilBuffer>;
 using MakeUnorderedAccessBuffer = _MakeObjectTool<UnorderedAccessBuffer>;
+using MakeStructedBuffer = _MakeObjectTool<StructedBuffer>;
 using MakeReadBackBuffer = _MakeObjectTool<ReadbackBuffer>;
 
 }

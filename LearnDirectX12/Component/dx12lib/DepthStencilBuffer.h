@@ -18,7 +18,10 @@ protected:
 		D3D12_CLEAR_VALUE *pClearValue = nullptr,
 		DXGI_FORMAT depthStencilFormat = DXGI_FORMAT_UNKNOWN
 	);
-	DepthStencilBuffer(std::weak_ptr<Device> pDevice, WRL::ComPtr<ID3D12Resource> pResource);
+	DepthStencilBuffer(std::weak_ptr<Device> pDevice, 
+		WRL::ComPtr<ID3D12Resource> pResource,
+		D3D12_RESOURCE_STATES state
+	);
 	void createViews(std::weak_ptr<Device> pDevice);
 private:
 	DescriptorAllocation _depthStencilView;

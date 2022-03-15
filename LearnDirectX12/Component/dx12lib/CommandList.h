@@ -82,6 +82,11 @@ public:
 		uint32 baseVertexLocation,
 		uint32 startInstanceLocation
 	) override;
+	void clearColor(std::shared_ptr<RenderTargetBuffer> pResource, float4 color) override;
+	void clearColor(std::shared_ptr<RenderTargetBuffer> pResource, float colors[4]) override;
+	void clearDepth(std::shared_ptr<DepthStencilBuffer> pResource, float depth) override;
+	void clearStencil(std::shared_ptr<DepthStencilBuffer> pResource, UINT stencil) override;
+	void clearDepthStencil(std::shared_ptr<DepthStencilBuffer> pResource, float depth, UINT stencil) override;
 /// create dds texture
 	std::shared_ptr<Texture> createDDSTextureFromFile(const std::wstring &fileName) override;
 	std::shared_ptr<Texture> createDDSTextureFromMemory(const void *pData, std::size_t sizeInByte) override;

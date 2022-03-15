@@ -8,10 +8,10 @@ namespace dx12lib {
 class IResource {
 public:
 	virtual WRL::ComPtr<ID3D12Resource> getD3DResource() const = 0;
-	virtual uint64 getWidth() const = 0;
-	virtual uint64 getHeight() const = 0;
-	virtual uint64 getDepth() const = 0;
 	virtual ~IResource() = default;
+	virtual uint64 getWidth() const;
+	virtual uint64 getHeight() const;
+	virtual uint64 getDepth() const;
 	ResourceType getResourceType() const {  return _resourceType; }
 protected:
 	IResource() = default;

@@ -2,8 +2,11 @@
 #include "dx12libStd.h"
 #include "StructConstantBuffer.hpp"
 #include <memory>
+#include "Math/MathHelper.h"
 
 namespace dx12lib {
+
+using namespace Math;
 
 struct NonCopyable {
 	NonCopyable() = default;
@@ -13,10 +16,27 @@ struct NonCopyable {
 
 class CommandContext : public NonCopyable {
 public:
-	virtual void copyResource(IResource &Dest, IResource &Src) = 0;
-	virtual void transitionBarrier(const IResource &resource, D3D12_RESOURCE_STATES state, UINT subResource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, bool flushBarrier = false) = 0;
-	virtual void transitionBarrier(const IResource *pResource, D3D12_RESOURCE_STATES state, UINT subResource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, bool flushBarrier = false) = 0;
-	virtual void transitionBarrier(std::shared_ptr<IResource> pResource, D3D12_RESOURCE_STATES state, UINT subResource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, bool flushBarrier = false) = 0;
+	template<typename T1, typename T2> requires(std::is_base_of_v<IResource, T1> &&std::is_base_of_v<IResource, T2>)
+	void copyResource(std::shared_ptr<T1> &pLhs, std::shared_ptr<T2> &pRhs) {
+		this->copyResourceImpl(
+			std::static_pointer_cast<IResource>(pLhs),
+			std::static_pointer_cast<IResource>(pRhs)
+		);
+	}
+
+	virtual void copyResourceImpl(std::shared_ptr<IResource> &pLhs, std::shared_ptr<IResource> &pRhs) = 0;
+
+	template<typename T> requires(std::is_base_of_v<IResource, T>)
+	void transitionBarrier(std::shared_ptr<T> pBuffer, D3D12_RESOURCE_STATES state, UINT subResource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, bool flushBarrier = false) {
+		this->transitionBarrierImpl(
+			std::static_pointer_cast<IResource>(pBuffer),
+			state,
+			subResource,
+			flushBarrier
+		);
+	}
+
+	virtual void transitionBarrierImpl(std::shared_ptr<IResource> pBuffer, D3D12_RESOURCE_STATES state, UINT subResource, bool flushBarrier) = 0;
 	virtual void aliasBarrier(const IResource *pResourceBefore = nullptr, const IResource *pResourceAfter = nullptr, bool flushBarrier = false) = 0;
 	virtual ID3D12GraphicsCommandList *getD3DCommandList() const noexcept = 0;
 	virtual	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) = 0;
@@ -43,6 +63,11 @@ public:
 	virtual void setStencilRef(UINT stencilRef) = 0;
 	virtual void drawInstanced(uint32 vertCount, uint32 instanceCount, uint32 baseVertexLocation, uint32 startInstanceLocation) = 0;
 	virtual void drawIndexdInstanced(uint32 indexCountPerInstance, uint32 instanceCount, uint32 startIndexLocation, uint32 baseVertexLocation, uint32 startInstanceLocation) = 0;
+	virtual void clearColor(std::shared_ptr<RenderTargetBuffer> pResource, float4 color) = 0;
+	virtual void clearColor(std::shared_ptr<RenderTargetBuffer> pResource, float colors[4]) = 0;
+	virtual void clearDepth(std::shared_ptr<DepthStencilBuffer> pResource, float depth) = 0;
+	virtual void clearStencil(std::shared_ptr<DepthStencilBuffer> pResource, UINT stencil) = 0;
+	virtual void clearDepthStencil(std::shared_ptr<DepthStencilBuffer> pResource, float depth, UINT stencil) = 0;
 	virtual std::shared_ptr<Texture> createDDSTextureFromFile(const std::wstring &fileName) = 0;
 	virtual std::shared_ptr<Texture> createDDSTextureFromMemory(const void *pData, std::size_t sizeInByte) = 0;
 	template<StructConstantBufferConcept T>

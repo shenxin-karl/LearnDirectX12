@@ -4,6 +4,18 @@
 
 namespace dx12lib {
 
+uint64 IResource::getWidth() const {
+	return getD3DResource()->GetDesc().Width;
+}
+
+uint64 IResource::getHeight() const {
+	return getD3DResource()->GetDesc().Height;
+}
+
+uint64 IResource::getDepth() const {
+	return getD3DResource()->GetDesc().DepthOrArraySize;
+}
+
 Resource::Resource(ID3D12Device *pDevice, const D3D12_RESOURCE_DESC &desc, const D3D12_CLEAR_VALUE *pClearValue /*= nullptr*/) {
 	ThrowIfFailed(pDevice->CreateCommittedResource(
 		RVPtr(CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT)),

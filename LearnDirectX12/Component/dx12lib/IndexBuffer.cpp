@@ -80,6 +80,11 @@ WRL::ComPtr<ID3D12Resource> IndexBuffer::getD3DResource() const {
 	return _pGPUBuffer->getD3DResource();
 }
 
+void IndexBuffer::resize(uint64 width, uint64 height) {
+	assert(false);
+	throw std::runtime_error("Index buffer cannot reszie");
+}
+
 IndexBuffer &IndexBuffer::operator=(IndexBuffer &&other) noexcept {
 	IndexBuffer tmp;
 	swap(*this, tmp);

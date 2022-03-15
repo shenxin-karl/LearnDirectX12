@@ -14,6 +14,8 @@
 #include "MakeObejctTool.hpp"
 #include "DefaultBuffer.h"
 #include "DDSTextureLoader.h"
+#include "RenderTargetBuffer.h"
+#include "DepthStencilBuffer.h"
 #include <iostream>
 
 #if defined(_DEBUG) || defined(DEBUG)
@@ -110,43 +112,14 @@ void CommandList::setRenderTarget(std::shared_ptr<RenderTarget> pRenderTarget) {
 	
 	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> renderTargetViews;
 	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> depthStencilViews;
-	for (std::size_t i = 0; i < static_cast<std::size_t>(AttachmentPoint::DepthStencil); ++i) {
-		auto pTexture = pRenderTarget->getTexture(static_cast<AttachmentPoint>(i));
-		if (pTexture == nullptr)
-			continue;
-		
-		ClearFlag clearFlag = pTexture->getClearFlag();
-		const auto *pClearValue = pTexture->getClearValue();
-		if (clearFlag & ClearFlag::Color && pTexture->checkRTVSupport()) {
-			_pCommandList->ClearRenderTargetView(
-				pTexture->getRenderTargetView(),
-				pClearValue->Color,
-				0,
-				nullptr
-			);
-			pTexture->setClearFlag(ClearFlag::None);
-		}
-		renderTargetViews.push_back(pTexture->getRenderTargetView());
+	for (std::size_t i = 0; i < AttachmentPoint::DepthStencil; ++i) {
+		auto pRenderTargetBuffer = pRenderTarget->getRenderTargetBuffer(AttachmentPoint(i));
+		if (pRenderTargetBuffer != nullptr)
+			renderTargetViews.emplace_back(pRenderTargetBuffer->getRenderTargetView());
 	}
-	
-	auto pDepthStencilTexture = pRenderTarget->getTexture(AttachmentPoint::DepthStencil);
-	if (pDepthStencilTexture != nullptr && pDepthStencilTexture->checkDSVSupport()) {
-		auto clearFlag = pDepthStencilTexture->getClearFlag();
-		const auto *pClearValue = pDepthStencilTexture->getClearValue();
-		D3D12_CLEAR_FLAGS flag = static_cast<D3D12_CLEAR_FLAGS>(0);
-		flag |= (clearFlag & ClearFlag::Depth)   ? D3D12_CLEAR_FLAG_DEPTH   : static_cast<D3D12_CLEAR_FLAGS>(0);
-		flag |= (clearFlag & ClearFlag::Stencil) ? D3D12_CLEAR_FLAG_STENCIL : static_cast<D3D12_CLEAR_FLAGS>(0);
-		_pCommandList->ClearDepthStencilView(
-			pDepthStencilTexture->getDepthStencilView(),
-			flag,
-			pClearValue->DepthStencil.Depth,
-			pClearValue->DepthStencil.Stencil,
-			0,
-			nullptr
-		);
-		pDepthStencilTexture->setClearFlag(ClearFlag::None);
-		depthStencilViews.push_back(pDepthStencilTexture->getDepthStencilView());
-	}
+
+	if (auto pDepthStencilBuffer = pRenderTarget->getDepthStencilBuffer())
+		depthStencilViews.emplace_back(pDepthStencilBuffer->getDepthStencilView());
 
 	assert((renderTargetViews.size() + depthStencilViews.size()) != 0);
 	_pCommandList->OMSetRenderTargets(
@@ -319,6 +292,57 @@ void CommandList::drawIndexdInstanced(uint32 indexCountPerInstance,
 		startIndexLocation, 
 		baseVertexLocation,
 		startIndexLocation
+	);
+}
+
+void CommandList::clearColor(std::shared_ptr<RenderTargetBuffer> pResource, float4 color) {
+	_pCommandList->ClearRenderTargetView(
+		pResource->getRenderTargetView(),
+		reinterpret_cast<FLOAT *>(&color),
+		0,
+		nullptr
+	);
+}
+
+void CommandList::clearColor(std::shared_ptr<RenderTargetBuffer> pResource, float colors[4]) {
+	_pCommandList->ClearRenderTargetView(
+		pResource->getRenderTargetView(),
+		colors,
+		0,
+		nullptr
+	);
+}
+
+void CommandList::clearDepth(std::shared_ptr<DepthStencilBuffer> pResource, float depth) {
+	_pCommandList->ClearDepthStencilView(
+		pResource->getDepthStencilView(),
+		D3D12_CLEAR_FLAG_DEPTH,
+		depth,
+		0,
+		0,
+		nullptr
+	);
+}
+
+void CommandList::clearStencil(std::shared_ptr<DepthStencilBuffer> pResource, UINT stencil) {
+	_pCommandList->ClearDepthStencilView(
+		pResource->getDepthStencilView(),
+		D3D12_CLEAR_FLAG_STENCIL,
+		0.f,
+		stencil,
+		0,
+		nullptr
+	);
+}
+
+void CommandList::clearDepthStencil(std::shared_ptr<DepthStencilBuffer> pResource, float depth, UINT stencil) {
+	_pCommandList->ClearDepthStencilView(
+		pResource->getDepthStencilView(),
+		D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL,
+		depth,
+		stencil,
+		0,
+		nullptr
 	);
 }
 

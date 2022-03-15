@@ -1,46 +1,38 @@
 #include "RenderTarget.h"
 #include "Texture.h"
 #include "CommandList.h"
+#include "RenderTargetBuffer.h"
+#include "DepthStencilBuffer.h"
 
 namespace dx12lib {
-
-void swap(RenderTarget &lhs, RenderTarget &rhs) noexcept {
-	using std::swap;
-	swap(lhs._size, rhs._size);
-	swap(lhs._textures, rhs._textures);
-}
 
 RenderTarget::RenderTarget(uint32 width, uint32 height) : _size(width, height) {
 }
 
 void RenderTarget::reset() {
-	std::fill(_textures.begin(), _textures.end(), nullptr);
+	_pDepthStencilBuffer = nullptr;
+	for (auto &pBuffer : _pRenderTargetBuffers)
+		pBuffer = nullptr;
 }
 
-void RenderTarget::resize(DX::XMUINT2 size) {
-	resize(size.x, size.y);
+void RenderTarget::attachRenderTargetBuffer(AttachmentPoint point, std::shared_ptr<RenderTargetBuffer> pBuffer) {
+	assert(pBuffer != nullptr);
+	assert(point < DepthStencil);
+	_pRenderTargetBuffers[point] = pBuffer;
 }
 
-void RenderTarget::resize(uint32 width, uint32 height) {
-	_size = { width, height };
-	for (auto &pTexture : _textures) {
-		if (pTexture != nullptr)
-			pTexture->resize(width, height);
-	}
+void RenderTarget::attachDepthStencilBuffer(std::shared_ptr<DepthStencilBuffer> pBuffer) {
+	assert(pBuffer != nullptr);
+	_pDepthStencilBuffer = pBuffer;
 }
 
-void RenderTarget::attachTexture(AttachmentPoint point, std::shared_ptr<Texture> pTexture) {
-	if (pTexture == nullptr || pTexture->getD3DResource() == nullptr)
-		return;
-
-	pTexture->resize(_size.x, _size.y);
-	auto index = static_cast<std::size_t>(point);
-	_textures[index] = pTexture;
+std::shared_ptr<RenderTargetBuffer> RenderTarget::getRenderTargetBuffer(AttachmentPoint point) const {
+	assert(point >= Color0 && point < DepthStencil);
+	return _pRenderTargetBuffers[point];
 }
 
-std::shared_ptr<Texture> RenderTarget::getTexture(AttachmentPoint point) const {
-	auto index = static_cast<std::size_t>(point);
-	return _textures[index];
+std::shared_ptr<DepthStencilBuffer> RenderTarget::getDepthStencilBuffer() const {
+	return _pDepthStencilBuffer;
 }
 
 uint32 RenderTarget::getWidth() const noexcept {
@@ -78,10 +70,10 @@ D3D12_VIEWPORT RenderTarget::getViewport(DX::XMFLOAT2 scale /*= { 1.f, 1.f }*/,
 D3D12_RT_FORMAT_ARRAY RenderTarget::getRenderTargetFormats() const {
 	D3D12_RT_FORMAT_ARRAY formatArray = {};
 	formatArray.NumRenderTargets = 0;
-	for (auto &pTexture : _textures) {
-		if (pTexture != nullptr) {
+	for (auto &pBuffer : _pRenderTargetBuffers) {
+		if (pBuffer != nullptr) {
 			auto index = formatArray.NumRenderTargets;
-			formatArray.RTFormats[index] = pTexture->getResourceDesc().Format;
+			formatArray.RTFormats[index] = pBuffer->getD3DResource()->GetDesc().Format;
 			formatArray.NumRenderTargets = index + 1;
 		}
 	}
@@ -90,22 +82,11 @@ D3D12_RT_FORMAT_ARRAY RenderTarget::getRenderTargetFormats() const {
 
 DXGI_FORMAT RenderTarget::getDepthStencilFormat() const {
 	DXGI_FORMAT ret = DXGI_FORMAT_UNKNOWN;
-	auto index = static_cast<std::size_t>(AttachmentPoint::DepthStencil);
-	if (_textures[index] != nullptr)
-		ret = _textures[index]->getResourceDesc().Format;
+	if (_pDepthStencilBuffer != nullptr) 
+		ret = _pDepthStencilBuffer->getD3DResource()->GetDesc().Format;
 	return ret;
 }
 
-DXGI_SAMPLE_DESC RenderTarget::getSampleDesc() const {
-	DXGI_SAMPLE_DESC sampleDesc = { 1, 0 };
-	for (auto &pTexture : _textures) {
-		if (pTexture != nullptr) {
-			sampleDesc = pTexture->getResourceDesc().SampleDesc;
-			break;
-		}
-	}
-	return sampleDesc;
-}
 
 D3D12_RECT RenderTarget::getScissiorRect() const {
 	return D3D12_RECT(0, 0, _size.x, _size.y);
@@ -116,16 +97,25 @@ void RenderTarget::transitionBarrier(CommandListProxy pCmdList,
 	UINT subresource /*= D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES */) 
 {
 	for (std::size_t i = 0; i < AttachmentPoint::DepthStencil; ++i) {
-		auto pTexture = getTexture(static_cast<AttachmentPoint>(i));
-		if (pTexture != nullptr) {
+		auto pRenderTargetBuffer = getRenderTargetBuffer(static_cast<AttachmentPoint>(i));
+		if (pRenderTargetBuffer != nullptr) {
 			pCmdList->transitionBarrier(
-				std::static_pointer_cast<IResource>(pTexture),
+				std::static_pointer_cast<IResource>(pRenderTargetBuffer),
 				state,
 				subresource
 			);
 		}
 	}
 }
+
+void swap(RenderTarget &lhs, RenderTarget &rhs) noexcept {
+	using std::swap;
+	swap(lhs._size, rhs._size);
+	swap(lhs._pRenderTargetBuffers, rhs._pRenderTargetBuffers);
+	swap(lhs._pDepthStencilBuffer, rhs._pDepthStencilBuffer);
+}
+
+/*************************************************************************************/
 
 RenderTargetTransitionBarrier::RenderTargetTransitionBarrier(CommandListProxy pCmdList, 
 	std::shared_ptr<RenderTarget> pRenderTarget, 
