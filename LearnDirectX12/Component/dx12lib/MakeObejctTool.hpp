@@ -37,5 +37,6 @@ using MakeDepthStencilBuffer = _MakeObjectTool<DepthStencilBuffer>;
 using MakeUnorderedAccessBuffer = _MakeObjectTool<UnorderedAccessBuffer>;
 using MakeStructedBuffer = _MakeObjectTool<StructedBuffer>;
 using MakeReadBackBuffer = _MakeObjectTool<ReadbackBuffer>;
+using MakeShaderResourceBuffer = _MakeObjectTool<ShaderResourceBuffer>;
 
 }

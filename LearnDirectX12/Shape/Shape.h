@@ -27,11 +27,12 @@ struct Mesh {
 
 struct ObjectCB {
 	float4x4          world;
-	d3d::Material material;
+	d3d::Material	  material;
 };
 
 struct RenderItem {
-	std::shared_ptr<Mesh> _pMesh;
+	std::shared_ptr<Mesh>    _pMesh;
+	std::shared_ptr<dx12lib::ShaderResourceBuffer> _pAlbedo;
 	GPUStructCBPtr<ObjectCB> _pObjectCB;
 };
 
@@ -72,5 +73,5 @@ private:
 	std::unordered_map<std::string, std::shared_ptr<Mesh>> _geometrys;
 	std::unordered_map<std::string, std::vector<RenderItem>> _renderItems;
 	std::unordered_map<std::string, std::shared_ptr<dx12lib::GraphicsPSO>> _PSOMap;
-	std::unordered_map<std::string, std::shared_ptr<dx12lib::Texture>> _textureMap;
+	std::unordered_map<std::string, std::shared_ptr<dx12lib::ShaderResourceBuffer>> _textureMap;
 };

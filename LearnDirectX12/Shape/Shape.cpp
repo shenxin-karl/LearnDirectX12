@@ -8,13 +8,15 @@
 #include "dx12lib/PipelineStateObject.h"
 #include "dx12lib/SwapChain.h"
 #include "dx12lib/RenderTarget.h"
-#include "dx12lib/Texture.h"
+#include "dx12lib/RenderTargetBuffer.h"
+#include "dx12lib/ShaderResourceBuffer.h"
 #include "dx12lib/IndexBuffer.h"
 #include "dx12lib/RootSignature.h"
 #include "dx12lib/CommandQueue.h"
 #include "Geometry/GeometryGenerator.h"
 #include "InputSystem/InputSystem.h"
 #include "InputSystem/Mouse.h"
+#include <DirectXColors.h>
 #include <iostream>
 
 Shape::Shape() {
@@ -67,8 +69,10 @@ void Shape::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 			D3D12_RESOURCE_STATE_PRESENT,
 		};
 
-		pRenderTarget->getTexture(dx12lib::Color0)->clearColor(DX::Colors::LightBlue);
-		pRenderTarget->getTexture(dx12lib::DepthStencil)->clearDepthStencil(1.0f, 0);
+		auto pRenderTargetBuffer = pRenderTarget->getRenderTargetBuffer(dx12lib::Color0);
+		auto pDepthStencilBuffer = pRenderTarget->getDepthStencilBuffer();
+		pCmdList->clearColor(pRenderTargetBuffer, float4(DX::Colors::LightSkyBlue));
+		pCmdList->clearDepthStencil(pDepthStencilBuffer, 1.f, 0);
 		pCmdList->setRenderTarget(pRenderTarget);
 		renderShapesPass(pCmdList);
 		renderSkullPass(pCmdList);
@@ -146,6 +150,7 @@ void Shape::buildRenderItem(dx12lib::CommandListProxy pCmdList) {
 	boxObjCb.material = _materials["boxMat"];
 	XMStoreFloat4x4(&boxObjCb.world, DX::XMMatrixScaling(2.f, 2.f, 2.f) * DX::XMMatrixTranslation(0.f, 0.5f, 0.f));
 	boxItem._pMesh = _geometrys["box"];
+	boxItem._pAlbedo = _textureMap["bricks.dds"];
 	boxItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCB>(boxObjCb);
 	textureRenderItems.push_back(boxItem);
 
@@ -154,6 +159,7 @@ void Shape::buildRenderItem(dx12lib::CommandListProxy pCmdList) {
 	gridObjCB.material = _materials["gridMat"];
 	gridObjCB.world = MathHelper::identity4x4();;
 	gridItem._pMesh = _geometrys["grid"];
+	gridItem._pAlbedo = _textureMap["tile.dds"];
 	gridItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCB>(gridObjCB);
 	textureRenderItems.push_back(gridItem);
 
@@ -182,6 +188,11 @@ void Shape::buildRenderItem(dx12lib::CommandListProxy pCmdList) {
 		rightCylRItem._pMesh = _geometrys["cylinder"];
 		leftSphereRItem._pMesh = _geometrys["sphere"];
 		rightSphereRItem._pMesh = _geometrys["sphere"];
+
+		leftCylRItem._pAlbedo = _textureMap["bricks.dds"];
+		rightCylRItem._pAlbedo = _textureMap["bricks.dds"];
+		leftSphereRItem._pAlbedo = _textureMap["bricks.dds"];
+		rightSphereRItem._pAlbedo = _textureMap["bricks.dds"];
 
 		leftCylRItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCB>(leftCylObjCB);
 		rightCylRItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCB>(rightCylObjCB);
@@ -328,6 +339,7 @@ void Shape::buildMaterials() {
 
 void Shape::loadTextures(dx12lib::CommandListProxy pCmdList) {
 	_textureMap["bricks.dds"] = pCmdList->createDDSTextureFromFile(L"resource/bricks.dds");
+	_textureMap["tile.dds"] = pCmdList->createDDSTextureFromFile(L"resource/tile.dds");
 }
 
 void Shape::renderShapesPass(dx12lib::CommandListProxy pCmdList) {
@@ -337,8 +349,6 @@ void Shape::renderShapesPass(dx12lib::CommandListProxy pCmdList) {
 
 	pCmdList->setStructConstantBuffer(_pPassCB, ShapeRootParameType::CBPass);
 	pCmdList->setStructConstantBuffer(_pGameLightsCB, ShapeRootParameType::CBLight);
-	auto pAlbedoMap = _textureMap["bricks.dds"];
-	pCmdList->setShaderResourceView(pAlbedoMap, ShapeRootParameType::SRAlbedo);
 
 	auto psoRenderItems = _renderItems[passPSOName];
 	for (auto &rItem : psoRenderItems) {
@@ -346,6 +356,7 @@ void Shape::renderShapesPass(dx12lib::CommandListProxy pCmdList) {
 		pCmdList->setIndexBuffer(rItem._pMesh->_pIndexBuffer);
 		pCmdList->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		pCmdList->setStructConstantBuffer(rItem._pObjectCB, ShapeRootParameType::CBObject);
+		pCmdList->setShaderResourceBuffer(rItem._pAlbedo, ShapeRootParameType::SRAlbedo);
 		pCmdList->drawIndexdInstanced(
 			rItem._pMesh->_pIndexBuffer->getIndexCount(), 1, 0,
 			0, 0

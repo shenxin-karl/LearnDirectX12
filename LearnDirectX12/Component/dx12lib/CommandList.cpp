@@ -16,6 +16,7 @@
 #include "DDSTextureLoader.h"
 #include "RenderTargetBuffer.h"
 #include "DepthStencilBuffer.h"
+#include "ShaderResourceBuffer.h"
 #include <iostream>
 
 #if defined(_DEBUG) || defined(DEBUG)
@@ -190,7 +191,7 @@ void CommandList::setConstantBufferView(std::shared_ptr<ConstantBuffer> pConstan
 	);
 }
 
-void CommandList::setShaderResourceViewImpl(std::shared_ptr<IShaderSourceResource> pTexture, uint32 rootIndex, uint32 offset) {
+void CommandList::setShaderResourceBufferImpl(std::shared_ptr<IShaderSourceResource> pTexture, uint32 rootIndex, uint32 offset) {
 	assert(pTexture != nullptr);
 	assert(_currentGPUState.pRootSignature != nullptr);
 	_pDynamicDescriptorHeaps[0]->stageDescriptors(
@@ -347,43 +348,41 @@ void CommandList::clearDepthStencil(std::shared_ptr<DepthStencilBuffer> pResourc
 	);
 }
 
-std::shared_ptr<Texture> CommandList::createDDSTextureFromFile(const std::wstring &fileName) {
-	//WRL::ComPtr<ID3D12Resource> pTexture;
-	//WRL::ComPtr<ID3D12Resource> pUploadHeap;
-	//DirectX::CreateDDSTextureFromFile12(_pDevice.lock()->getD3DDevice(), 
-	//	_pCommandList.Get(), 
-	//	fileName.c_str(),
-	//	pTexture,
-	//	pUploadHeap
-	//);
-	//assert(pTexture != nullptr && pUploadHeap != nullptr);
-	//return std::make_shared<MakeTexture>(_pDevice, 
-	//	pTexture, 
-	//	pUploadHeap, 
-	//	D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
-	//);
-	return nullptr;
+std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSTextureFromFile(const std::wstring &fileName) {
+	WRL::ComPtr<ID3D12Resource> pTexture;
+	WRL::ComPtr<ID3D12Resource> pUploadHeap;
+	DirectX::CreateDDSTextureFromFile12(_pDevice.lock()->getD3DDevice(),
+		_pCommandList.Get(),
+		fileName.c_str(),
+		pTexture,
+		pUploadHeap
+	);
+	assert(pTexture != nullptr && pUploadHeap != nullptr);
+	return std::make_shared<MakeShaderResourceBuffer>(_pDevice,
+		pTexture,
+		pUploadHeap,
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+	);
 }
 
-std::shared_ptr<dx12lib::Texture> CommandList::createDDSTextureFromMemory(const void *pData, 
+std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSTextureFromMemory(const void *pData,
 	std::size_t sizeInByte) 
 {
-	//WRL::ComPtr<ID3D12Resource> pTexture;
-	//WRL::ComPtr<ID3D12Resource> pUploadHeap;
-	//DirectX::CreateDDSTextureFromMemory12(_pDevice.lock()->getD3DDevice(),
-	//	_pCommandList.Get(),
-	//	reinterpret_cast<const uint8_t *>(pData),
-	//	sizeInByte,
-	//	pTexture,
-	//	pUploadHeap
-	//);
-	//assert(pTexture != nullptr && pUploadHeap != nullptr);
-	//return std::make_shared<MakeTexture>(_pDevice,
-	//	pTexture,
-	//	pUploadHeap,
-	//	D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
-	//);
-	return nullptr;
+	WRL::ComPtr<ID3D12Resource> pTexture;
+	WRL::ComPtr<ID3D12Resource> pUploadHeap;
+	DirectX::CreateDDSTextureFromMemory12(_pDevice.lock()->getD3DDevice(),
+		_pCommandList.Get(),
+		reinterpret_cast<const uint8_t *>(pData),
+		sizeInByte,
+		pTexture,
+		pUploadHeap
+	);
+	assert(pTexture != nullptr && pUploadHeap != nullptr);
+	return std::make_shared<MakeShaderResourceBuffer>(_pDevice,
+		pTexture,
+		pUploadHeap,
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+	);
 }
 
 void CommandList::setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, 

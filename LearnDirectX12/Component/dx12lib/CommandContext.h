@@ -51,14 +51,14 @@ public:
 	virtual void setConstantBufferView(std::shared_ptr<ConstantBuffer> pConstantBuffer, uint32 rootIndex, uint32 offset = 0) = 0;
 
 	template<typename T> requires(std::is_base_of_v<IShaderSourceResource, T>)
-	void setShaderResourceView(std::shared_ptr<T> pResource, uint32 rootIndex, uint32 offset = 0) {
-		this->setShaderResourceViewImpl(
+	void setShaderResourceBuffer(std::shared_ptr<T> pResource, uint32 rootIndex, uint32 offset = 0) {
+		this->setShaderResourceBufferImpl(
 			std::static_pointer_cast<IShaderSourceResource>(pResource),
 			rootIndex,
 			offset
 		);
 	}
-	virtual void setShaderResourceViewImpl(std::shared_ptr<IShaderSourceResource> pTexture, uint32 rootIndex, uint32 offset) = 0;
+	virtual void setShaderResourceBufferImpl(std::shared_ptr<IShaderSourceResource> pTexture, uint32 rootIndex, uint32 offset) = 0;
 	virtual std::shared_ptr<ConstantBuffer> createConstantBuffer(std::size_t sizeInByte, const void *pData = nullptr) = 0;
 };
 
@@ -84,8 +84,8 @@ public:
 	virtual void clearDepth(std::shared_ptr<DepthStencilBuffer> pResource, float depth) = 0;
 	virtual void clearStencil(std::shared_ptr<DepthStencilBuffer> pResource, UINT stencil) = 0;
 	virtual void clearDepthStencil(std::shared_ptr<DepthStencilBuffer> pResource, float depth, UINT stencil) = 0;
-	virtual std::shared_ptr<Texture> createDDSTextureFromFile(const std::wstring &fileName) = 0;
-	virtual std::shared_ptr<Texture> createDDSTextureFromMemory(const void *pData, std::size_t sizeInByte) = 0;
+	virtual std::shared_ptr<ShaderResourceBuffer> createDDSTextureFromFile(const std::wstring &fileName) = 0;
+	virtual std::shared_ptr<ShaderResourceBuffer> createDDSTextureFromMemory(const void *pData, std::size_t sizeInByte) = 0;
 	template<StructConstantBufferConcept T>
 	std::shared_ptr<StructConstantBuffer<T>> createStructConstantBuffer(const T *pData = nullptr) {
 		std::shared_ptr<ConstantBuffer> pConstantBuffer = createConstantBuffer(sizeof(T), nullptr);

@@ -45,7 +45,7 @@ public:
 		uint32 rootIndex, 
 		uint32 offset = 0
 	) override;
-	void setShaderResourceViewImpl(std::shared_ptr<IShaderSourceResource> pTexture, uint32 rootIndex, uint32 offset) override;
+	void setShaderResourceBufferImpl(std::shared_ptr<IShaderSourceResource> pTexture, uint32 rootIndex, uint32 offset) override;
 	void setPipelineStateObject(std::shared_ptr<GraphicsPSO> pPipelineStateObject) override;
 	void setGrahicsRootSignature(std::shared_ptr<RootSignature> pRootSignature) override;
 	void setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology) override;
@@ -70,8 +70,8 @@ public:
 	void clearStencil(std::shared_ptr<DepthStencilBuffer> pResource, UINT stencil) override;
 	void clearDepthStencil(std::shared_ptr<DepthStencilBuffer> pResource, float depth, UINT stencil) override;
 /// create dds texture
-	std::shared_ptr<Texture> createDDSTextureFromFile(const std::wstring &fileName) override;
-	std::shared_ptr<Texture> createDDSTextureFromMemory(const void *pData, std::size_t sizeInByte) override;
+	std::shared_ptr<ShaderResourceBuffer> createDDSTextureFromFile(const std::wstring &fileName) override;
+	std::shared_ptr<ShaderResourceBuffer> createDDSTextureFromMemory(const void *pData, std::size_t sizeInByte) override;
 /// bind descriptor
 	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) override;
 

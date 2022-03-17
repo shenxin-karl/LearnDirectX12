@@ -34,10 +34,10 @@ void TestApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 			D3D12_RESOURCE_STATE_PRESENT,
 		};
 
-		auto pTexture = pRenderTarget->getTexture(dx12lib::AttachmentPoint::Color0);
-		pTexture->clearColor({ 1.f, std::sin(pGameTimer->getTotalTime()) * 0.5f + 0.5f, 0.f, 1.f });
-		auto pDepthStencil = pRenderTarget->getTexture(dx12lib::AttachmentPoint::DepthStencil);
-		pDepthStencil->clearDepthStencil(1.f, 0);
+		auto pRenderTargetBuffer = pRenderTarget->getRenderTargetBuffer(dx12lib::Color0);
+		auto pDepthStencilBuffer = pRenderTarget->getDepthStencilBuffer();
+		pCmdList->clearColor(pRenderTargetBuffer, { 1.f, std::sin(pGameTimer->getTotalTime()) * 0.5f + 0.5f, 0.f, 1.f });
+		pCmdList->clearDepthStencil(pDepthStencilBuffer, 1.f, 0);
 		pCmdList->setRenderTarget(pRenderTarget);
 	}
 	pCmdQueue->executeCommandList(pCmdList);
