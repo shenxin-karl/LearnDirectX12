@@ -13,27 +13,9 @@ protected:
 public:
 	~CommandList();
 	ID3D12GraphicsCommandList *getD3DCommandList() const noexcept override;
-	void copyResource(IResource &dest, IResource &src) override;
-	/// resource barrier
-	void transitionBarrier(const IResource &resource,
-		D3D12_RESOURCE_STATES state,
-		UINT subResource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
-		bool flushBarrier = false
-	) override;
-	void transitionBarrier(const IResource *pResource,
-		D3D12_RESOURCE_STATES state,
-		UINT subResource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
-		bool flushBarrier = false
-	) override;
-	void transitionBarrier(std::shared_ptr<IResource> pResource,
-		D3D12_RESOURCE_STATES state,
-		UINT subResource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
-		bool flushBarrier = false
-	) override;
-	void aliasBarrier(const IResource *pResourceBefore = nullptr,
-		const IResource *pResourceAfter = nullptr,
-		bool flushBarrier = false
-	) override;
+	void copyResourceImpl(std::shared_ptr<IResource> &pLhs, std::shared_ptr<IResource> &pRhs) override;
+	void transitionBarrierImpl(std::shared_ptr<IResource> pBuffer, D3D12_RESOURCE_STATES state, UINT subResource, bool flushBarrier) override;
+	void aliasBarrierImpl(std::shared_ptr<IResource> pBeforce, std::shared_ptr<IResource> pAfter, bool flushBarrier) override;
 	void flushResourceBarriers() override;
 /// viewport scissorRect
 	void setViewports(const D3D12_VIEWPORT &viewport) override;
@@ -56,21 +38,21 @@ public:
 
 	std::shared_ptr<ConstantBuffer> createConstantBuffer(std::size_t sizeInByte, const void *pData) override;
 
-/// bind gpu buffer
+/// bind GPU buffer
 	void setVertexBuffer(std::shared_ptr<VertexBuffer> pVertBuffer, UINT slot = 0) override;
 	void setIndexBuffer(std::shared_ptr<IndexBuffer> pIndexBuffer) override;
 	void setConstantBufferView(std::shared_ptr<ConstantBuffer> pConstantBuffer, 
 		uint32 rootIndex, 
 		uint32 offset = 0
 	) override;
+	void setShaderResourceViewImpl(std::shared_ptr<IShaderSourceResource> pTexture, uint32 rootIndex, uint32 offset) override;
 	void setPipelineStateObject(std::shared_ptr<GraphicsPSO> pPipelineStateObject) override;
 	void setGrahicsRootSignature(std::shared_ptr<RootSignature> pRootSignature) override;
 	void setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology) override;
-	void setShaderResourceView(std::shared_ptr<Texture> pTexture, uint32 rootIndex, uint32 offset = 0) override;
 	void setStencilRef(UINT stencilRef) override;
 
 /// draw function
-	void drawInstanced(uint32 vertCount, 
+	void drawInstanced(uint32 vertCount,
 		uint32 instanceCount, 
 		uint32 baseVertexLocation,
 		uint32 startInstanceLocation
@@ -134,7 +116,7 @@ private:
 		PSO           *pPSO;
 		RootSignature *pRootSignature;
 		VertexBuffer  *pVertexBuffers[kVertexBufferSlotCount];
-		Texture       *pTextures[AttachmentPoint::NumAttachmentPoints];
+		IResource     *pRTbuffers[AttachmentPoint::NumAttachmentPoints];
 		IndexBuffer   *pIndexBuffer;
 		RenderTarget  *pRenderTarget;
 		bool           isSetViewprot;

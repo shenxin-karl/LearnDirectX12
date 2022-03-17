@@ -20,6 +20,12 @@ protected:
 	ResourceType _resourceType = ResourceType::Unknow;
 };
 
+class IShaderSourceResource : public IResource {
+public:
+	virtual D3D12_CPU_DESCRIPTOR_HANDLE getShaderResourceView() const = 0;
+	virtual bool isShaderSample() const = 0;
+};
+
 class Resource : public IResource {
 protected:
 	Resource(ID3D12Device *pDevice, 

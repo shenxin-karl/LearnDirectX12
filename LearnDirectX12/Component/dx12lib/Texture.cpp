@@ -3,7 +3,7 @@
 #include "ResourceStateTracker.h"
 
 namespace dx12lib {
-
+#if 0
 ClearFlag operator|(ClearFlag lhs, ClearFlag rhs) {
 	std::size_t flag = static_cast<std::size_t>(lhs) | static_cast<std::size_t>(rhs);
 	return ClearFlag(flag);
@@ -222,5 +222,5 @@ void Texture::createViews() {
 		);
 	}
 }
-
+#endif
 }

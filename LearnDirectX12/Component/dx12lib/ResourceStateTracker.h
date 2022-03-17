@@ -13,12 +13,8 @@ public:
 		D3D12_RESOURCE_STATES stateAfter, 
 		UINT subResource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES
 	);
-	void transitionResource(const IResource &resource,
-		D3D12_RESOURCE_STATES stateAfter,
-		UINT subResource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES
-	);
 	void UAVBarrier(const IResource *resource = nullptr);
-	void aliasBarrier(const IResource *resourceBefore = nullptr, const IResource *resourceAfter = nullptr);
+	void aliasBarrier(const IResource *pBeforce, const IResource *pAfter);
 	uint32 flushResourceBarriers(std::shared_ptr<CommandList> commandList);
 	void commitFinalResourceStates();
 	UINT flusePendingResourceBarriers(std::shared_ptr<CommandList> pCmdList);

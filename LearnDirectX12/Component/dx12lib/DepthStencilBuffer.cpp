@@ -13,7 +13,12 @@ D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilBuffer::getDepthStencilView() const {
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilBuffer::getShaderResourceView() const {
+	assert(_shaderResourceView.isValid());
 	return _shaderResourceView.getCPUHandle();
+}
+
+bool DepthStencilBuffer::isShaderSample() const {
+	return _shaderResourceView.isValid();
 }
 
 DepthStencilBuffer::~DepthStencilBuffer() {
@@ -23,8 +28,8 @@ DepthStencilBuffer::~DepthStencilBuffer() {
 DepthStencilBuffer::DepthStencilBuffer(std::weak_ptr<Device> pDevice, 
 	uint32 width, 
 	uint32 height, 
-	D3D12_CLEAR_VALUE *pClearValue = nullptr,
-	DXGI_FORMAT depthStencilFormat = DXGI_FORMAT_UNKNOWN)
+	const D3D12_CLEAR_VALUE *pClearValue,
+	DXGI_FORMAT depthStencilFormat)
 {
 	auto pSharedDevice = pDevice.lock();
 	if (depthStencilFormat == DXGI_FORMAT_UNKNOWN)
@@ -73,12 +78,23 @@ void DepthStencilBuffer::createViews(std::weak_ptr<Device> pDevice) {
 		_depthStencilView.getCPUHandle()
 	);
 
-	_shaderResourceView = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	pSharedDevice->getD3DDevice()->CreateShaderResourceView(
-		_pResource.Get(),
-		nullptr,
-		_shaderResourceView.getCPUHandle()
-	);
+	auto desc = _pResource->GetDesc();
+	D3D12_FEATURE_DATA_FORMAT_SUPPORT formatSupport;
+	formatSupport.Format = desc.Format;
+	ThrowIfFailed(pSharedDevice->getD3DDevice()->CheckFeatureSupport(
+		D3D12_FEATURE_FORMAT_SUPPORT,
+		&formatSupport,
+		sizeof(D3D12_FEATURE_DATA_FORMAT_SUPPORT)
+	));
+
+	if (formatSupport.Support1 & D3D12_FORMAT_SUPPORT1_SHADER_SAMPLE) {
+		_shaderResourceView = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		pSharedDevice->getD3DDevice()->CreateShaderResourceView(
+			_pResource.Get(),
+			nullptr,
+			_shaderResourceView.getCPUHandle()
+		);
+	}
 }
 
 }

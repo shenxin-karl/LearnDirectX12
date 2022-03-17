@@ -106,7 +106,11 @@ void SwapChain::updateBuffer(CommandListProxy pCmdList) {
 		name.append(std::to_wstring(i));
 		name.append(L"]");
 		pBuffer->SetName(name.c_str());
-		_pSwapChainBuffer[i] = std::make_shared<MakeRenderTargetBuffer>(_pDevice, pBuffer, nullptr);
+		_pSwapChainBuffer[i] = std::make_shared<MakeRenderTargetBuffer>(
+			_pDevice,
+			pBuffer, 
+			D3D12_RESOURCE_STATE_COMMON
+		);
 	}
 
 	D3D12_RESOURCE_DESC depthStencilDesc;
@@ -117,17 +121,27 @@ void SwapChain::updateBuffer(CommandListProxy pCmdList) {
 	depthStencilDesc.DepthOrArraySize = 1;
 	depthStencilDesc.MipLevels = 1;
 	depthStencilDesc.Format = _depthStendilFormat;
-	depthStencilDesc.SampleDesc = _pDevice.lock()->getSampleDesc();
+	depthStencilDesc.SampleDesc.Count = 1;
+	depthStencilDesc.SampleDesc.Quality = 0;
 	depthStencilDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
-
+	
 	D3D12_CLEAR_VALUE optClear;
 	optClear.Format = _depthStendilFormat;
 	optClear.DepthStencil.Depth = 1.f;
 	optClear.DepthStencil.Stencil = 0;
-	_pDepthStencilBuffer = std::make_shared<MakeDepthStencilBuffer>(_pDevice, depthStencilDesc, &optClear);
+
+	WRL::ComPtr<ID3D12Resource> pDepthStencil;
+	ThrowIfFailed(_pDevice.lock()->getD3DDevice()->CreateCommittedResource(
+		RVPtr(CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT)),
+		D3D12_HEAP_FLAG_NONE,
+		RVPtr(depthStencilDesc),
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		RVPtr(optClear),
+		IID_PPV_ARGS(&pDepthStencil)
+	));
+	_pDepthStencilBuffer = std::make_shared<MakeDepthStencilBuffer>(_pDevice, pDepthStencil, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 	_pDepthStencilBuffer->getD3DResource()->SetName(L"DepthStencilBuffer");
-	pCmdList->transitionBarrier(_pDepthStencilBuffer, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 	_pRenderTarget->attachRenderTargetBuffer(AttachmentPoint::Color0, getCurrentBackBuffer());
 	_pRenderTarget->attachDepthStencilBuffer(_pDepthStencilBuffer);
 }

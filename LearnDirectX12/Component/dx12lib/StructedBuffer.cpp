@@ -29,7 +29,7 @@ StructedBuffer::StructedBuffer(std::weak_ptr<Device> pDevice,
 		pSharedDevice->getD3DDevice(),
 		pCmdList->getD3DCommandList(),
 		pData,
-		sizeInByte
+		static_cast<uint32>(sizeInByte)
 	);
 
 	// create view

@@ -54,28 +54,15 @@ void ResourceStateTracker::transitionResource(ID3D12Resource *pResource,
 	));
 }
 
-void ResourceStateTracker::transitionResource(const IResource &resource, 
-	D3D12_RESOURCE_STATES stateAfter, 
-	UINT subResource /*= D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES */) 
-{
-	resourceBarrier(CD3DX12_RESOURCE_BARRIER::Transition(
-		resource.getD3DResource().Get(),
-		D3D12_RESOURCE_STATE_COMMON,
-		stateAfter,
-		subResource
-	));
-}
-
 void ResourceStateTracker::UAVBarrier(const IResource *pResource /*= nullptr*/) {
 	auto *pD3DResource = pResource != nullptr ? pResource->getD3DResource().Get() : nullptr;
+	assert(pD3DResource != nullptr);
 	resourceBarrier(CD3DX12_RESOURCE_BARRIER::UAV(pD3DResource));
 }
 
-void ResourceStateTracker::aliasBarrier(const IResource *pResourceBefore /*= nullptr*/, 
-	const IResource *pResourceAfter /*= nullptr*/) 
-{
-	auto *pD3DBeforceResource = pResourceBefore != nullptr ? pResourceBefore->getD3DResource().Get() : nullptr;
-	auto *pD3DAfterResource = pResourceAfter != nullptr ? pResourceAfter->getD3DResource().Get() : nullptr;
+void ResourceStateTracker::aliasBarrier(const IResource *pBeforce, const IResource *pAfter) {
+	auto *pD3DBeforceResource = pBeforce != nullptr ? pBeforce->getD3DResource().Get() : nullptr;
+	auto *pD3DAfterResource = pAfter != nullptr ? pAfter->getD3DResource().Get() : nullptr;
 	if (pD3DBeforceResource == nullptr || pD3DAfterResource == nullptr) {
 		assert(false);
 		std::cout << __FUNCTION__ << " pD3DBeforceResource == nullptr || pD3DAfterResource == nullptr" << std::endl;

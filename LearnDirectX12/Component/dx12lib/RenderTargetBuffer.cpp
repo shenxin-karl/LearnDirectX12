@@ -17,7 +17,12 @@ D3D12_CPU_DESCRIPTOR_HANDLE RenderTargetBuffer::getRenderTargetView() const {
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE RenderTargetBuffer::getShaderResourceView() const {
+	assert(_shaderResourceView.isValid());
 	return _shaderResourceView.getCPUHandle();
+}
+
+bool RenderTargetBuffer::isShaderSample() const {
+	return _shaderResourceView.isValid();
 }
 
 void RenderTargetBuffer::createViews(std::weak_ptr<Device> pDevice) {
@@ -29,12 +34,22 @@ void RenderTargetBuffer::createViews(std::weak_ptr<Device> pDevice) {
 		_renderTargetView.getCPUHandle()
 	);
 
-	_shaderResourceView = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	pSharedDevice->getD3DDevice()->CreateShaderResourceView(
-		_pResource.Get(),
-		nullptr,
-		_shaderResourceView.getCPUHandle()
-	);
+	auto desc = _pResource->GetDesc();
+	D3D12_FEATURE_DATA_FORMAT_SUPPORT formatSupport;
+	formatSupport.Format = desc.Format;
+	ThrowIfFailed(pSharedDevice->getD3DDevice()->CheckFeatureSupport(
+		D3D12_FEATURE_FORMAT_SUPPORT,
+		&formatSupport,
+		sizeof(D3D12_FEATURE_DATA_FORMAT_SUPPORT)
+	));
+	if (formatSupport.Support1 & D3D12_FORMAT_SUPPORT1_SHADER_SAMPLE) {
+		_shaderResourceView = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		pSharedDevice->getD3DDevice()->CreateShaderResourceView(
+			_pResource.Get(),
+			nullptr,
+			_shaderResourceView.getCPUHandle()
+		);
+	}
 }
 
 RenderTargetBuffer::RenderTargetBuffer(std::weak_ptr<Device> 

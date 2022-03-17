@@ -125,5 +125,7 @@ class ReadbackBuffer;
 class DepthStencilBuffer;
 class RenderTargetBuffer;
 class ShaderResourceBuffer;
+class IShaderSourceResource;
+class IResource;
 
 }

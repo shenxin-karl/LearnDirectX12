@@ -17,6 +17,7 @@ ClearFlag operator|(ClearFlag lhs, ClearFlag rhs);
 ClearFlag &operator|=(ClearFlag &lhs, ClearFlag rhs);
 bool operator&(ClearFlag lhs, ClearFlag rhs);
 
+#if 0
 class Texture : public Resource {
 protected:
 	Texture(std::weak_ptr<Device> pDevice, 
@@ -70,5 +71,7 @@ private:
 	uint32						_depthOrArraySize;
 	D3D12_RESOURCE_DIMENSION	_dimension;
 };
+
+#endif
 
 }

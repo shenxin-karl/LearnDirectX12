@@ -39,44 +39,34 @@ ID3D12GraphicsCommandList *CommandList::getD3DCommandList() const noexcept {
 	return _pCommandList.Get();
 }
 
-void CommandList::copyResource(IResource &dest, IResource &src) {
-	transitionBarrier(dest, D3D12_RESOURCE_STATE_COPY_DEST);
-	transitionBarrier(dest, D3D12_RESOURCE_STATE_COPY_SOURCE);
+void CommandList::copyResourceImpl(std::shared_ptr<IResource> &pDest, std::shared_ptr<IResource> &pSrc) {
+	transitionBarrier(pDest, D3D12_RESOURCE_STATE_COPY_DEST);
+	transitionBarrier(pSrc, D3D12_RESOURCE_STATE_COPY_SOURCE);
 	_pCommandList->CopyResource(
-		dest.getD3DResource().Get(),
-		src.getD3DResource().Get()
+		pDest->getD3DResource().Get(),
+		pSrc->getD3DResource().Get()
 	);
 }
 
-void CommandList::transitionBarrier(const IResource &resource,
-	D3D12_RESOURCE_STATES state, UINT subResource /*= D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES*/,
-	bool flushBarrier /*= false */) {
-	_pResourceStateTracker->transitionResource(resource, state, subResource);
+void CommandList::transitionBarrierImpl(std::shared_ptr<IResource> pBuffer, 
+	D3D12_RESOURCE_STATES state, 
+	UINT subResource,
+	bool flushBarrier) 
+{
+	_pResourceStateTracker->transitionResource(pBuffer->getD3DResource().Get(), state, subResource);
 	if (flushBarrier)
 		flushResourceBarriers();
 }
 
-void CommandList::transitionBarrier(const IResource *pResource,
-	D3D12_RESOURCE_STATES state,
-	UINT subResource /*= D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES*/,
-	bool flushBarrier /*= false */) {
-	transitionBarrier(*pResource, state, subResource, flushBarrier);
-}
-
-void CommandList::transitionBarrier(std::shared_ptr<IResource> pResource,
-	D3D12_RESOURCE_STATES state,
-	UINT subResource /*= D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES*/,
-	bool flushBarrier /*= false */) {
-	transitionBarrier(pResource.get(), state, subResource, flushBarrier);
-}
-
-void CommandList::aliasBarrier(const IResource *pResourceBefore /*= nullptr*/,
-	const IResource *pResourceAfter /*= nullptr*/,
-	bool flushBarrier /*= false */) {
-	_pResourceStateTracker->aliasBarrier(pResourceBefore, pResourceAfter);
+void CommandList::aliasBarrierImpl(std::shared_ptr<IResource> pBeforce, 
+	std::shared_ptr<IResource> pAfter, 
+	bool flushBarrier) 
+{
+	_pResourceStateTracker->aliasBarrier(pBeforce.get(), pAfter.get());
 	if (flushBarrier)
 		flushResourceBarriers();
 }
+
 
 void CommandList::flushResourceBarriers() {
 	_pResourceStateTracker->flushResourceBarriers(shared_from_this());
@@ -200,6 +190,17 @@ void CommandList::setConstantBufferView(std::shared_ptr<ConstantBuffer> pConstan
 	);
 }
 
+void CommandList::setShaderResourceViewImpl(std::shared_ptr<IShaderSourceResource> pTexture, uint32 rootIndex, uint32 offset) {
+	assert(pTexture != nullptr);
+	assert(_currentGPUState.pRootSignature != nullptr);
+	_pDynamicDescriptorHeaps[0]->stageDescriptors(
+		rootIndex,
+		offset,
+		1,
+		pTexture->getShaderResourceView()
+	);
+}
+
 void CommandList::setPipelineStateObject(std::shared_ptr<GraphicsPSO> pPipelineStateObject) {
 	assert(pPipelineStateObject != nullptr);
 	assert(!pPipelineStateObject->isDirty());
@@ -246,17 +247,17 @@ void CommandList::setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology) {
 	}
 }
 
-void CommandList::setShaderResourceView(std::shared_ptr<Texture> pTexture, uint32 rootIndex, uint32 offset /*= 0*/) {
-	assert(pTexture != nullptr);
-	assert(pTexture->checkSRVSupport());
-	assert(_currentGPUState.pRootSignature != nullptr);
-	_pDynamicDescriptorHeaps[0]->stageDescriptors(
-		rootIndex,
-		offset,
-		1,
-		pTexture->getShaderResourceView()
-	);
-}
+//void CommandList::setShaderResourceView(std::shared_ptr<Texture> pTexture, uint32 rootIndex, uint32 offset /*= 0*/) {
+//	assert(pTexture != nullptr);
+//	assert(pTexture->checkSRVSupport());
+//	assert(_currentGPUState.pRootSignature != nullptr);
+//	_pDynamicDescriptorHeaps[0]->stageDescriptors(
+//		rootIndex,
+//		offset,
+//		1,
+//		pTexture->getShaderResourceView()
+//	);
+//}
 
 void CommandList::setStencilRef(UINT stencilRef) {
 	if (stencilRef != _currentGPUState.stencilRef) {
@@ -347,40 +348,42 @@ void CommandList::clearDepthStencil(std::shared_ptr<DepthStencilBuffer> pResourc
 }
 
 std::shared_ptr<Texture> CommandList::createDDSTextureFromFile(const std::wstring &fileName) {
-	WRL::ComPtr<ID3D12Resource> pTexture;
-	WRL::ComPtr<ID3D12Resource> pUploadHeap;
-	DirectX::CreateDDSTextureFromFile12(_pDevice.lock()->getD3DDevice(), 
-		_pCommandList.Get(), 
-		fileName.c_str(),
-		pTexture,
-		pUploadHeap
-	);
-	assert(pTexture != nullptr && pUploadHeap != nullptr);
-	return std::make_shared<MakeTexture>(_pDevice, 
-		pTexture, 
-		pUploadHeap, 
-		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
-	);
+	//WRL::ComPtr<ID3D12Resource> pTexture;
+	//WRL::ComPtr<ID3D12Resource> pUploadHeap;
+	//DirectX::CreateDDSTextureFromFile12(_pDevice.lock()->getD3DDevice(), 
+	//	_pCommandList.Get(), 
+	//	fileName.c_str(),
+	//	pTexture,
+	//	pUploadHeap
+	//);
+	//assert(pTexture != nullptr && pUploadHeap != nullptr);
+	//return std::make_shared<MakeTexture>(_pDevice, 
+	//	pTexture, 
+	//	pUploadHeap, 
+	//	D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+	//);
+	return nullptr;
 }
 
 std::shared_ptr<dx12lib::Texture> CommandList::createDDSTextureFromMemory(const void *pData, 
 	std::size_t sizeInByte) 
 {
-	WRL::ComPtr<ID3D12Resource> pTexture;
-	WRL::ComPtr<ID3D12Resource> pUploadHeap;
-	DirectX::CreateDDSTextureFromMemory12(_pDevice.lock()->getD3DDevice(),
-		_pCommandList.Get(),
-		reinterpret_cast<const uint8_t *>(pData),
-		sizeInByte,
-		pTexture,
-		pUploadHeap
-	);
-	assert(pTexture != nullptr && pUploadHeap != nullptr);
-	return std::make_shared<MakeTexture>(_pDevice,
-		pTexture,
-		pUploadHeap,
-		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
-	);
+	//WRL::ComPtr<ID3D12Resource> pTexture;
+	//WRL::ComPtr<ID3D12Resource> pUploadHeap;
+	//DirectX::CreateDDSTextureFromMemory12(_pDevice.lock()->getD3DDevice(),
+	//	_pCommandList.Get(),
+	//	reinterpret_cast<const uint8_t *>(pData),
+	//	sizeInByte,
+	//	pTexture,
+	//	pUploadHeap
+	//);
+	//assert(pTexture != nullptr && pUploadHeap != nullptr);
+	//return std::make_shared<MakeTexture>(_pDevice,
+	//	pTexture,
+	//	pUploadHeap,
+	//	D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+	//);
+	return nullptr;
 }
 
 void CommandList::setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, 
@@ -551,11 +554,12 @@ bool CommandList::CommandListState::checkTextures() const {
 
 void CommandList::CommandListState::setRenderTarget(RenderTarget *pRenderTarget) {
 	this->pRenderTarget = pRenderTarget;
-	for (std::size_t i = 0; i < AttachmentPoint::NumAttachmentPoints; ++i) {
-		pTextures[i] = nullptr;
-		if (auto pTexture = pRenderTarget->getTexture(static_cast<AttachmentPoint>(i)))
-			pTextures[i] = pTexture.get();
+	for (std::size_t i = 0; i < AttachmentPoint::DepthStencil; ++i) {
+		pRTbuffers[i] = nullptr;
+		if (auto pRenderTargetBuffer = pRenderTarget->getRenderTargetBuffer(static_cast<AttachmentPoint>(i)))
+			pRTbuffers[i] = pRenderTargetBuffer.get();
 	}
+	pRTbuffers[AttachmentPoint::DepthStencil] = pRenderTarget->getDepthStencilBuffer().get();
 }
 
 }

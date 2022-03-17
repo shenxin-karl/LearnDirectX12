@@ -82,13 +82,15 @@ void BoxApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 
 		float cosine = std::cos(pGameTimer->getTotalTime());
 		float sine = std::sin(pGameTimer->getTotalTime());
-		pRenderTarget->getTexture(dx12lib::Color0)->clearColor({
+		auto pRenderTargetBuffer = pRenderTarget->getRenderTargetBuffer(dx12lib::Color0);
+		auto pDepthStencilBuffer = pRenderTarget->getDepthStencilBuffer();
+		pCmdList->clearColor(pRenderTargetBuffer, float4{
 			cosine * 0.5f + 0.5f,
 			sine * 0.5f + 0.5f,
 			0.6f,
-			1.f,
+			1.f
 		});
-		pRenderTarget->getTexture(dx12lib::DepthStencil)->clearDepthStencil(1.f, 0);
+		pCmdList->clearDepthStencil(pDepthStencilBuffer, 1.f, 0);
 		pCmdList->setRenderTarget(pRenderTarget);
 		renderBoxPass(pCmdList);
 	}

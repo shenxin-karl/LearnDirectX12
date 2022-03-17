@@ -23,7 +23,6 @@ public:
 			std::static_pointer_cast<IResource>(pRhs)
 		);
 	}
-
 	virtual void copyResourceImpl(std::shared_ptr<IResource> &pLhs, std::shared_ptr<IResource> &pRhs) = 0;
 
 	template<typename T> requires(std::is_base_of_v<IResource, T>)
@@ -35,18 +34,35 @@ public:
 			flushBarrier
 		);
 	}
-
 	virtual void transitionBarrierImpl(std::shared_ptr<IResource> pBuffer, D3D12_RESOURCE_STATES state, UINT subResource, bool flushBarrier) = 0;
-	virtual void aliasBarrier(const IResource *pResourceBefore = nullptr, const IResource *pResourceAfter = nullptr, bool flushBarrier = false) = 0;
+
+	template<typename T1, typename T2> requires(std::is_base_of_v<IResource, T1> &&std::is_base_of_v<IResource, T2>)
+	void aliasBarrier(std::shared_ptr<T1> pBeforce, std::shared_ptr<T2> pAfter, bool flushBarrier = false) {
+		this->aliasBarrierImpl(
+			std::static_pointer_cast<IResource>(pBeforce),
+			std::static_pointer_cast<IResource>(pAfter),
+			flushBarrier
+		);
+	}
+	virtual void aliasBarrierImpl(std::shared_ptr<IResource> pBeforce, std::shared_ptr<IResource> pAfter, bool flushBarrier) = 0;
 	virtual ID3D12GraphicsCommandList *getD3DCommandList() const noexcept = 0;
 	virtual	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) = 0;
 	virtual void flushResourceBarriers() = 0;
 	virtual void setConstantBufferView(std::shared_ptr<ConstantBuffer> pConstantBuffer, uint32 rootIndex, uint32 offset = 0) = 0;
-	virtual void setShaderResourceView(std::shared_ptr<Texture> pTexture, uint32 rootIndex, uint32 offset = 0) = 0;
+
+	template<typename T> requires(std::is_base_of_v<IShaderSourceResource, T>)
+	void setShaderResourceView(std::shared_ptr<T> pResource, uint32 rootIndex, uint32 offset = 0) {
+		this->setShaderResourceViewImpl(
+			std::static_pointer_cast<IShaderSourceResource>(pResource),
+			rootIndex,
+			offset
+		);
+	}
+	virtual void setShaderResourceViewImpl(std::shared_ptr<IShaderSourceResource> pTexture, uint32 rootIndex, uint32 offset) = 0;
 	virtual std::shared_ptr<ConstantBuffer> createConstantBuffer(std::size_t sizeInByte, const void *pData = nullptr) = 0;
 };
 
-class GrahpicsContext : public CommandContext {
+class GrahpicsContext : public virtual CommandContext {
 public:
 	virtual void setViewports(const D3D12_VIEWPORT &viewport) = 0;
 	virtual void setViewprots(const std::vector<D3D12_VIEWPORT> &viewports) = 0;
@@ -89,7 +105,7 @@ public:
 	}
 };
 
-class ComputeContext : public CommandContext {
+class ComputeContext : public virtual CommandContext {
 public:
 	virtual void dispatch(size_t GroupCountX = 1, size_t GroupCountY = 1, size_t GroupCountZ = 1) = 0;
 	virtual void setComputeRootSignature(std::shared_ptr<RootSignature> pRootSingature) = 0;
