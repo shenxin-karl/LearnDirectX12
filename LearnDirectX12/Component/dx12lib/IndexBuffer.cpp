@@ -24,6 +24,7 @@ IndexBuffer::IndexBuffer(std::weak_ptr<Device> pDevice,
 		pData, 
 		sizeInByte
 	);
+	_resourceType = ResourceType::IndexBuffer;
 }
 
 IndexBuffer::IndexBuffer(IndexBuffer &&other) noexcept : IndexBuffer() {

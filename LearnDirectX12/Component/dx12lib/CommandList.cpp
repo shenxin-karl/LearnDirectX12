@@ -2,7 +2,6 @@
 #include "Device.h"
 #include "FrameResourceQueue.h"
 #include "RenderTarget.h"
-#include "Texture.h"
 #include "ResourceStateTracker.h"
 #include "DynamicDescriptorHeap.h"
 #include "PipelineStateObject.h"
@@ -17,6 +16,9 @@
 #include "RenderTargetBuffer.h"
 #include "DepthStencilBuffer.h"
 #include "ShaderResourceBuffer.h"
+#include "ReadbackBuffer.h"
+#include "StructedBuffer.h"
+#include "UnorderedAccessBuffer.h"
 #include <iostream>
 
 #if defined(_DEBUG) || defined(DEBUG)
@@ -212,29 +214,65 @@ void CommandList::setPipelineStateObject(std::shared_ptr<GraphicsPSO> pPipelineS
 }
 
 std::shared_ptr<StructedBuffer> CommandList::createStructedBuffer(const void *pData, std::size_t sizeInByte) {
-	return nullptr;
+	assert(pData != nullptr && sizeInByte > 0);
+	return std::make_shared<MakeStructedBuffer>(
+		_pDevice,
+		shared_from_this(),
+		pData,
+		sizeInByte
+	);
 }
 
-std::shared_ptr<UnorderedAccessBuffer> CommandList::createUnorderedAccessBuffer(std::size_t sizeInByte) {
-	return nullptr;
+std::shared_ptr<UnorderedAccessBuffer> CommandList::createUnorderedAccessBuffer(DXGI_FORMAT format, 
+	std::size_t sizeInByte) 
+{
+	assert(format != DXGI_FORMAT::DXGI_FORMAT_UNKNOWN);
+	assert(sizeInByte > 0);
+	return std::make_shared<MakeUnorderedAccessBuffer>(
+		_pDevice,
+		sizeInByte,
+		format
+	);
 }
 
 std::shared_ptr<ReadbackBuffer> CommandList::createReadbackBuffer(std::size_t sizeInByte) {
-	return nullptr;
+	assert(sizeInByte > 0);
+	return std::make_shared<MakeReadbackBuffer>(
+		_pDevice,
+		sizeInByte
+	);
 }
 
 void CommandList::setStructedBuffer(std::shared_ptr<StructedBuffer> pStructedBuffer, 
 	uint32 rootIndex, 
 	uint32 offset /*= 0 */)
 {
-
+	assert(pStructedBuffer != nullptr);
+	assert(_currentGPUState.pRootSignature != nullptr);
+	_pDynamicDescriptorHeaps[0]->stageDescriptors(
+		rootIndex,
+		offset,
+		1,
+		pStructedBuffer->getStructedBufferView()
+	);
 }
 
 void CommandList::setUnorderedAccessBuffer(std::shared_ptr<UnorderedAccessBuffer> pBuffer, 
 	uint32 rootIndex, 
 	uint32 offset /*= 0 */) 
 {
+	assert(pBuffer != nullptr);
+	assert(_currentGPUState.pRootSignature != nullptr);
+	_pDynamicDescriptorHeaps[0]->stageDescriptors(
+		rootIndex,
+		offset,
+		1,
+		pBuffer->getUnorderedAccessView()
+	);
+}
 
+void CommandList::readback(std::shared_ptr<ReadbackBuffer> pReadbackBuffer) {
+	_pReadbackBuffers.push_back(pReadbackBuffer);
 }
 
 void CommandList::setGrahicsRootSignature(std::shared_ptr<RootSignature> pRootSignature) {
@@ -463,6 +501,10 @@ void CommandList::reset() {
 	std::memset(&_currentGPUState, 0, sizeof(_currentGPUState));
 	for (auto &pDynamicDescriptorHeap : _pDynamicDescriptorHeaps)
 		pDynamicDescriptorHeap->reset();
+
+	for (auto &pReadbackBuffer : _pReadbackBuffers)
+		pReadbackBuffer->setCompleted(true);
+	_pReadbackBuffers.clear();
 }
 
 void CommandList::setRootSignature(std::shared_ptr<RootSignature> pRootSignature, 

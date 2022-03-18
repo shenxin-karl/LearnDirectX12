@@ -36,10 +36,11 @@ ReadbackBuffer::ReadbackBuffer(std::weak_ptr<Device> pDevice, std::size_t sizeIn
 		nullptr,
 		IID_PPV_ARGS(&_pResource)
 	));
+	_resourceType = ResourceType::ReadbackBuffer;
 	ResourceStateTracker::addGlobalResourceState(_pResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST);
 }
 
-void ReadbackBuffer::setIsCompleted(bool flag) {
+void ReadbackBuffer::setCompleted(bool flag) {
 	_isCompleted = flag;
 }
 

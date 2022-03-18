@@ -17,8 +17,7 @@ VertexBuffer::VertexBuffer(std::weak_ptr<Device> pDevice, std::shared_ptr<Comman
 		pData, 
 		sizeInByte
 	);
-	//ThrowIfFailed(D3DCreateBlob(sizeInByte, &_pCPUBuffer));
-	//memcpy(_pCPUBuffer->GetBufferPointer(), pData, sizeInByte);
+	_resourceType = ResourceType::VertexBuffer;
 }
 
 VertexBuffer::VertexBuffer(VertexBuffer &&other) noexcept : VertexBuffer() {

@@ -80,7 +80,7 @@ public:
 	void setComputeRootSignature(std::shared_ptr<RootSignature> pRootSignature) override;
 	void setPipelineStateObject(std::shared_ptr<ComputePSO> pPipelineStateObject) override;
 	std::shared_ptr<StructedBuffer> createStructedBuffer(const void *pData, std::size_t sizeInByte) override;
-	std::shared_ptr<UnorderedAccessBuffer> createUnorderedAccessBuffer(std::size_t sizeInByte) override;
+	std::shared_ptr<UnorderedAccessBuffer> createUnorderedAccessBuffer(DXGI_FORMAT format, std::size_t sizeInByte) override;
 	std::shared_ptr<ReadbackBuffer> createReadbackBuffer(std::size_t sizeInByte) override;
 	void setStructedBuffer(std::shared_ptr<StructedBuffer> pStructedBuffer, 
 		uint32 rootIndex, 
@@ -90,6 +90,7 @@ public:
 		uint32 rootIndex, 
 		uint32 offset = 0
 	) override;
+	void readback(std::shared_ptr<ReadbackBuffer> pReadbackBuffer) override;
 private:
 	friend class CommandQueue;
 	friend class FrameResourceItem;
@@ -101,16 +102,14 @@ private:
 	void setRootSignature(std::shared_ptr<RootSignature> pRootSignature, const SetRootSignatureFunc &setFunc);
 	void bindDescriptorHeaps();
 private:
-	D3D12_COMMAND_LIST_TYPE                 _cmdListType;
-	std::weak_ptr<Device>                   _pDevice;
-	WRL::ComPtr<ID3D12GraphicsCommandList>  _pCommandList;
-	WRL::ComPtr<ID3D12CommandAllocator>     _pCmdListAlloc;
-	std::unique_ptr<ResourceStateTracker>   _pResourceStateTracker;
-	std::unique_ptr<DynamicDescriptorHeap>  _pDynamicDescriptorHeaps[kDynamicDescriptorHeapCount];
-private:	// ReadBackBuffer Item
-	struct ReadbackBufferItem {
-
-	};
+	using ReadbackBufferPool = std::vector<std::shared_ptr<ReadbackBuffer>>;
+	D3D12_COMMAND_LIST_TYPE                _cmdListType;
+	std::weak_ptr<Device>                  _pDevice;
+	WRL::ComPtr<ID3D12GraphicsCommandList> _pCommandList;
+	WRL::ComPtr<ID3D12CommandAllocator>    _pCmdListAlloc;
+	std::unique_ptr<ResourceStateTracker>  _pResourceStateTracker;
+	std::unique_ptr<DynamicDescriptorHeap> _pDynamicDescriptorHeaps[kDynamicDescriptorHeapCount];
+	ReadbackBufferPool                     _pReadbackBuffers;
 private:
 	struct CommandListState {
 		PSO           *pPSO;

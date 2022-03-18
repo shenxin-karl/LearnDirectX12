@@ -2,6 +2,7 @@
 #include "dx12libStd.h"
 #include "IResource.h"
 
+
 namespace dx12lib {
 
 class ReadbackBuffer : public IResource {
@@ -13,7 +14,7 @@ public:
 protected:
 	friend class CommandList;
 	ReadbackBuffer(std::weak_ptr<Device> pDevice, std::size_t sizeInByte);
-	void setIsCompleted(bool flag);
+	void setCompleted(bool flag);
 private:
 	bool _isCompleted = false;
 	mutable void *_pMapped = nullptr;

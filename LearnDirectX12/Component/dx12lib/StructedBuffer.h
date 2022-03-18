@@ -18,9 +18,9 @@ protected:
 		std::size_t sizeInByte
 	);
 private:
+	std::size_t                    _bufferSize;
 	DescriptorAllocation           _structedBufferView;
 	std::unique_ptr<DefaultBuffer> _pDefaultBuffer;
-	std::size_t                    _bufferSize;
 };
 
 }

@@ -38,6 +38,8 @@ StructedBuffer::StructedBuffer(std::weak_ptr<Device> pDevice,
 		nullptr,
 		_structedBufferView.getCPUHandle()
 	);
+
+	_resourceType = ResourceType::ReadbackBuffer;
 }
 
 }
