@@ -50,7 +50,7 @@ public:
 	virtual void flushResourceBarriers() = 0;
 	virtual void setConstantBufferView(std::shared_ptr<ConstantBuffer> pConstantBuffer, uint32 rootIndex, uint32 offset = 0) = 0;
 
-	template<typename T> requires(std::is_base_of_v<IShaderSourceResource, T>)
+	template<typename T> requires(sizeof(T) > 0 && std::is_base_of_v<IShaderSourceResource, T>)
 	void setShaderResourceBuffer(std::shared_ptr<T> pResource, uint32 rootIndex, uint32 offset = 0) {
 		this->setShaderResourceBufferImpl(
 			std::static_pointer_cast<IShaderSourceResource>(pResource),

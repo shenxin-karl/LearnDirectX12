@@ -248,18 +248,6 @@ void CommandList::setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology) {
 	}
 }
 
-//void CommandList::setShaderResourceView(std::shared_ptr<Texture> pTexture, uint32 rootIndex, uint32 offset /*= 0*/) {
-//	assert(pTexture != nullptr);
-//	assert(pTexture->checkSRVSupport());
-//	assert(_currentGPUState.pRootSignature != nullptr);
-//	_pDynamicDescriptorHeaps[0]->stageDescriptors(
-//		rootIndex,
-//		offset,
-//		1,
-//		pTexture->getShaderResourceView()
-//	);
-//}
-
 void CommandList::setStencilRef(UINT stencilRef) {
 	if (stencilRef != _currentGPUState.stencilRef) {
 		_currentGPUState.stencilRef = stencilRef;

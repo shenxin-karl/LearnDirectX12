@@ -9,7 +9,6 @@
 #include "dx12lib/VertexBuffer.h"
 #include "dx12lib/CommandQueue.h"
 #include "dx12lib/RenderTarget.h"
-#include "dx12lib/Texture.h"
 #include "D3D/d3dutil.h"
 #include "Math/MathHelper.h"
 #include "InputSystem/mouse.h"

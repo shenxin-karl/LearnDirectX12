@@ -73,9 +73,9 @@ struct CBObjectType {
 };
 
 struct RenderItem {
-	std::shared_ptr<d3d::Mesh>	      _pMesh;
-	GPUStructCBPtr<CBObjectType>      _pConstantBuffer;
-	std::shared_ptr<dx12lib::Texture> _pAlbedoMap;
+	std::shared_ptr<d3d::Mesh> _pMesh;
+	GPUStructCBPtr<CBObjectType> _pConstantBuffer;
+	std::shared_ptr<dx12lib::ShaderResourceBuffer> _pAlbedoMap;
 };
 
 class LandAndWater : public com::BaseApp {
@@ -111,10 +111,10 @@ private:
 	std::unique_ptr<d3d::CoronaCamera> _pCamera;
 	GPUStructCBPtr<d3d::PassCBType>    _pPassCB;
 	GPUStructCBPtr<d3d::LightCBType>   _pLightCB;
-	GPUStructCBPtr<WaterCBType>            _pWaterCB;
+	GPUStructCBPtr<WaterCBType>        _pWaterCB;
 	std::map<std::string, d3d::Material> _materialMap;
 	std::map<std::string, std::shared_ptr<d3d::Mesh>> _geometryMap;
-	std::map<std::string, std::shared_ptr<dx12lib::Texture>> _textureMap;
-	std::map<std::string, std::shared_ptr<dx12lib::GraphicsPSO>> _psoMap;
 	std::map<std::string, std::vector<RenderItem>> _renderItemMap;
+	std::map<std::string, std::shared_ptr<dx12lib::GraphicsPSO>> _psoMap;
+	std::map<std::string, std::shared_ptr<dx12lib::ShaderResourceBuffer>> _textureMap;
 };

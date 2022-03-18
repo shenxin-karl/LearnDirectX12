@@ -3,7 +3,7 @@
 #include "dx12lib/Device.h"
 #include "dx12lib/SwapChain.h"
 #include "dx12lib/RenderTarget.h"
-#include "dx12lib/Texture.h"
+#include "dx12lib/ShaderResourceBuffer.h"
 #include "dx12lib/CommandList.h"
 #include "dx12lib/CommandListProxy.h"
 #include "dx12lib/ConstantBuffer.h"
@@ -18,6 +18,7 @@
 #include "InputSystem/Mouse.h"
 #include "GameTimer/GameTimer.h"
 #include "D3D/D3DDescHelper.h"
+#include <DirectXColors.h>
 
 Vertex::Vertex(const com::Vertex &vertex)
 : position(vertex.position), normal(vertex.normal), texcoord(vertex.texcoord) {
@@ -78,8 +79,10 @@ void MirrorApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 			D3D12_RESOURCE_STATE_RENDER_TARGET,
 			D3D12_RESOURCE_STATE_PRESENT,
 		};
-		pRenderTarget->getTexture(dx12lib::Color0)->clearColor(DX::Colors::LightSkyBlue);
-		pRenderTarget->getTexture(dx12lib::DepthStencil)->clearDepthStencil(1.f, 0);
+		auto pRenderTargetBuffer = pRenderTarget->getRenderTargetBuffer(dx12lib::Color0);
+		auto pDepthStencilBuffer = pRenderTarget->getDepthStencilBuffer();
+		pCmdList->clearColor(pRenderTargetBuffer, float4(DX::Colors::LightSkyBlue));
+		pCmdList->clearDepthStencil(pDepthStencilBuffer, 1.f, 0);
 		pCmdList->setRenderTarget(pRenderTarget);
 
 		// draw opaque
@@ -134,7 +137,7 @@ void MirrorApp::drawRenderItems(dx12lib::CommandListProxy pCmdList, RenderLayer 
 		pCmdList->setVertexBuffer(rItem._pMesh->getVertexBuffer());
 		pCmdList->setIndexBuffer(rItem._pMesh->getIndexBuffer());
 		pCmdList->setStructConstantBuffer(rItem._pObjectCB, CBObject);
-		pCmdList->setShaderResourceView(rItem._pAlbedoMap, SRAlbedo);
+		pCmdList->setShaderResourceBuffer(rItem._pAlbedoMap, SRAlbedo);
 		rItem._submesh.drawIndexdInstanced(pCmdList);
 	}
 }

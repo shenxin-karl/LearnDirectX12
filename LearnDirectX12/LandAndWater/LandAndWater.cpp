@@ -11,7 +11,7 @@
 #include "dx12lib/CommandListProxy.h"
 #include "dx12lib/CommandList.h"
 #include "dx12lib/CommandQueue.h"
-#include "dx12lib/Texture.h"
+#include "dx12lib/ShaderResourceBuffer.h"
 #include "dx12lib/VertexBuffer.h"
 #include "dx12lib/ConstantBuffer.h"
 #include "dx12lib/IndexBuffer.h"
@@ -115,8 +115,10 @@ void LandAndWater::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 
 		auto pGPUPassCB = _pPassCB->cmap();
 		const auto &color = pGPUPassCB->fogColor;
-		pRenderTarget->getTexture(dx12lib::Color0)->clearColor({ color.x, color.y, color.z, color.w });
-		pRenderTarget->getTexture(dx12lib::DepthStencil)->clearDepthStencil(1.f, 0);
+		auto pRenderTargetBuffer = pRenderTarget->getRenderTargetBuffer(dx12lib::Color0);
+		auto pDepthStencilBuffer = pRenderTarget->getDepthStencilBuffer();
+		pCmdList->clearColor(pRenderTargetBuffer, color);
+		pCmdList->clearDepthStencil(pDepthStencilBuffer, 1.f, 0);
 		pCmdList->setRenderTarget(pRenderTarget);
 		drawOpaqueRenderItems(pCmdList, "TexturePSO", D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		drawOpaqueRenderItems(pCmdList, "ClipPSO", D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -179,7 +181,7 @@ void LandAndWater::drawOpaqueRenderItems(dx12lib::CommandListProxy pCmdList,
 		pCmdList->setVertexBuffer(rItem._pMesh->getVertexBuffer());
 		pCmdList->setIndexBuffer(rItem._pMesh->getIndexBuffer());
 		pCmdList->setStructConstantBuffer(rItem._pConstantBuffer, CBObject);
-		pCmdList->setShaderResourceView(rItem._pAlbedoMap, SRAlbedo);
+		pCmdList->setShaderResourceBuffer(rItem._pAlbedoMap, SRAlbedo);
 		rItem._pMesh->drawIndexdInstanced(pCmdList);
 	}
 }
@@ -247,10 +249,10 @@ void LandAndWater::buildConstantBuffer(dx12lib::CommandListProxy pCmdList) {
 void LandAndWater::buildTexturePSO(dx12lib::CommandListProxy pCmdList) {
 	dx12lib::RootSignatureDescHelper desc(d3d::getStaticSamplers());
 	desc.resize(4);
-	desc[0].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);	// cbv
+	desc[0].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);	// CBV
 	desc[1].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
 	desc[2].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2);
-	desc[3].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);	// srv
+	desc[3].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);	// SRV
 	auto pRootSignature = _pDevice->createRootSignature(desc);
 	auto pTexturePSO = _pDevice->createGraphicsPSO("TexturePSO");
 	pTexturePSO->setRootSignature(pRootSignature);

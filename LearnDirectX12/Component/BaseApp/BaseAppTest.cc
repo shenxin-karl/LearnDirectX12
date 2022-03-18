@@ -10,7 +10,6 @@
 #include "dx12lib/CommandQueue.h"
 #include "dx12lib/SwapChain.h"
 #include "dx12lib/RenderTarget.h"
-#include "dx12lib/Texture.h"
 
 
 class TestApp : public com::BaseApp {
