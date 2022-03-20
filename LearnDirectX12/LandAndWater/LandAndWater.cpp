@@ -153,16 +153,16 @@ void LandAndWater::renderWaterPass(dx12lib::CommandListProxy pCmdList) {
 	std::string_view passName = "WaterPSO";
 	auto pPSO = _psoMap[passName.data()];
 	pCmdList->setPipelineStateObject(pPSO);
-	pCmdList->setStructConstantBuffer(_pPassCB, CBPass);
-	pCmdList->setStructConstantBuffer(_pLightCB, CBLight);
-	pCmdList->setStructConstantBuffer(_pWaterCB, CBWater);
+	pCmdList->setStructuredConstantBuffer(_pPassCB, CBPass);
+	pCmdList->setStructuredConstantBuffer(_pLightCB, CBLight);
+	pCmdList->setStructuredConstantBuffer(_pWaterCB, CBWater);
 	pCmdList->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	auto &renderItems = _renderItemMap[passName.data()];
 	for (auto &rItem : renderItems) {
 		pCmdList->setVertexBuffer(rItem._pMesh->getVertexBuffer());
 		pCmdList->setIndexBuffer(rItem._pMesh->getIndexBuffer());
-		pCmdList->setStructConstantBuffer(rItem._pConstantBuffer, CBObject);
+		pCmdList->setStructuredConstantBuffer(rItem._pConstantBuffer, CBObject);
 		rItem._pMesh->drawIndexdInstanced(pCmdList);
 	}
 }
@@ -173,14 +173,14 @@ void LandAndWater::drawOpaqueRenderItems(dx12lib::CommandListProxy pCmdList,
 {
 	auto pPSO = _psoMap[passName.data()];
 	pCmdList->setPipelineStateObject(pPSO);
-	pCmdList->setStructConstantBuffer(_pPassCB, CBPass);
-	pCmdList->setStructConstantBuffer(_pLightCB, CBLight);
+	pCmdList->setStructuredConstantBuffer(_pPassCB, CBPass);
+	pCmdList->setStructuredConstantBuffer(_pLightCB, CBLight);
 	auto &renderItems = _renderItemMap[passName.data()];
 	pCmdList->setPrimitiveTopology(primitiveType);
 	for (auto &rItem : renderItems) {
 		pCmdList->setVertexBuffer(rItem._pMesh->getVertexBuffer());
 		pCmdList->setIndexBuffer(rItem._pMesh->getIndexBuffer());
-		pCmdList->setStructConstantBuffer(rItem._pConstantBuffer, CBObject);
+		pCmdList->setStructuredConstantBuffer(rItem._pConstantBuffer, CBObject);
 		pCmdList->setShaderResourceBuffer(rItem._pAlbedoMap, SRAlbedo);
 		rItem._pMesh->drawIndexdInstanced(pCmdList);
 	}

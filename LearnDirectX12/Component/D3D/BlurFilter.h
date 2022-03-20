@@ -34,22 +34,32 @@ public:
 	std::shared_ptr<dx12lib::UnorderedAccessBuffer> getOuput() const;
 private:
 	void buildUnorderedAccessResouce(dx12lib::ComputeContextProxy pComputeContext);
-	std::vector<float> calcGaussianWeights(int blurCount);
+	static void buildBlurPSO(std::weak_ptr<dx12lib::Device> pDevice);
+	static std::vector<float> calcGaussianWeights(int blurCount, float sigma);
+	static std::size_t getBlorRadiusBySigma(float sigma);
+	void updateBlurConstantBuffer(int blurCount, float sigma);
 
 	constexpr static std::size_t kMaxBlurCount = 5;
+	constexpr static std::size_t kMaxThreads = 256;
 	struct BlurCBType {
 		int   blurCount;
 		float weights[kMaxBlurCount * 2 + 1];
+	};
+
+	enum BlurRootParame : std::size_t {
+		SR_Input,
+		UA_Output,
+		CB_BlurParame,
 	};
 private:
 	std::uint32_t _width;
 	std::uint32_t _height;
 	DXGI_FORMAT   _format;
 	GPUStructCBPtr<BlurCBType> _pBlurCB;
-	std::shared_ptr<dx12lib::ComputePSO> _pHorzBlurPSO;
-	std::shared_ptr<dx12lib::ComputePSO> _pVertBlurPSO;
 	std::shared_ptr<dx12lib::UnorderedAccessBuffer> _pBlurMap0;
 	std::shared_ptr<dx12lib::UnorderedAccessBuffer> _pBlurMap1;
+	static std::shared_ptr<dx12lib::ComputePSO> _pHorzBlurPSO;
+	static std::shared_ptr<dx12lib::ComputePSO> _pVertBlurPSO;
 };
 
 }

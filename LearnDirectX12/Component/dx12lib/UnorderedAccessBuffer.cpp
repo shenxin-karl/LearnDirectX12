@@ -69,7 +69,7 @@ UnorderedAccessBuffer::UnorderedAccessBuffer(std::weak_ptr<Device> pDevice,
 	uavDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	uavDesc.Alignment = 0;
 	uavDesc.Width = width;
-	uavDesc.Height = height;
+	uavDesc.Height = static_cast<UINT>(height);
 	uavDesc.DepthOrArraySize = 1;
 	uavDesc.MipLevels = 1;
 	uavDesc.Format = format;

@@ -1,7 +1,8 @@
 #pragma once
+#include <memory>
 #include "dx12libStd.h"
 #include "StructConstantBuffer.hpp"
-#include <memory>
+#include "IResource.h"
 #include "Math/MathHelper.h"
 
 namespace dx12lib {
@@ -23,7 +24,7 @@ public:
 			std::static_pointer_cast<IResource>(pRhs)
 		);
 	}
-	virtual void copyResourceImpl(std::shared_ptr<IResource> &pLhs, std::shared_ptr<IResource> &pRhs) = 0;
+	virtual void copyResourceImpl(std::shared_ptr<IResource> pLhs, std::shared_ptr<IResource> pRhs) = 0;
 
 	template<typename T> requires(std::is_base_of_v<IResource, T>)
 	void transitionBarrier(std::shared_ptr<T> pBuffer, D3D12_RESOURCE_STATES state, UINT subResource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, bool flushBarrier = false) {
@@ -48,7 +49,7 @@ public:
 	virtual ID3D12GraphicsCommandList *getD3DCommandList() const noexcept = 0;
 	virtual	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) = 0;
 	virtual void flushResourceBarriers() = 0;
-	virtual void setConstantBufferView(std::shared_ptr<ConstantBuffer> pConstantBuffer, uint32 rootIndex, uint32 offset = 0) = 0;
+	virtual void setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuffer, uint32 rootIndex, uint32 offset = 0) = 0;
 
 	template<typename T> requires(sizeof(T) > 0 && std::is_base_of_v<IShaderSourceResource, T>)
 	void setShaderResourceBuffer(std::shared_ptr<T> pResource, uint32 rootIndex, uint32 offset = 0) {
@@ -60,6 +61,26 @@ public:
 	}
 	virtual void setShaderResourceBufferImpl(std::shared_ptr<IShaderSourceResource> pTexture, uint32 rootIndex, uint32 offset) = 0;
 	virtual std::shared_ptr<ConstantBuffer> createConstantBuffer(std::size_t sizeInByte, const void *pData = nullptr) = 0;
+
+	virtual std::shared_ptr<ShaderResourceBuffer> createDDSTextureFromFile(const std::wstring &fileName) = 0;
+	virtual std::shared_ptr<ShaderResourceBuffer> createDDSTextureFromMemory(const void *pData, std::size_t sizeInByte) = 0;
+	template<StructConstantBufferConcept T>
+	std::shared_ptr<StructConstantBuffer<T>> createStructConstantBuffer(const T *pData = nullptr) {
+		std::shared_ptr<ConstantBuffer> pConstantBuffer = createConstantBuffer(sizeof(T), nullptr);
+		return std::make_shared<StructConstantBuffer<T>>(pData, pConstantBuffer);
+	}
+	template<StructConstantBufferConcept T>
+	std::shared_ptr<StructConstantBuffer<T>> createStructConstantBuffer(const T &buff) {
+		return this->template createStructConstantBuffer<T>(&buff);
+	}
+	template<typename T>
+	void setStructuredConstantBuffer(std::shared_ptr<StructConstantBuffer<T>> pStructConstantBuffer,
+		uint32 rootIndex,
+		uint32 offset = 0) {
+		assert(pStructConstantBuffer != nullptr);
+		pStructConstantBuffer->updateConstantBuffer();
+		setConstantBuffer(pStructConstantBuffer->getConstantBuffer(), rootIndex, offset);
+	}
 };
 
 class GrahpicsContext : public virtual CommandContext {
@@ -84,25 +105,6 @@ public:
 	virtual void clearDepth(std::shared_ptr<DepthStencilBuffer> pResource, float depth) = 0;
 	virtual void clearStencil(std::shared_ptr<DepthStencilBuffer> pResource, UINT stencil) = 0;
 	virtual void clearDepthStencil(std::shared_ptr<DepthStencilBuffer> pResource, float depth, UINT stencil) = 0;
-	virtual std::shared_ptr<ShaderResourceBuffer> createDDSTextureFromFile(const std::wstring &fileName) = 0;
-	virtual std::shared_ptr<ShaderResourceBuffer> createDDSTextureFromMemory(const void *pData, std::size_t sizeInByte) = 0;
-	template<StructConstantBufferConcept T>
-	std::shared_ptr<StructConstantBuffer<T>> createStructConstantBuffer(const T *pData = nullptr) {
-		std::shared_ptr<ConstantBuffer> pConstantBuffer = createConstantBuffer(sizeof(T), nullptr);
-		return std::make_shared<StructConstantBuffer<T>>(pData, pConstantBuffer);
-	}
-	template<StructConstantBufferConcept T>
-	std::shared_ptr<StructConstantBuffer<T>> createStructConstantBuffer(const T &buff) {
-		return this->template createStructConstantBuffer<T>(&buff);
-	}
-	template<typename T>
-	void setStructConstantBuffer(std::shared_ptr<StructConstantBuffer<T>> pStructConstantBuffer,
-		uint32 rootIndex,
-		uint32 offset = 0) {
-		assert(pStructConstantBuffer != nullptr);
-		pStructConstantBuffer->updateConstantBuffer();
-		setConstantBufferView(pStructConstantBuffer->getConstantBuffer(), rootIndex, offset);
-	}
 };
 
 class ComputeContext : public virtual CommandContext {

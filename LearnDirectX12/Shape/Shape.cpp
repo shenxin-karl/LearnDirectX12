@@ -347,15 +347,15 @@ void Shape::renderShapesPass(dx12lib::CommandListProxy pCmdList) {
 	auto pPSO = _PSOMap[passPSOName];
 	pCmdList->setPipelineStateObject(pPSO);
 
-	pCmdList->setStructConstantBuffer(_pPassCB, ShapeRootParameType::CBPass);
-	pCmdList->setStructConstantBuffer(_pGameLightsCB, ShapeRootParameType::CBLight);
+	pCmdList->setStructuredConstantBuffer(_pPassCB, ShapeRootParameType::CBPass);
+	pCmdList->setStructuredConstantBuffer(_pGameLightsCB, ShapeRootParameType::CBLight);
 
 	auto psoRenderItems = _renderItems[passPSOName];
 	for (auto &rItem : psoRenderItems) {
 		pCmdList->setVertexBuffer(rItem._pMesh->_pVertexBuffer);
 		pCmdList->setIndexBuffer(rItem._pMesh->_pIndexBuffer);
 		pCmdList->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		pCmdList->setStructConstantBuffer(rItem._pObjectCB, ShapeRootParameType::CBObject);
+		pCmdList->setStructuredConstantBuffer(rItem._pObjectCB, ShapeRootParameType::CBObject);
 		pCmdList->setShaderResourceBuffer(rItem._pAlbedo, ShapeRootParameType::SRAlbedo);
 		pCmdList->drawIndexdInstanced(
 			rItem._pMesh->_pIndexBuffer->getIndexCount(), 1, 0,
@@ -369,14 +369,14 @@ void Shape::renderSkullPass(dx12lib::CommandListProxy pCmdList) {
 	auto pPSO = _PSOMap[passPSOName];
 
 	pCmdList->setPipelineStateObject(pPSO);
-	pCmdList->setStructConstantBuffer(_pPassCB, ShapeRootParameType::CBPass);
-	pCmdList->setStructConstantBuffer(_pGameLightsCB, ShapeRootParameType::CBLight);
+	pCmdList->setStructuredConstantBuffer(_pPassCB, ShapeRootParameType::CBPass);
+	pCmdList->setStructuredConstantBuffer(_pGameLightsCB, ShapeRootParameType::CBLight);
 	auto psoRenderItems = _renderItems[passPSOName];
 	auto &rItem = psoRenderItems[0];
 	pCmdList->setVertexBuffer(rItem._pMesh->_pVertexBuffer);
 	pCmdList->setIndexBuffer(rItem._pMesh->_pIndexBuffer);
 	pCmdList->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	pCmdList->setStructConstantBuffer(rItem._pObjectCB, ShapeRootParameType::CBObject);
+	pCmdList->setStructuredConstantBuffer(rItem._pObjectCB, ShapeRootParameType::CBObject);
 	pCmdList->drawIndexdInstanced(
 		rItem._pMesh->_pIndexBuffer->getIndexCount(), 1, 0,
 		0, 0

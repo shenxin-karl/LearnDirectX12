@@ -38,6 +38,8 @@ GraphicsPSO::GraphicsPSO(std::weak_ptr<Device> pDevice, const std::string &name)
 	_psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 	_psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	_psoDesc.SampleMask = 0xffffffff;
+	_psoDesc.SampleDesc.Count = 1;
+	_psoDesc.SampleDesc.Quality = 0;
 }
 
 void GraphicsPSO::setBlendState(const D3D12_BLEND_DESC& blendDesc) {

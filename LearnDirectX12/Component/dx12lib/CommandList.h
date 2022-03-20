@@ -13,7 +13,7 @@ protected:
 public:
 	~CommandList();
 	ID3D12GraphicsCommandList *getD3DCommandList() const noexcept override;
-	void copyResourceImpl(std::shared_ptr<IResource> &pLhs, std::shared_ptr<IResource> &pRhs) override;
+	void copyResourceImpl(std::shared_ptr<IResource> pLhs, std::shared_ptr<IResource> pRhs) override;
 	void transitionBarrierImpl(std::shared_ptr<IResource> pBuffer, D3D12_RESOURCE_STATES state, UINT subResource, bool flushBarrier) override;
 	void aliasBarrierImpl(std::shared_ptr<IResource> pBeforce, std::shared_ptr<IResource> pAfter, bool flushBarrier) override;
 	void flushResourceBarriers() override;
@@ -41,7 +41,7 @@ public:
 /// bind GPU buffer
 	void setVertexBuffer(std::shared_ptr<VertexBuffer> pVertBuffer, UINT slot = 0) override;
 	void setIndexBuffer(std::shared_ptr<IndexBuffer> pIndexBuffer) override;
-	void setConstantBufferView(std::shared_ptr<ConstantBuffer> pConstantBuffer, 
+	void setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuffer, 
 		uint32 rootIndex, 
 		uint32 offset = 0
 	) override;

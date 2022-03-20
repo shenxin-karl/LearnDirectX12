@@ -83,6 +83,10 @@ std::shared_ptr<GraphicsPSO> Device::createGraphicsPSO(const std::string &name) 
 	return std::make_shared<MakeGraphicsPSO>(weak_from_this(), name);
 }
 
+std::shared_ptr<ComputePSO> Device::createComputePSO(const std::string &name) {
+	return std::make_shared<MakeComputePSO>(weak_from_this(), name);
+}
+
 DescriptorAllocation Device::allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32 numDescriptors /*= 1*/) {
 	auto index = static_cast<std::size_t>(type);
 	return _pDescriptorAllocators[index]->allocate(numDescriptors);

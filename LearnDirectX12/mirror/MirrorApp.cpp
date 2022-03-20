@@ -88,38 +88,38 @@ void MirrorApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		// draw opaque
 		auto pPSO = _psoMap[RenderLayer::Opaque];
 		pCmdList->setPipelineStateObject(pPSO);
-		pCmdList->setStructConstantBuffer(_pPassCB, CBPass);
-		pCmdList->setStructConstantBuffer(_pLightCB, CBLight);
+		pCmdList->setStructuredConstantBuffer(_pPassCB, CBPass);
+		pCmdList->setStructuredConstantBuffer(_pLightCB, CBLight);
 		drawRenderItems(pCmdList, RenderLayer::Opaque);
 
 		// mark stencil 
 		pPSO = _psoMap[RenderLayer::Mirrors];
 		pCmdList->setPipelineStateObject(pPSO);
-		pCmdList->setStructConstantBuffer(_pPassCB, CBPass);
-		pCmdList->setStructConstantBuffer(_pLightCB, CBLight);
+		pCmdList->setStructuredConstantBuffer(_pPassCB, CBPass);
+		pCmdList->setStructuredConstantBuffer(_pLightCB, CBLight);
 		pCmdList->setStencilRef(1);
 		drawRenderItems(pCmdList, RenderLayer::Mirrors);
 
 		// draw 
 		pPSO = _psoMap[RenderLayer::Reflected];
 		pCmdList->setPipelineStateObject(pPSO);
-		pCmdList->setStructConstantBuffer(_pPassCB, CBPass);
-		pCmdList->setStructConstantBuffer(_pReflectedLightCB, CBLight);
+		pCmdList->setStructuredConstantBuffer(_pPassCB, CBPass);
+		pCmdList->setStructuredConstantBuffer(_pReflectedLightCB, CBLight);
 		pCmdList->setStencilRef(1);
 		drawRenderItems(pCmdList, RenderLayer::Reflected);
 
 		// draw 
 		pPSO = _psoMap[RenderLayer::Transparent];
 		pCmdList->setPipelineStateObject(pPSO);
-		pCmdList->setStructConstantBuffer(_pPassCB, CBPass);
-		pCmdList->setStructConstantBuffer(_pLightCB, CBLight);
+		pCmdList->setStructuredConstantBuffer(_pPassCB, CBPass);
+		pCmdList->setStructuredConstantBuffer(_pLightCB, CBLight);
 		pCmdList->setStencilRef(0);
 		drawRenderItems(pCmdList, RenderLayer::Transparent);
 
 		pPSO = _psoMap[RenderLayer::Shadow];
 		pCmdList->setPipelineStateObject(pPSO);
-		pCmdList->setStructConstantBuffer(_pPassCB, CBPass);
-		pCmdList->setStructConstantBuffer(_pLightCB, CBLight);
+		pCmdList->setStructuredConstantBuffer(_pPassCB, CBPass);
+		pCmdList->setStructuredConstantBuffer(_pLightCB, CBLight);
 		pCmdList->setStencilRef(0);
 		drawRenderItems(pCmdList, RenderLayer::Shadow);
 	}
@@ -136,7 +136,7 @@ void MirrorApp::drawRenderItems(dx12lib::CommandListProxy pCmdList, RenderLayer 
 	for (auto &rItem : _renderItems[layer]) {
 		pCmdList->setVertexBuffer(rItem._pMesh->getVertexBuffer());
 		pCmdList->setIndexBuffer(rItem._pMesh->getIndexBuffer());
-		pCmdList->setStructConstantBuffer(rItem._pObjectCB, CBObject);
+		pCmdList->setStructuredConstantBuffer(rItem._pObjectCB, CBObject);
 		pCmdList->setShaderResourceBuffer(rItem._pAlbedoMap, SRAlbedo);
 		rItem._submesh.drawIndexdInstanced(pCmdList);
 	}

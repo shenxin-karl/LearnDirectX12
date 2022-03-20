@@ -42,7 +42,7 @@ ID3D12GraphicsCommandList *CommandList::getD3DCommandList() const noexcept {
 	return _pCommandList.Get();
 }
 
-void CommandList::copyResourceImpl(std::shared_ptr<IResource> &pDest, std::shared_ptr<IResource> &pSrc) {
+void CommandList::copyResourceImpl(std::shared_ptr<IResource> pDest, std::shared_ptr<IResource> pSrc) {
 	transitionBarrier(pDest, D3D12_RESOURCE_STATE_COPY_DEST);
 	transitionBarrier(pSrc, D3D12_RESOURCE_STATE_COPY_SOURCE);
 	_pCommandList->CopyResource(
@@ -179,7 +179,7 @@ void CommandList::setIndexBuffer(std::shared_ptr<IndexBuffer> pIndexBuffer) {
 		_pCommandList->IASetIndexBuffer(RVPtr(pIndexBuffer->getIndexBufferView()));
 }
 
-void CommandList::setConstantBufferView(std::shared_ptr<ConstantBuffer> pConstantBuffer, 
+void CommandList::setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuffer, 
 	uint32 rootIndex, 
 	uint32 offset)
 {

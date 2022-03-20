@@ -20,11 +20,19 @@ struct LightCBType;
 
 using ::ThrowIfFailed;
 
-Microsoft::WRL::ComPtr<ID3DBlob> compileShader(
-	const std::wstring &fileName,
-	const D3D_SHADER_MACRO *defines,
-	const std::string &entrypoint,
-	const std::string &target
+WRL::ComPtr<ID3DBlob> compileShader(
+	const std::wstring		&fileName,
+	const D3D_SHADER_MACRO  *defines,
+	const std::string		&entrypoint,
+	const std::string		&target
+);
+
+WRL::ComPtr<ID3DBlob> compileShader(
+	const char				*fileContext,
+	std::size_t				 sizeInByte,
+	const D3D_SHADER_MACRO  *defines,
+	const std::string		&entrypoint,
+	const std::string		&target
 );
 
 }

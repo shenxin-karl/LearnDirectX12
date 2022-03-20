@@ -29,7 +29,23 @@ target_include_directories(D3D PUBLIC
 	${PROJECT_COMPONENT_DIR}
 )
 
-target_link_libraries(D3D PUBLIC 
+
+## 出来 d3d shader 资源
+include(CmakeRC.cmake)
+cmrc_add_resource_library(D3D-resources ALIAS D3D::rc
+	NAMESPACE D3D			# 指定命名空间
+	"shader/LightingUtil.hlsl"
+	"shader/ShaderCommon.hlsl"
+	"shader/BlurFilterCS.hlsl"
+)
+
+set_target_properties(D3D-resources PROPERTIES FOLDER "CmrcResource")
+
+target_link_libraries(${PROJECT_NAME} PUBLIC 
 	GameTimer
 	Exception
+)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE
+	D3D::rc
 )

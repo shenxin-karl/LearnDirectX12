@@ -23,7 +23,7 @@ function(GetRelativeDir relativeDir)
 	set(${relativeDir} ${dir} PARENT_SCOPE)
 endfunction()
 
-
+list(APPEND allSubDir "Libraies")
 LIST(APPEND allSubDir "Component")
 list(APPEND allSubDir "BoxApp")
 list(APPEND allSubDir "Shape")
