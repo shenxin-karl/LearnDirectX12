@@ -1,6 +1,6 @@
 #include <iostream>
 #include <format>
-#include "Window.h"
+#include "window.h"
 #include <errhandlingapi.h>
 #include <cassert>
 #include "GameTimer/GameTimer.h"

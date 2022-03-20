@@ -74,7 +74,7 @@ enum class ResourceType {
 	ShaderResourceBuffer	= ((0x1) << 5),
 	UnorderedAccessBuffer	= ((0x1) << 6),
 	ReadbackBuffer			= ((0x1) << 7),
-	StructedBuffer			= ((0x1) << 8),
+	StructuredBuffer			= ((0x1) << 8),
 };
 
 ResourceType operator|(const ResourceType &lhs, const ResourceType &rhs);
@@ -93,6 +93,8 @@ struct DeviceInitDesc;
 class Adapter;
 class CommandList;
 class CommandListProxy;
+class GrahpicsContextProxy;
+class ComputeContextProxy;
 class CommandQueue;
 class ConstantBuffer;
 class DefaultBuffer;
@@ -106,7 +108,6 @@ class IndexBuffer;
 class VertexBuffer;
 class RenderTarget;
 class SwapChain;
-class Texture;
 class UploadBuffer;
 class ResourceStateTracker;
 class IResource;
@@ -119,7 +120,7 @@ class ComputePSO;
 class CommandContext;
 class GrahpicsContext;
 class ComputeContext;
-class StructedBuffer;
+class StructuredBuffer;
 class UnorderedAccessBuffer;
 class ReadbackBuffer;
 class DepthStencilBuffer;
@@ -127,5 +128,9 @@ class RenderTargetBuffer;
 class ShaderResourceBuffer;
 class IShaderSourceResource;
 class IResource;
+class GrahicsContextProxy;
+class ComputeContextProxy;
+
+#define SHADER_FILE_TO_STRING(name, path) EMBED_STR(name, path)
 
 }

@@ -22,7 +22,7 @@ bool ReadbackBuffer::isCompleted() const {
 
 const void *ReadbackBuffer::getMapped() const {
 	if (isCompleted() && _pMapped == nullptr) 
-		_pResource->Map(0, nullptr, &_pMapped);
+		ThrowIfFailed(_pResource->Map(0, nullptr, &_pMapped));
 
 	return _pMapped;
 }

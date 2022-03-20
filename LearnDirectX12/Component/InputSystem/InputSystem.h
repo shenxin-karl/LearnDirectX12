@@ -16,6 +16,7 @@ public:
 	InputSystem(const InputSystem &) = delete;
 	InputSystem &operator=(const InputSystem &) = delete;
 	InputSystem() = default;
+	~InputSystem();
 	bool shouldClose() const;
 	virtual void beginTick(std::shared_ptr<GameTimer> pGameTimer) override;
 	virtual void tick(std::shared_ptr<GameTimer> pGameTimer) override;

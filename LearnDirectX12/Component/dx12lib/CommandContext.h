@@ -110,10 +110,10 @@ public:
 	virtual void dispatch(size_t GroupCountX = 1, size_t GroupCountY = 1, size_t GroupCountZ = 1) = 0;
 	virtual void setComputeRootSignature(std::shared_ptr<RootSignature> pRootSingature) = 0;
 	virtual void setPipelineStateObject(std::shared_ptr<ComputePSO> pPipelineStateObject) = 0;
-	virtual std::shared_ptr<StructedBuffer> createStructedBuffer(const void *pData, std::size_t sizeInByte) = 0;
-	virtual std::shared_ptr<UnorderedAccessBuffer> createUnorderedAccessBuffer(DXGI_FORMAT format, std::size_t sizeInByte) = 0;
+	virtual std::shared_ptr<StructuredBuffer> createStructedBuffer(const void *pData, std::size_t sizeInByte) = 0;
+	virtual std::shared_ptr<UnorderedAccessBuffer> createUnorderedAccessBuffer(std::size_t width, std::size_t height, DXGI_FORMAT format) = 0;
 	virtual std::shared_ptr<ReadbackBuffer> createReadbackBuffer(std::size_t sizeInByte) = 0;
-	virtual void setStructedBuffer(std::shared_ptr<StructedBuffer> pStructedBuffer, uint32 rootIndex, uint32 offset = 0) = 0;
+	virtual void setStructedBuffer(std::shared_ptr<StructuredBuffer> pStructedBuffer, uint32 rootIndex, uint32 offset = 0) = 0;
 	virtual void setUnorderedAccessBuffer(std::shared_ptr<UnorderedAccessBuffer> pBuffer, uint32 rootIndex, uint32 offset = 0) = 0;
 	virtual void readback(std::shared_ptr<ReadbackBuffer> pReadbackBuffer) = 0;
 };

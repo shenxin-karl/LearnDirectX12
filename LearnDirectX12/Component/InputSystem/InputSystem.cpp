@@ -16,6 +16,9 @@ InputSystem::InputSystem(const std::string &title, int width, int height) {
 	});
 }
 
+InputSystem::~InputSystem() {
+}
+
 bool InputSystem::shouldClose() const {
 	return window->shouldClose();
 }

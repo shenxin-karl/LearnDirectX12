@@ -213,7 +213,7 @@ void CommandList::setPipelineStateObject(std::shared_ptr<GraphicsPSO> pPipelineS
 	}
 }
 
-std::shared_ptr<StructedBuffer> CommandList::createStructedBuffer(const void *pData, std::size_t sizeInByte) {
+std::shared_ptr<StructuredBuffer> CommandList::createStructedBuffer(const void *pData, std::size_t sizeInByte) {
 	assert(pData != nullptr && sizeInByte > 0);
 	return std::make_shared<MakeStructedBuffer>(
 		_pDevice,
@@ -223,14 +223,17 @@ std::shared_ptr<StructedBuffer> CommandList::createStructedBuffer(const void *pD
 	);
 }
 
-std::shared_ptr<UnorderedAccessBuffer> CommandList::createUnorderedAccessBuffer(DXGI_FORMAT format, 
-	std::size_t sizeInByte) 
+std::shared_ptr<UnorderedAccessBuffer> CommandList::createUnorderedAccessBuffer(std::size_t width, 
+	std::size_t height, 
+	DXGI_FORMAT format)
 {
 	assert(format != DXGI_FORMAT::DXGI_FORMAT_UNKNOWN);
-	assert(sizeInByte > 0);
+	assert(height > 0);
+	assert(height > 0);
 	return std::make_shared<MakeUnorderedAccessBuffer>(
 		_pDevice,
-		sizeInByte,
+		height,
+		height,
 		format
 	);
 }
@@ -243,7 +246,7 @@ std::shared_ptr<ReadbackBuffer> CommandList::createReadbackBuffer(std::size_t si
 	);
 }
 
-void CommandList::setStructedBuffer(std::shared_ptr<StructedBuffer> pStructedBuffer, 
+void CommandList::setStructedBuffer(std::shared_ptr<StructuredBuffer> pStructedBuffer, 
 	uint32 rootIndex, 
 	uint32 offset /*= 0 */)
 {

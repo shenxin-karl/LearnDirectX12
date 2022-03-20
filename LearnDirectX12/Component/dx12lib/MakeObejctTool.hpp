@@ -23,7 +23,6 @@ using MakeFrameResourceItem = _MakeObjectTool<FrameResourceItem>;
 using MakeFrameResourceQueue = _MakeObjectTool<FrameResourceQueue>;
 using MakeRenderTarget = _MakeObjectTool<RenderTarget>;
 using MakeSwapChain = _MakeObjectTool<SwapChain>;
-using MakeTexture = _MakeObjectTool<Texture>;
 using MakeResourceStateTracker = _MakeObjectTool<ResourceStateTracker>;
 using MakeDynamicDescriptorHeap = _MakeObjectTool<DynamicDescriptorHeap>;
 using MakeRootSignature = _MakeObjectTool<RootSignature>;
@@ -35,7 +34,7 @@ using MakeVertexBuffer = _MakeObjectTool<VertexBuffer>;
 using MakeRenderTargetBuffer = _MakeObjectTool<RenderTargetBuffer>;
 using MakeDepthStencilBuffer = _MakeObjectTool<DepthStencilBuffer>;
 using MakeUnorderedAccessBuffer = _MakeObjectTool<UnorderedAccessBuffer>;
-using MakeStructedBuffer = _MakeObjectTool<StructedBuffer>;
+using MakeStructedBuffer = _MakeObjectTool<StructuredBuffer>;
 using MakeReadbackBuffer = _MakeObjectTool<ReadbackBuffer>;
 using MakeShaderResourceBuffer = _MakeObjectTool<ShaderResourceBuffer>;
 

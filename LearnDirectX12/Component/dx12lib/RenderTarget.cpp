@@ -1,5 +1,4 @@
 #include "RenderTarget.h"
-#include "Texture.h"
 #include "CommandList.h"
 #include "RenderTargetBuffer.h"
 #include "DepthStencilBuffer.h"
