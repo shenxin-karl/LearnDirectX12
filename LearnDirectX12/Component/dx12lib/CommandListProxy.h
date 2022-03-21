@@ -19,6 +19,9 @@ public:
 	operator bool() const;
 	friend bool operator==(const CommandListProxy &lhs, std::nullptr_t);
 	friend bool operator!=(const CommandListProxy &lhs, std::nullptr_t);
+
+	template<typename T>
+	friend class _ContextBase;
 private:
 	std::shared_ptr<CommandList> _pCmdList;
 };
@@ -27,6 +30,8 @@ template<typename T>
 class _ContextBase {
 public:
 	_ContextBase(std::shared_ptr<CommandList> pCmdList) : _pCmdList(pCmdList) {
+	}
+	_ContextBase(CommandListProxy pCmdList) : _pCmdList(pCmdList._pCmdList) {
 	}
 	T *operator->() {
 		return static_cast<T *>(_pCmdList.get());
@@ -54,11 +59,13 @@ private:
 };
 
 class GrahpicsContextProxy : public _ContextBase<GrahpicsContext> {
-
+public:
+	using _ContextBase<GrahpicsContext>::_ContextBase;
 };
 
 class ComputeContextProxy : public _ContextBase<ComputeContext> {
-
+public:
+	using _ContextBase<ComputeContext>::_ContextBase;
 };
 
 }

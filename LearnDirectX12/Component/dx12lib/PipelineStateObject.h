@@ -110,8 +110,9 @@ public:
 protected:
 	ComputePSO(std::weak_ptr<Device> pDevice, const std::string &name);
 private:
-	D3D12_COMPUTE_PIPELINE_STATE_DESC _psoDesc;
+	std::weak_ptr<Device>             _pDevice;
 	WRL::ComPtr<ID3DBlob>             _pCSShaderBytecode;
+	D3D12_COMPUTE_PIPELINE_STATE_DESC _psoDesc;
 };
 
 }

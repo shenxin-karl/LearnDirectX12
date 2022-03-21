@@ -2,6 +2,7 @@
 #include "GameTimer/GameTimer.h"
 #include "D3D/Camera.h"
 #include "D3D/D3DDescHelper.h"
+#include "D3D/BlurFilter.h"
 #include "InputSystem/window.h"
 #include "InputSystem/Keyboard.h"
 #include "InputSystem/Mouse.h"
@@ -91,6 +92,12 @@ void LandAndWater::onInitialize(dx12lib::CommandListProxy pCmdList) {
 	loadTextures(pCmdList);
 	buildMaterials();
 	buildRenderItems(pCmdList);
+
+	_pBlurFilter = std::make_unique<d3d::BlurFilter>(pCmdList, 
+		_width, 
+		_height, 
+		DXGI_FORMAT_R8G8B8A8_UNORM
+	);
 }
 
 void LandAndWater::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {

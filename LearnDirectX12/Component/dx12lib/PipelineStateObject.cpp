@@ -2,6 +2,7 @@
 #include "RootSignature.h"
 #include "Device.h"
 #include "MakeObejctTool.hpp"
+#include "RootSignature.h"
 
 namespace dx12lib {
 
@@ -242,12 +243,13 @@ std::shared_ptr<PSO> ComputePSO::clone(const std::string &name) {
 
 void ComputePSO::finalize() {
 	auto pDevice = _pDevice.lock()->getD3DDevice();
+	_psoDesc.pRootSignature = _pRootSignature->getRootSignature().Get();
 	ThrowIfFailed(pDevice->CreateComputePipelineState(&_psoDesc, IID_PPV_ARGS(&_pPSO)));
 	_dirty = false;
 }
 
 ComputePSO::ComputePSO(std::weak_ptr<Device> pDevice, const std::string &name)
-: PSO(pDevice, name) 
+: PSO(pDevice, name), _pDevice(pDevice)
 {
 	std::memset(&_psoDesc, 0, sizeof(_psoDesc));
 }

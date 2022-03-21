@@ -6,9 +6,9 @@
 
 namespace d3d {
 
-class BlurFileter {
+class BlurFilter {
 public:
-	BlurFileter(dx12lib::ComputeContextProxy pComputeContext,
+	BlurFilter(dx12lib::ComputeContextProxy pComputeContext,
 		std::uint32_t width,
 		std::uint32_t height,
 		DXGI_FORMAT format
@@ -54,12 +54,12 @@ private:
 private:
 	std::uint32_t _width;
 	std::uint32_t _height;
-	DXGI_FORMAT   _format;
+	DXGI_FORMAT   _format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	GPUStructCBPtr<BlurCBType> _pBlurCB;
 	std::shared_ptr<dx12lib::UnorderedAccessBuffer> _pBlurMap0;
 	std::shared_ptr<dx12lib::UnorderedAccessBuffer> _pBlurMap1;
-	static std::shared_ptr<dx12lib::ComputePSO> _pHorzBlurPSO;
-	static std::shared_ptr<dx12lib::ComputePSO> _pVertBlurPSO;
+	static inline std::shared_ptr<dx12lib::ComputePSO> _pHorzBlurPSO;
+	static inline std::shared_ptr<dx12lib::ComputePSO> _pVertBlurPSO;
 };
 
 }

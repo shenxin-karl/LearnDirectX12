@@ -109,6 +109,7 @@ private:
 	void buildRenderItems(dx12lib::CommandListProxy pCmdList);
 private:
 	std::unique_ptr<d3d::CoronaCamera> _pCamera;
+	std::unique_ptr<d3d::BlurFilter>  _pBlurFilter;
 	GPUStructCBPtr<d3d::PassCBType>    _pPassCB;
 	GPUStructCBPtr<d3d::LightCBType>   _pLightCB;
 	GPUStructCBPtr<WaterCBType>        _pWaterCB;

@@ -12,7 +12,7 @@
 
 namespace d3d {
 
-BlurFileter::BlurFileter(dx12lib::ComputeContextProxy pComputeContext,
+BlurFilter::BlurFilter(dx12lib::ComputeContextProxy pComputeContext,
 	std::uint32_t width, 
 	std::uint32_t height, 
 	DXGI_FORMAT format) 
@@ -22,9 +22,10 @@ BlurFileter::BlurFileter(dx12lib::ComputeContextProxy pComputeContext,
 	assert(width > 0);
 	assert(height > 0);
 	buildUnorderedAccessResouce(pComputeContext);
+	buildBlurPSO(pComputeContext->getDevice());
 }
 
-void BlurFileter::onResize(dx12lib::ComputeContextProxy pComputeList, std::uint32_t width, std::uint32_t height) {
+void BlurFilter::onResize(dx12lib::ComputeContextProxy pComputeList, std::uint32_t width, std::uint32_t height) {
 	if (_width != width && _height != height) {
 		_width = width;
 		_height = height;
@@ -32,7 +33,7 @@ void BlurFileter::onResize(dx12lib::ComputeContextProxy pComputeList, std::uint3
 	}
 }
 
-void BlurFileter::produceImpl(dx12lib::ComputeContextProxy pComputeList,
+void BlurFilter::produceImpl(dx12lib::ComputeContextProxy pComputeList,
 	std::shared_ptr<dx12lib::IShaderSourceResource> pShaderResource,
 	int blurCount,
 	float sigma)
@@ -62,16 +63,16 @@ void BlurFileter::produceImpl(dx12lib::ComputeContextProxy pComputeList,
 	}
 }
 
-std::shared_ptr<dx12lib::UnorderedAccessBuffer> BlurFileter::getOuput() const {
+std::shared_ptr<dx12lib::UnorderedAccessBuffer> BlurFilter::getOuput() const {
 	return _pBlurMap1;
 }
 
-void BlurFileter::buildUnorderedAccessResouce(dx12lib::ComputeContextProxy pComputeContext) {
+void BlurFilter::buildUnorderedAccessResouce(dx12lib::ComputeContextProxy pComputeContext) {
 	_pBlurMap0 = pComputeContext->createUnorderedAccessBuffer(_width, _height, _format);
 	_pBlurMap1 = pComputeContext->createUnorderedAccessBuffer(_width, _height, _format);
 }
 
-void BlurFileter::buildBlurPSO(std::weak_ptr<dx12lib::Device> pDevice) {
+void BlurFilter::buildBlurPSO(std::weak_ptr<dx12lib::Device> pDevice) {
 	if (_pHorzBlurPSO == nullptr) {
 		auto pBlurFilterCSFile = getD3DShaderResource("shader/BlurFilterCS.hlsl");
 		assert(pBlurFilterCSFile.size() != 0);
@@ -86,6 +87,9 @@ void BlurFileter::buildBlurPSO(std::weak_ptr<dx12lib::Device> pDevice) {
 
 		_pHorzBlurPSO = pSharedDevice->createComputePSO("HorizontalBlurPSO");
 		_pVertBlurPSO = pSharedDevice->createComputePSO("VerticalBlurPSO");
+
+		_pHorzBlurPSO->setRootSignature(pRootSignature);
+		_pVertBlurPSO->setRootSignature(pRootSignature);
 		_pHorzBlurPSO->setComputeShader(compileShader(
 			pBlurFilterCSFile.begin(),
 			pBlurFilterCSFile.size(),
@@ -106,14 +110,14 @@ void BlurFileter::buildBlurPSO(std::weak_ptr<dx12lib::Device> pDevice) {
 	}
 }
 
-void BlurFileter::updateBlurConstantBuffer(int blurCount, float sigma) {
+void BlurFilter::updateBlurConstantBuffer(int blurCount, float sigma) {
 	std::vector<float> weights = calcGaussianWeights(blurCount, sigma);
 	auto pGPUBlurCB = _pBlurCB->map();
 	pGPUBlurCB->blurCount = static_cast<int>(getBlorRadiusBySigma(sigma));
 	std::memcpy(pGPUBlurCB->weights, weights.data(), weights.size());
 }
 
-std::vector<float> BlurFileter::calcGaussianWeights(int blurCount, float sigma) {
+std::vector<float> BlurFilter::calcGaussianWeights(int blurCount, float sigma) {
 	std::vector<float> weights(kMaxBlurCount * 2 + 1, 0.f);
 	int limit = static_cast<int>(kMaxBlurCount);
 
@@ -133,7 +137,7 @@ std::vector<float> BlurFileter::calcGaussianWeights(int blurCount, float sigma) 
 	return weights;
 }
 
-std::size_t BlurFileter::getBlorRadiusBySigma(float sigma) {
+std::size_t BlurFilter::getBlorRadiusBySigma(float sigma) {
 	return static_cast<std::size_t>(std::ceil(2.f * sigma));
 }
 

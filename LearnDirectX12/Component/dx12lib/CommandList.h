@@ -13,6 +13,7 @@ protected:
 public:
 	~CommandList();
 	ID3D12GraphicsCommandList *getD3DCommandList() const noexcept override;
+	std::weak_ptr<Device> getDevice() const override;
 	void copyResourceImpl(std::shared_ptr<IResource> pLhs, std::shared_ptr<IResource> pRhs) override;
 	void transitionBarrierImpl(std::shared_ptr<IResource> pBuffer, D3D12_RESOURCE_STATES state, UINT subResource, bool flushBarrier) override;
 	void aliasBarrierImpl(std::shared_ptr<IResource> pBeforce, std::shared_ptr<IResource> pAfter, bool flushBarrier) override;

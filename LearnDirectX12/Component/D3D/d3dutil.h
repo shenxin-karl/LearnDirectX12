@@ -17,6 +17,7 @@ struct Light;
 struct Material;
 struct PassCBType;
 struct LightCBType;
+class BlurFilter;
 
 using ::ThrowIfFailed;
 
