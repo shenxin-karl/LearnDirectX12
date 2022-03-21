@@ -138,6 +138,7 @@ void LandAndWater::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 
 void LandAndWater::onResize(dx12lib::CommandListProxy pCmdList, int width, int height) {
 	_pCamera->_aspect = float(width) / float(height);
+	_pBlurFilter->onResize(pCmdList, width/2, height/2);
 }
 
 void LandAndWater::pollEvent() {

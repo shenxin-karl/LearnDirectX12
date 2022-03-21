@@ -26,7 +26,7 @@ BlurFilter::BlurFilter(dx12lib::ComputeContextProxy pComputeContext,
 }
 
 void BlurFilter::onResize(dx12lib::ComputeContextProxy pComputeList, std::uint32_t width, std::uint32_t height) {
-	if (_width != width && _height != height) {
+	if (_width != width || _height != height) {
 		_width = width;
 		_height = height;
 		buildUnorderedAccessResouce(pComputeList);
