@@ -13,10 +13,15 @@ public:
 		UINT baseShaderRegister,
 		UINT registerSpace = 0
 	);
+	void InitAsConstants(
+		UINT num32BitValues,
+		UINT shaderRegister,
+		UINT registerSpace = 0
+	);
 
 	const CD3DX12_ROOT_PARAMETER &getRootParameDesc() const;
 private:
-	CD3DX12_ROOT_PARAMETER _rootParame;
+	CD3DX12_ROOT_PARAMETER  _rootParame;
 	D3D12_SHADER_VISIBILITY _visibility;
 	std::shared_ptr<std::vector<D3D12_DESCRIPTOR_RANGE>> _pRanges;
 };
@@ -61,6 +66,7 @@ private:
 	D3D12_ROOT_SIGNATURE_DESC           _rootSignatureDesc;
 	WRL::ComPtr<ID3D12RootSignature>    _pRootSignature;
 	std::vector<D3D12_DESCRIPTOR_RANGE> _descriptorRangeCache;
+	std::vector<D3D12_ROOT_PARAMETER>   _rootParamterCache;
 
 	// 0: CBV_SRV_UAV
 	// 1: Sampler

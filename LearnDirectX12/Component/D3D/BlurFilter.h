@@ -38,7 +38,7 @@ private:
 	static void buildBlurPSO(std::weak_ptr<dx12lib::Device> pDevice);
 	static std::vector<float> calcGaussianWeights(int blurCount, float sigma);
 	static std::size_t getBlorRadiusBySigma(float sigma);
-	void updateBlurConstantBuffer(int blurCount, float sigma);
+	void updateBlurConstantBuffer(dx12lib::ComputeContextProxy pComputeList, int blurCount, float sigma);
 
 	constexpr static std::size_t kMaxBlurCount = 5;
 	constexpr static std::size_t kMaxThreads = 256;
@@ -56,7 +56,6 @@ private:
 	std::uint32_t _width;
 	std::uint32_t _height;
 	DXGI_FORMAT   _format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	GPUStructCBPtr<BlurCBType> _pBlurCB;
 	std::shared_ptr<dx12lib::UnorderedAccessBuffer> _pBlurMap0;
 	std::shared_ptr<dx12lib::UnorderedAccessBuffer> _pBlurMap1;
 	static inline std::shared_ptr<dx12lib::ComputePSO> _pHorzBlurPSO;

@@ -174,7 +174,6 @@ void CommandList::setVertexBuffer(std::shared_ptr<VertexBuffer> pVertBuffer, UIN
 			RVPtr(pVertBuffer->getVertexBufferView())
 		);
 	}
-
 }
 
 void CommandList::setIndexBuffer(std::shared_ptr<IndexBuffer> pIndexBuffer) {
@@ -283,6 +282,11 @@ void CommandList::readback(std::shared_ptr<ReadbackBuffer> pReadbackBuffer) {
 	_pReadbackBuffers.push_back(pReadbackBuffer);
 }
 
+void CommandList::setCompute32BitConstants(uint32 rootIndex, uint32 numConstants, const void *pData, uint32 destOffset) {
+	assert(_currentGPUState.debugChechSet32BitConstants(rootIndex, numConstants + destOffset));
+	_pCommandList->SetComputeRoot32BitConstants(rootIndex, numConstants, pData, destOffset);
+}
+
 void CommandList::setGrahicsRootSignature(std::shared_ptr<RootSignature> pRootSignature) {
 	setRootSignature(pRootSignature, &ID3D12GraphicsCommandList::SetGraphicsRootSignature);
 }
@@ -380,6 +384,11 @@ void CommandList::clearDepthStencil(std::shared_ptr<DepthStencilBuffer> pResourc
 		0,
 		nullptr
 	);
+}
+
+void CommandList::setGraphics32BitConstants(uint32 rootIndex, uint32 numConstants, const void *pData, uint32 destOffset) {
+	assert(_currentGPUState.debugChechSet32BitConstants(rootIndex, numConstants + destOffset));
+	_pCommandList->SetGraphicsRoot32BitConstants(rootIndex, numConstants, pData, destOffset);
 }
 
 std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSTextureFromFile(const std::wstring &fileName) {
@@ -590,6 +599,18 @@ bool CommandList::CommandListState::checkTextures() const {
 			return true;
 	}
 	return false;
+}
+
+bool CommandList::CommandListState::debugChechSet32BitConstants(uint32 rootIndex, uint32 numConstants) const {
+	if (pRootSignature == nullptr)
+		return false;
+	const auto &desc = pRootSignature->getRootSignatureDesc();
+	if (rootIndex > desc.NumParameters)
+		return false;
+	if (desc.pParameters[rootIndex].ParameterType != D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS)
+		return false;
+
+	return numConstants <= desc.pParameters[rootIndex].Constants.Num32BitValues;
 }
 
 void CommandList::CommandListState::setRenderTarget(RenderTarget *pRenderTarget) {

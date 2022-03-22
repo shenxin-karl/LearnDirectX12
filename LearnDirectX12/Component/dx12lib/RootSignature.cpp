@@ -19,6 +19,10 @@ void RootParameter::initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE rangeType,
 	_rootParame.InitAsDescriptorTable(static_cast<UINT>(_pRanges->size()), _pRanges->data(), _visibility);
 }
 
+void RootParameter::InitAsConstants(UINT num32BitValues, UINT shaderRegister, UINT registerSpace /*= 0 */) {
+	_rootParame.InitAsConstants(num32BitValues, shaderRegister, registerSpace);
+}
+
 const CD3DX12_ROOT_PARAMETER &RootParameter::getRootParameDesc() const {
 	return _rootParame;
 }
@@ -120,6 +124,7 @@ void RootSignature::setRootSignatureDesc(const D3D12_ROOT_SIGNATURE_DESC &desc) 
 	// collect descriptor range
 	for (std::size_t i = 0; i < desc.NumParameters; ++i) {
 		const auto &rootParameter = desc.pParameters[i];
+		_rootParamterCache.push_back(rootParameter);
 		if (rootParameter.ParameterType == D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE) {
 			for (std::size_t j = 0; j < rootParameter.DescriptorTable.NumDescriptorRanges; ++j)
 				_descriptorRangeCache.push_back(rootParameter.DescriptorTable.pDescriptorRanges[j]);
@@ -128,6 +133,7 @@ void RootSignature::setRootSignatureDesc(const D3D12_ROOT_SIGNATURE_DESC &desc) 
 
 	// build _rootSignatureDesc
 	_rootSignatureDesc = desc;
+	_rootSignatureDesc.pParameters = _rootParamterCache.data();
 	auto *pBaseDescriptor = _descriptorRangeCache.data();
 	for (std::size_t rootIndex = 0; rootIndex < desc.NumParameters; ++rootIndex) {
 		const D3D12_ROOT_PARAMETER &rootParameter = _rootSignatureDesc.pParameters[rootIndex];

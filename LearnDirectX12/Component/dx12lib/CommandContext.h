@@ -106,6 +106,7 @@ public:
 	virtual void clearDepth(std::shared_ptr<DepthStencilBuffer> pResource, float depth) = 0;
 	virtual void clearStencil(std::shared_ptr<DepthStencilBuffer> pResource, UINT stencil) = 0;
 	virtual void clearDepthStencil(std::shared_ptr<DepthStencilBuffer> pResource, float depth, UINT stencil) = 0;
+	virtual void setGraphics32BitConstants(uint32 rootIndex, uint32 numConstants, const void *pData, uint32 destOffset = 0) = 0;
 };
 
 class ComputeContext : public virtual CommandContext {
@@ -119,6 +120,7 @@ public:
 	virtual void setStructedBuffer(std::shared_ptr<StructuredBuffer> pStructedBuffer, uint32 rootIndex, uint32 offset = 0) = 0;
 	virtual void setUnorderedAccessBuffer(std::shared_ptr<UnorderedAccessBuffer> pBuffer, uint32 rootIndex, uint32 offset = 0) = 0;
 	virtual void readback(std::shared_ptr<ReadbackBuffer> pReadbackBuffer) = 0;
+	virtual void setCompute32BitConstants(uint32 rootIndex, uint32 numConstants, const void *pData, uint32 destOffset = 0) = 0;
 };
 
 

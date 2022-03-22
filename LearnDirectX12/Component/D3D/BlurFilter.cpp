@@ -21,7 +21,6 @@ BlurFilter::BlurFilter(dx12lib::ComputeContextProxy pComputeContext,
 	assert(format != DXGI_FORMAT_UNKNOWN);
 	assert(width > 0);
 	assert(height > 0);
-	_pBlurCB = pComputeContext->createStructConstantBuffer<BlurCBType>();
 	buildUnorderedAccessResouce(pComputeContext);
 	buildBlurPSO(pComputeContext->getDevice());
 }
@@ -39,29 +38,34 @@ void BlurFilter::produceImpl(dx12lib::ComputeContextProxy pComputeList,
 	int blurCount,
 	float sigma)
 {
+	auto setConstantBuffer = [&, weights = calcGaussianWeights(blurCount, sigma)]() {
+		pComputeList->setCompute32BitConstants(CB_BlurParame, 1, &blurCount);
+		pComputeList->setCompute32BitConstants(CB_BlurParame, 11, weights.data(), 1);
+	};
+
 	assert(pShaderResource->isShaderSample());
-	updateBlurConstantBuffer(blurCount, sigma);
+	//updateBlurConstantBuffer(pComputeList, blurCount, sigma);
 	pComputeList->copyResource(_pBlurMap1, pShaderResource);
 	for (int i = 0; i < blurCount; ++i) {
 		// horizonal blur
 		pComputeList->setPipelineStateObject(_pHorzBlurPSO);
 		pComputeList->setShaderResourceBuffer(_pBlurMap1, SR_Input);
 		pComputeList->setUnorderedAccessBuffer(_pBlurMap0, UA_Output);
-		pComputeList->setStructuredConstantBuffer(_pBlurCB, CB_BlurParame);
+		setConstantBuffer();
 		pComputeList->transitionBarrier(_pBlurMap1, D3D12_RESOURCE_STATE_GENERIC_READ);
 		pComputeList->transitionBarrier(_pBlurMap0, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-		int numXGroup = static_cast<int>(std::ceil(_width / kMaxThreads));
-		pComputeList->dispatch(numXGroup, 1, 1);
+		int numXGroup = static_cast<int>(std::ceil(_width / float(kMaxThreads)));
+		pComputeList->dispatch(numXGroup, _height, 1);
 		
 		// vertical blur
 		pComputeList->setPipelineStateObject(_pVertBlurPSO);
 		pComputeList->setShaderResourceBuffer(_pBlurMap0, SR_Input);
 		pComputeList->setUnorderedAccessBuffer(_pBlurMap1, UA_Output);
-		pComputeList->setStructuredConstantBuffer(_pBlurCB, CB_BlurParame);
+		setConstantBuffer();
 		pComputeList->transitionBarrier(_pBlurMap0, D3D12_RESOURCE_STATE_GENERIC_READ);
 		pComputeList->transitionBarrier(_pBlurMap1, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-		int numYGroup = static_cast<int>(std::ceil(_height / kMaxThreads));
-		pComputeList->dispatch(1, numYGroup, 1);
+		int numYGroup = static_cast<int>(std::ceil(_height / float(kMaxThreads)));
+		pComputeList->dispatch(_width, numYGroup, 1);
 	}
 }
 
@@ -81,9 +85,9 @@ void BlurFilter::buildBlurPSO(std::weak_ptr<dx12lib::Device> pDevice) {
 
 		dx12lib::RootSignatureDescHelper desc;
 		desc.resize(3);
-		desc[SR_Input].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+		desc[SR_Input].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);;
 		desc[UA_Output].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
-		desc[CB_BlurParame].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+		desc[CB_BlurParame].InitAsConstants(12, 0);
 		auto pSharedDevice = pDevice.lock();
 		auto pRootSignature = pSharedDevice->createRootSignature(desc);
 
@@ -112,11 +116,10 @@ void BlurFilter::buildBlurPSO(std::weak_ptr<dx12lib::Device> pDevice) {
 	}
 }
 
-void BlurFilter::updateBlurConstantBuffer(int blurCount, float sigma) {
+void BlurFilter::updateBlurConstantBuffer(dx12lib::ComputeContextProxy pComputeList, int blurCount, float sigma) {
 	std::vector<float> weights = calcGaussianWeights(blurCount, sigma);
-	auto pGPUBlurCB = _pBlurCB->map();
-	pGPUBlurCB->blurCount = static_cast<int>(getBlorRadiusBySigma(sigma));
-	std::memcpy(pGPUBlurCB->weights, weights.data(), weights.size() * sizeof(float));
+	pComputeList->setCompute32BitConstants(CB_BlurParame, 1, &blurCount);
+	pComputeList->setCompute32BitConstants(CB_BlurParame, 11, weights.data(), 1);
 }
 
 std::vector<float> BlurFilter::calcGaussianWeights(int blurCount, float sigma) {

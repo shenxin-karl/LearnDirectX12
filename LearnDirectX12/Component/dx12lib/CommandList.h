@@ -70,6 +70,7 @@ public:
 	void clearDepth(std::shared_ptr<DepthStencilBuffer> pResource, float depth) override;
 	void clearStencil(std::shared_ptr<DepthStencilBuffer> pResource, UINT stencil) override;
 	void clearDepthStencil(std::shared_ptr<DepthStencilBuffer> pResource, float depth, UINT stencil) override;
+	void setGraphics32BitConstants(uint32 rootIndex, uint32 numConstants, const void *pData, uint32 destOffset = 0) override;
 /// create dds texture
 	std::shared_ptr<ShaderResourceBuffer> createDDSTextureFromFile(const std::wstring &fileName) override;
 	std::shared_ptr<ShaderResourceBuffer> createDDSTextureFromMemory(const void *pData, std::size_t sizeInByte) override;
@@ -92,6 +93,7 @@ public:
 		uint32 offset = 0
 	) override;
 	void readback(std::shared_ptr<ReadbackBuffer> pReadbackBuffer) override;
+	void setCompute32BitConstants(uint32 rootIndex, uint32 numConstants, const void *pData, uint32 destOffset = 0) override;
 private:
 	friend class CommandQueue;
 	friend class FrameResourceItem;
@@ -129,6 +131,7 @@ private:
 		bool debugCheckDrawIndex() const;
 		bool checkVertexBuffer() const;
 		bool checkTextures() const;
+		bool debugChechSet32BitConstants(uint32 rootIndex, uint32 numConstants) const;
 		void setRenderTarget(RenderTarget *pRenderTarget);
 	};
 	CommandListState _currentGPUState;
