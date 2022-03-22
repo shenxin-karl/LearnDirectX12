@@ -3,6 +3,7 @@
 #include "dx12lib/CommandListProxy.h"
 #include "dx12lib/CommandContext.h"
 #include "dx12lib/StructConstantBuffer.hpp"
+#include "dx12lib/IResource.h"
 
 namespace d3d {
 
@@ -22,7 +23,7 @@ public:
 		int blurCount,
 		float sigma = 1.f)	
 	{
-		this->produceImpl(pComputeList, pShaderResource, blurCount);
+		this->produceImpl(pComputeList, pShaderResource, blurCount, sigma);
 	}
 
 	void produceImpl(dx12lib::ComputeContextProxy pComputeList,

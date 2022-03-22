@@ -19,7 +19,7 @@ class CommandContext : public NonCopyable {
 public:
 	virtual std::weak_ptr<Device> getDevice() const = 0;
 	template<typename T1, typename T2> requires(std::is_base_of_v<IResource, T1> &&std::is_base_of_v<IResource, T2>)
-	void copyResource(std::shared_ptr<T1> &pLhs, std::shared_ptr<T2> &pRhs) {
+	void copyResource(std::shared_ptr<T1> pLhs, std::shared_ptr<T2> pRhs) {
 		this->copyResourceImpl(
 			std::static_pointer_cast<IResource>(pLhs),
 			std::static_pointer_cast<IResource>(pRhs)

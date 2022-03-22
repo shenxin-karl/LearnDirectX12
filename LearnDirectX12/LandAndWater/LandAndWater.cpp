@@ -18,6 +18,8 @@
 #include "dx12lib/IndexBuffer.h"
 #include "dx12lib/RootSignature.h"
 #include "dx12lib/PipelineStateObject.h"
+#include "dx12lib/RenderTargetBuffer.h"
+#include "dx12lib/UnorderedAccessBuffer.h"
 #include "Geometry/GeometryGenerator.h"
 #include <DirectXColors.h>
 #include <random>
@@ -131,6 +133,8 @@ void LandAndWater::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		drawOpaqueRenderItems(pCmdList, "ClipPSO", D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		drawOpaqueRenderItems(pCmdList, "TreeBillboardPSO", D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 		renderWaterPass(pCmdList);
+		_pBlurFilter->produce(pCmdList, pRenderTargetBuffer, 5, 2.5f);
+		pCmdList->copyResource(pRenderTargetBuffer, _pBlurFilter->getOuput());
 	}
 	pCmdQueue->executeCommandList(pCmdList);
 	pCmdQueue->signal(_pSwapChain);
@@ -138,7 +142,7 @@ void LandAndWater::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 
 void LandAndWater::onResize(dx12lib::CommandListProxy pCmdList, int width, int height) {
 	_pCamera->_aspect = float(width) / float(height);
-	_pBlurFilter->onResize(pCmdList, width/2, height/2);
+	_pBlurFilter->onResize(pCmdList, width, height);
 }
 
 void LandAndWater::pollEvent() {

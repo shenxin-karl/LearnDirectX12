@@ -49,6 +49,7 @@ std::weak_ptr<dx12lib::Device> CommandList::getDevice() const {
 void CommandList::copyResourceImpl(std::shared_ptr<IResource> pDest, std::shared_ptr<IResource> pSrc) {
 	transitionBarrier(pDest, D3D12_RESOURCE_STATE_COPY_DEST);
 	transitionBarrier(pSrc, D3D12_RESOURCE_STATE_COPY_SOURCE);
+	flushResourceBarriers();
 	_pCommandList->CopyResource(
 		pDest->getD3DResource().Get(),
 		pSrc->getD3DResource().Get()
@@ -232,11 +233,11 @@ std::shared_ptr<UnorderedAccessBuffer> CommandList::createUnorderedAccessBuffer(
 	DXGI_FORMAT format)
 {
 	assert(format != DXGI_FORMAT::DXGI_FORMAT_UNKNOWN);
-	assert(height > 0);
+	assert(width > 0);
 	assert(height > 0);
 	return std::make_shared<MakeUnorderedAccessBuffer>(
 		_pDevice,
-		height,
+		width,
 		height,
 		format
 	);
@@ -430,6 +431,9 @@ void CommandList::setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType,
 /**************************************************************************************************/
 
 void CommandList::dispatch(size_t GroupCountX, size_t GroupCountY, size_t GroupCountZ) {
+	assert(GroupCountX >= 1);
+	assert(GroupCountY >= 1);
+	assert(GroupCountZ >= 1);
 	flushResourceBarriers();
 	for (auto &pDynamicHeap : _pDynamicDescriptorHeaps)
 		pDynamicHeap->commitStagedDescriptorForDispatch(shared_from_this());

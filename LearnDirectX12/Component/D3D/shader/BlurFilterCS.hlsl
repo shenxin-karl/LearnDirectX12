@@ -35,7 +35,8 @@ void HorizonBlurCS(int3 groupThreadID : SV_GroupThreadID,
         int index = blurIndex + kMaxBlurCount;
         blurColor += gCache[x + blurIndex] * gBlurWieghts[index];
     }
-    gOuput[dispatchThreadID.xy] = blurColor;
+    //gOuput[dispatchThreadID.xy] = blurColor;
+    gOuput[dispatchThreadID.xy] = float4(1, 0, 0, 1);
 }
 
 [numthreads(1, N, 1)]
@@ -60,5 +61,7 @@ void VerticalBlurCS(int3 groupThreadID : SV_GroupThreadID,
         int index = blurIndex + kMaxBlurCount;
         blurColor += gCache[y + blurIndex] * gBlurWieghts[index];
     }
-    gOuput[dispatchThreadID.xy] = blurColor;
+    //gOuput[dispatchThreadID.xy] = blurColor;
+    gOuput[dispatchThreadID.xy] = float4(1, 0, 0, 1);
+    
 }

@@ -21,6 +21,7 @@ BlurFilter::BlurFilter(dx12lib::ComputeContextProxy pComputeContext,
 	assert(format != DXGI_FORMAT_UNKNOWN);
 	assert(width > 0);
 	assert(height > 0);
+	_pBlurCB = pComputeContext->createStructConstantBuffer<BlurCBType>();
 	buildUnorderedAccessResouce(pComputeContext);
 	buildBlurPSO(pComputeContext->getDevice());
 }
@@ -38,7 +39,7 @@ void BlurFilter::produceImpl(dx12lib::ComputeContextProxy pComputeList,
 	int blurCount,
 	float sigma)
 {
-	assert(!pShaderResource->isShaderSample());
+	assert(pShaderResource->isShaderSample());
 	updateBlurConstantBuffer(blurCount, sigma);
 	pComputeList->copyResource(_pBlurMap1, pShaderResource);
 	for (int i = 0; i < blurCount; ++i) {
@@ -50,16 +51,17 @@ void BlurFilter::produceImpl(dx12lib::ComputeContextProxy pComputeList,
 		pComputeList->transitionBarrier(_pBlurMap1, D3D12_RESOURCE_STATE_GENERIC_READ);
 		pComputeList->transitionBarrier(_pBlurMap0, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 		int numXGroup = static_cast<int>(std::ceil(_width / kMaxThreads));
-		pComputeList->dispatch(numXGroup, 1, 0);
+		pComputeList->dispatch(numXGroup, 1, 1);
 		
 		// vertical blur
+		pComputeList->setPipelineStateObject(_pVertBlurPSO);
 		pComputeList->setShaderResourceBuffer(_pBlurMap0, SR_Input);
 		pComputeList->setUnorderedAccessBuffer(_pBlurMap1, UA_Output);
 		pComputeList->setStructuredConstantBuffer(_pBlurCB, CB_BlurParame);
 		pComputeList->transitionBarrier(_pBlurMap0, D3D12_RESOURCE_STATE_GENERIC_READ);
 		pComputeList->transitionBarrier(_pBlurMap1, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 		int numYGroup = static_cast<int>(std::ceil(_height / kMaxThreads));
-		pComputeList->dispatch(1, numYGroup, 0);
+		pComputeList->dispatch(1, numYGroup, 1);
 	}
 }
 
@@ -114,7 +116,7 @@ void BlurFilter::updateBlurConstantBuffer(int blurCount, float sigma) {
 	std::vector<float> weights = calcGaussianWeights(blurCount, sigma);
 	auto pGPUBlurCB = _pBlurCB->map();
 	pGPUBlurCB->blurCount = static_cast<int>(getBlorRadiusBySigma(sigma));
-	std::memcpy(pGPUBlurCB->weights, weights.data(), weights.size());
+	std::memcpy(pGPUBlurCB->weights, weights.data(), weights.size() * sizeof(float));
 }
 
 std::vector<float> BlurFilter::calcGaussianWeights(int blurCount, float sigma) {
