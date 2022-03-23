@@ -41,6 +41,7 @@ private:
 	void updateBlurConstantBuffer(dx12lib::ComputeContextProxy pComputeList, int blurCount, float sigma);
 
 	constexpr static std::size_t kMaxBlurCount = 5;
+	constexpr static std::size_t kMaxBlurRadius = 5;
 	constexpr static std::size_t kMaxThreads = 256;
 	struct BlurCBType {
 		int   blurCount;

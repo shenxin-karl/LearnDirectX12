@@ -249,9 +249,10 @@ void ComputePSO::finalize() {
 }
 
 ComputePSO::ComputePSO(std::weak_ptr<Device> pDevice, const std::string &name)
-: PSO(pDevice, name), _pDevice(pDevice)
+: PSO(pDevice, name), _pDevice(pDevice), _psoDesc({})
 {
-	std::memset(&_psoDesc, 0, sizeof(_psoDesc));
+	_psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+	_psoDesc.NodeMask = 0;
 }
 
 }

@@ -65,7 +65,7 @@ UnorderedAccessBuffer::UnorderedAccessBuffer(std::weak_ptr<Device> pDevice,
 	std::size_t width, std::size_t height,
 	DXGI_FORMAT format) 
 {
-	D3D12_RESOURCE_DESC uavDesc;
+	D3D12_RESOURCE_DESC uavDesc = {};
 	uavDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	uavDesc.Alignment = 0;
 	uavDesc.Width = width;
@@ -82,12 +82,12 @@ UnorderedAccessBuffer::UnorderedAccessBuffer(std::weak_ptr<Device> pDevice,
 		RVPtr(CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT)),
 		D3D12_HEAP_FLAG_NONE,
 		RVPtr(uavDesc),
-		D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+		D3D12_RESOURCE_STATE_COMMON,
 		nullptr,
 		IID_PPV_ARGS(&_pResource)
 	));
 	createViews(pDevice, format);
-	ResourceStateTracker::addGlobalResourceState(_pResource.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	ResourceStateTracker::addGlobalResourceState(_pResource.Get(), D3D12_RESOURCE_STATE_COMMON);
 }
 
 UnorderedAccessBuffer::UnorderedAccessBuffer(std::weak_ptr<Device> pDevice, 

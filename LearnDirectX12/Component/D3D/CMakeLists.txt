@@ -34,8 +34,6 @@ target_include_directories(D3D PUBLIC
 include(CmakeRC.cmake)
 cmrc_add_resource_library(D3D-resources ALIAS D3D::rc
 	NAMESPACE D3D			# 指定命名空间
-	"shader/LightingUtil.hlsl"
-	"shader/ShaderCommon.hlsl"
 	"shader/BlurFilterCS.hlsl"
 )
 

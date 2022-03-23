@@ -38,20 +38,21 @@ void BlurFilter::produceImpl(dx12lib::ComputeContextProxy pComputeList,
 	int blurCount,
 	float sigma)
 {
-	auto setConstantBuffer = [&, weights = calcGaussianWeights(blurCount, sigma)]() {
-		pComputeList->setCompute32BitConstants(CB_BlurParame, 1, &blurCount);
+	auto weights = calcGaussianWeights(blurCount, sigma);
+	auto blurRadius = getBlorRadiusBySigma(sigma);
+	auto updateConstantBuffer = [&]() {
+		pComputeList->setCompute32BitConstants(CB_BlurParame, 1, &blurRadius);
 		pComputeList->setCompute32BitConstants(CB_BlurParame, 11, weights.data(), 1);
 	};
 
 	assert(pShaderResource->isShaderSample());
-	//updateBlurConstantBuffer(pComputeList, blurCount, sigma);
 	pComputeList->copyResource(_pBlurMap1, pShaderResource);
-	for (int i = 0; i < 1; ++i) {
+	for (int i = 0; i < blurCount; ++i) {
 		// horizonal blur
 		pComputeList->setPipelineStateObject(_pHorzBlurPSO);
 		pComputeList->setShaderResourceBuffer(_pBlurMap1, SR_Input);
 		pComputeList->setUnorderedAccessBuffer(_pBlurMap0, UA_Output);
-		setConstantBuffer();
+		updateConstantBuffer();
 		pComputeList->transitionBarrier(_pBlurMap1, D3D12_RESOURCE_STATE_GENERIC_READ);
 		pComputeList->transitionBarrier(_pBlurMap0, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 		int numXGroup = static_cast<int>(std::ceil(_width / float(kMaxThreads)));
@@ -61,7 +62,7 @@ void BlurFilter::produceImpl(dx12lib::ComputeContextProxy pComputeList,
 		pComputeList->setPipelineStateObject(_pVertBlurPSO);
 		pComputeList->setShaderResourceBuffer(_pBlurMap0, SR_Input);
 		pComputeList->setUnorderedAccessBuffer(_pBlurMap1, UA_Output);
-		setConstantBuffer();
+		updateConstantBuffer();
 		pComputeList->transitionBarrier(_pBlurMap0, D3D12_RESOURCE_STATE_GENERIC_READ);
 		pComputeList->transitionBarrier(_pBlurMap1, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 		int numYGroup = static_cast<int>(std::ceil(_height / float(kMaxThreads)));
@@ -143,7 +144,7 @@ std::vector<float> BlurFilter::calcGaussianWeights(int blurCount, float sigma) {
 }
 
 std::size_t BlurFilter::getBlorRadiusBySigma(float sigma) {
-	return static_cast<std::size_t>(std::ceil(2.f * sigma));
+	return std::min(static_cast<std::size_t>(std::ceil(2.f * sigma)), kMaxBlurRadius);
 }
 
 }
