@@ -46,7 +46,7 @@ void BlurFilter::produceImpl(dx12lib::ComputeContextProxy pComputeList,
 	assert(pShaderResource->isShaderSample());
 	//updateBlurConstantBuffer(pComputeList, blurCount, sigma);
 	pComputeList->copyResource(_pBlurMap1, pShaderResource);
-	for (int i = 0; i < blurCount; ++i) {
+	for (int i = 0; i < 1; ++i) {
 		// horizonal blur
 		pComputeList->setPipelineStateObject(_pHorzBlurPSO);
 		pComputeList->setShaderResourceBuffer(_pBlurMap1, SR_Input);

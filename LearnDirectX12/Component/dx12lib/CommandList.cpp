@@ -47,6 +47,8 @@ std::weak_ptr<dx12lib::Device> CommandList::getDevice() const {
 }
 
 void CommandList::copyResourceImpl(std::shared_ptr<IResource> pDest, std::shared_ptr<IResource> pSrc) {
+	//auto destState = _pResourceStateTracker-
+
 	transitionBarrier(pDest, D3D12_RESOURCE_STATE_COPY_DEST);
 	transitionBarrier(pSrc, D3D12_RESOURCE_STATE_COPY_SOURCE);
 	flushResourceBarriers();
