@@ -2,6 +2,7 @@
 #include "D3D/d3dutil.h"
 #include "D3D/Camera.h"
 #include "D3D/ShaderCommon.h"
+#include "D3D/SobelFilter.h"
 #include "dx12lib/Device.h"
 #include "dx12lib/SwapChain.h"
 #include "dx12lib/CommandList.h"
@@ -13,6 +14,7 @@
 #include "dx12lib/IndexBuffer.h"
 #include "dx12lib/RootSignature.h"
 #include "dx12lib/CommandQueue.h"
+#include "dx12lib/UnorderedAccessBuffer.h"
 #include "Geometry/GeometryGenerator.h"
 #include "InputSystem/InputSystem.h"
 #include "InputSystem/Mouse.h"
@@ -47,6 +49,7 @@ void Shape::onInitialize(dx12lib::CommandListProxy pCmdList) {
 	loadTextures(pCmdList);
 	buildMaterials();
 	buildRenderItem(pCmdList);
+	_pSobelFilter = std::make_unique<d3d::SobelFilter>(pCmdList, _width, _height);
 }
 
 void Shape::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
@@ -76,6 +79,8 @@ void Shape::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		pCmdList->setRenderTarget(pRenderTarget);
 		renderShapesPass(pCmdList);
 		renderSkullPass(pCmdList);
+		_pSobelFilter->apply(pCmdList, pRenderTargetBuffer);
+		pCmdList->copyResource(pRenderTargetBuffer, _pSobelFilter->getOutput());
 	}
 	pCmdQueue->executeCommandList(pCmdList);
 	pCmdQueue->signal(_pSwapChain);
@@ -83,6 +88,7 @@ void Shape::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 
 void Shape::onResize(dx12lib::CommandListProxy pCmdList, int width, int height) {
 	_pCamera->_aspect = float(width) / float(height);
+	_pSobelFilter->onResize(pCmdList, width, height);
 }
 
 void Shape::buildTexturePSO(dx12lib::CommandListProxy pCmdList) {

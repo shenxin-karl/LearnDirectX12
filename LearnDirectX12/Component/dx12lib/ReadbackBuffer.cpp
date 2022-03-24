@@ -20,6 +20,10 @@ bool ReadbackBuffer::isCompleted() const {
 	return _isCompleted;
 }
 
+bool ReadbackBuffer::isMapped() const {
+	return _pMapped != nullptr;
+}
+
 const void *ReadbackBuffer::getMapped() const {
 	if (isCompleted() && _pMapped == nullptr) 
 		ThrowIfFailed(_pResource->Map(0, nullptr, &_pMapped));

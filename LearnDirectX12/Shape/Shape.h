@@ -69,6 +69,7 @@ private:
 	std::unique_ptr<d3d::CoronaCamera>  _pCamera;
 	GPUStructCBPtr<d3d::LightCBType>    _pGameLightsCB;
 	GPUStructCBPtr<d3d::PassCBType>     _pPassCB;
+	std::unique_ptr<d3d::SobelFilter>	_pSobelFilter;
 	std::unordered_map<std::string, d3d::Material> _materials;
 	std::unordered_map<std::string, std::shared_ptr<Mesh>> _geometrys;
 	std::unordered_map<std::string, std::vector<RenderItem>> _renderItems;

@@ -10,6 +10,7 @@ public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
 	~ReadbackBuffer() override;
 	bool isCompleted() const;
+	bool isMapped() const override;
 	const void *getMapped() const;
 protected:
 	friend class CommandList;

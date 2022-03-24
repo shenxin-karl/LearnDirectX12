@@ -16,6 +16,10 @@ uint64 IResource::getDepth() const {
 	return getD3DResource()->GetDesc().DepthOrArraySize;
 }
 
+bool IResource::isMapped() const {
+	return false;
+}
+
 DXGI_FORMAT IResource::getFormat() const {
 	return getD3DResource()->GetDesc().Format;
 }

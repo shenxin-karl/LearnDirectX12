@@ -14,7 +14,7 @@ public:
 
 	template<typename T> requires(std::is_base_of_v<dx12lib::IShaderSourceResource, T>)
 	void produce(dx12lib::ComputeContextProxy pComputeList, std::shared_ptr<T> pInput) {
-		this->produceImpl(pComputeList, pShaderResource);
+		this->produceImpl(pComputeList, pInput);
 	}
 
 	template<typename T> requires(std::is_base_of_v<dx12lib::IShaderSourceResource, T>)
@@ -25,7 +25,7 @@ public:
 	std::shared_ptr<dx12lib::UnorderedAccessBuffer> getOutput() const;
 private:
 	void tryBuildSobelMap(dx12lib::ComputeContextProxy pComputeList, DXGI_FORMAT format);
-	static void buildRootSignature(dx12lib::ComputeContextProxy pComputeList);
+	static void tryBuildRootSignature(dx12lib::ComputeContextProxy pComputeList);
 	static void tryBuildProducePSO(dx12lib::ComputeContextProxy pComputeList);
 	static void tryBuildApplyPSO(dx12lib::ComputeContextProxy pComputeList);
 	void produceImpl(dx12lib::ComputeContextProxy pComputeList, 

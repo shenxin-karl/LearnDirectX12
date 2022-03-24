@@ -34,16 +34,58 @@ void SobelFilter::tryBuildSobelMap(dx12lib::ComputeContextProxy pComputeList, DX
 	}
 }
 
-void SobelFilter::buildRootSignature(dx12lib::ComputeContextProxy pComputeList) {
+void SobelFilter::tryBuildRootSignature(dx12lib::ComputeContextProxy pComputeList) {
+	if (_pRootSignature != nullptr)
+		return;
 
+	dx12lib::RootSignatureDescHelper desc;
+	desc.resize(2);
+	desc[SR_Input].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+	desc[UA_Output].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
+	auto pSharedDevice = pComputeList->getDevice().lock();
+	_pRootSignature = pSharedDevice->createRootSignature(desc);
 }
 
 void SobelFilter::tryBuildProducePSO(dx12lib::ComputeContextProxy pComputeList) {
+	if (_pProducePSO != nullptr)
+		return;
 
+	tryBuildRootSignature(pComputeList);
+	auto pSharedDevice = pComputeList->getDevice().lock();
+	_pProducePSO = pSharedDevice->createComputePSO("SobelProducePSO");
+	auto sobelFilterCSHlsl = getD3DShaderResource("shader/SobelFilterCS.hlsl");
+
+	D3D_SHADER_MACRO macros[] = { { "PRODUCE_MODE", "" }, { nullptr, nullptr } };
+	_pProducePSO->setRootSignature(_pRootSignature);
+	_pProducePSO->setComputeShader(compileShader(
+		sobelFilterCSHlsl.begin(),
+		sobelFilterCSHlsl.size(),
+		macros,
+		"SobelProduce",
+		"cs_5_0"
+	));
+	_pProducePSO->finalize();
 }
 
 void SobelFilter::tryBuildApplyPSO(dx12lib::ComputeContextProxy pComputeList) {
+	if (_pAllpyPSO != nullptr)
+		return;
 
+	tryBuildRootSignature(pComputeList);
+	auto pSharedDevice = pComputeList->getDevice().lock();
+	_pAllpyPSO = pSharedDevice->createComputePSO("SobelProducePSO");
+	auto sobelFilterCSHlsl = getD3DShaderResource("shader/SobelFilterCS.hlsl");
+
+	D3D_SHADER_MACRO macros[] = { { "APPLY_MODE", "" }, { nullptr, nullptr } };
+	_pAllpyPSO->setRootSignature(_pRootSignature);
+	_pAllpyPSO->setComputeShader(compileShader(
+		sobelFilterCSHlsl.begin(),
+		sobelFilterCSHlsl.size(),
+		macros,
+		"SobelApply",
+		"cs_5_0"
+	));
+	_pAllpyPSO->finalize();
 }
 
 void SobelFilter::produceImpl(dx12lib::ComputeContextProxy pComputeList, 
@@ -58,7 +100,7 @@ void SobelFilter::produceImpl(dx12lib::ComputeContextProxy pComputeList,
 
 	pComputeList->setPipelineStateObject(_pProducePSO);
 	pComputeList->setShaderResourceBuffer(pInput, SR_Input);
-	pComputeList->setShaderResourceBuffer(_pSobelMap, UA_Output);
+	pComputeList->setUnorderedAccessBuffer(_pSobelMap, UA_Output);
 	uint32 numXGroup = static_cast<uint32>(std::ceil(float(_width) / kMaxSobelThreadCount));
 	uint32 numYGroup = static_cast<uint32>(std::ceil(float(_height) / kMaxSobelThreadCount));
 	pComputeList->dispatch(numXGroup, numYGroup);
@@ -76,7 +118,7 @@ void SobelFilter::applyImpl(dx12lib::ComputeContextProxy pComputeList,
 
 	pComputeList->setPipelineStateObject(_pAllpyPSO);
 	pComputeList->setShaderResourceBuffer(pInput, SR_Input);
-	pComputeList->setShaderResourceBuffer(_pSobelMap, UA_Output);
+	pComputeList->setUnorderedAccessBuffer(_pSobelMap, UA_Output);
 	uint32 numXGroup = static_cast<uint32>(std::ceil(float(_width) / kMaxSobelThreadCount));
 	uint32 numYGroup = static_cast<uint32>(std::ceil(float(_height) / kMaxSobelThreadCount));
 	pComputeList->dispatch(numXGroup, numYGroup);
