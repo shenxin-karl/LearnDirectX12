@@ -133,7 +133,7 @@ void LandAndWater::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		drawOpaqueRenderItems(pCmdList, "ClipPSO", D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		drawOpaqueRenderItems(pCmdList, "TreeBillboardPSO", D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 		renderWaterPass(pCmdList);
-		_pBlurFilter->produce(pCmdList, pRenderTargetBuffer, 5, 2.5f);
+		_pBlurFilter->produce(pCmdList, pRenderTargetBuffer, 1, 2.5f);
 		pCmdList->copyResource(pRenderTargetBuffer, _pBlurFilter->getOuput());
 	}
 	pCmdQueue->executeCommandList(pCmdList);

@@ -35,6 +35,7 @@ include(CmakeRC.cmake)
 cmrc_add_resource_library(D3D-resources ALIAS D3D::rc
 	NAMESPACE D3D			# 指定命名空间
 	"shader/BlurFilterCS.hlsl"
+	"shader/SobelFilterCS.hlsl"
 )
 
 set_target_properties(D3D-resources PROPERTIES FOLDER "CmrcResource")

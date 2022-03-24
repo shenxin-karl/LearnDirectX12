@@ -12,6 +12,7 @@ public:
 	virtual uint64 getWidth() const;
 	virtual uint64 getHeight() const;
 	virtual uint64 getDepth() const;
+	virtual DXGI_FORMAT getFormat() const;
 	ResourceType getResourceType() const {  return _resourceType; }
 protected:
 	IResource() = default;

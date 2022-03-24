@@ -16,6 +16,10 @@ uint64 IResource::getDepth() const {
 	return getD3DResource()->GetDesc().DepthOrArraySize;
 }
 
+DXGI_FORMAT IResource::getFormat() const {
+	return getD3DResource()->GetDesc().Format;
+}
+
 Resource::Resource(ID3D12Device *pDevice, const D3D12_RESOURCE_DESC &desc, const D3D12_CLEAR_VALUE *pClearValue /*= nullptr*/) {
 	ThrowIfFailed(pDevice->CreateCommittedResource(
 		RVPtr(CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT)),
