@@ -7,7 +7,7 @@
 
 namespace dx12lib {
 
-class CommandList : public std::enable_shared_from_this<CommandList>, public GrahpicsContext, public ComputeContext  {
+class CommandList : public std::enable_shared_from_this<CommandList>, public DirectContext {
 protected:
 	CommandList(std::weak_ptr<FrameResourceItem> pFrameResourceItem);
 public:

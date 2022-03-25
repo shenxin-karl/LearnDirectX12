@@ -123,5 +123,7 @@ public:
 	virtual void setCompute32BitConstants(uint32 rootIndex, uint32 numConstants, const void *pData, uint32 destOffset = 0) = 0;
 };
 
+class DirectContext : public GrahpicsContext, public ComputeContext {
+};
 
 }

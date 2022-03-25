@@ -33,6 +33,11 @@ public:
 	}
 	_ContextBase(CommandListProxy pCmdList) : _pCmdList(pCmdList._pCmdList) {
 	}
+
+	template<typename T>
+	_ContextBase(_ContextBase<T> pOther) : _pCmdList(pOther._pCmdList) {
+	}
+
 	T *operator->() {
 		return static_cast<T *>(_pCmdList.get());
 	}
@@ -66,6 +71,11 @@ public:
 class ComputeContextProxy : public _ContextBase<ComputeContext> {
 public:
 	using _ContextBase<ComputeContext>::_ContextBase;
+};
+
+class DirectContextProxy : public _ContextBase<DirectContext> {
+public:
+	using _ContextBase<DirectContext>::_ContextBase;
 };
 
 }
