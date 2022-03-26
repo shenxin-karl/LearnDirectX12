@@ -7,7 +7,7 @@
 #include <string>
 #include <unordered_map>
 #include "Geometry/GeometryGenerator.h"
-#include "dx12lib/CommandListProxy.h"
+#include "dx12lib/ContextProxy.hpp"
 #include "dx12lib/CommandList.h"
 
 namespace d3d {
@@ -21,12 +21,12 @@ struct SubMesh {
 	std::uint32_t _baseVertexLocation;
 public:
 	explicit operator bool() const;
-	void drawInstanced(dx12lib::CommandListProxy pCmdList,
+	void drawInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx,
 		std::uint32_t instanceCount = 1, 
 		std::uint32_t startInstanceLocation = 0
 	) const;
 
-	void drawIndexdInstanced(dx12lib::CommandListProxy pCmdList, 
+	void drawIndexdInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx,
 		std::uint32_t instanceCount = 1, 
 		std::uint32_t startInstanceLocation = 0
 	) const;
@@ -53,12 +53,12 @@ public:
 	iteraotr begin() const;
 	iteraotr end() const;
 
-	void drawInstanced(dx12lib::CommandListProxy pCmdList,
+	void drawInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx,
 		std::uint32_t instanceCount = 1,
 		std::uint32_t startInstanceLocation = 0
 	) const;
 
-	void drawIndexdInstanced(dx12lib::CommandListProxy pCmdList,
+	void drawIndexdInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx,
 		std::uint32_t instanceCount = 1,
 		std::uint32_t startInstanceLocation = 0
 	) const;
@@ -84,9 +84,9 @@ using MeshIndexTypeToIntegerType_t = std::conditional_t<(IndexType == MeshIndexT
 template<typename T, MeshIndexType IndexType = MeshIndexType::UINT16>
 struct MakeMeshHelper {
 	static std::shared_ptr<dx12lib::VertexBuffer> 
-	buildVertexBuffer(dx12lib::CommandListProxy pCmdList, const com::MeshData &mesh) {
+	buildVertexBuffer(dx12lib::GraphicsContextProxy pGrahpicsCtx, const com::MeshData &mesh) {
 		if constexpr (std::is_same_v<com::Vertex, T>) {
-			return pCmdList->createVertexBuffer(
+			return pGrahpicsCtx->createVertexBuffer(
 				mesh.vertices.data(),
 				sizeof(com::Vertex) * mesh.vertices.size(),
 				sizeof(com::Vertex)
@@ -95,7 +95,7 @@ struct MakeMeshHelper {
 			std::vector<T> vertices;
 			vertices.reserve(mesh.vertices.size());
 			vertices.insert(vertices.end(), mesh.vertices.begin(), mesh.vertices.end());
-			return pCmdList->createVertexBuffer(
+			return pGrahpicsCtx->createVertexBuffer(
 				vertices.data(),
 				sizeof(T) * vertices.size(),
 				sizeof(T)
@@ -104,13 +104,13 @@ struct MakeMeshHelper {
 	}
 
 	static std::shared_ptr<dx12lib::IndexBuffer>
-	buildIndexBuffer(dx12lib::CommandListProxy pCmdList, const com::MeshData &mesh) {
+	buildIndexBuffer(dx12lib::GraphicsContextProxy pGrahpicsCtx, const com::MeshData &mesh) {
 		switch (IndexType) {
 		case d3d::MeshIndexType::UINT8: {
 			std::vector<std::uint8_t> indices;
 			indices.reserve(mesh.indices.size());
 			indices.insert(indices.end(), mesh.indices.begin(), mesh.indices.end());
-			return pCmdList->createIndexBuffer(
+			return pGrahpicsCtx->createIndexBuffer(
 				indices.data(),
 				sizeof(std::uint8_t) * indices.size(),
 				DXGI_FORMAT_R8_UINT
@@ -121,7 +121,7 @@ struct MakeMeshHelper {
 			std::vector<std::uint16_t> indices;
 			indices.reserve(mesh.indices.size());
 			indices.insert(indices.end(), mesh.indices.begin(), mesh.indices.end());
-			return pCmdList->createIndexBuffer(
+			return pGrahpicsCtx->createIndexBuffer(
 				indices.data(),
 				sizeof(std::uint16_t) * indices.size(),
 				DXGI_FORMAT_R16_UINT
@@ -129,7 +129,7 @@ struct MakeMeshHelper {
 			break;
 		}
 		case d3d::MeshIndexType::UINT32: {
-			return pCmdList->createIndexBuffer(
+			return pGrahpicsCtx->createIndexBuffer(
 				mesh.indices.data(),
 				sizeof(std::uint32_t) * mesh.indices.size(),
 				DXGI_FORMAT_R32_UINT
@@ -143,10 +143,9 @@ struct MakeMeshHelper {
 		return nullptr;
 	}
 
-	static std::shared_ptr<Mesh> build(dx12lib::CommandListProxy pCmdList, 
-		const com::MeshData &mesh, 
-		const std::string &name = "") 
-	{
+	static std::shared_ptr<Mesh> build(dx12lib::GraphicsContextProxy pGrahpicsCtx,
+		const com::MeshData &mesh,
+		const std::string &name = "") {
 		std::uint32_t count = -1;
 		std::uint32_t vertCount = std::uint32_t(mesh.vertices.size());
 		std::uint32_t indexCount = std::uint32_t(mesh.indices.size());
@@ -154,8 +153,8 @@ struct MakeMeshHelper {
 			count = (mesh.indices.empty()) ? vertCount : indexCount;
 
 		assert(count != -1);
-		auto pVertexBuffer = buildVertexBuffer(pCmdList, mesh);
-		auto pIndexBuffer = buildIndexBuffer(pCmdList, mesh);
+		auto pVertexBuffer = buildVertexBuffer(pGrahpicsCtx, mesh);
+		auto pIndexBuffer = buildIndexBuffer(pGrahpicsCtx, mesh);
 		std::vector<SubMesh> submeshs;
 		if (!name.empty())
 			submeshs.emplace_back(name, count, std::uint32_t(0), std::uint32_t(0));
@@ -191,13 +190,13 @@ struct MakeUnionMeshHelper {
 		_subMeshs.emplace(name, subMesh);
 	}
 
-	std::shared_ptr<Mesh> build(dx12lib::CommandListProxy pCmdList) const {
-		auto pVertexBuffer = pCmdList->createVertexBuffer(
+	std::shared_ptr<Mesh> build(dx12lib::GraphicsContextProxy pGrahpicsCtx) const {
+		auto pVertexBuffer = pGrahpicsCtx->createVertexBuffer(
 			_vertices.data(),
 			sizeof(T) * _vertices.size(),
 			sizeof(T)
 		);
-		auto pIndexBuffer = pCmdList->createIndexBuffer(
+		auto pIndexBuffer = pGrahpicsCtx->createIndexBuffer(
 			_indices.data(),
 			sizeof(index_t) * _indices.size(),
 			reinterpret_cast<DXGI_FORMAT>(IndexType)

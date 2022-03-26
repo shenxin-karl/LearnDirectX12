@@ -98,7 +98,7 @@ void SobelFilter::produceImpl(dx12lib::ComputeContextProxy pComputeList,
 	pComputeList->transitionBarrier(pInput, D3D12_RESOURCE_STATE_GENERIC_READ);
 	pComputeList->transitionBarrier(_pSobelMap, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
-	pComputeList->setPipelineStateObject(_pProducePSO);
+	pComputeList->setComputePSO(_pProducePSO);
 	pComputeList->setShaderResourceBuffer(pInput, SR_Input);
 	pComputeList->setUnorderedAccessBuffer(_pSobelMap, UA_Output);
 	uint32 numXGroup = static_cast<uint32>(std::ceil(float(_width) / kMaxSobelThreadCount));
@@ -116,7 +116,7 @@ void SobelFilter::applyImpl(dx12lib::ComputeContextProxy pComputeList,
 	pComputeList->transitionBarrier(pInput, D3D12_RESOURCE_STATE_GENERIC_READ);
 	pComputeList->transitionBarrier(_pSobelMap, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
-	pComputeList->setPipelineStateObject(_pAllpyPSO);
+	pComputeList->setComputePSO(_pAllpyPSO);
 	pComputeList->setShaderResourceBuffer(pInput, SR_Input);
 	pComputeList->setUnorderedAccessBuffer(_pSobelMap, UA_Output);
 	uint32 numXGroup = static_cast<uint32>(std::ceil(float(_width) / kMaxSobelThreadCount));

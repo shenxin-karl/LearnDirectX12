@@ -5,6 +5,7 @@
 #include "Device.h"
 #include "ResourceStateTracker.h"
 #include "MakeObejctTool.hpp"
+#include "ContextProxy.hpp"
 
 namespace dx12lib {
 
@@ -41,23 +42,24 @@ uint64 CommandQueue::signal(std::shared_ptr<SwapChain> pSwapChain) {
 	return _fenceValue;
 }
 
-void CommandQueue::executeCommandList(CommandListProxy pCommandList) {
-	std::vector<CommandListProxy> cmdLists;
-	cmdLists.push_back(pCommandList);
+void CommandQueue::executeCommandList(ContextProxy pContext) {
+	std::vector<ContextProxy> cmdLists;
+	cmdLists.push_back(pContext);
 	executeCommandList(cmdLists);
 }
 
-void CommandQueue::executeCommandList(const std::vector<CommandListProxy> &cmdLists) {
+void CommandQueue::executeCommandList(const std::vector<ContextProxy> &contextList) {
 	std::unordered_set<ID3D12CommandList *> hashset;
 	std::vector<ID3D12CommandList *> lists;
 
 	ResourceStateTracker::lock();
-	for (auto pCmdList : cmdLists) {
+	for (auto &pContext : contextList) {
+		auto pCmdList = pContext.getCmdList();
 		auto *pD3DCmdList = pCmdList->getD3DCommandList();
 		if (hashset.find(pD3DCmdList) != hashset.end())
 			continue;
 		hashset.insert(pD3DCmdList);
-		CommandListProxy pPendingCmdList = createCommandListProxy();
+		std::shared_ptr<CommandList> pPendingCmdList = _pFrameResourceQueue->createCommandList();
 		pCmdList->close(pPendingCmdList);
 		pPendingCmdList->close();
 		lists.push_back(pPendingCmdList->getD3DCommandList());
@@ -94,8 +96,8 @@ uint64 CommandQueue::getCompletedValue() const {
 	return _pFence->GetCompletedValue();
 }
 
-CommandListProxy CommandQueue::createCommandListProxy() {
-	return _pFrameResourceQueue->createCommandListProxy();
+DirectContextProxy CommandQueue::createDirectContextProxy() {
+	return _pFrameResourceQueue->createCommandList();
 }
 
 void CommandQueue::newFrame() {

@@ -1,4 +1,4 @@
-#include "StructedBuffer.h"
+#include "StructuredBuffer.h"
 #include "DefaultBuffer.h"
 #include "Device.h"
 #include "CommandList.h"

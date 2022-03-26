@@ -1,6 +1,6 @@
 #pragma once
 #include "dx12libStd.h"
-#include "CommandListProxy.h"
+#include "ContextProxy.hpp"
 
 namespace dx12lib {
 
@@ -12,14 +12,14 @@ protected:
 		DXGI_FORMAT depthStencilFormat
 	);
 public:
-	void resize(CommandListProxy pCmdList, uint32 width, uint32 height);
+	void resize(DirectContextProxy pDirectContext, uint32 width, uint32 height);
 	DXGI_FORMAT getRenderTargetFormat() const;
 	DXGI_FORMAT getDepthStencilFormat() const;
 	void present();
 	std::shared_ptr<RenderTarget> getRenderTarget() const;
 private:
 	std::shared_ptr<RenderTargetBuffer> getCurrentBackBuffer() const;
-	void updateBuffer(CommandListProxy pCmdList);
+	void updateBuffer(DirectContextProxy pDirectContext);
 private:
 	HWND	_hwnd;
 	uint32	_width;

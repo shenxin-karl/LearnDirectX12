@@ -1,7 +1,7 @@
 #pragma once
 #include "Math/MathHelper.h"
 #include "D3D/d3dutil.h"
-#include "dx12lib/StructConstantBuffer.hpp"
+#include "dx12lib/StructuredConstantBuffer.hpp"
 
 namespace com {
 

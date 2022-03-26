@@ -8,12 +8,12 @@ SubMesh::operator bool() const {
 	return _count != -1;
 }
 
-void SubMesh::drawInstanced(dx12lib::CommandListProxy pCmdList, 
+void SubMesh::drawInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx,
 	std::uint32_t instanceCount /*= 1*/, 
 	std::uint32_t startInstanceLocation /*= 0 */) const 
 {
 	assert(bool(*this) && "this submesh invalid");
-	pCmdList->drawInstanced(
+	pGrahpicsCtx->drawInstanced(
 		_count,
 		instanceCount,
 		_baseVertexLocation,
@@ -21,12 +21,12 @@ void SubMesh::drawInstanced(dx12lib::CommandListProxy pCmdList,
 	);
 }
 
-void SubMesh::drawIndexdInstanced(dx12lib::CommandListProxy pCmdList, 
+void SubMesh::drawIndexdInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx,
 	std::uint32_t instanceCount /*= 1*/, 
 	std::uint32_t startInstanceLocation /*= 0 */) const 
 {
 	assert(bool(*this) && "this submesh invalid");
-	pCmdList->drawIndexdInstanced(
+	pGrahpicsCtx->drawIndexdInstanced(
 		_count,
 		instanceCount,
 		_startIndexLocation,
@@ -62,15 +62,15 @@ Mesh::iteraotr Mesh::end() const {
 }
 
 
-void Mesh::drawInstanced(dx12lib::CommandListProxy pCmdList, 
+void Mesh::drawInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx,
 	std::uint32_t instanceCount /*= 1*/, 
 	std::uint32_t startInstanceLocation /*= 0 */) const 
 {
 	if (!_subMeshs.empty()) {
 		for (auto &submesh : *this)
-			submesh.drawInstanced(pCmdList, instanceCount, startInstanceLocation);
+			submesh.drawInstanced(pGrahpicsCtx, instanceCount, startInstanceLocation);
 	} else {
-		pCmdList->drawInstanced(
+		pGrahpicsCtx->drawInstanced(
 			_pVertexBuffer->getVertexCount(),
 			instanceCount, 0, startInstanceLocation
 		);
@@ -78,15 +78,15 @@ void Mesh::drawInstanced(dx12lib::CommandListProxy pCmdList,
 }
 
 
-void Mesh::drawIndexdInstanced(dx12lib::CommandListProxy pCmdList, 
+void Mesh::drawIndexdInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx, 
 	std::uint32_t instanceCount /*= 1*/, 
 	std::uint32_t startInstanceLocation /*= 0 */) const 
 {
 	if (!_subMeshs.empty()) {
 		for (auto &submesh : *this)
-			submesh.drawIndexdInstanced(pCmdList, instanceCount, startInstanceLocation);
+			submesh.drawIndexdInstanced(pGrahpicsCtx, instanceCount, startInstanceLocation);
 	} else {
-		pCmdList->drawIndexdInstanced(
+		pGrahpicsCtx->drawIndexdInstanced(
 			_pIndexBuffer->getIndexCount(),
 			instanceCount, 0, 0, startInstanceLocation
 		);

@@ -1,8 +1,8 @@
 #pragma once
 #include "dx12lib/dx12libStd.h"
-#include "dx12lib/CommandListProxy.h"
+#include "dx12lib/ContextProxy.hpp"
 #include "dx12lib/CommandContext.h"
-#include "dx12lib/StructConstantBuffer.hpp"
+#include "dx12lib/StructuredConstantBuffer.hpp"
 #include "dx12lib/IResource.h"
 
 namespace d3d {

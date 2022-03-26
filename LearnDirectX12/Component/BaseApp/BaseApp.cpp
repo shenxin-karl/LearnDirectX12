@@ -25,10 +25,10 @@ void BaseApp::initialize() {
 	_pSwapChain = _pDevice->createSwapChain(_pInputSystem->window->getHWND());
 	// first resize
 	auto pCmdQueue = _pDevice->getCommandQueue(dx12lib::CommandQueueType::Direct);
-	auto pCmdList = pCmdQueue->createCommandListProxy();
-	_pSwapChain->resize(pCmdList, _width, _height);
-	onInitialize(pCmdList);
-	pCmdQueue->executeCommandList(pCmdList);
+	auto pDirectContext = pCmdQueue->createDirectContextProxy();
+	_pSwapChain->resize(pDirectContext, _width, _height);
+	onInitialize(pDirectContext);
+	pCmdQueue->executeCommandList(pDirectContext);
 	pCmdQueue->signal(_pSwapChain);
 	pCmdQueue->flushCommandQueue();
 }
@@ -77,7 +77,7 @@ void BaseApp::resize(int width, int height) {
 	auto pCmdQueue = _pDevice->getCommandQueue(dx12lib::CommandQueueType::Direct);
 	pCmdQueue->flushCommandQueue();
 	pCmdQueue->newFrame();
-	auto pCmdList = pCmdQueue->createCommandListProxy();
+	auto pCmdList = pCmdQueue->createDirectContextProxy();
 	_pSwapChain->resize(pCmdList, width, height);
 	onResize(pCmdList, width, height);
 	pCmdQueue->executeCommandList(pCmdList);

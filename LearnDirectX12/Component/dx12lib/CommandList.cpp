@@ -17,7 +17,7 @@
 #include "DepthStencilBuffer.h"
 #include "ShaderResourceBuffer.h"
 #include "ReadbackBuffer.h"
-#include "StructedBuffer.h"
+#include "StructuredBuffer.h"
 #include "UnorderedAccessBuffer.h"
 #include <iostream>
 
@@ -38,12 +38,130 @@ bool StateCMove(T0 &&dest, T1 &&src) {
 
 namespace dx12lib {
 
+/// private function
+CommandList::CommandList(std::weak_ptr<FrameResourceItem> pFrameResourceItem) {
+	auto pSharedFrameResourceItem = pFrameResourceItem.lock();
+	_cmdListType = pSharedFrameResourceItem->getCommandListType();
+	_pDevice = pSharedFrameResourceItem->getDevice();
+
+	auto pDevice = pSharedFrameResourceItem->getDevice();
+	auto pd3d12Device = pDevice.lock()->getD3DDevice();
+	ThrowIfFailed(pd3d12Device->CreateCommandAllocator(
+		_cmdListType,
+		IID_PPV_ARGS(&_pCmdListAlloc)
+	));
+	ThrowIfFailed(pd3d12Device->CreateCommandList(
+		0,
+		_cmdListType,
+		_pCmdListAlloc.Get(),
+		nullptr,
+		IID_PPV_ARGS(&_pCommandList)
+	));
+
+	_pResourceStateTracker = std::make_unique<MakeResourceStateTracker>();
+	for (std::size_t i = 0; i < kDynamicDescriptorHeapCount; ++i) {
+		_pDynamicDescriptorHeaps[i] = std::make_unique<MakeDynamicDescriptorHeap>(
+			_pDevice,
+			static_cast<D3D12_DESCRIPTOR_HEAP_TYPE>(i),
+			static_cast<uint32>(kDynamicDescriptorPerHeap)
+		);
+	}
+}
+
+CommandList::~CommandList() {
+}
+
+/// ******************************************** Context api ***************************************************
 ID3D12GraphicsCommandList *CommandList::getD3DCommandList() const noexcept {
 	return _pCommandList.Get();
 }
 
 std::weak_ptr<dx12lib::Device> CommandList::getDevice() const {
 	return _pDevice;
+}
+
+/// ******************************************** CommandContext api ********************************************
+std::shared_ptr<ConstantBuffer>
+CommandList::createConstantBuffer(std::size_t sizeInByte, const void *pData) {
+	auto pSharedDevice = _pDevice.lock();
+	auto queueType = toCommandQueueType(_cmdListType);
+	auto *pFrameResourceQueue = pSharedDevice->getCommandQueue(queueType)->getFrameResourceQueue();
+	ConstantBufferDesc desc = {
+		_pDevice,
+		pFrameResourceQueue->getCurrentFrameResourceIndexRef(),
+		pFrameResourceQueue->getMaxFrameResourceCount(),
+		uint32(sizeInByte),
+		pData
+	};
+	return std::make_shared<MakeConstantBuffer>(desc);
+}
+
+std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSTextureFromFile(const std::wstring &fileName) {
+	WRL::ComPtr<ID3D12Resource> pTexture;
+	WRL::ComPtr<ID3D12Resource> pUploadHeap;
+	DirectX::CreateDDSTextureFromFile12(_pDevice.lock()->getD3DDevice(),
+		_pCommandList.Get(),
+		fileName.c_str(),
+		pTexture,
+		pUploadHeap
+	);
+	assert(pTexture != nullptr && pUploadHeap != nullptr);
+	return std::make_shared<MakeShaderResourceBuffer>(_pDevice,
+		pTexture,
+		pUploadHeap,
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+	);
+}
+
+std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSTextureFromMemory(const void *pData,
+	std::size_t sizeInByte) {
+	WRL::ComPtr<ID3D12Resource> pTexture;
+	WRL::ComPtr<ID3D12Resource> pUploadHeap;
+	DirectX::CreateDDSTextureFromMemory12(_pDevice.lock()->getD3DDevice(),
+		_pCommandList.Get(),
+		reinterpret_cast<const uint8_t *>(pData),
+		sizeInByte,
+		pTexture,
+		pUploadHeap
+	);
+	assert(pTexture != nullptr && pUploadHeap != nullptr);
+	return std::make_shared<MakeShaderResourceBuffer>(_pDevice,
+		pTexture,
+		pUploadHeap,
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+	);
+}
+
+void CommandList::setShaderResourceBufferImpl(std::shared_ptr<IShaderSourceResource> pTexture, uint32 rootIndex, uint32 offset) {
+	assert(pTexture != nullptr);
+	assert(_currentGPUState.pRootSignature != nullptr);
+	_pDynamicDescriptorHeaps[0]->stageDescriptors(
+		rootIndex,
+		offset,
+		1,
+		pTexture->getShaderResourceView()
+	);
+}
+
+void CommandList::setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType,
+	WRL::ComPtr<ID3D12DescriptorHeap> pHeap) {
+	if (_currentGPUState.pDescriptorHeaps[heapType] != pHeap.Get()) {
+		_currentGPUState.pDescriptorHeaps[heapType] = pHeap.Get();
+		bindDescriptorHeaps();
+	}
+}
+
+void CommandList::setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuffer,
+	uint32 rootIndex,
+	uint32 offset) {
+	assert(pConstantBuffer != nullptr);
+	assert(_currentGPUState.pRootSignature != nullptr);
+	_pDynamicDescriptorHeaps[0]->stageDescriptors(
+		rootIndex,
+		offset,
+		1,
+		pConstantBuffer->getConstantBufferView()
+	);
 }
 
 void CommandList::copyResourceImpl(std::shared_ptr<IResource> pDest, std::shared_ptr<IResource> pSrc) {
@@ -81,12 +199,30 @@ void CommandList::aliasBarrierImpl(std::shared_ptr<IResource> pBeforce,
 		flushResourceBarriers();
 }
 
-
 void CommandList::flushResourceBarriers() {
 	_pResourceStateTracker->flushResourceBarriers(shared_from_this());
 }
 
-/*************************************************************************************************/
+/// ******************************************** GraphicsContext api ********************************************
+std::shared_ptr<VertexBuffer>
+CommandList::createVertexBuffer(const void *pData, std::size_t sizeInByte, std::size_t stride) {
+	return std::make_shared<MakeVertexBuffer>(_pDevice,
+		shared_from_this(),
+		pData,
+		uint32(sizeInByte),
+		uint32(stride)
+	);
+}
+
+std::shared_ptr<IndexBuffer>
+CommandList::createIndexBuffer(const void *pData, std::size_t sizeInByte, DXGI_FORMAT indexFormat) {
+	return std::make_shared<MakeIndexBuffer>(_pDevice,
+		shared_from_this(),
+		pData,
+		uint32(sizeInByte),
+		indexFormat
+	);
+}
 
 void CommandList::setViewports(const D3D12_VIEWPORT &viewport) {
 	_currentGPUState.isSetViewprot = true;
@@ -134,41 +270,6 @@ void CommandList::setRenderTarget(std::shared_ptr<RenderTarget> pRenderTarget) {
 	);
 }
 
-std::shared_ptr<VertexBuffer> 
-CommandList::createVertexBuffer(const void *pData, std::size_t sizeInByte, std::size_t stride) {
-	return std::make_shared<MakeVertexBuffer>(_pDevice, 
-		shared_from_this(), 
-		pData, 
-		uint32(sizeInByte), 
-		uint32(stride)
-	);
-}
-
-std::shared_ptr<IndexBuffer> 
-CommandList::createIndexBuffer(const void *pData, std::size_t sizeInByte, DXGI_FORMAT indexFormat) {
-	return std::make_shared<MakeIndexBuffer>(_pDevice, 
-		shared_from_this(), 
-		pData, 
-		uint32(sizeInByte),
-		indexFormat
-	);
-}
-
-std::shared_ptr<ConstantBuffer> 
-CommandList::createConstantBuffer(std::size_t sizeInByte, const void *pData) {
-	auto pSharedDevice = _pDevice.lock();
-	auto queueType = toCommandQueueType(_cmdListType);
-	auto *pFrameResourceQueue = pSharedDevice->getCommandQueue(queueType)->getFrameResourceQueue();
-	ConstantBufferDesc desc = {
-		_pDevice,
-		pFrameResourceQueue->getCurrentFrameResourceIndexRef(),
-		pFrameResourceQueue->getMaxFrameResourceCount(),
-		uint32(sizeInByte),
-		pData
-	};
-	return std::make_shared<MakeConstantBuffer>(desc);
-}
-
 void CommandList::setVertexBuffer(std::shared_ptr<VertexBuffer> pVertBuffer, UINT slot /*= 0 */) {
 	assert(pVertBuffer != nullptr);
 	assert(slot < kVertexBufferSlotCount);
@@ -189,112 +290,14 @@ void CommandList::setIndexBuffer(std::shared_ptr<IndexBuffer> pIndexBuffer) {
 		_pCommandList->IASetIndexBuffer(RVPtr(pIndexBuffer->getIndexBufferView()));
 }
 
-void CommandList::setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuffer, 
-	uint32 rootIndex, 
-	uint32 offset)
-{
-	assert(pConstantBuffer != nullptr);
-	assert(_currentGPUState.pRootSignature != nullptr);
-	_pDynamicDescriptorHeaps[0]->stageDescriptors(
-		rootIndex, 
-		offset, 
-		1, 
-		pConstantBuffer->getConstantBufferView()
-	);
-}
 
-void CommandList::setShaderResourceBufferImpl(std::shared_ptr<IShaderSourceResource> pTexture, uint32 rootIndex, uint32 offset) {
-	assert(pTexture != nullptr);
-	assert(_currentGPUState.pRootSignature != nullptr);
-	_pDynamicDescriptorHeaps[0]->stageDescriptors(
-		rootIndex,
-		offset,
-		1,
-		pTexture->getShaderResourceView()
-	);
-}
-
-void CommandList::setPipelineStateObject(std::shared_ptr<GraphicsPSO> pPipelineStateObject) {
+void CommandList::setGraphicsPSO(std::shared_ptr<GraphicsPSO> pPipelineStateObject) {
 	assert(pPipelineStateObject != nullptr);
 	assert(!pPipelineStateObject->isDirty());
 	if (StateCMove(_currentGPUState.pPSO, pPipelineStateObject.get())) {
 		setGrahicsRootSignature(pPipelineStateObject->getRootSignature());
 		_pCommandList->SetPipelineState(pPipelineStateObject->getPipelineStateObject().Get());
 	}
-}
-
-std::shared_ptr<StructuredBuffer> CommandList::createStructedBuffer(const void *pData, std::size_t sizeInByte) {
-	assert(pData != nullptr && sizeInByte > 0);
-	return std::make_shared<MakeStructedBuffer>(
-		_pDevice,
-		shared_from_this(),
-		pData,
-		sizeInByte
-	);
-}
-
-std::shared_ptr<UnorderedAccessBuffer> CommandList::createUnorderedAccessBuffer(std::size_t width, 
-	std::size_t height, 
-	DXGI_FORMAT format)
-{
-	assert(format != DXGI_FORMAT::DXGI_FORMAT_UNKNOWN);
-	assert(width > 0);
-	assert(height > 0);
-	return std::make_shared<MakeUnorderedAccessBuffer>(
-		_pDevice,
-		width,
-		height,
-		format
-	);
-}
-
-std::shared_ptr<ReadbackBuffer> CommandList::createReadbackBuffer(std::size_t sizeInByte) {
-	assert(sizeInByte > 0);
-	return std::make_shared<MakeReadbackBuffer>(
-		_pDevice,
-		sizeInByte
-	);
-}
-
-void CommandList::setStructedBuffer(std::shared_ptr<StructuredBuffer> pStructedBuffer, 
-	uint32 rootIndex, 
-	uint32 offset /*= 0 */)
-{
-	assert(pStructedBuffer != nullptr);
-	assert(_currentGPUState.pRootSignature != nullptr);
-	_pDynamicDescriptorHeaps[0]->stageDescriptors(
-		rootIndex,
-		offset,
-		1,
-		pStructedBuffer->getStructedBufferView()
-	);
-}
-
-void CommandList::setUnorderedAccessBuffer(std::shared_ptr<UnorderedAccessBuffer> pBuffer, 
-	uint32 rootIndex, 
-	uint32 offset /*= 0 */) 
-{
-	assert(pBuffer != nullptr);
-	assert(_currentGPUState.pRootSignature != nullptr);
-	_pDynamicDescriptorHeaps[0]->stageDescriptors(
-		rootIndex,
-		offset,
-		1,
-		pBuffer->getUnorderedAccessView()
-	);
-}
-
-void CommandList::readback(std::shared_ptr<ReadbackBuffer> pReadbackBuffer) {
-	_pReadbackBuffers.push_back(pReadbackBuffer);
-}
-
-void CommandList::setCompute32BitConstants(uint32 rootIndex, uint32 numConstants, const void *pData, uint32 destOffset) {
-	assert(_currentGPUState.debugChechSet32BitConstants(rootIndex, numConstants + destOffset));
-	_pCommandList->SetComputeRoot32BitConstants(rootIndex, numConstants, pData, destOffset);
-}
-
-void CommandList::setGrahicsRootSignature(std::shared_ptr<RootSignature> pRootSignature) {
-	setRootSignature(pRootSignature, &ID3D12GraphicsCommandList::SetGraphicsRootSignature);
 }
 
 void CommandList::setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology) {
@@ -310,6 +313,12 @@ void CommandList::setStencilRef(UINT stencilRef) {
 		_pCommandList->OMSetStencilRef(stencilRef);
 	}
 }
+
+void CommandList::setGraphics32BitConstants(uint32 rootIndex, uint32 numConstants, const void *pData, uint32 destOffset) {
+	assert(_currentGPUState.debugChechSet32BitConstants(rootIndex, numConstants + destOffset));
+	_pCommandList->SetGraphicsRoot32BitConstants(rootIndex, numConstants, pData, destOffset);
+}
+
 
 void CommandList::drawInstanced(uint32 vertCount, 
 	uint32 instanceCount, 
@@ -392,58 +401,79 @@ void CommandList::clearDepthStencil(std::shared_ptr<DepthStencilBuffer> pResourc
 	);
 }
 
-void CommandList::setGraphics32BitConstants(uint32 rootIndex, uint32 numConstants, const void *pData, uint32 destOffset) {
-	assert(_currentGPUState.debugChechSet32BitConstants(rootIndex, numConstants + destOffset));
-	_pCommandList->SetGraphicsRoot32BitConstants(rootIndex, numConstants, pData, destOffset);
-}
 
-std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSTextureFromFile(const std::wstring &fileName) {
-	WRL::ComPtr<ID3D12Resource> pTexture;
-	WRL::ComPtr<ID3D12Resource> pUploadHeap;
-	DirectX::CreateDDSTextureFromFile12(_pDevice.lock()->getD3DDevice(),
-		_pCommandList.Get(),
-		fileName.c_str(),
-		pTexture,
-		pUploadHeap
-	);
-	assert(pTexture != nullptr && pUploadHeap != nullptr);
-	return std::make_shared<MakeShaderResourceBuffer>(_pDevice,
-		pTexture,
-		pUploadHeap,
-		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+/// ******************************************** ComputeContext api ********************************************
+std::shared_ptr<StructuredBuffer> CommandList::createStructedBuffer(const void *pData, std::size_t sizeInByte) {
+	assert(pData != nullptr && sizeInByte > 0);
+	return std::make_shared<MakeStructedBuffer>(
+		_pDevice,
+		shared_from_this(),
+		pData,
+		sizeInByte
 	);
 }
 
-std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSTextureFromMemory(const void *pData,
-	std::size_t sizeInByte) 
-{
-	WRL::ComPtr<ID3D12Resource> pTexture;
-	WRL::ComPtr<ID3D12Resource> pUploadHeap;
-	DirectX::CreateDDSTextureFromMemory12(_pDevice.lock()->getD3DDevice(),
-		_pCommandList.Get(),
-		reinterpret_cast<const uint8_t *>(pData),
-		sizeInByte,
-		pTexture,
-		pUploadHeap
-	);
-	assert(pTexture != nullptr && pUploadHeap != nullptr);
-	return std::make_shared<MakeShaderResourceBuffer>(_pDevice,
-		pTexture,
-		pUploadHeap,
-		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+std::shared_ptr<UnorderedAccessBuffer> CommandList::createUnorderedAccessBuffer(std::size_t width,
+	std::size_t height,
+	DXGI_FORMAT format) {
+	assert(format != DXGI_FORMAT::DXGI_FORMAT_UNKNOWN);
+	assert(width > 0);
+	assert(height > 0);
+	return std::make_shared<MakeUnorderedAccessBuffer>(
+		_pDevice,
+		width,
+		height,
+		format
 	);
 }
 
-void CommandList::setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, 
-	WRL::ComPtr<ID3D12DescriptorHeap> pHeap) 
-{
-	if (_currentGPUState.pDescriptorHeaps[heapType] != pHeap.Get()) {
-		_currentGPUState.pDescriptorHeaps[heapType] = pHeap.Get();
-		bindDescriptorHeaps();
+std::shared_ptr<ReadbackBuffer> CommandList::createReadbackBuffer(std::size_t sizeInByte) {
+	assert(sizeInByte > 0);
+	return std::make_shared<MakeReadbackBuffer>(
+		_pDevice,
+		sizeInByte
+	);
+}
+
+void CommandList::setComputePSO(std::shared_ptr<ComputePSO> pPipelineStateObject) {
+	assert(pPipelineStateObject != nullptr);
+	assert(!pPipelineStateObject->isDirty());
+	if (StateCMove(_currentGPUState.pPSO, pPipelineStateObject.get())) {
+		setComputeRootSignature(pPipelineStateObject->getRootSignature());
+		_pCommandList->SetPipelineState(pPipelineStateObject->getPipelineStateObject().Get());
 	}
 }
 
-/**************************************************************************************************/
+void CommandList::setStructedBuffer(std::shared_ptr<StructuredBuffer> pStructedBuffer,
+	uint32 rootIndex,
+	uint32 offset /*= 0 */) {
+	assert(pStructedBuffer != nullptr);
+	assert(_currentGPUState.pRootSignature != nullptr);
+	_pDynamicDescriptorHeaps[0]->stageDescriptors(
+		rootIndex,
+		offset,
+		1,
+		pStructedBuffer->getStructedBufferView()
+	);
+}
+
+void CommandList::setUnorderedAccessBuffer(std::shared_ptr<UnorderedAccessBuffer> pBuffer,
+	uint32 rootIndex,
+	uint32 offset /*= 0 */) {
+	assert(pBuffer != nullptr);
+	assert(_currentGPUState.pRootSignature != nullptr);
+	_pDynamicDescriptorHeaps[0]->stageDescriptors(
+		rootIndex,
+		offset,
+		1,
+		pBuffer->getUnorderedAccessView()
+	);
+}
+
+void CommandList::setCompute32BitConstants(uint32 rootIndex, uint32 numConstants, const void *pData, uint32 destOffset) {
+	assert(_currentGPUState.debugChechSet32BitConstants(rootIndex, numConstants + destOffset));
+	_pCommandList->SetComputeRoot32BitConstants(rootIndex, numConstants, pData, destOffset);
+}
 
 void CommandList::dispatch(size_t GroupCountX, size_t GroupCountY, size_t GroupCountZ) {
 	assert(GroupCountX >= 1);
@@ -459,62 +489,25 @@ void CommandList::dispatch(size_t GroupCountX, size_t GroupCountY, size_t GroupC
 	);
 }
 
+void CommandList::readback(std::shared_ptr<ReadbackBuffer> pReadbackBuffer) {
+	_pReadbackBuffers.push_back(pReadbackBuffer);
+}
+
+void CommandList::setGrahicsRootSignature(std::shared_ptr<RootSignature> pRootSignature) {
+	setRootSignature(pRootSignature, &ID3D12GraphicsCommandList::SetGraphicsRootSignature);
+}
+
 void CommandList::setComputeRootSignature(std::shared_ptr<RootSignature> pRootSignature) {
 	setRootSignature(pRootSignature, &ID3D12GraphicsCommandList::SetComputeRootSignature);
 }
-
-void CommandList::setPipelineStateObject(std::shared_ptr<ComputePSO> pPipelineStateObject) {
-	assert(pPipelineStateObject != nullptr);
-	assert(!pPipelineStateObject->isDirty());
-	if (StateCMove(_currentGPUState.pPSO, pPipelineStateObject.get())) {
-		setComputeRootSignature(pPipelineStateObject->getRootSignature());
-		_pCommandList->SetPipelineState(pPipelineStateObject->getPipelineStateObject().Get());
-	}
-}
-
-/**************************************************************************************************/
-
-CommandList::CommandList(std::weak_ptr<FrameResourceItem> pFrameResourceItem) {
-	auto pSharedFrameResourceItem = pFrameResourceItem.lock();
-	_cmdListType = pSharedFrameResourceItem->getCommandListType();
-	_pDevice = pSharedFrameResourceItem->getDevice();
-
-	auto pDevice = pSharedFrameResourceItem->getDevice();
-	auto pd3d12Device = pDevice.lock()->getD3DDevice();
-	ThrowIfFailed(pd3d12Device->CreateCommandAllocator(
-		_cmdListType,
-		IID_PPV_ARGS(&_pCmdListAlloc)
-	));
-	ThrowIfFailed(pd3d12Device->CreateCommandList(
-		0,
-		_cmdListType,
-		_pCmdListAlloc.Get(),
-		nullptr,
-		IID_PPV_ARGS(&_pCommandList)
-	));
-
-	_pResourceStateTracker = std::make_unique<MakeResourceStateTracker>();
-
-	for (std::size_t i = 0; i < kDynamicDescriptorHeapCount; ++i) {
-		_pDynamicDescriptorHeaps[i] = std::make_unique<MakeDynamicDescriptorHeap>(
-			_pDevice,
-			static_cast<D3D12_DESCRIPTOR_HEAP_TYPE>(i),
-			static_cast<uint32>(kDynamicDescriptorPerHeap)
-		);
-	}
-}
-
-CommandList::~CommandList() {
-}
-
 
 void CommandList::close() {
 	flushResourceBarriers();
 	ThrowIfFailed(_pCommandList->Close());
 }
 
-void CommandList::close(CommandListProxy pPendingCmdList) {
-	_pResourceStateTracker->flusePendingResourceBarriers(pPendingCmdList->shared_from_this());
+void CommandList::close(std::shared_ptr<CommandList> pPendingCmdList) {
+	_pResourceStateTracker->flusePendingResourceBarriers(pPendingCmdList);
 	flushResourceBarriers();
 	_pResourceStateTracker->commitFinalResourceStates();
 	ThrowIfFailed(_pCommandList->Close());

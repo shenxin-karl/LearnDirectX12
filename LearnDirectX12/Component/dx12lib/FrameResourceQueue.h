@@ -1,6 +1,6 @@
 #pragma once
 #include "dx12libStd.h"
-#include "CommandListProxy.h"
+#include "ContextProxy.hpp"
 #include "ThreakSafeQueue.hpp"
 #include <array>
 
@@ -17,15 +17,14 @@ public:
 	FrameResourceItem &operator=(const FrameResourceItem &) = delete;
 	uint64 getFence() const noexcept;
 	void setFence(uint64 fence) noexcept;
-	CommandListProxy createCommandListProxy();
-	void releaseCommandList(std::shared_ptr<CommandList> pCommandList);
+	std::shared_ptr<CommandList> createCommandList();
 	std::weak_ptr<Device> getDevice() const noexcept;
 	D3D12_COMMAND_LIST_TYPE getCommandListType() const noexcept;
 	void newFrame(uint64 fence);
 private:
-	uint64                                     _fence = 0;
-	D3D12_COMMAND_LIST_TYPE                    _cmdListType;
-	std::weak_ptr<Device>                      _pDevice;
+	uint64                  _fence = 0;
+	D3D12_COMMAND_LIST_TYPE _cmdListType;
+	std::weak_ptr<Device>   _pDevice;
 	mutable ThreadSafeQueue<std::shared_ptr<CommandList>>  _cmdListPool;
 	mutable ThreadSafeQueue<std::shared_ptr<CommandList>>  _availableCmdList;
 };
@@ -34,7 +33,7 @@ class FrameResourceQueue {
 protected:
 	FrameResourceQueue(std::weak_ptr<Device> pDevice, D3D12_COMMAND_LIST_TYPE cmdListType);
 public:
-	CommandListProxy createCommandListProxy();
+	std::shared_ptr<CommandList> createCommandList();
 	uint32 getMaxFrameResourceCount() const noexcept;
 	std::atomic_uint32_t &getCurrentFrameResourceIndexRef();
 	void newFrame(uint64 fence);

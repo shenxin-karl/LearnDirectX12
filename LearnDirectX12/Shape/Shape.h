@@ -5,7 +5,7 @@
 #include "GameTimer/GameTimer.h"
 #include "BaseApp/BaseApp.h"
 #include "Math/MathHelper.h"
-#include "dx12lib/StructConstantBuffer.hpp"
+#include "dx12lib/StructuredConstantBuffer.hpp"
 
 using namespace Math;
 
@@ -49,20 +49,20 @@ class Shape : public com::BaseApp {
 public:
 	Shape();
 	virtual ~Shape() override;
-	virtual void onInitialize(dx12lib::CommandListProxy pCmdList) override;
+	virtual void onInitialize(dx12lib::DirectContextProxy pDirectCtx) override;
 	virtual void onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 	virtual void onTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
-	virtual void onResize(dx12lib::CommandListProxy pCmdList, int width, int height) override;
+	virtual void onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int height) override;
 private:
-	void buildTexturePSO(dx12lib::CommandListProxy pCmdList);
-	void buildColorPSO(dx12lib::CommandListProxy pCmdList);
-	void buildRenderItem(dx12lib::CommandListProxy pCmdList);
-	void buildGeometry(dx12lib::CommandListProxy pCmdList);
-	void buildGameLight(dx12lib::CommandListProxy pCmdList);
+	void buildTexturePSO(dx12lib::DirectContextProxy pDirectCtx);
+	void buildColorPSO(dx12lib::DirectContextProxy pDirectCtx);
+	void buildRenderItem(dx12lib::DirectContextProxy pDirectCtx);
+	void buildGeometry(dx12lib::DirectContextProxy pDirectCtx);
+	void buildGameLight(dx12lib::DirectContextProxy pDirectCtx);
 	void buildMaterials();
-	void loadTextures(dx12lib::CommandListProxy pCmdList);
-	void renderShapesPass(dx12lib::CommandListProxy pCmdList);
-	void renderSkullPass(dx12lib::CommandListProxy pCmdList);
+	void loadTextures(dx12lib::DirectContextProxy pDirectCtx);
+	void renderShapesPass(dx12lib::DirectContextProxy pDirectCtx);
+	void renderSkullPass(dx12lib::DirectContextProxy pDirectCtx);
 	void pollEvent();
 	void updatePassCB(std::shared_ptr<com::GameTimer> pGameTimer);
 private:

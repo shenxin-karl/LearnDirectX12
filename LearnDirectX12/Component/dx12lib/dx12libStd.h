@@ -92,9 +92,6 @@ struct DeviceInitDesc;
 
 class Adapter;
 class CommandList;
-class CommandListProxy;
-class GrahpicsContextProxy;
-class ComputeContextProxy;
 class CommandQueue;
 class ConstantBuffer;
 class DefaultBuffer;
@@ -128,8 +125,6 @@ class RenderTargetBuffer;
 class ShaderResourceBuffer;
 class IShaderSourceResource;
 class IResource;
-class GrahicsContextProxy;
-class ComputeContextProxy;
 
 #define SHADER_FILE_TO_STRING(name, path) EMBED_STR(name, path)
 

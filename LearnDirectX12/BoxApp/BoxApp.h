@@ -3,7 +3,7 @@
 #include "GameTimer/GameTimer.h"
 #include "D3D/Camera.h"
 #include "Math/MathHelper.h"
-#include "dx12lib/StructConstantBuffer.hpp"
+#include "dx12lib/StructuredConstantBuffer.hpp"
 
 using namespace Math;
 
@@ -31,13 +31,13 @@ class BoxApp : public com::BaseApp {
 public:
 	BoxApp();
 protected:
-	virtual void onInitialize(dx12lib::CommandListProxy pCmdList) override;
+	virtual void onInitialize(dx12lib::DirectContextProxy pDirectContext) override;
 	virtual void onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 	virtual void onTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 private:
 	void pollEvent();
-	void buildBoxGeometry(dx12lib::CommandListProxy pCmdList);
-	void renderBoxPass(dx12lib::CommandListProxy pCmdList);
+	void buildBoxGeometry(dx12lib::DirectContextProxy pDirectContext);
+	void renderBoxPass(dx12lib::DirectContextProxy pDirectContext);
 private:
 	std::shared_ptr<dx12lib::GraphicsPSO>  _pGraphicsPSO;
 	std::unique_ptr<d3d::CoronaCamera>     _pCamera;

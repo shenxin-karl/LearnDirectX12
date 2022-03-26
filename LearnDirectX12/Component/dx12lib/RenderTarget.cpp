@@ -91,14 +91,14 @@ D3D12_RECT RenderTarget::getScissiorRect() const {
 	return D3D12_RECT(0, 0, _size.x, _size.y);
 }
 
-void RenderTarget::transitionBarrier(CommandListProxy pCmdList, 
+void RenderTarget::transitionBarrier(CommandContextProxy pCmdProxy,
 	D3D12_RESOURCE_STATES state, 
 	UINT subresource /*= D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES */) 
 {
 	for (std::size_t i = 0; i < AttachmentPoint::DepthStencil; ++i) {
 		auto pRenderTargetBuffer = getRenderTargetBuffer(static_cast<AttachmentPoint>(i));
 		if (pRenderTargetBuffer != nullptr) {
-			pCmdList->transitionBarrier(
+			pCmdProxy->transitionBarrier(
 				std::static_pointer_cast<IResource>(pRenderTargetBuffer),
 				state,
 				subresource
@@ -116,17 +116,17 @@ void swap(RenderTarget &lhs, RenderTarget &rhs) noexcept {
 
 /*************************************************************************************/
 
-RenderTargetTransitionBarrier::RenderTargetTransitionBarrier(CommandListProxy pCmdList, 
+RenderTargetTransitionBarrier::RenderTargetTransitionBarrier(CommandContextProxy pCmdPorxy,
 	std::shared_ptr<RenderTarget> pRenderTarget, 
 	D3D12_RESOURCE_STATES stateBeforce, 
 	D3D12_RESOURCE_STATES stateAfter)
-: _pCmdList(pCmdList), _pRenderTarget(pRenderTarget), _stateBeforce(stateBeforce), _stateAfter(stateAfter)
+: _pCmdPorxy(pCmdPorxy), _pRenderTarget(pRenderTarget), _stateBeforce(stateBeforce), _stateAfter(stateAfter)
 {
-	_pRenderTarget->transitionBarrier(_pCmdList, _stateBeforce);
+	_pRenderTarget->transitionBarrier(_pCmdPorxy, _stateBeforce);
 }
 
 RenderTargetTransitionBarrier::~RenderTargetTransitionBarrier() {
-	_pRenderTarget->transitionBarrier(_pCmdList, _stateAfter);
+	_pRenderTarget->transitionBarrier(_pCmdPorxy, _stateAfter);
 }
 
 }

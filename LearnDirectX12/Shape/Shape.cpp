@@ -29,7 +29,7 @@ Shape::~Shape() {
 
 }
 
-void Shape::onInitialize(dx12lib::CommandListProxy pCmdList) {
+void Shape::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 	d3d::CameraDesc cameraDesc = {
 		float3(10, 10, 10),
 		float3(0, 1, 0),
@@ -41,15 +41,15 @@ void Shape::onInitialize(dx12lib::CommandListProxy pCmdList) {
 	};
 	_pCamera = std::make_unique<d3d::CoronaCamera>(cameraDesc);
 	_pCamera->_whellSensitivety = 1.f;
-	_pPassCB = pCmdList->createStructConstantBuffer<d3d::PassCBType>();
-	buildTexturePSO(pCmdList);
-	buildColorPSO(pCmdList);
-	buildGameLight(pCmdList);
-	buildGeometry(pCmdList);
-	loadTextures(pCmdList);
+	_pPassCB = pDirectCtx->createStructConstantBuffer<d3d::PassCBType>();
+	buildTexturePSO(pDirectCtx);
+	buildColorPSO(pDirectCtx);
+	buildGameLight(pDirectCtx);
+	buildGeometry(pDirectCtx);
+	loadTextures(pDirectCtx);
 	buildMaterials();
-	buildRenderItem(pCmdList);
-	_pSobelFilter = std::make_unique<d3d::SobelFilter>(pCmdList, _width, _height);
+	buildRenderItem(pDirectCtx);
+	_pSobelFilter = std::make_unique<d3d::SobelFilter>(pDirectCtx, _width, _height);
 }
 
 void Shape::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
@@ -59,14 +59,14 @@ void Shape::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 
 void Shape::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pCmdQueue = _pDevice->getCommandQueue(dx12lib::CommandQueueType::Direct);
-	auto pCmdList = pCmdQueue->createCommandListProxy();
+	auto pDirectCtx = pCmdQueue->createDirectContextProxy();
 	auto pRenderTarget = _pSwapChain->getRenderTarget();
 
-	pCmdList->setViewports(pRenderTarget->getViewport());
-	pCmdList->setScissorRects(pRenderTarget->getScissiorRect());
+	pDirectCtx->setViewports(pRenderTarget->getViewport());
+	pDirectCtx->setScissorRects(pRenderTarget->getScissiorRect());
 	{
 		dx12lib::RenderTargetTransitionBarrier barrierGuard = {
-			pCmdList,
+			pDirectCtx,
 			pRenderTarget,
 			D3D12_RESOURCE_STATE_RENDER_TARGET,
 			D3D12_RESOURCE_STATE_PRESENT,
@@ -74,24 +74,24 @@ void Shape::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 
 		auto pRenderTargetBuffer = pRenderTarget->getRenderTargetBuffer(dx12lib::Color0);
 		auto pDepthStencilBuffer = pRenderTarget->getDepthStencilBuffer();
-		pCmdList->clearColor(pRenderTargetBuffer, float4(DX::Colors::LightSkyBlue));
-		pCmdList->clearDepthStencil(pDepthStencilBuffer, 1.f, 0);
-		pCmdList->setRenderTarget(pRenderTarget);
-		renderShapesPass(pCmdList);
-		renderSkullPass(pCmdList);
-		_pSobelFilter->apply(pCmdList, pRenderTargetBuffer);
-		pCmdList->copyResource(pRenderTargetBuffer, _pSobelFilter->getOutput());
+		pDirectCtx->clearColor(pRenderTargetBuffer, float4(DX::Colors::LightSkyBlue));
+		pDirectCtx->clearDepthStencil(pDepthStencilBuffer, 1.f, 0);
+		pDirectCtx->setRenderTarget(pRenderTarget);
+		renderShapesPass(pDirectCtx);
+		renderSkullPass(pDirectCtx);
+		_pSobelFilter->apply(pDirectCtx, pRenderTargetBuffer);
+		pDirectCtx->copyResource(pRenderTargetBuffer, _pSobelFilter->getOutput());
 	}
-	pCmdQueue->executeCommandList(pCmdList);
+	pCmdQueue->executeCommandList(pDirectCtx);
 	pCmdQueue->signal(_pSwapChain);
 }
 
-void Shape::onResize(dx12lib::CommandListProxy pCmdList, int width, int height) {
+void Shape::onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int height) {
 	_pCamera->_aspect = float(width) / float(height);
-	_pSobelFilter->onResize(pCmdList, width, height);
+	_pSobelFilter->onResize(pDirectCtx, width, height);
 }
 
-void Shape::buildTexturePSO(dx12lib::CommandListProxy pCmdList) {
+void Shape::buildTexturePSO(dx12lib::DirectContextProxy pDirectCtx) {
 	dx12lib::RootSignatureDescHelper rootDesc(d3d::getStaticSamplers());
 	rootDesc.resize(4);
 	rootDesc[0].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
@@ -119,7 +119,7 @@ void Shape::buildTexturePSO(dx12lib::CommandListProxy pCmdList) {
 	_PSOMap["TexturePSO"] = pPSO;
 }
 
-void Shape::buildColorPSO(dx12lib::CommandListProxy pCmdList) {
+void Shape::buildColorPSO(dx12lib::DirectContextProxy pDirectCtx) {
 	dx12lib::RootSignatureDescHelper rootDesc;
 	rootDesc.resize(3);
 	rootDesc[0].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
@@ -145,7 +145,7 @@ void Shape::buildColorPSO(dx12lib::CommandListProxy pCmdList) {
 	_PSOMap["ColorPSO"] = pPSO;
 }
 
-void Shape::buildRenderItem(dx12lib::CommandListProxy pCmdList) {
+void Shape::buildRenderItem(dx12lib::DirectContextProxy pDirectCtx) {
 	RenderItem boxItem;
 	ObjectCB boxObjCb;
 
@@ -157,7 +157,7 @@ void Shape::buildRenderItem(dx12lib::CommandListProxy pCmdList) {
 	XMStoreFloat4x4(&boxObjCb.world, DX::XMMatrixScaling(2.f, 2.f, 2.f) * DX::XMMatrixTranslation(0.f, 0.5f, 0.f));
 	boxItem._pMesh = _geometrys["box"];
 	boxItem._pAlbedo = _textureMap["bricks.dds"];
-	boxItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCB>(boxObjCb);
+	boxItem._pObjectCB = pDirectCtx->createStructConstantBuffer<ObjectCB>(boxObjCb);
 	textureRenderItems.push_back(boxItem);
 
 	RenderItem gridItem;
@@ -166,7 +166,7 @@ void Shape::buildRenderItem(dx12lib::CommandListProxy pCmdList) {
 	gridObjCB.world = MathHelper::identity4x4();;
 	gridItem._pMesh = _geometrys["grid"];
 	gridItem._pAlbedo = _textureMap["tile.dds"];
-	gridItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCB>(gridObjCB);
+	gridItem._pObjectCB = pDirectCtx->createStructConstantBuffer<ObjectCB>(gridObjCB);
 	textureRenderItems.push_back(gridItem);
 
 	for (std::size_t i = 0; i < 5; ++i) {
@@ -200,10 +200,10 @@ void Shape::buildRenderItem(dx12lib::CommandListProxy pCmdList) {
 		leftSphereRItem._pAlbedo = _textureMap["bricks.dds"];
 		rightSphereRItem._pAlbedo = _textureMap["bricks.dds"];
 
-		leftCylRItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCB>(leftCylObjCB);
-		rightCylRItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCB>(rightCylObjCB);
-		leftSphereRItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCB>(leftSphereObjCB);
-		rightSphereRItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCB>(rightSphereObjCB);
+		leftCylRItem._pObjectCB = pDirectCtx->createStructConstantBuffer<ObjectCB>(leftCylObjCB);
+		rightCylRItem._pObjectCB = pDirectCtx->createStructConstantBuffer<ObjectCB>(rightCylObjCB);
+		leftSphereRItem._pObjectCB = pDirectCtx->createStructConstantBuffer<ObjectCB>(leftSphereObjCB);
+		rightSphereRItem._pObjectCB = pDirectCtx->createStructConstantBuffer<ObjectCB>(rightSphereObjCB);
 
 		textureRenderItems.push_back(leftCylRItem);
 		textureRenderItems.push_back(rightCylRItem);
@@ -217,14 +217,14 @@ void Shape::buildRenderItem(dx12lib::CommandListProxy pCmdList) {
 	RenderItem skullItem;
 	ObjectCB skullObjCB;
 	skullObjCB.material = _materials["skullMat"];
-	XMStoreFloat4x4(&skullObjCB.world, 
+	XMStoreFloat4x4(&skullObjCB.world,
 		DX::XMMatrixMultiply(DX::XMMatrixScaling(0.5f, 0.5f, 0.5f), DX::XMMatrixTranslation(0.f, 1.0f, 0.f)));
 	skullItem._pMesh = _geometrys["skull"];
-	skullItem._pObjectCB = pCmdList->createStructConstantBuffer<ObjectCB>(skullObjCB);
+	skullItem._pObjectCB = pDirectCtx->createStructConstantBuffer<ObjectCB>(skullObjCB);
 	colorRenderItems.push_back(skullItem);
 }
 
-void Shape::buildGeometry(dx12lib::CommandListProxy pCmdList) {
+void Shape::buildGeometry(dx12lib::DirectContextProxy pDirectCtx) {
 	com::GometryGenerator gen;
 	com::MeshData box = gen.createBox(1.5f, 0.5f, 1.5f, 3);
 	com::MeshData grid = gen.createGrid(20.f, 30.f, 60, 40);
@@ -245,12 +245,12 @@ void Shape::buildGeometry(dx12lib::CommandListProxy pCmdList) {
 		});
 
 		std::shared_ptr<Mesh> pMesh = std::make_shared<Mesh>();
-		pMesh->_pVertexBuffer = pCmdList->createVertexBuffer(
+		pMesh->_pVertexBuffer = pDirectCtx->createVertexBuffer(
 			vertices.data(),
 			sizeof(ShapeVertex) * vertices.size(),
 			sizeof(ShapeVertex)
 		);
-		pMesh->_pIndexBuffer = pCmdList->createIndexBuffer(
+		pMesh->_pIndexBuffer = pDirectCtx->createIndexBuffer(
 			indices.data(),
 			sizeof(std::uint16_t) * indices.size(),
 			DXGI_FORMAT_R16_UINT
@@ -270,12 +270,12 @@ void Shape::buildGeometry(dx12lib::CommandListProxy pCmdList) {
 			return static_cast<std::uint16_t>(i);
 		});
 		std::shared_ptr<Mesh> pMesh = std::make_shared<Mesh>();
-		pMesh->_pVertexBuffer = pCmdList->createVertexBuffer(
+		pMesh->_pVertexBuffer = pDirectCtx->createVertexBuffer(
 			vertices.data(),
 			sizeof(SkullVertex) * vertices.size(),
 			sizeof(SkullVertex)
 		);
-		pMesh->_pIndexBuffer = pCmdList->createIndexBuffer(
+		pMesh->_pIndexBuffer = pDirectCtx->createIndexBuffer(
 			indices.data(),
 			sizeof(std::uint16_t) * indices.size(),
 			DXGI_FORMAT_R16_UINT
@@ -291,8 +291,8 @@ void Shape::buildGeometry(dx12lib::CommandListProxy pCmdList) {
 }
 
 
-void Shape::buildGameLight(dx12lib::CommandListProxy pCmdList) {
-	_pGameLightsCB = pCmdList->createStructConstantBuffer<d3d::LightCBType>();
+void Shape::buildGameLight(dx12lib::DirectContextProxy pDirectCtx) {
+	_pGameLightsCB = pDirectCtx->createStructConstantBuffer<d3d::LightCBType>();
 	auto pGPUGameLightCB = _pGameLightsCB->map();
 	pGPUGameLightCB->directLightCount = 1;
 	pGPUGameLightCB->pointLightCount = 1;
@@ -343,47 +343,47 @@ void Shape::buildMaterials() {
 	_materials["skullMat"] = skullMat;
 }
 
-void Shape::loadTextures(dx12lib::CommandListProxy pCmdList) {
-	_textureMap["bricks.dds"] = pCmdList->createDDSTextureFromFile(L"resource/bricks.dds");
-	_textureMap["tile.dds"] = pCmdList->createDDSTextureFromFile(L"resource/tile.dds");
+void Shape::loadTextures(dx12lib::DirectContextProxy pDirectCtx) {
+	_textureMap["bricks.dds"] = pDirectCtx->createDDSTextureFromFile(L"resource/bricks.dds");
+	_textureMap["tile.dds"] = pDirectCtx->createDDSTextureFromFile(L"resource/tile.dds");
 }
 
-void Shape::renderShapesPass(dx12lib::CommandListProxy pCmdList) {
+void Shape::renderShapesPass(dx12lib::DirectContextProxy pDirectCtx) {
 	const std::string passPSOName = "TexturePSO";
 	auto pPSO = _PSOMap[passPSOName];
-	pCmdList->setPipelineStateObject(pPSO);
+	pDirectCtx->setGraphicsPSO(pPSO);
 
-	pCmdList->setStructuredConstantBuffer(_pPassCB, ShapeRootParameType::CBPass);
-	pCmdList->setStructuredConstantBuffer(_pGameLightsCB, ShapeRootParameType::CBLight);
+	pDirectCtx->setStructuredConstantBuffer(_pPassCB, ShapeRootParameType::CBPass);
+	pDirectCtx->setStructuredConstantBuffer(_pGameLightsCB, ShapeRootParameType::CBLight);
 
 	auto psoRenderItems = _renderItems[passPSOName];
 	for (auto &rItem : psoRenderItems) {
-		pCmdList->setVertexBuffer(rItem._pMesh->_pVertexBuffer);
-		pCmdList->setIndexBuffer(rItem._pMesh->_pIndexBuffer);
-		pCmdList->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		pCmdList->setStructuredConstantBuffer(rItem._pObjectCB, ShapeRootParameType::CBObject);
-		pCmdList->setShaderResourceBuffer(rItem._pAlbedo, ShapeRootParameType::SRAlbedo);
-		pCmdList->drawIndexdInstanced(
+		pDirectCtx->setVertexBuffer(rItem._pMesh->_pVertexBuffer);
+		pDirectCtx->setIndexBuffer(rItem._pMesh->_pIndexBuffer);
+		pDirectCtx->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		pDirectCtx->setStructuredConstantBuffer(rItem._pObjectCB, ShapeRootParameType::CBObject);
+		pDirectCtx->setShaderResourceBuffer(rItem._pAlbedo, ShapeRootParameType::SRAlbedo);
+		pDirectCtx->drawIndexdInstanced(
 			rItem._pMesh->_pIndexBuffer->getIndexCount(), 1, 0,
 			0, 0
 		);
 	}
 }
 
-void Shape::renderSkullPass(dx12lib::CommandListProxy pCmdList) {
+void Shape::renderSkullPass(dx12lib::DirectContextProxy pDirectCtx) {
 	const std::string passPSOName = "ColorPSO";
 	auto pPSO = _PSOMap[passPSOName];
 
-	pCmdList->setPipelineStateObject(pPSO);
-	pCmdList->setStructuredConstantBuffer(_pPassCB, ShapeRootParameType::CBPass);
-	pCmdList->setStructuredConstantBuffer(_pGameLightsCB, ShapeRootParameType::CBLight);
+	pDirectCtx->setGraphicsPSO(pPSO);
+	pDirectCtx->setStructuredConstantBuffer(_pPassCB, ShapeRootParameType::CBPass);
+	pDirectCtx->setStructuredConstantBuffer(_pGameLightsCB, ShapeRootParameType::CBLight);
 	auto psoRenderItems = _renderItems[passPSOName];
 	auto &rItem = psoRenderItems[0];
-	pCmdList->setVertexBuffer(rItem._pMesh->_pVertexBuffer);
-	pCmdList->setIndexBuffer(rItem._pMesh->_pIndexBuffer);
-	pCmdList->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	pCmdList->setStructuredConstantBuffer(rItem._pObjectCB, ShapeRootParameType::CBObject);
-	pCmdList->drawIndexdInstanced(
+	pDirectCtx->setVertexBuffer(rItem._pMesh->_pVertexBuffer);
+	pDirectCtx->setIndexBuffer(rItem._pMesh->_pIndexBuffer);
+	pDirectCtx->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	pDirectCtx->setStructuredConstantBuffer(rItem._pObjectCB, ShapeRootParameType::CBObject);
+	pDirectCtx->drawIndexdInstanced(
 		rItem._pMesh->_pIndexBuffer->getIndexCount(), 1, 0,
 		0, 0
 	);

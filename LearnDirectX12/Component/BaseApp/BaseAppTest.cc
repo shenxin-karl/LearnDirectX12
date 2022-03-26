@@ -5,7 +5,7 @@
 #include "Exception/ExceptionBase.h"
 #include "GameTimer/GameTimer.h"
 #include "dx12lib/Device.h"
-#include "dx12lib/CommandListProxy.h"
+#include "dx12lib/ContextProxy.hpp"
 #include "dx12lib/CommandList.h"
 #include "dx12lib/CommandQueue.h"
 #include "dx12lib/SwapChain.h"
@@ -20,14 +20,14 @@ public:
 
 void TestApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pCmdQueue = _pDevice->getCommandQueue(dx12lib::CommandQueueType::Direct);
-	auto pCmdList = pCmdQueue->createCommandListProxy();
+	auto pDirectCtx = pCmdQueue->createDirectContextProxy();
 	auto pRenderTarget = _pSwapChain->getRenderTarget();
-	pCmdList->setViewports(pRenderTarget->getViewport());
-	pCmdList->setScissorRects(pRenderTarget->getScissiorRect());
+	pDirectCtx->setViewports(pRenderTarget->getViewport());
+	pDirectCtx->setScissorRects(pRenderTarget->getScissiorRect());
 
 	{
 		dx12lib::RenderTargetTransitionBarrier barrierGuard = {
-			pCmdList,
+			pDirectCtx,
 			pRenderTarget,
 			D3D12_RESOURCE_STATE_RENDER_TARGET,
 			D3D12_RESOURCE_STATE_PRESENT,
@@ -35,11 +35,11 @@ void TestApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 
 		auto pRenderTargetBuffer = pRenderTarget->getRenderTargetBuffer(dx12lib::Color0);
 		auto pDepthStencilBuffer = pRenderTarget->getDepthStencilBuffer();
-		pCmdList->clearColor(pRenderTargetBuffer, { 1.f, std::sin(pGameTimer->getTotalTime()) * 0.5f + 0.5f, 0.f, 1.f });
-		pCmdList->clearDepthStencil(pDepthStencilBuffer, 1.f, 0);
-		pCmdList->setRenderTarget(pRenderTarget);
+		pDirectCtx->clearColor(pRenderTargetBuffer, { 1.f, std::sin(pGameTimer->getTotalTime()) * 0.5f + 0.5f, 0.f, 1.f });
+		pDirectCtx->clearDepthStencil(pDepthStencilBuffer, 1.f, 0);
+		pDirectCtx->setRenderTarget(pRenderTarget);
 	}
-	pCmdQueue->executeCommandList(pCmdList);
+	pCmdQueue->executeCommandList(pDirectCtx);
 	pCmdQueue->signal(_pSwapChain);
 }
 

@@ -13,7 +13,6 @@ public:
 };
 
 using MakeCommandList = _MakeObjectTool<CommandList>;
-using MakeCommandListProxy = _MakeObjectTool<CommandListProxy>;
 using MakeCommandQueue = _MakeObjectTool<CommandQueue>;
 using MakeConstantBuffer = _MakeObjectTool<ConstantBuffer>;
 using MakeDescriptorAllocation = _MakeObjectTool<DescriptorAllocation>;

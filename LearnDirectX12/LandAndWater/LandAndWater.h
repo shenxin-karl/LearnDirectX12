@@ -2,7 +2,7 @@
 #include <map>
 #include "BaseApp/BaseApp.h"
 #include "dx12lib/dx12libStd.h"
-#include "dx12lib/StructConstantBuffer.hpp"
+#include "dx12lib/StructuredConstantBuffer.hpp"
 #include "Math/MathHelper.h"
 #include "D3D/ShaderCommon.h"
 #include "D3D/d3dutil.h"
@@ -83,30 +83,30 @@ public:
 	LandAndWater();
 	~LandAndWater();
 public:
-	virtual void onInitialize(dx12lib::CommandListProxy pCmdList) override;
+	virtual void onInitialize(dx12lib::DirectContextProxy pDirectCtx) override;
 	virtual void onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 	virtual void onTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
-	virtual void onResize(dx12lib::CommandListProxy pCmdList, int width, int height) override;
+	virtual void onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int height) override;
 private:
 	void pollEvent();
 	void updateConstantBuffer(std::shared_ptr<com::GameTimer> pGameTimer);
-	void renderWaterPass(dx12lib::CommandListProxy pCmdList);
-	void drawOpaqueRenderItems(dx12lib::CommandListProxy pCmdList, 
+	void renderWaterPass(dx12lib::DirectContextProxy pDirectCtx);
+	void drawOpaqueRenderItems(dx12lib::DirectContextProxy pDirectCtx,
 		const std::string &passName,
 		D3D_PRIMITIVE_TOPOLOGY primitiveType
 	);
 private:
 	void buildCamera();
-	void buildConstantBuffer(dx12lib::CommandListProxy pCmdList);
-	void buildTexturePSO(dx12lib::CommandListProxy pCmdList);
-	void buildWaterPSO(dx12lib::CommandListProxy pCmdList);
-	void buildClipPSO(dx12lib::CommandListProxy pCmdList);
-	void buildTreeBillboardPSO(dx12lib::CommandListProxy pCmdList);
-	void buildGeometrys(dx12lib::CommandListProxy pCmdList);
-	void buildTreeBillBoards(dx12lib::CommandListProxy pCmdList);
-	void loadTextures(dx12lib::CommandListProxy pCmdList);
+	void buildConstantBuffer(dx12lib::DirectContextProxy pDirectCtx);
+	void buildTexturePSO(dx12lib::DirectContextProxy pDirectCtx);
+	void buildWaterPSO(dx12lib::DirectContextProxy pDirectCtx);
+	void buildClipPSO(dx12lib::DirectContextProxy pDirectCtx);
+	void buildTreeBillboardPSO(dx12lib::DirectContextProxy pDirectCtx);
+	void buildGeometrys(dx12lib::DirectContextProxy pDirectCtx);
+	void buildTreeBillBoards(dx12lib::DirectContextProxy pDirectCtx);
+	void loadTextures(dx12lib::DirectContextProxy pDirectCtx);
 	void buildMaterials();
-	void buildRenderItems(dx12lib::CommandListProxy pCmdList);
+	void buildRenderItems(dx12lib::DirectContextProxy pDirectCtx);
 private:
 	std::unique_ptr<d3d::CoronaCamera> _pCamera;
 	std::unique_ptr<d3d::BlurFilter>   _pBlurFilter;

@@ -49,7 +49,7 @@ void BlurFilter::produceImpl(dx12lib::ComputeContextProxy pComputeList,
 	pComputeList->copyResource(_pBlurMap1, pShaderResource);
 	for (int i = 0; i < blurCount; ++i) {
 		// horizonal blur
-		pComputeList->setPipelineStateObject(_pHorzBlurPSO);
+		pComputeList->setComputePSO(_pHorzBlurPSO);
 		pComputeList->setShaderResourceBuffer(_pBlurMap1, SR_Input);
 		pComputeList->setUnorderedAccessBuffer(_pBlurMap0, UA_Output);
 		updateConstantBuffer();
@@ -59,7 +59,7 @@ void BlurFilter::produceImpl(dx12lib::ComputeContextProxy pComputeList,
 		pComputeList->dispatch(numXGroup, _height, 1);
 		
 		// vertical blur
-		pComputeList->setPipelineStateObject(_pVertBlurPSO);
+		pComputeList->setComputePSO(_pVertBlurPSO);
 		pComputeList->setShaderResourceBuffer(_pBlurMap0, SR_Input);
 		pComputeList->setUnorderedAccessBuffer(_pBlurMap1, UA_Output);
 		updateConstantBuffer();

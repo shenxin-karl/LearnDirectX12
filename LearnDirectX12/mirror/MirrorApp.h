@@ -1,7 +1,7 @@
 #pragma once
 #include "dx12lib/dx12libStd.h"
-#include "dx12lib/StructConstantBuffer.hpp"
-#include "dx12lib/CommandListProxy.h"
+#include "dx12lib/StructuredConstantBuffer.hpp"
+#include "dx12lib/ContextProxy.hpp"
 #include "BaseApp/BaseApp.h"
 #include "GameTimer/GameTimer.h"
 #include "D3D/d3dutil.h"
@@ -55,19 +55,19 @@ public:
 	MirrorApp();
 	~MirrorApp();
 public:
-	virtual void onInitialize(dx12lib::CommandListProxy pCmdList) override;
+	virtual void onInitialize(dx12lib::DirectContextProxy pDirectCtx) override;
 	virtual void onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 	virtual void onTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
-	virtual void onResize(dx12lib::CommandListProxy pCmdList, int width, int height) override;
+	virtual void onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int height) override;
 private:
-	void drawRenderItems(dx12lib::CommandListProxy pCmdList, RenderLayer layer);
+	void drawRenderItems(dx12lib::DirectContextProxy pDirectCtx, RenderLayer layer);
 	void buildCamera();
-	void buildConstantBuffers(dx12lib::CommandListProxy pCmdList);
-	void loadTextures(dx12lib::CommandListProxy pCmdList);
+	void buildConstantBuffers(dx12lib::DirectContextProxy pDirectCtx);
+	void loadTextures(dx12lib::DirectContextProxy pDirectCtx);
 	void buildMaterials();
-	void buildMeshs(dx12lib::CommandListProxy pCmdList);
-	void buildPSOs(dx12lib::CommandListProxy pCmdList);
-	void buildRenderItems(dx12lib::CommandListProxy pCmdList);
+	void buildMeshs(dx12lib::DirectContextProxy pDirectCtx);
+	void buildPSOs(dx12lib::DirectContextProxy pDirectCtx);
+	void buildRenderItems(dx12lib::DirectContextProxy pDirectCtx);
 private:
 	std::unique_ptr<d3d::CoronaCamera> _pCamera;
 	GPUStructCBPtr<d3d::PassCBType>    _pPassCB;

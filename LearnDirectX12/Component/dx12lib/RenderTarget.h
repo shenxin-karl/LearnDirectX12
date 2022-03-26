@@ -1,6 +1,6 @@
 #pragma once
 #include "dx12libStd.h"
-#include "CommandListProxy.h"
+#include "ContextProxy.hpp"
 #include <array>
 
 namespace dx12lib {
@@ -32,7 +32,7 @@ public:
 	D3D12_RT_FORMAT_ARRAY getRenderTargetFormats() const;
 	DXGI_FORMAT getDepthStencilFormat() const;
 	D3D12_RECT getScissiorRect() const;
-	void transitionBarrier(CommandListProxy pCmdList, 
+	void transitionBarrier(CommandContextProxy pCmdProxy,
 		D3D12_RESOURCE_STATES state, 
 		UINT subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES
 	);
@@ -45,14 +45,14 @@ private:
 
 class RenderTargetTransitionBarrier {
 public:
-	RenderTargetTransitionBarrier(CommandListProxy pCmdList, 
+	RenderTargetTransitionBarrier(CommandContextProxy pCmdList,
 		std::shared_ptr<RenderTarget> pRenderTarget, 
 		D3D12_RESOURCE_STATES stateBeforce,
 		D3D12_RESOURCE_STATES stateAfter
 	);
 	~RenderTargetTransitionBarrier();
 private:
-	CommandListProxy              _pCmdList;
+	CommandContextProxy           _pCmdPorxy;
 	std::shared_ptr<RenderTarget> _pRenderTarget;
 	D3D12_RESOURCE_STATES         _stateBeforce;
 	D3D12_RESOURCE_STATES         _stateAfter;

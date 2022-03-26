@@ -41,7 +41,7 @@ float CalcSobelMag(int3 dispatchThreadID, inout float4 c[3][3]) {
     float4 GY = (+1.0 * c[0][0]) + (+2.0 * c[1][0]) + (+1.0 * c[2][0]) +
                 (-1.0 * c[0][2]) + (-2.0 * c[1][2]) + (-1.0 * c[2][2]) ;
                 
-    float4 G  = sqrt(GX*GX + GY+GY);
+    float4 G  = sqrt(GX*GX + GY*GY);
     float mag = saturate(CalcLuminance(G.rgb));
     return mag;
 }

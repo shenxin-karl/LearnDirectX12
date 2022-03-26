@@ -1,6 +1,6 @@
 #pragma once
 #include "dx12libStd.h"
-#include "CommandListProxy.h"
+#include "ContextProxy.hpp"
 #include "FrameResourceQueue.h"
 
 namespace dx12lib {
@@ -12,14 +12,14 @@ public:
 	CommandQueue(const CommandQueue &) = delete;
 	ID3D12CommandQueue *getD3D12CommandQueue() const;
 	uint64 signal(std::shared_ptr<SwapChain> pSwapChain);
-	void executeCommandList(CommandListProxy pCommandList);
-	void executeCommandList(const std::vector<CommandListProxy> &cmdLists);
+	void executeCommandList(ContextProxy pContext);
+	void executeCommandList(const std::vector<ContextProxy> &contextList);
 	bool isFenceComplete(uint64 fenceValue) const noexcept;
 	void waitForFenceValue(uint64 fenceValue);
 	uint32 getFrameResourceCount() const;
 	uint64 getFenceValue() const;
 	uint64 getCompletedValue() const;
-	CommandListProxy createCommandListProxy();
+	DirectContextProxy createDirectContextProxy();
 	void newFrame();
 	void flushCommandQueue();
 	~CommandQueue();

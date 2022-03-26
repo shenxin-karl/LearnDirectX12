@@ -17,7 +17,7 @@ BoxApp::BoxApp() {
 	_title = "BoxApp";
 }
 
-void BoxApp::onInitialize(dx12lib::CommandListProxy pCmdList) {
+void BoxApp::onInitialize(dx12lib::DirectContextProxy pDirectContext) {
 	d3d::CameraDesc cameraDesc;
 	cameraDesc.lookAt = float3(0, 0, 0);
 	cameraDesc.lookFrom = float3(2, 2, 2);
@@ -28,7 +28,7 @@ void BoxApp::onInitialize(dx12lib::CommandListProxy pCmdList) {
 	cameraDesc.aspect = float(_width) / float(_height);
 
 	_pCamera = std::make_unique<d3d::CoronaCamera>(cameraDesc);
-	_pMVPConstantBuffer = pCmdList->createStructConstantBuffer<WVMConstantBuffer>();
+	_pMVPConstantBuffer = pDirectContext->createStructConstantBuffer<WVMConstantBuffer>();
 
 	// initialize root signature
 	dx12lib::RootParameter rootParame0;
@@ -55,7 +55,7 @@ void BoxApp::onInitialize(dx12lib::CommandListProxy pCmdList) {
 	_pGraphicsPSO->setInputLayout(inputLayout);
 	_pGraphicsPSO->finalize();
 
-	buildBoxGeometry(pCmdList);
+	buildBoxGeometry(pDirectContext);
 }
 
 void BoxApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
@@ -67,13 +67,13 @@ void BoxApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 
 void BoxApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pCmdQueue = _pDevice->getCommandQueue(dx12lib::CommandQueueType::Direct);
-	auto pCmdList = pCmdQueue->createCommandListProxy();
+	auto pDirectProxy = pCmdQueue->createDirectContextProxy();
 	auto pRenderTarget = _pSwapChain->getRenderTarget();
-	pCmdList->setViewports(pRenderTarget->getViewport());
-	pCmdList->setScissorRects(pRenderTarget->getScissiorRect());
+	pDirectProxy->setViewports(pRenderTarget->getViewport());
+	pDirectProxy->setScissorRects(pRenderTarget->getScissiorRect());
 	{
 		dx12lib::RenderTargetTransitionBarrier barrierGuard = {
-			pCmdList,
+			pDirectProxy,
 			pRenderTarget,
 			D3D12_RESOURCE_STATE_RENDER_TARGET,
 			D3D12_RESOURCE_STATE_PRESENT,
@@ -83,17 +83,17 @@ void BoxApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		float sine = std::sin(pGameTimer->getTotalTime());
 		auto pRenderTargetBuffer = pRenderTarget->getRenderTargetBuffer(dx12lib::Color0);
 		auto pDepthStencilBuffer = pRenderTarget->getDepthStencilBuffer();
-		pCmdList->clearColor(pRenderTargetBuffer, float4{
+		pDirectProxy->clearColor(pRenderTargetBuffer, float4{
 			cosine * 0.5f + 0.5f,
 			sine * 0.5f + 0.5f,
 			0.6f,
 			1.f
-		});
-		pCmdList->clearDepthStencil(pDepthStencilBuffer, 1.f, 0);
-		pCmdList->setRenderTarget(pRenderTarget);
-		renderBoxPass(pCmdList);
+			});
+		pDirectProxy->clearDepthStencil(pDepthStencilBuffer, 1.f, 0);
+		pDirectProxy->setRenderTarget(pRenderTarget);
+		renderBoxPass(pDirectProxy);
 	}
-	pCmdQueue->executeCommandList(pCmdList);
+	pCmdQueue->executeCommandList(pDirectProxy);
 	pCmdQueue->signal(_pSwapChain);
 }
 
@@ -102,7 +102,7 @@ void BoxApp::pollEvent() {
 		_pCamera->pollEvent(event);
 }
 
-void BoxApp::buildBoxGeometry(dx12lib::CommandListProxy pCmdList) {
+void BoxApp::buildBoxGeometry(dx12lib::DirectContextProxy pDirectContext) {
 	std::array<Vertex, 8> vertices = {
 		Vertex { float3(-1.f, -1.f, -1.f), float4(DX::Colors::White)   },
 		Vertex { float3(-1.f, +1.f, -1.f), float4(DX::Colors::Black)   },
@@ -129,11 +129,11 @@ void BoxApp::buildBoxGeometry(dx12lib::CommandListProxy pCmdList) {
 	};
 
 	_pBoxMesh = std::make_unique<BoxMesh>();
-	_pBoxMesh->_pVertexBuffer = pCmdList->createVertexBuffer(vertices.data(), 
+	_pBoxMesh->_pVertexBuffer = pDirectContext->createVertexBuffer(vertices.data(),
 		sizeof(Vertex) * vertices.size(), 
 		sizeof(Vertex)
 	);
-	_pBoxMesh->_pIndexBuffer = pCmdList->createIndexBuffer(indices.data(),
+	_pBoxMesh->_pIndexBuffer = pDirectContext->createIndexBuffer(indices.data(),
 		sizeof(std::uint16_t) * indices.size(),
 		DXGI_FORMAT_R16_UINT
 	);
@@ -141,13 +141,13 @@ void BoxApp::buildBoxGeometry(dx12lib::CommandListProxy pCmdList) {
 	_pBoxMesh->_startIndexLocation = 0;
 }
 
-void BoxApp::renderBoxPass(dx12lib::CommandListProxy pCmdList) {
-	pCmdList->setPipelineStateObject(_pGraphicsPSO);
-	pCmdList->setStructuredConstantBuffer(_pMVPConstantBuffer, WorldViewProjCBuffer, 0);
-	pCmdList->setVertexBuffer(_pBoxMesh->_pVertexBuffer);
-	pCmdList->setIndexBuffer(_pBoxMesh->_pIndexBuffer);
-	pCmdList->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	pCmdList->drawIndexdInstanced(
+void BoxApp::renderBoxPass(dx12lib::DirectContextProxy pDirectContext) {
+	pDirectContext->setGraphicsPSO(_pGraphicsPSO);
+	pDirectContext->setStructuredConstantBuffer(_pMVPConstantBuffer, WorldViewProjCBuffer, 0);
+	pDirectContext->setVertexBuffer(_pBoxMesh->_pVertexBuffer);
+	pDirectContext->setIndexBuffer(_pBoxMesh->_pIndexBuffer);
+	pDirectContext->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	pDirectContext->drawIndexdInstanced(
 		_pBoxMesh->_pIndexBuffer->getIndexCount(),
 		1,
 		_pBoxMesh->_baseVertexLocation,

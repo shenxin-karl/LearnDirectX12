@@ -2,7 +2,7 @@
 #include "IResource.h"
 #include "ResourceStateTracker.h"
 #include "CommandList.h"
-#include "CommandListProxy.h"
+#include "ContextProxy.hpp"
 
 namespace dx12lib {
 

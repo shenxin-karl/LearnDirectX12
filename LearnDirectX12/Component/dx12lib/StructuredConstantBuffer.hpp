@@ -5,13 +5,13 @@
 namespace dx12lib {
 
 template<typename T>
-concept StructConstantBufferConcept = std::is_class_v<T> && !std::is_union_v<T>;
+concept StructuredConstantBufferConcept = std::is_class_v<T> && !std::is_union_v<T>;
 
-template<StructConstantBufferConcept T>
-class StructConstantBuffer;
+template<StructuredConstantBufferConcept T>
+class StructuredConstantBuffer;
 
-template<StructConstantBufferConcept T>
-using GPUStructCBPtr = std::shared_ptr<StructConstantBuffer<T>>;
+template<StructuredConstantBufferConcept T>
+using GPUStructCBPtr = std::shared_ptr<StructuredConstantBuffer<T>>;
 
 template<typename T>
 class MappedPtr {
@@ -42,17 +42,17 @@ public:
 		return lhs._ptr != nullptr;
 	}
 private:
-	template<StructConstantBufferConcept T>
-	friend class StructConstantBuffer;
+	template<StructuredConstantBufferConcept T>
+	friend class StructuredConstantBuffer;
 	MappedPtr(T *ptr) : _ptr(ptr) {}
 private:
 	T *_ptr;
 };
 
-template<StructConstantBufferConcept T>
-class StructConstantBuffer {
+template<StructuredConstantBufferConcept T>
+class StructuredConstantBuffer {
 public:
-	StructConstantBuffer(const void *pData, std::shared_ptr<ConstantBuffer> pConstantBuffer) 
+	StructuredConstantBuffer(const void *pData, std::shared_ptr<ConstantBuffer> pConstantBuffer) 
 	: _pConstantBuffer(pConstantBuffer) 
 	{
 		assert(pConstantBuffer != nullptr);
@@ -62,12 +62,12 @@ public:
 		else
 			std::memset(&_buffer, 0, sizeof(T));
 	}
-	StructConstantBuffer(const StructConstantBuffer &) = delete;
-	StructConstantBuffer(StructConstantBuffer &&) = delete;
-	StructConstantBuffer &operator=(const StructConstantBuffer &) = delete;
-	StructConstantBuffer &operator=(StructConstantBuffer &&) = delete;
+	StructuredConstantBuffer(const StructuredConstantBuffer &) = delete;
+	StructuredConstantBuffer(StructuredConstantBuffer &&) = delete;
+	StructuredConstantBuffer &operator=(const StructuredConstantBuffer &) = delete;
+	StructuredConstantBuffer &operator=(StructuredConstantBuffer &&) = delete;
 
-	friend void swap(StructConstantBuffer &lhs, StructConstantBuffer &rhs) noexcept {
+	friend void swap(StructuredConstantBuffer &lhs, StructuredConstantBuffer &rhs) noexcept {
 		std::swap(lhs._pConstantBuffer, rhs._pConstantBuffer);
 	}
 

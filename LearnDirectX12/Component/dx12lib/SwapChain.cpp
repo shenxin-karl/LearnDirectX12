@@ -54,7 +54,7 @@ SwapChain::SwapChain(std::weak_ptr<Device> pDevice,
 	));
 }
 
-void SwapChain::resize(CommandListProxy pCmdList, uint32 width, uint32 height) {
+void SwapChain::resize(DirectContextProxy pDirectContext, uint32 width, uint32 height) {
 	_pDepthStencilBuffer = nullptr;
 	for (auto &pTexture : _pSwapChainBuffer)
 		pTexture = nullptr;
@@ -73,7 +73,7 @@ void SwapChain::resize(CommandListProxy pCmdList, uint32 width, uint32 height) {
 		swapChainDesc.BufferDesc.Format, 
 		swapChainDesc.Flags
 	));
-	updateBuffer(pCmdList);
+	updateBuffer(pDirectContext);
 }
 
 DXGI_FORMAT SwapChain::getRenderTargetFormat() const {
@@ -98,7 +98,7 @@ std::shared_ptr<RenderTargetBuffer> SwapChain::getCurrentBackBuffer() const {
 	return _pSwapChainBuffer[_currentBackBufferIndex];
 }
 
-void SwapChain::updateBuffer(CommandListProxy pCmdList) {
+void SwapChain::updateBuffer(DirectContextProxy pDirectContext) {
 	for (std::size_t i = 0; i < kSwapChainBufferCount; ++i) {
 		WRL::ComPtr<ID3D12Resource> pBuffer;
 		ThrowIfFailed(_pSwapChain->GetBuffer(static_cast<UINT>(i), IID_PPV_ARGS(&pBuffer)));
