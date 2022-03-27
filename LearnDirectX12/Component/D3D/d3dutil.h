@@ -37,4 +37,12 @@ WRL::ComPtr<ID3DBlob> compileShader(
 	const std::string		&target
 );
 
+class NonCopyable {
+public:
+	NonCopyable() = default;
+	~NonCopyable() = default;
+	NonCopyable(const NonCopyable &) = delete;
+	NonCopyable &operator=(const NonCopyable &) = delete;
+};
+
 }

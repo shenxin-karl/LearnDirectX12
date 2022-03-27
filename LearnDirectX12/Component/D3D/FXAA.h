@@ -1,0 +1,48 @@
+#pragma once
+#include "dx12lib/dx12libStd.h"
+#include "dx12lib/ContextProxy.hpp"
+#include "d3dUtil.h"
+
+namespace d3d {
+	
+class FXAA : public NonCopyable {
+public:
+	FXAA(dx12lib::ComputeContextProxy pComputeCtx,
+		std::uint32_t width, 
+		std::uint32_t height, 
+		DXGI_FORMAT format
+	);
+
+	template<typename T> requires(std::is_base_of_v<dx12lib::IShaderSourceResource, T>)
+	void produce(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<T> pInput) {
+		_produceImpl(
+			pComputeCtx,
+			std::static_pointer_cast<IShaderSourceResource>(pInput)
+		);
+	}
+
+	void _produceImpl(dx12lib::ComputeContextProxy pComputeCtx, 
+		std::shared_ptr<dx12lib::IShaderSourceResource> pInput
+	);
+
+public:
+	float _minThreshold = 0.0312f;
+	float _threshold = 0.125f;
+	float _consoleTangentScale = 0.5f;
+	float _gSharpness = 8.f;
+private:
+	enum RootParame {
+		CB_Setting,
+		SR_Input,
+		UA_Output,
+	};
+private:
+	std::uint32_t _width;
+	std::uint32_t _height;
+	DXGI_FORMAT   _format;
+	std::shared_ptr<dx12lib::UnorderedAccessBuffer> _pOutputMap;
+	static inline std::shared_ptr<dx12lib::ComputePSO>	_pConsolePSO;
+	static inline std::shared_ptr<dx12lib::RootSignature> _pRootSingnature;
+};
+
+}
