@@ -17,7 +17,7 @@ public:
 	void produce(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<T> pInput) {
 		_produceImpl(
 			pComputeCtx,
-			std::static_pointer_cast<IShaderSourceResource>(pInput)
+			std::static_pointer_cast<dx12lib::IShaderSourceResource>(pInput)
 		);
 	}
 
@@ -36,6 +36,10 @@ private:
 		SR_Input,
 		UA_Output,
 	};
+	static void tryBuildRootSignature(std::weak_ptr<dx12lib::Device> pDevice);
+	static void tryBuildConsolePSO(std::weak_ptr<dx12lib::Device> pDevice);
+	void updateFXAASetting();
+	constexpr static std::size_t kFXAAThreadCount = 16;
 private:
 	std::uint32_t _width;
 	std::uint32_t _height;
