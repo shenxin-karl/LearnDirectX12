@@ -19,6 +19,7 @@ struct PassCBType;
 struct LightCBType;
 class BlurFilter;
 class SobelFilter;
+class FXAA;
 
 using ::ThrowIfFailed;
 

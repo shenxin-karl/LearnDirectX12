@@ -14,7 +14,7 @@ public:
 	);
 
 	template<typename T> requires(std::is_base_of_v<dx12lib::IShaderSourceResource, T>)
-	void produce(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<T> pInput) {
+	void produce(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<T> pInput) const {
 		_produceImpl(
 			pComputeCtx,
 			std::static_pointer_cast<dx12lib::IShaderSourceResource>(pInput)
@@ -23,8 +23,9 @@ public:
 
 	void _produceImpl(dx12lib::ComputeContextProxy pComputeCtx, 
 		std::shared_ptr<dx12lib::IShaderSourceResource> pInput
-	);
+	) const;
 
+	void onResize(dx12lib::ComputeContextProxy pComputeCtx, uint32 width, uint32 height);
 public:
 	float _minThreshold = 0.0312f;
 	float _threshold = 0.125f;
@@ -38,7 +39,7 @@ private:
 	};
 	static void tryBuildRootSignature(std::weak_ptr<dx12lib::Device> pDevice);
 	static void tryBuildConsolePSO(std::weak_ptr<dx12lib::Device> pDevice);
-	void updateFXAASetting();
+	void updateFXAASetting(dx12lib::ComputeContextProxy pComputeCtx) const;
 	constexpr static std::size_t kFXAAThreadCount = 16;
 private:
 	std::uint32_t _width;

@@ -17,10 +17,10 @@ SamplerState gSamLinearClamp : register(s0);
 
 [numthreads(16, 16, 1)]
 void FXAAConsole(int3 dispatchThreadID : SV_DispatchThreadID) {
-    float s = float(dispatchThreadID.x) / float(gInput.Lenght.x-1);
-    float t = float(dispatchThreadID.y) / float(gInput.Lenght.y-1);
+    float s = float(dispatchThreadID.x) / float(gInput.Length.x-1);
+    float t = float(dispatchThreadID.y) / float(gInput.Length.y-1);
     float invWidth  = 1.0 / (gInput.Length.x-1);
-    float invHeight = 1.0 / (gInput.Lenght.y-1);
+    float invHeight = 1.0 / (gInput.Length.y-1);
     float invHalfWidth  = invWidth * 0.5;
     float invHalfHeight = invHeight * 0.5;
     float4 pixelColor = gInput.SampleLevel(gSamLinearClamp, float2(s, t), 0.0);
@@ -33,7 +33,7 @@ void FXAAConsole(int3 dispatchThreadID : SV_DispatchThreadID) {
     float minLuma = min(min(NW, NE), min(SW, SE));
     float contrast = max(maxLuma, M) - min(minLuma, M);
     if (contrast < max(gMinThreshold, maxLuma*gThreshold)) {
-        gInput[dispatchThreadID.xy] = pixelColor;
+        gOutput[dispatchThreadID.xy] = pixelColor;
         return;
     }
     

@@ -9,6 +9,7 @@
 #include "dx12lib/ConstantBuffer.h"
 #include "dx12lib/VertexBuffer.h"
 #include "dx12lib/IndexBuffer.h"
+#include "dx12lib/RenderTargetBuffer.h"
 #include "dx12lib/PipelineStateObject.h"
 #include "dx12lib/RootSignature.h"
 #include "dx12lib/CommandQueue.h"
@@ -18,6 +19,7 @@
 #include "InputSystem/Mouse.h"
 #include "GameTimer/GameTimer.h"
 #include "D3D/D3DDescHelper.h"
+#include "D3D/FXAA.h"
 #include <DirectXColors.h>
 
 Vertex::Vertex(const com::Vertex &vertex)
@@ -44,6 +46,12 @@ void MirrorApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 	buildMeshs(pDirectCtx);
 	buildPSOs(pDirectCtx);
 	buildRenderItems(pDirectCtx);
+	_pFXAAFilter = std::make_unique<d3d::FXAA>(
+		pDirectCtx,
+		_width,
+		_height,
+		_pSwapChain->getRenderTargetFormat()
+	);
 }
 
 void MirrorApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
@@ -122,6 +130,8 @@ void MirrorApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		pDirectCtx->setStructuredConstantBuffer(_pLightCB, CBLight);
 		pDirectCtx->setStencilRef(0);
 		drawRenderItems(pDirectCtx, RenderLayer::Shadow);
+
+		_pFXAAFilter->produce(pDirectCtx, pRenderTargetBuffer);
 	}
 	pCmdQueue->executeCommandList(pDirectCtx);
 	pCmdQueue->signal(_pSwapChain);
@@ -129,6 +139,7 @@ void MirrorApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 
 void MirrorApp::onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int height) {
 	_pCamera->_aspect = float(width) / float(height);
+	_pFXAAFilter->onResize(pDirectCtx, width, height);
 }
 
 void MirrorApp::drawRenderItems(dx12lib::DirectContextProxy pDirectCtx, RenderLayer layer) {

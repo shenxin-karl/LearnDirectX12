@@ -69,6 +69,7 @@ private:
 	void buildPSOs(dx12lib::DirectContextProxy pDirectCtx);
 	void buildRenderItems(dx12lib::DirectContextProxy pDirectCtx);
 private:
+	std::unique_ptr<d3d::FXAA>		   _pFXAAFilter;
 	std::unique_ptr<d3d::CoronaCamera> _pCamera;
 	GPUStructCBPtr<d3d::PassCBType>    _pPassCB;
 	GPUStructCBPtr<d3d::LightCBType>   _pLightCB;
