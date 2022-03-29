@@ -47,7 +47,7 @@ void FXAAConsole(int3 dispatchThreadID : SV_DispatchThreadID) {
     float4 result1 = (S0 + L0) * 0.5;
     
     float minDirAbsAxis = min(abs(dir.x), abs(dir.y)) * gSharpness;
-    float2 dir2 = clamp(dir / minDirAbsAxis, -2, +2) * 2;
+    float2 dir2 = clamp(dir / minDirAbsAxis, -2, +2) * 2 * float2(invWidth, invHeight);
     float4 S1 = gInput.SampleLevel(gSamLinearClamp, float2(s, t) + dir2, 0.0);
     float4 L1 = gInput.SampleLevel(gSamLinearClamp, float2(s, t) - dir2, 0.0);
     float4 result2 = result1 * 0.5 + (S1 + L1) * 0.25;

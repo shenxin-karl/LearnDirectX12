@@ -26,6 +26,7 @@ public:
 	) const;
 
 	void onResize(dx12lib::ComputeContextProxy pComputeCtx, uint32 width, uint32 height);
+	std::shared_ptr<dx12lib::UnorderedAccessBuffer> getOutput() const;
 public:
 	float _minThreshold = 0.0312f;
 	float _threshold = 0.125f;

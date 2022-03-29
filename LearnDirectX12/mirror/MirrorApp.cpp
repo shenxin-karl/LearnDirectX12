@@ -13,6 +13,7 @@
 #include "dx12lib/PipelineStateObject.h"
 #include "dx12lib/RootSignature.h"
 #include "dx12lib/CommandQueue.h"
+#include "dx12lib/UnorderedAccessBuffer.h"
 #include "InputSystem/InputSystem.h"
 #include "InputSystem/Keyboard.h"
 #include "InputSystem/window.h"
@@ -132,6 +133,7 @@ void MirrorApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		drawRenderItems(pDirectCtx, RenderLayer::Shadow);
 
 		_pFXAAFilter->produce(pDirectCtx, pRenderTargetBuffer);
+		pDirectCtx->copyResource(pRenderTargetBuffer, _pFXAAFilter->getOutput());
 	}
 	pCmdQueue->executeCommandList(pDirectCtx);
 	pCmdQueue->signal(_pSwapChain);

@@ -44,6 +44,10 @@ void FXAA::onResize(dx12lib::ComputeContextProxy pComputeCtx, uint32 width, uint
 	}
 }
 
+std::shared_ptr<dx12lib::UnorderedAccessBuffer> FXAA::getOutput() const {
+	return _pOutputMap;
+}
+
 void FXAA::tryBuildRootSignature(std::weak_ptr<dx12lib::Device> pDevice) {
 	if (_pRootSingnature != nullptr)
 		return;
