@@ -15,6 +15,7 @@ struct Context {
 	Context &operator=(const Context &) = delete;
 	virtual std::weak_ptr<Device> getDevice() const = 0;
 	virtual ID3D12GraphicsCommandList *getD3DCommandList() const noexcept = 0;
+	virtual ~Context() = default;
 };
 
 class CommandContext : public Context {

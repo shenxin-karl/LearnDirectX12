@@ -29,6 +29,7 @@ list(APPEND allSubDir "BoxApp")
 list(APPEND allSubDir "Shape")
 list(APPEND allSubDir "LandAndWater")
 list(APPEND allSubDir "Mirror")
+list(APPEND allSubDir "BasicTessellation")
 
 foreach(dirname ${allSubDir})
 	add_subdirectory(${dirname})

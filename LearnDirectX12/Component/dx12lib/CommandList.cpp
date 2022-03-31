@@ -11,7 +11,6 @@
 #include "CommandQueue.h"
 #include "RootSignature.h"
 #include "MakeObejctTool.hpp"
-#include "DefaultBuffer.h"
 #include "DDSTextureLoader.h"
 #include "RenderTargetBuffer.h"
 #include "DepthStencilBuffer.h"
