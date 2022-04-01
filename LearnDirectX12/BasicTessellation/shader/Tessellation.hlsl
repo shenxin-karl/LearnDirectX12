@@ -69,3 +69,29 @@ HullOut HS(InputPatch<VertexOut, 4> input,
 	hout.position = input[i].position;
 	return hout;
 }
+
+
+struct DomainOut {
+    float4 position : SV_Position;
+};
+
+[domain("quad")]
+DomainOut DS(PatchTess patchTess, float2 uv : SV_DomainLocation,
+			 const OutputPatch<HullOut, 4> quad)
+{
+	DomainOut dout;
+	float3 v0 = lerp(quad[0].position, quad[1].position, uv.x);
+	float3 v1 = lerp(quad[2].position, quad[3].position, uv.x);
+	float3 p  = lerp(v0, v1, uv.y);
+
+	// Using the displacement
+	p.y = 0.3f * (p.z * sin(0.1f * p.x) + p.x * cos(0.1f * p.z));
+
+	float4 worldPosition = mul(gWorld, float4(p, 1.0));
+	dout.position = mul(gPass.viewProj, worldPosition);
+	return dout;
+}
+
+float4 PS(DomainOut pin) : SV_Target {
+	return float4(1.0, 1.0, 1.0, 1.0);
+}

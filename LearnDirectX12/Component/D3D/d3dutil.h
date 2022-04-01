@@ -20,6 +20,7 @@ struct LightCBType;
 class BlurFilter;
 class SobelFilter;
 class FXAA;
+class Mesh;
 
 using ::ThrowIfFailed;
 

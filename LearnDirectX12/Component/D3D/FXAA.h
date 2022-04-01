@@ -30,7 +30,7 @@ public:
 public:
 	float _minThreshold = 0.0312f;
 	float _threshold = 0.125f;
-	float _consoleTangentScale = 0.5f;
+	float _consoleTangentScale = 0.7f;
 	float _gSharpness = 8.f;
 private:
 	enum RootParame {
