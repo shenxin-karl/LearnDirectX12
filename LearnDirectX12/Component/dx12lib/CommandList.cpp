@@ -558,10 +558,6 @@ do {										\
 	}										\
 } while (false)
 bool CommandList::CommandListState::debugCheckDraw() const {
-	return pPSO != nullptr && pRootSignature != nullptr && pRenderTarget != nullptr && 
-		   isSetViewprot && isSetScissorRect && checkVertexBuffer() && checkTextures() &&
-		   primitiveTopology != D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
-
 	CheckState(pPSO != nullptr, "PipelineStateObject not set");
 	CheckState(dynamic_cast<GraphicsPSO *>(pPSO), "PipelineStateObject cast to GraphicsPSO failed!");
 	CheckState(pRootSignature != nullptr, "RootSignature not set");

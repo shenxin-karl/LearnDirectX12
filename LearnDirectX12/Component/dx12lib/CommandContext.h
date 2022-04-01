@@ -28,16 +28,16 @@ public:
 	virtual	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) = 0;
 	virtual void setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuffer, uint32 rootIndex, uint32 offset = 0) = 0;
 
-	virtual void copyResourceImpl(std::shared_ptr<IResource> pLhs, std::shared_ptr<IResource> pRhs) = 0;
+	virtual void copyResourceImpl(std::shared_ptr<IResource> pDest, std::shared_ptr<IResource> pSrc) = 0;
 	virtual void transitionBarrierImpl(std::shared_ptr<IResource> pBuffer, D3D12_RESOURCE_STATES state, UINT subResource, bool flushBarrier) = 0;
 	virtual void aliasBarrierImpl(std::shared_ptr<IResource> pBeforce, std::shared_ptr<IResource> pAfter, bool flushBarrier) = 0;
 	virtual void flushResourceBarriers() = 0;
 
 	template<typename T1, typename T2> requires(std::is_base_of_v<IResource, T1> &&std::is_base_of_v<IResource, T2>)
-	void copyResource(std::shared_ptr<T1> pLhs, std::shared_ptr<T2> pRhs) {
+	void copyResource(std::shared_ptr<T1> pDest, std::shared_ptr<T2> pSrc) {
 		this->copyResourceImpl(
-			std::static_pointer_cast<IResource>(pLhs),
-			std::static_pointer_cast<IResource>(pRhs)
+			std::static_pointer_cast<IResource>(pDest),
+			std::static_pointer_cast<IResource>(pSrc)
 		);
 	}
 
@@ -70,14 +70,14 @@ public:
 	}
 
 	template<StructuredConstantBufferConcept T>
-	std::shared_ptr<StructuredConstantBuffer<T>> createStructConstantBuffer(const T *pData = nullptr) {
+	std::shared_ptr<StructuredConstantBuffer<T>> createStructuredConstantBuffer(const T *pData = nullptr) {
 		std::shared_ptr<ConstantBuffer> pConstantBuffer = createConstantBuffer(sizeof(T), nullptr);
 		return std::make_shared<StructuredConstantBuffer<T>>(pData, pConstantBuffer);
 	}
 
 	template<StructuredConstantBufferConcept T>
-	std::shared_ptr<StructuredConstantBuffer<T>> createStructConstantBuffer(const T &buff) {
-		return this->template createStructConstantBuffer<T>(&buff);
+	std::shared_ptr<StructuredConstantBuffer<T>> createStructuredConstantBuffer(const T &buff) {
+		return this->template createStructuredConstantBuffer<T>(&buff);
 	}
 
 	template<typename T>

@@ -23,9 +23,9 @@ public:
 
 	void setShaderResourceBufferImpl(std::shared_ptr<IShaderSourceResource> pTexture, uint32 rootIndex, uint32 offset) override;
 	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) override;
-	void setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuffer, uint32 rootIndex, uint32 offset = 0) override;
+	void setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuffer, uint32 rootIndex, uint32 offset) override;
 
-	void copyResourceImpl(std::shared_ptr<IResource> pLhs, std::shared_ptr<IResource> pRhs) override;
+	void copyResourceImpl(std::shared_ptr<IResource> pDest, std::shared_ptr<IResource> pSrc) override;
 	void transitionBarrierImpl(std::shared_ptr<IResource> pBuffer, D3D12_RESOURCE_STATES state, UINT subResource, bool flushBarrier) override;
 	void aliasBarrierImpl(std::shared_ptr<IResource> pBeforce, std::shared_ptr<IResource> pAfter, bool flushBarrier) override;
 	void flushResourceBarriers() override;
@@ -39,12 +39,12 @@ public:
 	void setScissorRects(const D3D12_RECT &rect) override;
 	void setScissorRects(const std::vector<D3D12_RECT> &rects) override;
 	void setRenderTarget(std::shared_ptr<RenderTarget> pRenderTarget) override;
-	void setVertexBuffer(std::shared_ptr<VertexBuffer> pVertBuffer, UINT slot = 0) override;
+	void setVertexBuffer(std::shared_ptr<VertexBuffer> pVertBuffer, UINT slot) override;
 	void setIndexBuffer(std::shared_ptr<IndexBuffer> pIndexBuffer) override;
 	void setGraphicsPSO(std::shared_ptr<GraphicsPSO> pPipelineStateObject) override;
 	void setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology) override;
 	void setStencilRef(UINT stencilRef) override;
-	void setGraphics32BitConstants(uint32 rootIndex, uint32 numConstants, const void *pData, uint32 destOffset = 0) override;
+	void setGraphics32BitConstants(uint32 rootIndex, uint32 numConstants, const void *pData, uint32 destOffset) override;
 
 	void drawInstanced(uint32 vertCount, uint32 instanceCount, uint32 baseVertexLocation, uint32 startInstanceLocation) override;
 	void drawIndexdInstanced(uint32 indexCountPerInstance, uint32 instanceCount, uint32 startIndexLocation, uint32 baseVertexLocation, uint32 startInstanceLocation) override;
@@ -60,18 +60,18 @@ public:
 	std::shared_ptr<ReadbackBuffer> createReadbackBuffer(std::size_t sizeInByte) override;
 
 	void setComputePSO(std::shared_ptr<ComputePSO> pPipelineStateObject) override;
-	void setStructedBuffer(std::shared_ptr<StructuredBuffer> pStructedBuffer, uint32 rootIndex, uint32 offset = 0) override;
-	void setUnorderedAccessBuffer(std::shared_ptr<UnorderedAccessBuffer> pBuffer, uint32 rootIndex, uint32 offset = 0) override;
-	void setCompute32BitConstants(uint32 rootIndex, uint32 numConstants, const void *pData, uint32 destOffset = 0) override;
+	void setStructedBuffer(std::shared_ptr<StructuredBuffer> pStructedBuffer, uint32 rootIndex, uint32 offset) override;
+	void setUnorderedAccessBuffer(std::shared_ptr<UnorderedAccessBuffer> pBuffer, uint32 rootIndex, uint32 offset) override;
+	void setCompute32BitConstants(uint32 rootIndex, uint32 numConstants, const void *pData, uint32 destOffset) override;
 
-	void dispatch(size_t GroupCountX = 1, size_t GroupCountY = 1, size_t GroupCountZ = 1) override;
+	void dispatch(size_t GroupCountX, size_t GroupCountY, size_t GroupCountZ) override;
 	void readback(std::shared_ptr<ReadbackBuffer> pReadbackBuffer) override;
 private:
 	friend class CommandQueue;
 	friend class FrameResourceItem;
 	using ReadbackBufferPool = std::vector<std::shared_ptr<ReadbackBuffer>>;
 	void setGrahicsRootSignature(std::shared_ptr<RootSignature> pRootSignature);
-	void setComputeRootSignature(std::shared_ptr<RootSignature> pRootSingature);
+	void setComputeRootSignature(std::shared_ptr<RootSignature> pRootSignature);
 	void close();
 	void close(std::shared_ptr<CommandList> pPendingCmdList);
 	void reset();

@@ -213,9 +213,9 @@ void LandAndWater::buildCamera() {
 }
 
 void LandAndWater::buildConstantBuffer(dx12lib::DirectContextProxy pDirectCtx) {
-	_pPassCB = pDirectCtx->createStructConstantBuffer<d3d::PassCBType>();
-	_pLightCB = pDirectCtx->createStructConstantBuffer<d3d::LightCBType>();
-	_pWaterCB = pDirectCtx->createStructConstantBuffer<WaterCBType>();
+	_pPassCB = pDirectCtx->createStructuredConstantBuffer<d3d::PassCBType>();
+	_pLightCB = pDirectCtx->createStructuredConstantBuffer<d3d::LightCBType>();
+	_pWaterCB = pDirectCtx->createStructuredConstantBuffer<WaterCBType>();
 
 	// init pass fog constant buffer
 	auto pGPUPassCB = _pPassCB->map();
@@ -448,7 +448,7 @@ void LandAndWater::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 	boxOBjectCB.matTransfrom = MathHelper::identity4x4();
 	RenderItem boxRItem;
 	boxRItem._pMesh = pBoxMesh;
-	boxRItem._pConstantBuffer = pDirectCtx->createStructConstantBuffer<CBObjectType>(boxOBjectCB);
+	boxRItem._pConstantBuffer = pDirectCtx->createStructuredConstantBuffer<CBObjectType>(boxOBjectCB);
 	boxRItem._pAlbedoMap = _textureMap["WireFence.dds"];
 
 	auto pLandMesh = _geometryMap["landGeo"];
@@ -461,7 +461,7 @@ void LandAndWater::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 	landOBjectCB.normalMat = MathHelper::identity4x4();
 	RenderItem landRItem;
 	landRItem._pMesh = pLandMesh;
-	landRItem._pConstantBuffer = pDirectCtx->createStructConstantBuffer<CBObjectType>(landOBjectCB);
+	landRItem._pConstantBuffer = pDirectCtx->createStructuredConstantBuffer<CBObjectType>(landOBjectCB);
 	landRItem._pAlbedoMap = _textureMap["grass.dds"];
 
 	auto pWaterMesh = _geometryMap["gridGeo"];
@@ -473,7 +473,7 @@ void LandAndWater::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 	waterOBjectCB.matTransfrom = MathHelper::identity4x4();
 	RenderItem waterRItem;
 	waterRItem._pMesh = pWaterMesh;
-	waterRItem._pConstantBuffer = pDirectCtx->createStructConstantBuffer<CBObjectType>(waterOBjectCB);
+	waterRItem._pConstantBuffer = pDirectCtx->createStructuredConstantBuffer<CBObjectType>(waterOBjectCB);
 
 	RenderItem treeBillboards;
 	CBObjectType treeOBjectCB;
@@ -482,7 +482,7 @@ void LandAndWater::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 	treeOBjectCB.normalMat = MathHelper::identity4x4();
 	treeOBjectCB.matTransfrom = MathHelper::identity4x4();
 	treeBillboards._pMesh = _geometryMap["TreeBillboardGeo"];
-	treeBillboards._pConstantBuffer = pDirectCtx->createStructConstantBuffer<CBObjectType>(treeOBjectCB);
+	treeBillboards._pConstantBuffer = pDirectCtx->createStructuredConstantBuffer<CBObjectType>(treeOBjectCB);
 	treeBillboards._pAlbedoMap = _textureMap["treeArray2.dds"];
 	_renderItemMap["ClipPSO"].push_back(boxRItem);
 	_renderItemMap["TexturePSO"].push_back(landRItem);

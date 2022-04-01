@@ -41,7 +41,7 @@ void Shape::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 	};
 	_pCamera = std::make_unique<d3d::CoronaCamera>(cameraDesc);
 	_pCamera->_whellSensitivety = 1.f;
-	_pPassCB = pDirectCtx->createStructConstantBuffer<d3d::PassCBType>();
+	_pPassCB = pDirectCtx->createStructuredConstantBuffer<d3d::PassCBType>();
 	buildTexturePSO(pDirectCtx);
 	buildColorPSO(pDirectCtx);
 	buildGameLight(pDirectCtx);
@@ -157,7 +157,7 @@ void Shape::buildRenderItem(dx12lib::DirectContextProxy pDirectCtx) {
 	XMStoreFloat4x4(&boxObjCb.world, DX::XMMatrixScaling(2.f, 2.f, 2.f) * DX::XMMatrixTranslation(0.f, 0.5f, 0.f));
 	boxItem._pMesh = _geometrys["box"];
 	boxItem._pAlbedo = _textureMap["bricks.dds"];
-	boxItem._pObjectCB = pDirectCtx->createStructConstantBuffer<ObjectCB>(boxObjCb);
+	boxItem._pObjectCB = pDirectCtx->createStructuredConstantBuffer<ObjectCB>(boxObjCb);
 	textureRenderItems.push_back(boxItem);
 
 	RenderItem gridItem;
@@ -166,7 +166,7 @@ void Shape::buildRenderItem(dx12lib::DirectContextProxy pDirectCtx) {
 	gridObjCB.world = MathHelper::identity4x4();;
 	gridItem._pMesh = _geometrys["grid"];
 	gridItem._pAlbedo = _textureMap["tile.dds"];
-	gridItem._pObjectCB = pDirectCtx->createStructConstantBuffer<ObjectCB>(gridObjCB);
+	gridItem._pObjectCB = pDirectCtx->createStructuredConstantBuffer<ObjectCB>(gridObjCB);
 	textureRenderItems.push_back(gridItem);
 
 	for (std::size_t i = 0; i < 5; ++i) {
@@ -200,10 +200,10 @@ void Shape::buildRenderItem(dx12lib::DirectContextProxy pDirectCtx) {
 		leftSphereRItem._pAlbedo = _textureMap["bricks.dds"];
 		rightSphereRItem._pAlbedo = _textureMap["bricks.dds"];
 
-		leftCylRItem._pObjectCB = pDirectCtx->createStructConstantBuffer<ObjectCB>(leftCylObjCB);
-		rightCylRItem._pObjectCB = pDirectCtx->createStructConstantBuffer<ObjectCB>(rightCylObjCB);
-		leftSphereRItem._pObjectCB = pDirectCtx->createStructConstantBuffer<ObjectCB>(leftSphereObjCB);
-		rightSphereRItem._pObjectCB = pDirectCtx->createStructConstantBuffer<ObjectCB>(rightSphereObjCB);
+		leftCylRItem._pObjectCB = pDirectCtx->createStructuredConstantBuffer<ObjectCB>(leftCylObjCB);
+		rightCylRItem._pObjectCB = pDirectCtx->createStructuredConstantBuffer<ObjectCB>(rightCylObjCB);
+		leftSphereRItem._pObjectCB = pDirectCtx->createStructuredConstantBuffer<ObjectCB>(leftSphereObjCB);
+		rightSphereRItem._pObjectCB = pDirectCtx->createStructuredConstantBuffer<ObjectCB>(rightSphereObjCB);
 
 		textureRenderItems.push_back(leftCylRItem);
 		textureRenderItems.push_back(rightCylRItem);
@@ -220,7 +220,7 @@ void Shape::buildRenderItem(dx12lib::DirectContextProxy pDirectCtx) {
 	XMStoreFloat4x4(&skullObjCB.world,
 		DX::XMMatrixMultiply(DX::XMMatrixScaling(0.5f, 0.5f, 0.5f), DX::XMMatrixTranslation(0.f, 1.0f, 0.f)));
 	skullItem._pMesh = _geometrys["skull"];
-	skullItem._pObjectCB = pDirectCtx->createStructConstantBuffer<ObjectCB>(skullObjCB);
+	skullItem._pObjectCB = pDirectCtx->createStructuredConstantBuffer<ObjectCB>(skullObjCB);
 	colorRenderItems.push_back(skullItem);
 }
 
@@ -292,7 +292,7 @@ void Shape::buildGeometry(dx12lib::DirectContextProxy pDirectCtx) {
 
 
 void Shape::buildGameLight(dx12lib::DirectContextProxy pDirectCtx) {
-	_pGameLightsCB = pDirectCtx->createStructConstantBuffer<d3d::LightCBType>();
+	_pGameLightsCB = pDirectCtx->createStructuredConstantBuffer<d3d::LightCBType>();
 	auto pGPUGameLightCB = _pGameLightsCB->map();
 	pGPUGameLightCB->directLightCount = 1;
 	pGPUGameLightCB->pointLightCount = 1;

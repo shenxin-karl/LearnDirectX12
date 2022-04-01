@@ -8,11 +8,6 @@ cbuffer CBPass : register(b1) {
     PassCBType gPass;
 };
 
-cbuffer CBLight : register(b2) {
-	LightCBType gLight;
-};
-
-
 struct VertexIn {
 	float3 position : POSITION;
 };
@@ -35,10 +30,10 @@ struct PatchTess {
 PatchTess ConstantHS(InputPatch<VertexOut, 4> patch, uint patchID : SV_PrimitiveID) {
 	PatchTess pt;
 	float3 centerL = (patch[0].position + patch[1].position + patch[2].position + patch[3].position) * 0.25;
-	float3 centerW = mul(gWorld, float4(centerL, 1.0));
+	float3 centerW = mul(gWorld, float4(centerL, 1.0)).xyz;
 	float dis = distance(centerW, gPass.eyePos);
 
-	const float dis0 = 20.0;
+	const float dis0 = 5.0;
 	const float dis1 = 100.0;
 	float tess = max(64.0 * saturate((dis1-dis) / (dis1-dis0)), 1.0);
 	pt.EdgeTess[0] = tess;
@@ -85,7 +80,7 @@ DomainOut DS(PatchTess patchTess, float2 uv : SV_DomainLocation,
 	float3 p  = lerp(v0, v1, uv.y);
 
 	// Using the displacement
-	p.y = 0.3f * (p.z * sin(0.1f * p.x) + p.x * cos(0.1f * p.z));
+	p.y = 0.3f * (p.z* sin(p.x) + p.x * cos(p.z));
 
 	float4 worldPosition = mul(gWorld, float4(p, 1.0));
 	dout.position = mul(gPass.viewProj, worldPosition);

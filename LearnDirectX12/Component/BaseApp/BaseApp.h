@@ -29,12 +29,12 @@ public:
 	virtual void resize(int width, int height);
 	bool isRuning() const;
 protected:
-	virtual void onInitialize(dx12lib::DirectContextProxy pCmdList) {}
+	virtual void onInitialize(dx12lib::DirectContextProxy pDirectCtx) {}
 	virtual void onDistory() {}
 	virtual void onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {}
 	virtual void onTick(std::shared_ptr<com::GameTimer> pGameTimer) {}
 	virtual void onEndTick(std::shared_ptr<com::GameTimer> pGameTimer) {}
-	virtual void onResize(dx12lib::DirectContextProxy pCmdList, int width, int height) {}
+	virtual void onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int height) {}
 protected:
 	int  _width = 800;
 	int  _height = 600;

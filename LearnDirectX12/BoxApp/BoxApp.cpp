@@ -28,7 +28,7 @@ void BoxApp::onInitialize(dx12lib::DirectContextProxy pDirectContext) {
 	cameraDesc.aspect = float(_width) / float(_height);
 
 	_pCamera = std::make_unique<d3d::CoronaCamera>(cameraDesc);
-	_pMVPConstantBuffer = pDirectContext->createStructConstantBuffer<WVMConstantBuffer>();
+	_pMVPConstantBuffer = pDirectContext->createStructuredConstantBuffer<WVMConstantBuffer>();
 
 	// initialize root signature
 	dx12lib::RootParameter rootParame0;

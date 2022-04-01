@@ -17,10 +17,13 @@ std::size_t StructuredBuffer::getBufferSize() const {
 	return _bufferSize;
 }
 
+StructuredBuffer::~StructuredBuffer() {
+}
+
 StructuredBuffer::StructuredBuffer(std::weak_ptr<Device> pDevice, 
-	std::shared_ptr<CommandList> pCmdList, 
-	const void *pData, 
-	std::size_t sizeInByte) 
+                                   std::shared_ptr<CommandList> pCmdList, 
+                                   const void *pData, 
+                                   std::size_t sizeInByte) 
 {
 	auto pSharedDevice = pDevice.lock();
 	_structedBufferView = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
