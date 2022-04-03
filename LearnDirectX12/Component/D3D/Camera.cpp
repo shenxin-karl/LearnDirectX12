@@ -26,7 +26,7 @@ CameraBase::CameraBase(const CameraDesc &desc) {
 	assert(_farClip > _nearClip);
 }
 
-void CameraBase::updatePassCB(GPUStructCBPtr<d3d::PassCBType> pPassCB) const {
+void CameraBase::updatePassCB(GPUStructuredCBPtr<d3d::PassCBType> pPassCB) const {
 	assert(pPassCB != nullptr);
 	auto pGPUPassCB = pPassCB->map();
 	updatePassCB(*pGPUPassCB);

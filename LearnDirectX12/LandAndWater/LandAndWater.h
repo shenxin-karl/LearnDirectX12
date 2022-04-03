@@ -74,7 +74,7 @@ struct CBObjectType {
 
 struct RenderItem {
 	std::shared_ptr<d3d::Mesh> _pMesh;
-	GPUStructCBPtr<CBObjectType> _pConstantBuffer;
+	GPUStructuredCBPtr<CBObjectType> _pConstantBuffer;
 	std::shared_ptr<dx12lib::ShaderResourceBuffer> _pAlbedoMap;
 };
 
@@ -110,9 +110,9 @@ private:
 private:
 	std::unique_ptr<d3d::CoronaCamera> _pCamera;
 	std::unique_ptr<d3d::BlurFilter>   _pBlurFilter;
-	GPUStructCBPtr<d3d::PassCBType>    _pPassCB;
-	GPUStructCBPtr<d3d::LightCBType>   _pLightCB;
-	GPUStructCBPtr<WaterCBType>        _pWaterCB;
+	GPUStructuredCBPtr<d3d::PassCBType>    _pPassCB;
+	GPUStructuredCBPtr<d3d::LightCBType>   _pLightCB;
+	GPUStructuredCBPtr<WaterCBType>        _pWaterCB;
 	std::map<std::string, d3d::Material> _materialMap;
 	std::map<std::string, std::shared_ptr<d3d::Mesh>> _geometryMap;
 	std::map<std::string, std::vector<RenderItem>> _renderItemMap;

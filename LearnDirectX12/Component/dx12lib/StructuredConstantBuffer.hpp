@@ -11,7 +11,7 @@ template<StructuredConstantBufferConcept T>
 class StructuredConstantBuffer;
 
 template<StructuredConstantBufferConcept T>
-using GPUStructCBPtr = std::shared_ptr<StructuredConstantBuffer<T>>;
+using GPUStructuredCBPtr = std::shared_ptr<StructuredConstantBuffer<T>>;
 
 template<typename T>
 class MappedPtr {
@@ -119,4 +119,4 @@ private:
 
 }
 
-using dx12lib::GPUStructCBPtr;
+using dx12lib::GPUStructuredCBPtr;

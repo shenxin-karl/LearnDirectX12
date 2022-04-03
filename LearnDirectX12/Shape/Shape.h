@@ -33,7 +33,7 @@ struct ObjectCB {
 struct RenderItem {
 	std::shared_ptr<Mesh>    _pMesh;
 	std::shared_ptr<dx12lib::ShaderResourceBuffer> _pAlbedo;
-	GPUStructCBPtr<ObjectCB> _pObjectCB;
+	GPUStructuredCBPtr<ObjectCB> _pObjectCB;
 };
 
 enum ShapeRootParameType : UINT {
@@ -67,8 +67,8 @@ private:
 	void updatePassCB(std::shared_ptr<com::GameTimer> pGameTimer);
 private:
 	std::unique_ptr<d3d::CoronaCamera>  _pCamera;
-	GPUStructCBPtr<d3d::LightCBType>    _pGameLightsCB;
-	GPUStructCBPtr<d3d::PassCBType>     _pPassCB;
+	GPUStructuredCBPtr<d3d::LightCBType>    _pGameLightsCB;
+	GPUStructuredCBPtr<d3d::PassCBType>     _pPassCB;
 	std::unique_ptr<d3d::SobelFilter>	_pSobelFilter;
 	std::unordered_map<std::string, d3d::Material> _materials;
 	std::unordered_map<std::string, std::shared_ptr<Mesh>> _geometrys;
