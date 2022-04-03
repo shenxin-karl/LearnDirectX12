@@ -36,7 +36,7 @@ struct ObjectCBType {
 
 struct RenderItem {
 	std::shared_ptr<d3d::Mesh> _pMesh;
-	GPUStructCBPtr<ObjectCBType> _pObjectCB;
+	GPUStructuredCBPtr<ObjectCBType> _pObjectCB;
 	std::shared_ptr<dx12lib::ShaderResourceBuffer> _pAlbedoMap;
 	d3d::SubMesh _submesh;
 };
@@ -71,9 +71,9 @@ private:
 private:
 	std::unique_ptr<d3d::FXAA>		   _pFXAAFilter;
 	std::unique_ptr<d3d::CoronaCamera> _pCamera;
-	GPUStructCBPtr<d3d::PassCBType>    _pPassCB;
-	GPUStructCBPtr<d3d::LightCBType>   _pLightCB;
-	GPUStructCBPtr<d3d::LightCBType>   _pReflectedLightCB;
+	GPUStructuredCBPtr<d3d::PassCBType>    _pPassCB;
+	GPUStructuredCBPtr<d3d::LightCBType>   _pLightCB;
+	GPUStructuredCBPtr<d3d::LightCBType>   _pReflectedLightCB;
 	std::map<std::string, d3d::Material> _materialMap;
 	std::map<std::string, std::shared_ptr<d3d::Mesh>> _meshMap;
 	std::map<RenderLayer, std::shared_ptr<dx12lib::GraphicsPSO>> _psoMap;
@@ -81,5 +81,5 @@ private:
 	std::vector<RenderItem> _renderItems[RenderLayer::Count];
 
 	float3 _skullTranslation = { 0.0f, 1.0f, -5.0f };
-	GPUStructCBPtr<ObjectCBType> _pSkullObjectCB;
+	GPUStructuredCBPtr<ObjectCBType> _pSkullObjectCB;
 };

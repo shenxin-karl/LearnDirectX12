@@ -41,7 +41,7 @@ private:
 private:
 	std::shared_ptr<dx12lib::GraphicsPSO>  _pGraphicsPSO;
 	std::unique_ptr<d3d::CoronaCamera>     _pCamera;
-	GPUStructCBPtr<WVMConstantBuffer>      _pMVPConstantBuffer;
+	GPUStructuredCBPtr<WVMConstantBuffer>      _pMVPConstantBuffer;
 	std::unique_ptr<BoxMesh>               _pBoxMesh;
 	float    _theta = 0.f;
 	float    _phi = 0.f;

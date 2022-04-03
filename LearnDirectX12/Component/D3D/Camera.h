@@ -33,7 +33,7 @@ public:
 	virtual	const float4x4 &getInvView() const = 0;
 	virtual const float4x4 &getInvProj() const = 0;
 	virtual const float4x4 &getInvViewProj() const = 0;
-	void updatePassCB(GPUStructCBPtr<d3d::PassCBType> pPassCB) const;
+	void updatePassCB(GPUStructuredCBPtr<d3d::PassCBType> pPassCB) const;
 	void updatePassCB(d3d::PassCBType &passCB) const;
 public:
 	float3 _lookFrom;
