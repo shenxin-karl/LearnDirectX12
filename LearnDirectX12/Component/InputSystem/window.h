@@ -8,11 +8,13 @@
 
 namespace com {
 
+class InputSystem;
 class GameTimer;
+
 class Window : public ITick {
 	class WindowClass;
 public:
-	Window(int width, int height, const std::string &title);
+	Window(int width, int height, const std::string &title, InputSystem *pInputSystem);
 	Window(const Window &) = delete;
 	Window &operator=(const Window &) = delete;
 	bool shouldClose() const;
@@ -42,6 +44,7 @@ private:
 	bool shouldClose_;
 	int  result;
 	std::string title_;
+	InputSystem *_pInputSystem = nullptr;
 	std::function<void(HWND, UINT, WPARAM, LPARAM)> messageCallback_;
 	std::function<void(int x, int y)>				resizeCallback_;
 	std::shared_ptr<GameTimer>						pGameTimer_;

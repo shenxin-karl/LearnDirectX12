@@ -7,8 +7,8 @@
 namespace com {
 
 InputSystem::InputSystem(const std::string &title, int width, int height) {
-	window = std::make_unique<Window>(width, height, title);
-	mouse = std::make_unique<Mouse>();
+	window = std::make_unique<Window>(width, height, title, this);
+	mouse = std::make_unique<Mouse>(this);
 	keyboard = std::make_unique<Keyboard>();
 	window->setMessageCallback([&](HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		mouse->handleMsg(hwnd, msg, wParam, lParam);

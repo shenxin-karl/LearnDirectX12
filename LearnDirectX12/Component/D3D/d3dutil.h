@@ -2,6 +2,7 @@
 #include <d3d12.h>
 #include <wrl.h>
 #include <string>
+#include <DirectXMath.h>
 #include "ComponentStd.h"
 
 
@@ -13,6 +14,7 @@ using uint64 = std::uint64_t;
 
 class CameraBase;
 class CoronaCamera;
+class FirstPersonCamera;
 struct Light;
 struct Material;
 struct PassCBType;
@@ -46,5 +48,8 @@ public:
 	NonCopyable(const NonCopyable &) = delete;
 	NonCopyable &operator=(const NonCopyable &) = delete;
 };
+
+namespace DX = DirectX;
+namespace WRL = Microsoft::WRL;
 
 }

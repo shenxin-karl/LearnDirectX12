@@ -3,13 +3,15 @@
 #include "window.h"
 #include <errhandlingapi.h>
 #include <cassert>
+#include "InputSystem.h"
+#include "Mouse.h"
 #include "GameTimer/GameTimer.h"
 
 namespace com {
 
-Window::Window(int width, int height, const std::string &title)
+Window::Window(int width, int height, const std::string &title, InputSystem *pInputSystem)
 	: hwnd_(nullptr), width_(width), height_(height), title_(title)
-	, shouldClose_(false), result(-1)
+	, shouldClose_(false), result(-1), _pInputSystem(pInputSystem)
 {
 	resizeCallback_ = [](int, int) {};
 	messageCallback_ = [](HWND, UINT, WPARAM, LPARAM) {};
@@ -97,7 +99,18 @@ void Window::beginTick(std::shared_ptr<GameTimer> pGameTimer) {
 	if (resizeDirty_) {
 		resizeDirty_ = false;
 		resizeCallback_(width_, height_);
+		_pInputSystem->mouse->updateWindowCenter();
 	}
+
+	if (!_pInputSystem->mouse->getShowCursor()) {
+		RECT rect;
+		POINT cursorPos;
+		GetWindowRect(_pInputSystem->window->getHWND(), &rect);
+		cursorPos.x = (rect.right + rect.left) / 2;
+		cursorPos.y = (rect.bottom + rect.top) / 2;
+		SetCursorPos(cursorPos.x, cursorPos.y);
+	}
+
 	if (pGameTimer->oneSecondTrigger()) {
 		std::stringstream sbuf;
 		sbuf << title_ << ' ';

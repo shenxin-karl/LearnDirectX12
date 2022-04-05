@@ -104,7 +104,7 @@ void LandAndWater::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 
 void LandAndWater::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	pollEvent();
-	_pCamera->update();
+	_pCamera->update(pGameTimer);
 	updateConstantBuffer(pGameTimer);
 }
 
@@ -147,6 +147,8 @@ void LandAndWater::onResize(dx12lib::DirectContextProxy pDirectCtx, int width, i
 
 void LandAndWater::pollEvent() {
 	while (auto event = _pInputSystem->mouse->getEvent())
+		_pCamera->pollEvent(event);
+	while (auto event = _pInputSystem->keyboard->getKeyEvent())
 		_pCamera->pollEvent(event);
 }
 
@@ -208,8 +210,9 @@ void LandAndWater::buildCamera() {
 		500.f,
 		float(_width) / float(_height),
 	};
-	_pCamera = std::make_unique<d3d::CoronaCamera>(desc);
-	_pCamera->_whellSensitivety = 5.f;
+	_pCamera = std::make_unique<d3d::FirstPersonCamera>(desc);
+	_pInputSystem->mouse->setShowCursor(false);
+	_pCamera->_mouseWheelSensitivity = 5.f;
 }
 
 void LandAndWater::buildConstantBuffer(dx12lib::DirectContextProxy pDirectCtx) {

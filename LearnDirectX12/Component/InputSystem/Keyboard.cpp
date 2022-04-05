@@ -13,7 +13,7 @@ bool Keyboard::isCharPressed(unsigned char key) const {
 	return characterState_.test(key);
 }
 
-KeyEvent Keyboard::readKey() {
+KeyEvent Keyboard::getKeyEvent() {
 	if (keycodeQueue_.empty())
 		return KeyEvent{};
 
@@ -22,7 +22,7 @@ KeyEvent Keyboard::readKey() {
 	return res;
 }
 
-CharEvent Keyboard::readChar() {
+CharEvent Keyboard::getCharEvent() {
 	if (characterQueue_.empty())
 		return CharEvent{};
 	auto res = characterQueue_.front();

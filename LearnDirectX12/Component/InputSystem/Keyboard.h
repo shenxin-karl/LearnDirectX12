@@ -57,8 +57,8 @@ public:
 	bool isKeyPressed(unsigned char key) const;
 	bool isCharPressed(unsigned char key) const;
 	/// https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
-	KeyEvent readKey();
-	CharEvent readChar();
+	KeyEvent getKeyEvent();
+	CharEvent getCharEvent();
 
 	template<typename T>
 	static void tryDiscardEvent(std::queue<T> &queue);

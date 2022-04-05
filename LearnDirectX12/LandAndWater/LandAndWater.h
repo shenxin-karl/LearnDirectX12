@@ -9,6 +9,7 @@
 #include "D3D/Mesh.h"
 
 using namespace Math;
+
 namespace com {
 	struct Vertex;
 }
@@ -108,11 +109,11 @@ private:
 	void buildMaterials();
 	void buildRenderItems(dx12lib::DirectContextProxy pDirectCtx);
 private:
-	std::unique_ptr<d3d::CoronaCamera> _pCamera;
-	std::unique_ptr<d3d::BlurFilter>   _pBlurFilter;
-	GPUStructuredCBPtr<d3d::PassCBType>    _pPassCB;
-	GPUStructuredCBPtr<d3d::LightCBType>   _pLightCB;
-	GPUStructuredCBPtr<WaterCBType>        _pWaterCB;
+	std::unique_ptr<d3d::BlurFilter> _pBlurFilter;
+	GPUStructuredCBPtr<d3d::PassCBType> _pPassCB;
+	GPUStructuredCBPtr<d3d::LightCBType> _pLightCB;
+	GPUStructuredCBPtr<WaterCBType> _pWaterCB;
+	std::unique_ptr<d3d::FirstPersonCamera> _pCamera;
 	std::map<std::string, d3d::Material> _materialMap;
 	std::map<std::string, std::shared_ptr<d3d::Mesh>> _geometryMap;
 	std::map<std::string, std::vector<RenderItem>> _renderItemMap;

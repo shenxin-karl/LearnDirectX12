@@ -97,25 +97,6 @@ void Device::releaseStaleDescriptor() {
 		pAllocator->releaseStateDescriptors();
 }
 
-UINT Device::getSampleCount() const {
-	return 1;
-}
-
-UINT Device::getSampleQuality() const {
-	return 0;
-}
-
-DXGI_SAMPLE_DESC Device::getSampleDesc() const {
-	return {
-		getSampleCount(),
-		getSampleQuality(),
-	};
-}
-
-bool Device::get4xMsaaState() const {
-	return false;
-}
-
 const dx12lib::DeviceInitDesc &Device::getDesc() const {
 	return _initDesc;
 }

@@ -87,7 +87,7 @@ void BezierPatchApp::buildCamera() {
 		float(_width) / float(_height),
 	};
 	_pCamara = std::make_unique<d3d::CoronaCamera>(cameraDesc);
-	_pCamara->_whellSensitivety = 3.f;
+	_pCamara->_mouseWheelSensitivity = 3.f;
 }
 
 void BezierPatchApp::buildConstantBuffer(dx12lib::CommandContextProxy pCmdCtx) {

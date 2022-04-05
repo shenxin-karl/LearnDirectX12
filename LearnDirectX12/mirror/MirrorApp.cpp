@@ -166,7 +166,7 @@ void MirrorApp::buildCamera() {
 		float(_width) / float(_height)
 	};
 	_pCamera = std::make_unique<d3d::CoronaCamera>(cameraDesc);
-	_pCamera->_whellSensitivety = 2.f;
+	_pCamera->_mouseWheelSensitivity = 2.f;
 }
 
 void MirrorApp::buildConstantBuffers(dx12lib::DirectContextProxy pDirectCtx) {

@@ -26,6 +26,9 @@
 #include <array>
 #include "ComponentStd.h"
 
+namespace DX = DirectX;
+namespace WRL = Microsoft::WRL;
+
 namespace dx12lib {
 
 namespace WRL = Microsoft::WRL;

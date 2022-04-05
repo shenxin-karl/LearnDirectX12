@@ -11,7 +11,7 @@ int main() {
 	std::unique_ptr<com::InputSystem> pInputSystem = std::make_unique<com::InputSystem>("Title", 800, 600);
 	while (!pInputSystem->shouldClose()) {
 		pInputSystem->tick(pGameTimer);
-		while (auto charEvent = pInputSystem->keyboard->readChar())
+		while (auto charEvent = pInputSystem->keyboard->getCharEvent())
 			std::cout << charEvent.getCharacter() << std::endl;
 		while (auto mouseEvent = pInputSystem->mouse->getEvent()) {
 			switch (mouseEvent.state_) {

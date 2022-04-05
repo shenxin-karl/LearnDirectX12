@@ -1,15 +1,19 @@
 #include "Mouse.h"
+#include <iostream>
+#include "Window.h"
+#include "InputSystem.h"
 
 namespace com {
 
-Mouse::Mouse() {
+Mouse::Mouse(InputSystem *pInputSystem) : _pInputSystem(pInputSystem) {
+	updateWindowCenter();
 }
 
 void Mouse::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	int x = LOWORD(lParam);
 	int y = HIWORD(lParam);
 	bool isEvent = true;
-	MouseEvent mouseEvent ={ x, y, MouseState::Invalid, 0.f };
+	MouseEvent mouseEvent = { x, y, MouseState::Invalid, 0.f };
 	switch (msg) {
 	case WM_LBUTTONDOWN:
 		mouseEvent.state_ = MouseState::LPress;
@@ -25,6 +29,11 @@ void Mouse::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		break;
 	case WM_MOUSEMOVE:
 		mouseEvent.state_ = MouseState::Move;
+		if (!_showCursor && x == _windowCenter.x && y == _windowCenter.y) {
+			// todo: 这里应该给外部停供虚假的 xy 坐标. 在 window 里面会调用 SetCursorPos 函数
+			// todo: 外面计算出来的 dx 和 dy 是错误的
+			isEvent = false;
+		}
 		break;
 	case WM_MBUTTONDOWN:
 		mouseEvent.state_ = MouseState::WheelDown;
@@ -56,6 +65,29 @@ MouseEvent Mouse::getEvent() {
 	auto res = events_.front();
 	events_.pop();
 	return res;
+}
+
+bool Mouse::getShowCursor() const {
+	return _showCursor;
+}
+
+void Mouse::setShowCursor(bool bShow) {
+	if (_showCursor != bShow) {
+		_showCursor = bShow;
+		setShowCursor(bShow);
+	}
+
+	if (!bShow)
+		updateWindowCenter();
+}
+
+void Mouse::updateWindowCenter() {
+	RECT rect;
+	GetWindowRect(_pInputSystem->window->getHWND(), &rect);
+	_windowCenter.x = (rect.right + rect.left) / 2;
+	_windowCenter.y = (rect.bottom + rect.top) / 2;
+	ScreenToClient(_pInputSystem->window->getHWND(), &_windowCenter);
+	ClipCursor(&rect);
 }
 
 MouseEvent::operator bool() const {

@@ -40,7 +40,7 @@ void Shape::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 		float(_width) / float(_height),
 	};
 	_pCamera = std::make_unique<d3d::CoronaCamera>(cameraDesc);
-	_pCamera->_whellSensitivety = 1.f;
+	_pCamera->_mouseWheelSensitivity = 1.f;
 	_pPassCB = pDirectCtx->createStructuredConstantBuffer<d3d::PassCBType>();
 	buildTexturePSO(pDirectCtx);
 	buildColorPSO(pDirectCtx);

@@ -7,6 +7,8 @@
 
 namespace com {
 
+class InputSystem;
+
 enum class MouseState : int {
 	LPress,
 	LRelease,
@@ -41,15 +43,21 @@ public:
 class GameTimer;
 class Mouse : public ITick {
 public:
-	Mouse();
+	Mouse(InputSystem *pInputSystem);
 	Mouse(const Mouse &) = delete;
 	Mouse &operator=(const Mouse &) = delete;
 	~Mouse() = default;
 	void handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 	virtual void endTick(std::shared_ptr<GameTimer> pGameTimer) override;
 	MouseEvent getEvent();
+	bool getShowCursor() const;
+	void setShowCursor(bool bShow);
+	void updateWindowCenter();
 private:
 	static constexpr size_t EventMaxSize_ = 0xff;
+	POINT _windowCenter;
+	bool _showCursor = true;
+	InputSystem *_pInputSystem = nullptr;
 	std::queue<MouseEvent> events_;
 };
 

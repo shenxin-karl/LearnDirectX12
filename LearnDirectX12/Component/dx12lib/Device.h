@@ -18,23 +18,14 @@ public:
 	~Device();
 	void initialize(const DeviceInitDesc &desc);
 	void destory();
-
 	std::shared_ptr<SwapChain> createSwapChain(HWND hwnd) const;
 	std::shared_ptr<RootSignature> createRootSignature(const D3D12_ROOT_SIGNATURE_DESC &desc);
 	std::shared_ptr<RootSignature> createRootSignature(const RootSignatureDescHelper &desc);
 	std::shared_ptr<GraphicsPSO> createGraphicsPSO(const std::string &name);
 	std::shared_ptr<ComputePSO> createComputePSO(const std::string &name);
-
 	DescriptorAllocation allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32 numDescriptors = 1);
-
 	void releaseStaleDescriptor();
-
-	UINT getSampleCount() const;
-	UINT getSampleQuality() const;
-	DXGI_SAMPLE_DESC getSampleDesc() const;
-	bool get4xMsaaState() const;
 	const DeviceInitDesc &getDesc() const;
-public:
 	std::shared_ptr<Adapter> getAdapter() const;
 	std::shared_ptr<CommandQueue> getCommandQueue(CommandQueueType type) const;
 	ID3D12Device *getD3DDevice() const;

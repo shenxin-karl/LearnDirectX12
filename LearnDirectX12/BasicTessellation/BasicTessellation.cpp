@@ -32,7 +32,7 @@ void BasicTessellationApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) 
 		static_cast<float>(_width) / static_cast<float>(_height)
 	};
 	_pCamera = std::make_unique<d3d::CoronaCamera>(cameraDesc);
-	_pCamera->_whellSensitivety = 2.f;
+	_pCamera->_mouseWheelSensitivity = 2.f;
 	_pTessellationPSO = _pDevice->createGraphicsPSO("TessellationPSO");
 	_pTessellationPSO->setVertexShader(d3d::compileShader(
 		L"shader/Tessellation.hlsl", 
