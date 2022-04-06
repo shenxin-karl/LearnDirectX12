@@ -87,7 +87,7 @@ void Shape::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 }
 
 void Shape::onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int height) {
-	_pCamera->_aspect = float(width) / float(height);
+	_pCamera->setAspect(float(width) / float(height));
 	_pSobelFilter->onResize(pDirectCtx, width, height);
 }
 

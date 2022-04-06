@@ -153,5 +153,5 @@ void BasicTessellationApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 }
 
 void BasicTessellationApp::onResize(dx12lib::DirectContextProxy pCmdList, int width, int height) {
-	_pCamera->_aspect = static_cast<float>(width) / static_cast<float>(height);
+	_pCamera->setAspect(static_cast<float>(width) / static_cast<float>(height));
 }

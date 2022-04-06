@@ -38,14 +38,19 @@ public:
 	virtual void update(std::shared_ptr<com::GameTimer> pGameTimer) = 0;
 	void updatePassCB(GPUStructuredCBPtr<d3d::PassCBType> pPassCB) const;
 	void updatePassCB(d3d::PassCBType &passCB) const;
+	void setFov(float fov);
+	void setAspect(float aspect);
+	float getFov() const;
+	float getAspect() const;
+protected:
+	float  _fov;
+	float  _aspect;
 public:
 	float3 _lookFrom;
 	float3 _lookUp;
 	float3 _lookAt;
 	float  _nearClip;
 	float  _farClip;
-	float  _fov;
-	float  _aspect;
 };
 
 
@@ -103,7 +108,7 @@ public:
 	float getYaw() const;
 	float getRoll() const;
 public:
-	float _mouseWheelSensitivity = 0.1f;		
+	float _mouseWheelSensitivity = 1.f;		
 	float _mouseMoveSensitivity = 0.2f;		// degrees
 	float _rollSensitivity = 15.f;			// degrees
 	float _cameraMoveSpeed = 5.f;			// The number of positions moved in one second

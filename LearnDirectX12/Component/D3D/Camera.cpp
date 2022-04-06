@@ -46,6 +46,22 @@ void CameraBase::updatePassCB(d3d::PassCBType &passCB) const {
 	passCB.farZ = _farClip;
 }
 
+void CameraBase::setFov(float fov) {
+	_fov = std::clamp(fov, 1.f, 89.f);
+}
+
+void CameraBase::setAspect(float aspect) {
+	_aspect = aspect;
+}
+
+float CameraBase::getFov() const {
+	return _fov;
+}
+
+float CameraBase::getAspect() const {
+	return _aspect;
+}
+
 CoronaCamera::CoronaCamera(const CameraDesc &desc) : CameraBase(desc) {
 	auto direction = desc.lookAt - desc.lookFrom;
 	_radius = length(direction);
@@ -259,6 +275,9 @@ void FirstPersonCamera::pollEvent(const com::MouseEvent &event) {
 		setPitch(_pitch - dy);
 		setYaw(_yaw - dx);
 		_lastMousePosition = POINT(event.x, event.y);
+	} else if (event._state == com::MouseState::Wheel) {
+		float fovDeviation = event._offset * _mouseWheelSensitivity;
+		setFov(getFov() - fovDeviation);
 	}
 }
 

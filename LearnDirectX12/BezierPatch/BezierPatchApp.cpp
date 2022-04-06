@@ -73,7 +73,7 @@ void BezierPatchApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 }
 
 void BezierPatchApp::onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int height) {
-	_pCamara->_aspect = float(width) / float(height);
+	_pCamara->setAspect(float(width) / float(height));
 }
 
 void BezierPatchApp::buildCamera() {

@@ -141,7 +141,7 @@ void LandAndWater::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 }
 
 void LandAndWater::onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int height) {
-	_pCamera->_aspect = float(width) / float(height);
+	_pCamera->setAspect(float(width) / float(height));
 	_pBlurFilter->onResize(pDirectCtx, width, height);
 }
 
@@ -212,7 +212,6 @@ void LandAndWater::buildCamera() {
 	};
 	_pCamera = std::make_unique<d3d::FirstPersonCamera>(desc);
 	_pInputSystem->pMouse->setShowCursor(false);
-	_pCamera->_mouseWheelSensitivity = 5.f;
 }
 
 void LandAndWater::buildConstantBuffer(dx12lib::DirectContextProxy pDirectCtx) {

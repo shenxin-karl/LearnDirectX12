@@ -140,7 +140,7 @@ void MirrorApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 }
 
 void MirrorApp::onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int height) {
-	_pCamera->_aspect = float(width) / float(height);
+	_pCamera->setAspect(float(width) / float(height));
 	_pFXAAFilter->onResize(pDirectCtx, width, height);
 }
 
