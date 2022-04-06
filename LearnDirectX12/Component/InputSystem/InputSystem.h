@@ -22,9 +22,9 @@ public:
 	virtual void tick(std::shared_ptr<GameTimer> pGameTimer) override;
 	virtual void endTick(std::shared_ptr<GameTimer> pGameTimer) override;
 public:
-	std::unique_ptr<Mouse>		mouse;
-	std::unique_ptr<Keyboard>	keyboard;
-	std::unique_ptr<Window>		window;
+	std::unique_ptr<Mouse>		pMouse;
+	std::unique_ptr<Keyboard>	pKeyboard;
+	std::unique_ptr<Window>		pWindow;
 };
 
 }

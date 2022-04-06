@@ -22,8 +22,8 @@ namespace com {
 		bool isInvalid() const;
 		explicit operator bool() const;
 	private:
-		KeyState		state_ = KeyState::Invalid;
-		unsigned char	character_ = 0;
+		KeyState		_state = KeyState::Invalid;
+		unsigned char	_character = 0;
 	};
 
 	struct KeyEvent {
@@ -36,20 +36,20 @@ namespace com {
 		bool isInvalid() const;
 		explicit operator bool() const;
 	private:
-		KeyState      state_ = KeyState::Invalid;
-		unsigned char key_ = 0;				// Use the window's virtual button
+		KeyState      _state = KeyState::Invalid;
+		unsigned char _key = 0;				// Use the window's virtual button
 	};
 
 class GameTimer;
 class Keyboard : public ITick {
 
 public:
-	static constexpr int MaxKeyCodeSize_ = 0xff;
-	static constexpr int MaxQueueSize_ = 0xff;
-	std::bitset<MaxKeyCodeSize_>	keyState_;
-	std::bitset<MaxKeyCodeSize_>	characterState_;
-	std::queue<KeyEvent>			keycodeQueue_;
-	std::queue<CharEvent>			characterQueue_;
+	static constexpr int kMaxKeyCodeSize = 0xff;
+	static constexpr int kMaxQueueSize = 0xff;
+	std::bitset<kMaxKeyCodeSize>	_keyState;
+	std::bitset<kMaxKeyCodeSize>	_characterState;
+	std::queue<KeyEvent>			_keycodeQueue;
+	std::queue<CharEvent>			_characterQueue;
 public:
 	Keyboard();
 	Keyboard(const Keyboard &) = delete;
@@ -70,7 +70,7 @@ public:
 
 template<typename T>
 void Keyboard::tryDiscardEvent(std::queue<T> &queue) {
-	while (queue.size() > Keyboard::MaxQueueSize_)
+	while (queue.size() > Keyboard::kMaxQueueSize)
 		queue.pop();
 }
 

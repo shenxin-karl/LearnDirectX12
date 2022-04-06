@@ -61,7 +61,7 @@ void BoxApp::onInitialize(dx12lib::DirectContextProxy pDirectContext) {
 void BoxApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	pollEvent();
 	auto pGPUWVM = _pMVPConstantBuffer->map();
-	_pCamera->update();
+	_pCamera->update(pGameTimer);
 	pGPUWVM->gWorldViewProj = _pCamera->getViewProj();
 }
 
@@ -98,7 +98,7 @@ void BoxApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 }
 
 void BoxApp::pollEvent() {
-	while (auto event = _pInputSystem->mouse->getEvent())
+	while (auto event = _pInputSystem->pMouse->getEvent())
 		_pCamera->pollEvent(event);
 }
 

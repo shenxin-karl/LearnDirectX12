@@ -10,7 +10,7 @@ namespace com {
 void BaseApp::initialize() {
 	_pInputSystem = std::make_unique<InputSystem>(_title, _width, _height);
 	_pInputSystem->initialize();
-	_pInputSystem->window->setResizeCallback([&](int width, int height) {
+	_pInputSystem->pWindow->setResizeCallback([&](int width, int height) {
 		resize(width, height);
 	});
 
@@ -22,7 +22,7 @@ void BaseApp::initialize() {
 		DXGI_FORMAT_D24_UNORM_S8_UINT,
 	};
 	_pDevice->initialize(desc);
-	_pSwapChain = _pDevice->createSwapChain(_pInputSystem->window->getHWND());
+	_pSwapChain = _pDevice->createSwapChain(_pInputSystem->pWindow->getHWND());
 	// first resize
 	auto pCmdQueue = _pDevice->getCommandQueue(dx12lib::CommandQueueType::Direct);
 	auto pDirectContext = pCmdQueue->createDirectContextProxy();
@@ -41,7 +41,7 @@ void BaseApp::destory() {
 
 void BaseApp::beginTick(std::shared_ptr<GameTimer> pGameTimer) {
 	_pInputSystem->beginTick(pGameTimer);
-	if (_pInputSystem->window->isPause()) {
+	if (_pInputSystem->pWindow->isPause()) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(1000.f / 60.f)));
 		return;
 	}
@@ -53,7 +53,7 @@ void BaseApp::beginTick(std::shared_ptr<GameTimer> pGameTimer) {
 
 void BaseApp::tick(std::shared_ptr<GameTimer> pGameTimer) {
 	_pInputSystem->tick(pGameTimer);
-	if (_pInputSystem->window->isPause())
+	if (_pInputSystem->pWindow->isPause())
 		return;
 
 	onTick(pGameTimer);
@@ -61,7 +61,7 @@ void BaseApp::tick(std::shared_ptr<GameTimer> pGameTimer) {
 
 void BaseApp::endTick(std::shared_ptr<GameTimer> pGameTimer) {
 	_pInputSystem->endTick(pGameTimer);
-	if (_pInputSystem->window->isPause())
+	if (_pInputSystem->pWindow->isPause())
 		return;
 
 	_pDevice->releaseStaleDescriptor();

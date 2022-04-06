@@ -38,29 +38,29 @@ private:
 	void stop();
 	void start();
 private:
-	HWND hwnd_;
-	int	 width_;
-	int	 height_;
-	bool shouldClose_;
+	HWND _hwnd;
+	int	 _width;
+	int	 _height;
+	bool _shouldClose;
 	int  result;
-	std::string title_;
+	std::string _title;
 	InputSystem *_pInputSystem = nullptr;
-	std::function<void(HWND, UINT, WPARAM, LPARAM)> messageCallback_;
-	std::function<void(int x, int y)>				resizeCallback_;
-	std::shared_ptr<GameTimer>						pGameTimer_;
+	std::function<void(HWND, UINT, WPARAM, LPARAM)> _messageCallback;
+	std::function<void(int x, int y)>				_resizeCallback;
+	std::shared_ptr<GameTimer>						_pGameTimer;
 public:
-	bool paused_          = false;
-	bool minimized_       = false;
-	bool maximized_       = false;
-	bool resizing_        = false;
-	bool fullScreenState_ = false;
-	bool resizeDirty_     = false;
+	bool _paused          = false;
+	bool _minimized       = false;
+	bool _maximized       = false;
+	bool _resizing        = false;
+	bool _fullScreenState = false;
+	bool _resizeDirty     = false;
 };
 
 class Window::WindowClass {
 	HINSTANCE hInstance_ = nullptr;
 private:
-	static inline std::unique_ptr<WindowClass> singletonPtr_ = std::make_unique<WindowClass>();
+	static inline std::unique_ptr<WindowClass> _pSingleton = std::make_unique<WindowClass>();
 public:
 	WindowClass();
 	static HINSTANCE getInstance();

@@ -146,9 +146,9 @@ void LandAndWater::onResize(dx12lib::DirectContextProxy pDirectCtx, int width, i
 }
 
 void LandAndWater::pollEvent() {
-	while (auto event = _pInputSystem->mouse->getEvent())
+	while (auto event = _pInputSystem->pMouse->getEvent())
 		_pCamera->pollEvent(event);
-	while (auto event = _pInputSystem->keyboard->getKeyEvent())
+	while (auto event = _pInputSystem->pKeyboard->getKeyEvent())
 		_pCamera->pollEvent(event);
 }
 
@@ -211,7 +211,7 @@ void LandAndWater::buildCamera() {
 		float(_width) / float(_height),
 	};
 	_pCamera = std::make_unique<d3d::FirstPersonCamera>(desc);
-	_pInputSystem->mouse->setShowCursor(false);
+	_pInputSystem->pMouse->setShowCursor(false);
 	_pCamera->_mouseWheelSensitivity = 5.f;
 }
 

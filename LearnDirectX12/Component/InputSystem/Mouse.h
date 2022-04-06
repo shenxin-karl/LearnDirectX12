@@ -1,7 +1,7 @@
 #pragma once
 #define  NOMINMAX
 #include <queue>
-#include <windows.h>
+#include <Windows.h>
 #include <bitset>
 #include "ITick.h"
 
@@ -23,21 +23,21 @@ enum class MouseState : int {
 };
 
 struct MouseEvent {
-	bool isLPress() const { return state_ == MouseState::LPress; }
-	bool isLRelease() const { return state_ == MouseState::LRelease; }
-	bool isRPress() const { return state_ == MouseState::RPress; }
-	bool isRRelease() const { return state_ == MouseState::RRelease; }
-	bool isWheelDown() const { return state_ == MouseState::WheelDown; }
-	bool isWheelUp() const { return state_ == MouseState::WheelUp; }
-	bool isMove() const { return state_ == MouseState::Move; }
-	bool isWheel() const { return state_ == MouseState::Wheel; }
-	bool isInvalid() const { return state_ == MouseState::Invalid; }
+	bool isLPress() const { return _state == MouseState::LPress; }
+	bool isLRelease() const { return _state == MouseState::LRelease; }
+	bool isRPress() const { return _state == MouseState::RPress; }
+	bool isRRelease() const { return _state == MouseState::RRelease; }
+	bool isWheelDown() const { return _state == MouseState::WheelDown; }
+	bool isWheelUp() const { return _state == MouseState::WheelUp; }
+	bool isMove() const { return _state == MouseState::Move; }
+	bool isWheel() const { return _state == MouseState::Wheel; }
+	bool isInvalid() const { return _state == MouseState::Invalid; }
 	explicit operator bool() const;
 public:
 	int		    x = 0;
 	int		    y = 0;
-	MouseState	state_ = MouseState::Invalid;
-	float	    offset_ = 0;
+	MouseState	_state = MouseState::Invalid;
+	float	    _offset = 0;
 };
 
 class GameTimer;
@@ -52,13 +52,15 @@ public:
 	MouseEvent getEvent();
 	bool getShowCursor() const;
 	void setShowCursor(bool bShow);
-	void updateWindowCenter();
+	void adjustCursorPosition();
 private:
-	static constexpr size_t EventMaxSize_ = 0xff;
+	static constexpr size_t kEventMaxSize = 0xff;
 	POINT _windowCenter;
+	POINT _virtualCursorPos;
+	POINT _lastCursorPos;
 	bool _showCursor = true;
 	InputSystem *_pInputSystem = nullptr;
-	std::queue<MouseEvent> events_;
+	std::queue<MouseEvent> _events;
 };
 
 }

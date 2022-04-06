@@ -11,10 +11,10 @@ int main() {
 	std::unique_ptr<com::InputSystem> pInputSystem = std::make_unique<com::InputSystem>("Title", 800, 600);
 	while (!pInputSystem->shouldClose()) {
 		pInputSystem->tick(pGameTimer);
-		while (auto charEvent = pInputSystem->keyboard->getCharEvent())
+		while (auto charEvent = pInputSystem->pKeyboard->getCharEvent())
 			std::cout << charEvent.getCharacter() << std::endl;
-		while (auto mouseEvent = pInputSystem->mouse->getEvent()) {
-			switch (mouseEvent.state_) {
+		while (auto mouseEvent = pInputSystem->pMouse->getEvent()) {
+			switch (mouseEvent._state) {
 			case com::MouseState::LPress:
 				std::cout << std::format("LPress:({}, {})", mouseEvent.x, mouseEvent.y) << std::endl;
 				break;
@@ -31,7 +31,7 @@ int main() {
 				std::cout << std::format("Move:({}, {})", mouseEvent.x, mouseEvent.y) << std::endl;
 				break;
 			case com::MouseState::Wheel:
-				std::cout << std::format("Wheel:({})", mouseEvent.offset_) << std::endl;
+				std::cout << std::format("Wheel:({})", mouseEvent._offset) << std::endl;
 				break;
 			case com::MouseState::WheelDown:
 				std::cout << std::format("WheelDown:({}, {})", mouseEvent.x, mouseEvent.y) << std::endl;

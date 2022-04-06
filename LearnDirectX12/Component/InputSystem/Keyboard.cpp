@@ -6,27 +6,27 @@ Keyboard::Keyboard() {
 }
 
 bool Keyboard::isKeyPressed(unsigned char key) const {
-	return keyState_.test(key);
+	return _keyState.test(key);
 }
 
 bool Keyboard::isCharPressed(unsigned char key) const {
-	return characterState_.test(key);
+	return _characterState.test(key);
 }
 
 KeyEvent Keyboard::getKeyEvent() {
-	if (keycodeQueue_.empty())
+	if (_keycodeQueue.empty())
 		return KeyEvent{};
 
-	auto res = keycodeQueue_.front();
-	keycodeQueue_.pop();
+	auto res = _keycodeQueue.front();
+	_keycodeQueue.pop();
 	return res;
 }
 
 CharEvent Keyboard::getCharEvent() {
-	if (characterQueue_.empty())
+	if (_characterQueue.empty())
 		return CharEvent{};
-	auto res = characterQueue_.front();
-	characterQueue_.pop();
+	auto res = _characterQueue.front();
+	_characterQueue.pop();
 	return res;
 }
 
@@ -34,74 +34,74 @@ CharEvent Keyboard::getCharEvent() {
 void Keyboard::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
 	case WM_KEYDOWN:
-		keyState_.set(wParam);
-		keycodeQueue_.emplace(KeyState::Pressed, static_cast<char>(wParam));
+		_keyState.set(wParam);
+		_keycodeQueue.emplace(KeyState::Pressed, static_cast<char>(wParam));
 		break;
 	case WM_KEYUP:
-		keyState_.set(wParam, false);
-		keycodeQueue_.emplace(KeyState::Released, static_cast<char>(wParam));
+		_keyState.set(wParam, false);
+		_keycodeQueue.emplace(KeyState::Released, static_cast<char>(wParam));
 		break;
 	case WM_CHAR:
-		characterState_.set(wParam);
-		characterQueue_.emplace(KeyState::Pressed, static_cast<char>(wParam));
+		_characterState.set(wParam);
+		_characterQueue.emplace(KeyState::Pressed, static_cast<char>(wParam));
 		break;
 	}
 }
 
 void Keyboard::endTick(std::shared_ptr<GameTimer> pGameTimer) {
-	tryDiscardEvent(keycodeQueue_);
-	tryDiscardEvent(characterQueue_);
+	tryDiscardEvent(_keycodeQueue);
+	tryDiscardEvent(_characterQueue);
 }
 
 unsigned char KeyEvent::getKey() const {
-	return key_;
+	return _key;
 }
 
 KeyState KeyEvent::getState() const {
-	return state_;
+	return _state;
 }
 
 bool KeyEvent::isPressed() const {
-	return state_ == KeyState::Pressed;
+	return _state == KeyState::Pressed;
 }
 
 bool KeyEvent::isReleased() const {
-	return state_ == KeyState::Released;
+	return _state == KeyState::Released;
 }
 
 bool KeyEvent::isInvalid() const {
-	return state_ == KeyState::Invalid;
+	return _state == KeyState::Invalid;
 }
 
 KeyEvent::operator bool() const {
 	return !isInvalid();
 }
 
-KeyEvent::KeyEvent(KeyState state, unsigned char key) : state_(state), key_(key) {
+KeyEvent::KeyEvent(KeyState state, unsigned char key) : _state(state), _key(key) {
 }
 
 unsigned char CharEvent::getCharacter() const {
-	return character_;
+	return _character;
 }
 
 KeyState CharEvent::getState() const {
-	return state_;
+	return _state;
 }
 
 bool CharEvent::isPressed() const {
-	return state_ == KeyState::Pressed;
+	return _state == KeyState::Pressed;
 }
 
 bool CharEvent::isInvalid() const {
-	return state_ == KeyState::Invalid;
+	return _state == KeyState::Invalid;
 }
 
 CharEvent::operator bool() const {
-	return state_ != KeyState::Invalid;
+	return _state != KeyState::Invalid;
 }
 
 CharEvent::CharEvent(KeyState state, unsigned char character)
-	: state_(state), character_(character) {
+	: _state(state), _character(character) {
 }
 
 }

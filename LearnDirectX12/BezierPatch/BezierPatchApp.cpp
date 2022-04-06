@@ -27,10 +27,10 @@ void BezierPatchApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 }
 
 void BezierPatchApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
-	while (auto event = _pInputSystem->mouse->getEvent())
+	while (auto event = _pInputSystem->pMouse->getEvent())
 		_pCamara->pollEvent(event);
 
-	_pCamara->update();
+	_pCamara->update(pGameTimer);
 	_pCamara->updatePassCB(_pPassCB);
 	auto pRenderTarget = _pSwapChain->getRenderTarget();
 	auto pGPUPassCB = _pPassCB->map();

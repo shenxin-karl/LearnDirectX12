@@ -390,12 +390,12 @@ void Shape::renderSkullPass(dx12lib::DirectContextProxy pDirectCtx) {
 }
 
 void Shape::pollEvent() {
-	while (auto event = _pInputSystem->mouse->getEvent())
+	while (auto event = _pInputSystem->pMouse->getEvent())
 		_pCamera->pollEvent(event);
 }
 
 void Shape::updatePassCB(std::shared_ptr<com::GameTimer> pGameTimer) {
-	_pCamera->update();
+	_pCamera->update(pGameTimer);
 	_pCamera->updatePassCB(_pPassCB);
 	auto pGPUPassCB = _pPassCB->map();
 	auto pRenderTarget = _pSwapChain->getRenderTarget();

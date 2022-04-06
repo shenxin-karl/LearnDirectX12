@@ -108,10 +108,10 @@ void BasicTessellationApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) 
 }
 
 void BasicTessellationApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
-	while (auto event = _pInputSystem->mouse->getEvent())
+	while (auto event = _pInputSystem->pMouse->getEvent())
 		_pCamera->pollEvent(event);
 
-	_pCamera->update();
+	_pCamera->update(pGameTimer);
 	_pCamera->updatePassCB(_pPassCB);
 	auto pPassCBuffer = _pPassCB->map();
 	pPassCBuffer->totalTime = pGameTimer->getTotalTime();

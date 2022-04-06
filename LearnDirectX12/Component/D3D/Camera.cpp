@@ -1,9 +1,6 @@
 #define NOMINMAX
 #include <algorithm>
 #include "Camera.h"
-
-#include <iostream>
-
 #include "D3D/ShaderCommon.h"
 #include "GameTimer/GameTimer.h"
 #include "InputSystem/Mouse.h"
@@ -149,7 +146,7 @@ void CoronaCamera::setRadiuse(float radius) {
 }
 
 void CoronaCamera::pollEvent(const com::MouseEvent &event) {
-	switch (event.state_) {
+	switch (event._state) {
 	case com::MouseState::LPress: {
 		_isMouseLeftPress = true;
 		_lastMousePosition.x = event.x;
@@ -161,7 +158,7 @@ void CoronaCamera::pollEvent(const com::MouseEvent &event) {
 		break;
 	}
 	case com::MouseState::Wheel: {
-		auto radius = std::max(0.1f, getRadius() - event.offset_ * _mouseWheelSensitivity);
+		auto radius = std::max(0.1f, getRadius() - event._offset * _mouseWheelSensitivity);
 		setRadiuse(radius);
 		break;
 	}
@@ -256,11 +253,9 @@ void FirstPersonCamera::pollEvent(const com::MouseEvent &event) {
 	if (_lastMousePosition.x == -1 && _lastMousePosition.y == -1) 
 		_lastMousePosition = POINT(event.x, event.y);
 
-	if (event.state_ == com::MouseState::Move) {
+	if (event._state == com::MouseState::Move) {
 		float dx = static_cast<float>(event.x - _lastMousePosition.x) * _mouseMoveSensitivity;
 		float dy = static_cast<float>(event.y - _lastMousePosition.y) * _mouseMoveSensitivity;
-		if (dx != 0.f && dy != 0.f)
-			std::cerr << "dx: " << dx << ", dy: " << dy << std::endl;
 		setPitch(_pitch - dy);
 		setYaw(_yaw - dx);
 		_lastMousePosition = POINT(event.x, event.y);

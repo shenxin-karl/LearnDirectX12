@@ -1,8 +1,7 @@
 #include <iostream>
 #include <format>
-#include "window.h"
-#include <errhandlingapi.h>
 #include <cassert>
+#include "Window.h"
 #include "InputSystem.h"
 #include "Mouse.h"
 #include "GameTimer/GameTimer.h"
@@ -10,11 +9,11 @@
 namespace com {
 
 Window::Window(int width, int height, const std::string &title, InputSystem *pInputSystem)
-	: hwnd_(nullptr), width_(width), height_(height), title_(title)
-	, shouldClose_(false), result(-1), _pInputSystem(pInputSystem)
+	: _hwnd(nullptr), _width(width), _height(height), _title(title)
+	, _shouldClose(false), result(-1), _pInputSystem(pInputSystem)
 {
-	resizeCallback_ = [](int, int) {};
-	messageCallback_ = [](HWND, UINT, WPARAM, LPARAM) {};
+	_resizeCallback = [](int, int) {};
+	_messageCallback = [](HWND, UINT, WPARAM, LPARAM) {};
 
 	RECT wr;
 	wr.left = 100;
@@ -22,7 +21,7 @@ Window::Window(int width, int height, const std::string &title, InputSystem *pIn
 	wr.top = 100;
 	wr.bottom = wr.top + height;
 	AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, FALSE);
-	hwnd_ = CreateWindowEx(
+	_hwnd = CreateWindowEx(
 		0, WindowClass::getClassName(), title.c_str(),
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, CW_USEDEFAULT,
@@ -30,17 +29,17 @@ Window::Window(int width, int height, const std::string &title, InputSystem *pIn
 		nullptr, nullptr, WindowClass::getInstance(), this
 	);
 
-	assert(hwnd_ != nullptr && "hwnd is nullptr");
-	ShowWindow(hwnd_, SW_SHOWDEFAULT);
-	shouldClose_ = false;
+	assert(_hwnd != nullptr && "hwnd is nullptr");
+	ShowWindow(_hwnd, SW_SHOWDEFAULT);
+	_shouldClose = false;
 }
 
 bool Window::shouldClose() const {
-	return shouldClose_;
+	return _shouldClose;
 }
 
 void Window::setShouldClose(bool flag) {
-	shouldClose_ = flag;
+	_shouldClose = flag;
 }
 
 int Window::getReturnCode() const {
@@ -48,81 +47,75 @@ int Window::getReturnCode() const {
 }
 
 void Window::setMessageCallback(const std::function<void(HWND, UINT, WPARAM, LPARAM)> &callback) {
-	messageCallback_ = callback;
+	_messageCallback = callback;
 }
 
 void Window::setResizeCallback(const std::function<void(int x, int y)> &callback) {
-	resizeCallback_ = callback;
+	_resizeCallback = callback;
 }
 
 int Window::getWidth() const {
-	return width_;
+	return _width;
 }
 
 int Window::getHeight() const {
-	return height_;
+	return _height;
 }
 
 HWND Window::getHWND() const {
-	return hwnd_;
+	return _hwnd;
 }
 
 float Window::aspectRatio() const {
-	return float(width_) / float(height_);
+	return float(_width) / float(_height);
 }
 
 const std::string & Window::getTitle() const {
-	return title_;
+	return _title;
 }
 
 void Window::setShowTitle(const std::string &title) {
-	title_ = title;
+	_title = title;
 }
 
 bool Window::isPause() const {
-	return paused_;
+	return _paused;
 }
 
 void Window::beginTick(std::shared_ptr<GameTimer> pGameTimer) {
-	pGameTimer_ = pGameTimer;
+	_pGameTimer = pGameTimer;
 	MSG msg;
 	BOOL getResult = 0;
 	while (PeekMessage(&msg, nullptr, 0, 0, true)) {
 		if (msg.message == WM_QUIT) {
-			shouldClose_ = true;
+			_shouldClose = true;
 			result = static_cast<int>(msg.wParam);
 			return;
 		}
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
-	if (resizeDirty_) {
-		resizeDirty_ = false;
-		resizeCallback_(width_, height_);
-		_pInputSystem->mouse->updateWindowCenter();
+	if (_resizeDirty) {
+		_resizeDirty = false;
+		_resizeCallback(_width, _height);
+		_pInputSystem->pMouse->adjustCursorPosition();
 	}
 
-	if (!_pInputSystem->mouse->getShowCursor()) {
-		RECT rect;
-		POINT cursorPos;
-		GetWindowRect(_pInputSystem->window->getHWND(), &rect);
-		cursorPos.x = (rect.right + rect.left) / 2;
-		cursorPos.y = (rect.bottom + rect.top) / 2;
-		SetCursorPos(cursorPos.x, cursorPos.y);
-	}
+	if (!_pInputSystem->pMouse->getShowCursor())
+		_pInputSystem->pMouse->adjustCursorPosition();
 
 	if (pGameTimer->oneSecondTrigger()) {
 		std::stringstream sbuf;
-		sbuf << title_ << ' ';
+		sbuf << _title << ' ';
 		sbuf << "fps: " << pGameTimer->FPS() << ' ';
 		sbuf << "mspf: " << pGameTimer->mspf() << "ms";
 		auto title = sbuf.str();
-		SetWindowText(hwnd_, title.c_str());
+		SetWindowText(_hwnd, title.c_str());
 	}
 }
 
 Window::~Window() {
-	DestroyWindow(hwnd_);
+	DestroyWindow(_hwnd);
 }
 
 LRESULT CALLBACK Window::handleMsgSetup(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -150,16 +143,16 @@ LRESULT Window::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	case WM_CLOSE:
 	{
 		PostQuitMessage(1);		// set exit application code
-		shouldClose_ = true;
+		_shouldClose = true;
 		break;
 	}
 	case WM_PAINT:
 	{
 		RECT rect;
 		GetWindowRect(hwnd, &rect);
-		width_ = rect.right - rect.left;
-		height_ = rect.bottom - rect.top;
-		resizeDirty_ = true;
+		_width = rect.right - rect.left;
+		_height = rect.bottom - rect.top;
+		_resizeDirty = true;
 		break;
 	}
 	case WM_ACTIVATE:
@@ -172,13 +165,13 @@ LRESULT Window::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	}
 	case WM_ENTERSIZEMOVE:
 	{
-		resizing_ = true;
+		_resizing = true;
 		stop();
 		break;
 	}
 	case WM_EXITSIZEMOVE:
 	{
-		resizing_ = false;
+		_resizing = false;
 		start();
 		break;
 	}
@@ -190,51 +183,51 @@ LRESULT Window::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	}
 	case WM_SIZE:
 	{
-		width_ = LOWORD(lParam);
-		height_ = HIWORD(lParam);
+		_width = LOWORD(lParam);
+		_height = HIWORD(lParam);
 		if (wParam == SIZE_MINIMIZED) {
-			paused_ = true;
-			minimized_ = true;
-			maximized_ = false;
+			_paused = true;
+			_minimized = true;
+			_maximized = false;
 		} else if (wParam == SIZE_MAXIMIZED) {
-			paused_ = false;
-			minimized_ = false;
-			maximized_ = true;
-			resizeDirty_ = true;
+			_paused = false;
+			_minimized = false;
+			_maximized = true;
+			_resizeDirty = true;
 		} else if (wParam == SIZE_RESTORED) {		// restore for old state
-			if (minimized_) {
-				paused_ = false;
-				minimized_ = false;
-				resizeDirty_ = true; 
-			} else if (maximized_) {
-				paused_ = false;
-				maximized_ = false;
-				resizeDirty_ = true;
-			} else if (resizing_) {
+			if (_minimized) {
+				_paused = false;
+				_minimized = false;
+				_resizeDirty = true; 
+			} else if (_maximized) {
+				_paused = false;
+				_maximized = false;
+				_resizeDirty = true;
+			} else if (_resizing) {
 				break;
 			} else {
-				resizeDirty_ = true;
+				_resizeDirty = true;
 			}
 		}
 		break;
 	}
 	}
-	messageCallback_(hwnd, msg, wParam, lParam);
+	_messageCallback(hwnd, msg, wParam, lParam);
 	return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
 
 void Window::stop() {
-	paused_ = true;
-	if (pGameTimer_ != nullptr)
-		pGameTimer_->stop();
+	_paused = true;
+	if (_pGameTimer != nullptr)
+		_pGameTimer->stop();
 }
 
 
 void Window::start() {
-	paused_ = false;
-	if (pGameTimer_ != nullptr)
-		pGameTimer_->start();
+	_paused = false;
+	if (_pGameTimer != nullptr)
+		_pGameTimer->start();
 }
 
 Window::WindowClass::WindowClass() : hInstance_(GetModuleHandle(nullptr)) {
@@ -260,7 +253,7 @@ const char *Window::WindowClass::getClassName() {
 }
 
 HINSTANCE Window::WindowClass::getInstance() {
-	return singletonPtr_->hInstance_;
+	return _pSingleton->hInstance_;
 }
 
 }
