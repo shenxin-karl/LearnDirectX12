@@ -54,7 +54,7 @@ private:
 
 using ContextProxy = _ContextProxy<Context>;
 using CommandContextProxy = _ContextProxy<CommandContext>;
-using GraphicsContextProxy = _ContextProxy<GrahpicsContext>;
+using GraphicsContextProxy = _ContextProxy<GraphicsContext>;
 using ComputeContextProxy = _ContextProxy<ComputeContext>;
 using DirectContextProxy = _ContextProxy<DirectContext>;
 

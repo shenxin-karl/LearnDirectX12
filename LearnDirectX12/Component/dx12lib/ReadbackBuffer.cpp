@@ -1,14 +1,14 @@
-#include "ReadbackBuffer.h"
+#include "ReadBackBuffer.h"
 #include "ResourceStateTracker.h"
 #include "Device.h"
 
 namespace dx12lib {
 
-WRL::ComPtr<ID3D12Resource> ReadbackBuffer::getD3DResource() const {
+WRL::ComPtr<ID3D12Resource> ReadBackBuffer::getD3DResource() const {
 	return _pResource;
 }
 
-ReadbackBuffer::~ReadbackBuffer() {
+ReadBackBuffer::~ReadBackBuffer() {
 	if (_pMapped != nullptr) {
 		_pResource->Unmap(0, nullptr);
 		_pMapped = nullptr;
@@ -16,22 +16,22 @@ ReadbackBuffer::~ReadbackBuffer() {
 	ResourceStateTracker::removeGlobalResourceState(_pResource.Get());
 }
 
-bool ReadbackBuffer::isCompleted() const {
+bool ReadBackBuffer::isCompleted() const {
 	return _isCompleted;
 }
 
-bool ReadbackBuffer::isMapped() const {
+bool ReadBackBuffer::isMapped() const {
 	return _pMapped != nullptr;
 }
 
-const void *ReadbackBuffer::getMapped() const {
+const void *ReadBackBuffer::getMapped() const {
 	if (isCompleted() && _pMapped == nullptr) 
 		ThrowIfFailed(_pResource->Map(0, nullptr, &_pMapped));
 
 	return _pMapped;
 }
 
-ReadbackBuffer::ReadbackBuffer(std::weak_ptr<Device> pDevice, std::size_t sizeInByte) : _bufferSize(sizeInByte) {
+ReadBackBuffer::ReadBackBuffer(std::weak_ptr<Device> pDevice, std::size_t sizeInByte) : _bufferSize(sizeInByte) {
 	ThrowIfFailed(pDevice.lock()->getD3DDevice()->CreateCommittedResource(
 		RVPtr(CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK)),
 		D3D12_HEAP_FLAG_NONE,
@@ -40,11 +40,11 @@ ReadbackBuffer::ReadbackBuffer(std::weak_ptr<Device> pDevice, std::size_t sizeIn
 		nullptr,
 		IID_PPV_ARGS(&_pResource)
 	));
-	_resourceType = ResourceType::ReadbackBuffer;
+	_resourceType = ResourceType::ReadBackBuffer;
 	ResourceStateTracker::addGlobalResourceState(_pResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST);
 }
 
-void ReadbackBuffer::setCompleted(bool flag) {
+void ReadBackBuffer::setCompleted(bool flag) {
 	_isCompleted = flag;
 }
 

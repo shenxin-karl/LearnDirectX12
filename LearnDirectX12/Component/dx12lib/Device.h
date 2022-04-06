@@ -10,7 +10,7 @@ struct DeviceInitDesc {
 	DXGI_FORMAT depthStencilFormat = DXGI_FORMAT_UNKNOWN;
 };
 
-class Device : public std::enable_shared_from_this<Device> {
+class Device : public NonCopyable, public std::enable_shared_from_this<Device> {
 public:
 	Device(std::shared_ptr<Adapter> pAdapter);
 	Device(const Device &) = delete;
@@ -32,7 +32,7 @@ public:
 private:
 	WRL::ComPtr<ID3D12Device>            _pDevice;
 	std::shared_ptr<Adapter>             _pAdapter;
-	std::shared_ptr<CommandQueue>        _pCommandQueueList[kComandQueueTypeCount];
+	std::shared_ptr<CommandQueue>        _pCommandQueueList[kCommandQueueTypeCount];
 	std::unique_ptr<DescriptorAllocator> _pDescriptorAllocators[D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES];
 	DeviceInitDesc				         _initDesc;
 };

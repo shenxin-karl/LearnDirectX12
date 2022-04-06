@@ -68,22 +68,22 @@ enum AttachmentPoint : std::size_t {
 CommandQueueType toCommandQueueType(D3D12_COMMAND_LIST_TYPE type);
 
 enum class ResourceType {
-	Unknow					= 0,
-	VertexBuffer			= ((0x1) << 0),
-	IndexBuffer				= ((0x1) << 1),
-	ConstantBuffer			= ((0x1) << 2),
-	DepthStencilBuffer		= ((0x1) << 3),
-	RenderTargetBuffer		= ((0x1) << 4),
-	ShaderResourceBuffer	= ((0x1) << 5),
-	UnorderedAccessBuffer	= ((0x1) << 6),
-	ReadbackBuffer			= ((0x1) << 7),
-	StructuredBuffer			= ((0x1) << 8),
+	Unknown				  = ((0x0) << 0),
+	VertexBuffer		  = ((0x1) << 0),
+	IndexBuffer			  = ((0x1) << 1),
+	ConstantBuffer		  = ((0x1) << 2),
+	DepthStencilBuffer	  = ((0x1) << 3),
+	RenderTargetBuffer	  = ((0x1) << 4),
+	ShaderResourceBuffer  = ((0x1) << 5),
+	UnorderedAccessBuffer = ((0x1) << 6),
+	ReadBackBuffer		  = ((0x1) << 7),
+	StructuredBuffer	  = ((0x1) << 8),
 };
 
 ResourceType operator|(const ResourceType &lhs, const ResourceType &rhs);
 bool operator&(const ResourceType &lhs, const ResourceType &rhs);
 
-constexpr static std::size_t kComandQueueTypeCount = 3;
+constexpr static std::size_t kCommandQueueTypeCount = 3;
 constexpr static std::size_t kSwapChainBufferCount = 2;
 constexpr static std::size_t kFrameResourceCount = 3;
 constexpr static std::size_t kMaxDescriptorTables = 32;
@@ -118,17 +118,24 @@ class PSO;
 class GraphicsPSO;
 class ComputePSO;
 class CommandContext;
-class GrahpicsContext;
+class GraphicsContext;
 class ComputeContext;
 class StructuredBuffer;
 class UnorderedAccessBuffer;
-class ReadbackBuffer;
+class ReadBackBuffer;
 class DepthStencilBuffer;
 class RenderTargetBuffer;
 class ShaderResourceBuffer;
 class IShaderSourceResource;
 class IResource;
 
-#define SHADER_FILE_TO_STRING(name, path) EMBED_STR(name, path)
+struct NonCopyable {
+	NonCopyable() = default;
+	NonCopyable(NonCopyable &&) = default;
+	NonCopyable &operator=(NonCopyable &&) = default;
+	virtual ~NonCopyable() = default;
+	NonCopyable(const NonCopyable &) = delete;
+	NonCopyable &operator=(const NonCopyable &) = delete;
+};
 
 }

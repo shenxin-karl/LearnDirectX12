@@ -7,44 +7,29 @@
 namespace dx12lib {
 
 
-ConstantBuffer::ConstantBuffer(const ConstantBufferDesc &desc)
-: _frameIndex(desc.frameIndex)
+ConstantBuffer::ConstantBuffer(std::weak_ptr<Device> pDevice, const void *pData, std::size_t sizeInByte)
+: _bufferSize(sizeInByte)
 {
-	_bufferSize = desc.sizeInByte;
 	_pGPUBuffer = std::make_unique<UploadBuffer>(
-		desc.pDevice.lock()->getD3DDevice(),
-		desc.frameCount,
-		desc.sizeInByte,
+		pDevice.lock()->getD3DDevice(),
+		1,
+		_bufferSize,
 		true
 	);
 
-	auto bufferSizes = UploadBuffer::calcConstantBufferByteSize(desc.sizeInByte);
-	auto pShadedDevice = desc.pDevice.lock();
-	auto *pD3DDevice = pShadedDevice->getD3DDevice();
-	for (uint32 i = 0; i < desc.frameCount; ++i) {
-		// padding buffer data
-		auto *pMappedPtr = _pGPUBuffer->getMappedDataByIndex(i);
-		if (desc.pData == nullptr) {
-			std::memset(pMappedPtr, 0, bufferSizes);
-		} else {
-			std::memcpy(pMappedPtr, desc.pData, desc.sizeInByte);
-			pMappedPtr += desc.sizeInByte;
-			if (auto leftSize = (bufferSizes - desc.sizeInByte))
-				std::memset(pMappedPtr, 0, leftSize);
-		}
-
-		// create constant buffer view
-		auto CBV = pShadedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1);
-		D3D12_CONSTANT_BUFFER_VIEW_DESC constantBufferDesc = {
-			_pGPUBuffer->getGPUAddressByIndex(i),
-			bufferSizes,
-		};
-		pD3DDevice->CreateConstantBufferView(
-			&constantBufferDesc,
-			CBV.getCPUHandle()
-		);
-		_CBV.push_back(std::move(CBV));
+	if (pData != nullptr) {
+		auto *pMapped = _pGPUBuffer->getMappedDataByIndex(0);
+		std::memcpy(pMapped, pData, _bufferSize);
 	}
+
+	auto address = _pGPUBuffer->getGPUAddressByIndex(0);
+	auto pSharedDevice = pDevice.lock();
+	_CBV = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+	D3D12_CONSTANT_BUFFER_VIEW_DESC cbv;
+	cbv.BufferLocation = address;
+	cbv.SizeInBytes = UploadBuffer::calcConstantBufferByteSize(_bufferSize);
+	pSharedDevice->getD3DDevice()->CreateConstantBufferView(&cbv, _CBV.getCPUHandle());
 }
 
 void ConstantBuffer::updateConstantBuffer(const void *pData, uint32 sizeInByte, uint32 offset) {
@@ -55,11 +40,11 @@ void ConstantBuffer::updateConstantBuffer(const void *pData, uint32 sizeInByte, 
 }
 
 BYTE *ConstantBuffer::getMappedPtr() {
-	return _pGPUBuffer->getMappedDataByIndex(_frameIndex);
+	return _pGPUBuffer->getMappedDataByIndex(0);
 }
 
-BYTE *ConstantBuffer::getMappedPtr() const {
-	return _pGPUBuffer->getMappedDataByIndex(_frameIndex);
+const BYTE *ConstantBuffer::getMappedPtr() const {
+	return _pGPUBuffer->getMappedDataByIndex(0);
 }
 
 uint32 ConstantBuffer::getConstantBufferSize() const noexcept {
@@ -71,11 +56,7 @@ uint32 ConstantBuffer::getConstantAlignedBufferSize() const noexcept {
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE ConstantBuffer::getConstantBufferView() const {
-	return _CBV[_frameIndex].getCPUHandle();
-}
-
-uint32 ConstantBuffer::getFrameIndex() const {
-	return _frameIndex;
+	return _CBV.getCPUHandle();
 }
 
 }

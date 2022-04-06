@@ -57,7 +57,7 @@ public:
 /// ComputeContext api 
 	std::shared_ptr<StructuredBuffer> createStructedBuffer(const void *pData, std::size_t sizeInByte) override;
 	std::shared_ptr<UnorderedAccessBuffer> createUnorderedAccessBuffer(std::size_t width, std::size_t height, DXGI_FORMAT format) override;
-	std::shared_ptr<ReadbackBuffer> createReadbackBuffer(std::size_t sizeInByte) override;
+	std::shared_ptr<ReadBackBuffer> createReadbackBuffer(std::size_t sizeInByte) override;
 
 	void setComputePSO(std::shared_ptr<ComputePSO> pPipelineStateObject) override;
 	void setStructedBuffer(std::shared_ptr<StructuredBuffer> pStructedBuffer, uint32 rootIndex, uint32 offset) override;
@@ -65,11 +65,11 @@ public:
 	void setCompute32BitConstants(uint32 rootIndex, uint32 numConstants, const void *pData, uint32 destOffset) override;
 
 	void dispatch(size_t GroupCountX, size_t GroupCountY, size_t GroupCountZ) override;
-	void readback(std::shared_ptr<ReadbackBuffer> pReadbackBuffer) override;
+	void readback(std::shared_ptr<ReadBackBuffer> pReadbackBuffer) override;
 private:
 	friend class CommandQueue;
 	friend class FrameResourceItem;
-	using ReadbackBufferPool = std::vector<std::shared_ptr<ReadbackBuffer>>;
+	using ReadbackBufferPool = std::vector<std::shared_ptr<ReadBackBuffer>>;
 	void setGrahicsRootSignature(std::shared_ptr<RootSignature> pRootSignature);
 	void setComputeRootSignature(std::shared_ptr<RootSignature> pRootSignature);
 	void close();

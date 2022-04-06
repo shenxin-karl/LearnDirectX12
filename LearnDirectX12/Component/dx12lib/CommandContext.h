@@ -90,7 +90,7 @@ public:
 	}
 };
 
-class GrahpicsContext : public virtual CommandContext {
+class GraphicsContext : public virtual CommandContext {
 public:
 	virtual std::shared_ptr<VertexBuffer> createVertexBuffer(const void *pData, std::size_t sizeInByte, std::size_t stride) = 0;
 	virtual std::shared_ptr<IndexBuffer> createIndexBuffer(const void *pData, std::size_t sizeInByte, DXGI_FORMAT indexFormat) = 0;
@@ -121,7 +121,7 @@ class ComputeContext : public virtual CommandContext {
 public:
 	virtual std::shared_ptr<StructuredBuffer> createStructedBuffer(const void *pData, std::size_t sizeInByte) = 0;
 	virtual std::shared_ptr<UnorderedAccessBuffer> createUnorderedAccessBuffer(std::size_t width, std::size_t height, DXGI_FORMAT format) = 0;
-	virtual std::shared_ptr<ReadbackBuffer> createReadbackBuffer(std::size_t sizeInByte) = 0;
+	virtual std::shared_ptr<ReadBackBuffer> createReadbackBuffer(std::size_t sizeInByte) = 0;
 
 	virtual void setComputePSO(std::shared_ptr<ComputePSO> pPipelineStateObject) = 0;
 	virtual void setStructedBuffer(std::shared_ptr<StructuredBuffer> pStructedBuffer, uint32 rootIndex, uint32 offset = 0) = 0;
@@ -129,10 +129,10 @@ public:
 	virtual void setCompute32BitConstants(uint32 rootIndex, uint32 numConstants, const void *pData, uint32 destOffset = 0) = 0;
 
 	virtual void dispatch(size_t GroupCountX = 1, size_t GroupCountY = 1, size_t GroupCountZ = 1) = 0;
-	virtual void readback(std::shared_ptr<ReadbackBuffer> pReadbackBuffer) = 0;
+	virtual void readback(std::shared_ptr<ReadBackBuffer> pReadbackBuffer) = 0;
 };
 
-class DirectContext : public GrahpicsContext, public ComputeContext {
+class DirectContext : public GraphicsContext, public ComputeContext {
 };
 
 }

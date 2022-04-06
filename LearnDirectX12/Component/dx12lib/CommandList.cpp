@@ -15,7 +15,7 @@
 #include "RenderTargetBuffer.h"
 #include "DepthStencilBuffer.h"
 #include "ShaderResourceBuffer.h"
-#include "ReadbackBuffer.h"
+#include "ReadBackBuffer.h"
 #include "StructuredBuffer.h"
 #include "UnorderedAccessBuffer.h"
 #include <iostream>
@@ -426,7 +426,7 @@ std::shared_ptr<UnorderedAccessBuffer> CommandList::createUnorderedAccessBuffer(
 	);
 }
 
-std::shared_ptr<ReadbackBuffer> CommandList::createReadbackBuffer(std::size_t sizeInByte) {
+std::shared_ptr<ReadBackBuffer> CommandList::createReadbackBuffer(std::size_t sizeInByte) {
 	assert(sizeInByte > 0);
 	return std::make_shared<MakeReadbackBuffer>(
 		_pDevice,
@@ -488,7 +488,7 @@ void CommandList::dispatch(size_t GroupCountX, size_t GroupCountY, size_t GroupC
 	);
 }
 
-void CommandList::readback(std::shared_ptr<ReadbackBuffer> pReadbackBuffer) {
+void CommandList::readback(std::shared_ptr<ReadBackBuffer> pReadbackBuffer) {
 	_pReadbackBuffers.push_back(pReadbackBuffer);
 }
 

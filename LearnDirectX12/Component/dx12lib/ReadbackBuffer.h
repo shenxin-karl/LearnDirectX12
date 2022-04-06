@@ -5,16 +5,16 @@
 
 namespace dx12lib {
 
-class ReadbackBuffer : public IResource {
+class ReadBackBuffer : public IResource {
 public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
-	~ReadbackBuffer() override;
+	~ReadBackBuffer() override;
 	bool isCompleted() const;
 	bool isMapped() const override;
 	const void *getMapped() const;
 protected:
 	friend class CommandList;
-	ReadbackBuffer(std::weak_ptr<Device> pDevice, std::size_t sizeInByte);
+	ReadBackBuffer(std::weak_ptr<Device> pDevice, std::size_t sizeInByte);
 	void setCompleted(bool flag);
 private:
 	bool _isCompleted = false;
