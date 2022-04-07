@@ -5,7 +5,7 @@
 
 namespace dx12lib {
 
-class IResource {
+class IResource : public NonCopyable {
 public:
 	virtual WRL::ComPtr<ID3D12Resource> getD3DResource() const = 0;
 	virtual ~IResource() = default;
@@ -16,9 +16,6 @@ public:
 	virtual DXGI_FORMAT getFormat() const;
 	ResourceType getResourceType() const {  return _resourceType; }
 protected:
-	IResource() = default;
-	IResource(const IResource &) = delete;
-	IResource &operator=(const IResource &) = delete;
 	ResourceType _resourceType = ResourceType::Unknown;
 };
 
@@ -28,5 +25,10 @@ public:
 	virtual bool isShaderSample() const = 0;
 };
 
+class IConstantBuffer : public IResource {
+	virtual D3D12_CPU_DESCRIPTOR_HANDLE getConstantBufferView() const = 0;
+	virtual void updateConstantBuffer(const void *pData, uint32 sizeInByte, uint32 offset = 0) = 0;
+	virtual uint32 getConstantBufferSize() const noexcept = 0;
+};
 
 }

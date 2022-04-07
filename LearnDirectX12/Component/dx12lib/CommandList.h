@@ -92,6 +92,7 @@ private:
 		RootSignature *pRootSignature;
 		VertexBuffer  *pVertexBuffers[kVertexBufferSlotCount];
 		IResource     *pRTbuffers[AttachmentPoint::NumAttachmentPoints];
+		IResource     *pDepthStencil;
 		IndexBuffer   *pIndexBuffer;
 		RenderTarget  *pRenderTarget;
 		bool           isSetViewprot;

@@ -10,6 +10,7 @@ public:
 	UploadBuffer(UploadBuffer &&other) noexcept;
 	UploadBuffer &operator=(UploadBuffer &&other) noexcept;
 	void copyData(UINT elementIndex, const void *pData);
+	void copyData(UINT elementIndex, const void *pData, uint32 sizeInByte, uint32 offset);
 	D3D12_GPU_VIRTUAL_ADDRESS getGPUAddressByIndex(UINT elementIndex = 0) const;
 	BYTE *getMappedDataByIndex(UINT elementIndex = 0);
 	const BYTE *getMappedDataByIndex(UINT elementIndex = 0) const;

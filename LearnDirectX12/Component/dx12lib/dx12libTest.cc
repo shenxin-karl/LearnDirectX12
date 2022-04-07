@@ -26,7 +26,7 @@ struct Test {
 
 
 void testStructConstantBuffer(std::shared_ptr<Device> pDevice) {
-	auto pCmdQueue = pDevice->getCommandQueue(CommandQueueType::Direct);
+	auto pCmdQueue = pDevice->getCommandQueue();
 	auto pDirectCtx = pCmdQueue->createDirectContextProxy();
 	auto pGPUTest = pDirectCtx->createStructuredConstantBuffer<Test>({ 10, 'a', 1.f, 10.0 });
 	auto pMappedTest = pGPUTest->map();

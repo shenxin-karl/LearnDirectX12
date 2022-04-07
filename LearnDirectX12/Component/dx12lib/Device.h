@@ -27,12 +27,12 @@ public:
 	void releaseStaleDescriptor();
 	const DeviceInitDesc &getDesc() const;
 	std::shared_ptr<Adapter> getAdapter() const;
-	std::shared_ptr<CommandQueue> getCommandQueue(CommandQueueType type) const;
+	std::shared_ptr<CommandQueue> getCommandQueue() const;
 	ID3D12Device *getD3DDevice() const;
 private:
 	WRL::ComPtr<ID3D12Device>            _pDevice;
 	std::shared_ptr<Adapter>             _pAdapter;
-	std::shared_ptr<CommandQueue>        _pCommandQueueList[kCommandQueueTypeCount];
+	std::shared_ptr<CommandQueue>        _pCommandQueue;
 	std::unique_ptr<DescriptorAllocator> _pDescriptorAllocators[D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES];
 	DeviceInitDesc				         _initDesc;
 };

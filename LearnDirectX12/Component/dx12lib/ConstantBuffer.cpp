@@ -6,8 +6,7 @@
 
 namespace dx12lib {
 
-
-ConstantBuffer::ConstantBuffer(std::weak_ptr<Device> pDevice, const void *pData, std::size_t sizeInByte)
+ConstantBuffer::ConstantBuffer(std::weak_ptr<Device> pDevice, const void *pData, uint32 sizeInByte)
 : _bufferSize(sizeInByte)
 {
 	_pGPUBuffer = std::make_unique<UploadBuffer>(
@@ -32,6 +31,10 @@ ConstantBuffer::ConstantBuffer(std::weak_ptr<Device> pDevice, const void *pData,
 	pSharedDevice->getD3DDevice()->CreateConstantBufferView(&cbv, _CBV.getCPUHandle());
 }
 
+WRL::ComPtr<ID3D12Resource> ConstantBuffer::getD3DResource() const {
+	return _pGPUBuffer->getD3DResource();
+}
+
 void ConstantBuffer::updateConstantBuffer(const void *pData, uint32 sizeInByte, uint32 offset) {
 	assert((offset + sizeInByte) <= _bufferSize);
 	BYTE *pDest = getMappedPtr();
@@ -49,10 +52,6 @@ const BYTE *ConstantBuffer::getMappedPtr() const {
 
 uint32 ConstantBuffer::getConstantBufferSize() const noexcept {
 	return _bufferSize;
-}
-
-uint32 ConstantBuffer::getConstantAlignedBufferSize() const noexcept {
-	return _pGPUBuffer != nullptr ? _pGPUBuffer->getElementByteSize() : 0;
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE ConstantBuffer::getConstantBufferView() const {

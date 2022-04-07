@@ -122,7 +122,7 @@ void BasicTessellationApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTime
 }
 
 void BasicTessellationApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
-	auto pCmdQueue = _pDevice->getCommandQueue(dx12lib::CommandQueueType::Direct);
+	auto pCmdQueue = _pDevice->getCommandQueue();
 	auto pDirectCtx = pCmdQueue->createDirectContextProxy();
 	auto pRenderTarget = _pSwapChain->getRenderTarget();
 	pDirectCtx->setViewports(pRenderTarget->getViewport());

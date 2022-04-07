@@ -45,6 +45,13 @@ void UploadBuffer::copyData(UINT elementIndex, const void *pData) {
 	memcpy(pDest, pData, _elementByteSize);
 }
 
+void UploadBuffer::copyData(UINT elementIndex, const void* pData, uint32 sizeInByte, uint32 offset) {
+	assert(elementIndex < _elementCount);
+	assert((sizeInByte + offset) < _elementByteSize);
+	auto *pDest = _pMappedData + static_cast<std::ptrdiff_t>(elementIndex) * _elementByteSize;
+	memcpy(pDest + offset, pData, sizeInByte);
+}
+
 D3D12_GPU_VIRTUAL_ADDRESS UploadBuffer::getGPUAddressByIndex(UINT elementIndex /*= 0*/) const {
 	D3D12_GPU_VIRTUAL_ADDRESS address = _pUploadBuffer->GetGPUVirtualAddress();
 	address += UINT64(elementIndex) * _elementByteSize;

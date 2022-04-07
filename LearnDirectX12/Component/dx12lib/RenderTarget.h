@@ -39,7 +39,7 @@ public:
 	friend void swap(RenderTarget &lhs, RenderTarget &rhs) noexcept;
 private:
 	DX::XMUINT2 _size;
-	std::shared_ptr<RenderTargetBuffer> _pRenderTargetBuffers[DepthStencil];
+	std::shared_ptr<RenderTargetBuffer> _pRenderTargetBuffers[NumAttachmentPoints];
 	std::shared_ptr<DepthStencilBuffer> _pDepthStencilBuffer;
 };
 

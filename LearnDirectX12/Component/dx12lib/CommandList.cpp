@@ -82,17 +82,7 @@ std::weak_ptr<dx12lib::Device> CommandList::getDevice() const {
 /// ******************************************** CommandContext api ********************************************
 std::shared_ptr<ConstantBuffer>
 CommandList::createConstantBuffer(std::size_t sizeInByte, const void *pData) {
-	auto pSharedDevice = _pDevice.lock();
-	auto queueType = toCommandQueueType(_cmdListType);
-	auto *pFrameResourceQueue = pSharedDevice->getCommandQueue(queueType)->getFrameResourceQueue();
-	ConstantBufferDesc desc = {
-		_pDevice,
-		pFrameResourceQueue->getCurrentFrameResourceIndexRef(),
-		pFrameResourceQueue->getMaxFrameResourceCount(),
-		uint32(sizeInByte),
-		pData
-	};
-	return std::make_shared<MakeConstantBuffer>(desc);
+	return std::make_shared<MakeConstantBuffer>(_pDevice, pData, sizeInByte);
 }
 
 std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSTextureFromFile(const std::wstring &fileName) {
@@ -251,7 +241,7 @@ void CommandList::setRenderTarget(std::shared_ptr<RenderTarget> pRenderTarget) {
 	
 	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> renderTargetViews;
 	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> depthStencilViews;
-	for (std::size_t i = 0; i < AttachmentPoint::DepthStencil; ++i) {
+	for (std::size_t i = 0; i < AttachmentPoint::NumAttachmentPoints; ++i) {
 		auto pRenderTargetBuffer = pRenderTarget->getRenderTargetBuffer(AttachmentPoint(i));
 		if (pRenderTargetBuffer != nullptr)
 			renderTargetViews.emplace_back(pRenderTargetBuffer->getRenderTargetView());
@@ -609,12 +599,12 @@ bool CommandList::CommandListState::debugChechSet32BitConstants(uint32 rootIndex
 
 void CommandList::CommandListState::setRenderTarget(RenderTarget *pRenderTarget) {
 	this->pRenderTarget = pRenderTarget;
-	for (std::size_t i = 0; i < AttachmentPoint::DepthStencil; ++i) {
+	for (std::size_t i = 0; i < AttachmentPoint::NumAttachmentPoints; ++i) {
 		pRTbuffers[i] = nullptr;
 		if (auto pRenderTargetBuffer = pRenderTarget->getRenderTargetBuffer(static_cast<AttachmentPoint>(i)))
 			pRTbuffers[i] = pRenderTargetBuffer.get();
 	}
-	pRTbuffers[AttachmentPoint::DepthStencil] = pRenderTarget->getDepthStencilBuffer().get();
+	pDepthStencil = pRenderTarget->getDepthStencilBuffer().get();
 }
 
 }

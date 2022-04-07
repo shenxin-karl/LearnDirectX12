@@ -66,7 +66,7 @@ void BoxApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 }
 
 void BoxApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
-	auto pCmdQueue = _pDevice->getCommandQueue(dx12lib::CommandQueueType::Direct);
+	auto pCmdQueue = _pDevice->getCommandQueue();
 	auto pDirectProxy = pCmdQueue->createDirectContextProxy();
 	auto pRenderTarget = _pSwapChain->getRenderTarget();
 	pDirectProxy->setViewports(pRenderTarget->getViewport());

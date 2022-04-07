@@ -16,7 +16,7 @@ void RenderTarget::reset() {
 
 void RenderTarget::attachRenderTargetBuffer(AttachmentPoint point, std::shared_ptr<RenderTargetBuffer> pBuffer) {
 	assert(pBuffer != nullptr);
-	assert(point < DepthStencil);
+	assert(point < NumAttachmentPoints);
 	_pRenderTargetBuffers[point] = pBuffer;
 }
 
@@ -26,7 +26,7 @@ void RenderTarget::attachDepthStencilBuffer(std::shared_ptr<DepthStencilBuffer> 
 }
 
 std::shared_ptr<RenderTargetBuffer> RenderTarget::getRenderTargetBuffer(AttachmentPoint point) const {
-	assert(point >= Color0 && point < DepthStencil);
+	assert(point >= Color0 && point < NumAttachmentPoints);
 	return _pRenderTargetBuffers[point];
 }
 
@@ -95,7 +95,7 @@ void RenderTarget::transitionBarrier(CommandContextProxy pCmdProxy,
 	D3D12_RESOURCE_STATES state, 
 	UINT subresource /*= D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES */) 
 {
-	for (std::size_t i = 0; i < AttachmentPoint::DepthStencil; ++i) {
+	for (std::size_t i = 0; i < NumAttachmentPoints; ++i) {
 		auto pRenderTargetBuffer = getRenderTargetBuffer(static_cast<AttachmentPoint>(i));
 		if (pRenderTargetBuffer != nullptr) {
 			pCmdProxy->transitionBarrier(

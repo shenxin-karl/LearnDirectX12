@@ -41,12 +41,7 @@ void Device::initialize(const DeviceInitDesc &desc) {
 		));
 	}
 
-	auto pDirectQueue = std::make_shared<MakeCommandQueue>(weak_from_this(), D3D12_COMMAND_LIST_TYPE_DIRECT);
-	_pCommandQueueList[std::size_t(CommandQueueType::Direct)] = pDirectQueue;
-	auto pComputeQueue = std::make_shared<MakeCommandQueue>(weak_from_this(), D3D12_COMMAND_LIST_TYPE_COMPUTE);
-	_pCommandQueueList[std::size_t(CommandQueueType::Compute)] = pComputeQueue;
-	auto pCopyQueue = std::make_shared<MakeCommandQueue>(weak_from_this(), D3D12_COMMAND_LIST_TYPE_COMPUTE);
-	_pCommandQueueList[std::size_t(CommandQueueType::Copy)] = pCopyQueue;
+	_pCommandQueue = std::make_shared<MakeCommandQueue>(weak_from_this(), D3D12_COMMAND_LIST_TYPE_DIRECT);
 
 	for (std::size_t i = 0; i < D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES; ++i) {
 		_pDescriptorAllocators[i] = std::make_unique<MakeDescriptorAllocator>(
@@ -58,8 +53,7 @@ void Device::initialize(const DeviceInitDesc &desc) {
 }
 
 void Device::destory() {
-	for (auto &pCmdQueue : _pCommandQueueList)
-		pCmdQueue->flushCommandQueue();
+	_pCommandQueue->flushCommandQueue();
 }
 
 std::shared_ptr<SwapChain> Device::createSwapChain(HWND hwnd) const {
@@ -105,8 +99,8 @@ std::shared_ptr<Adapter> Device::getAdapter() const {
 	return _pAdapter;
 }
 
-std::shared_ptr<CommandQueue> Device::getCommandQueue(CommandQueueType type) const {
-	return _pCommandQueueList[static_cast<std::size_t>(type)];
+std::shared_ptr<CommandQueue> Device::getCommandQueue() const {
+	return _pCommandQueue;
 }
 
 ID3D12Device *Device::getD3DDevice() const {

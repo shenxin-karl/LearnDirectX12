@@ -44,14 +44,6 @@ using int32 = std::int32_t;
 using int64 = std::int64_t;
 using size_t = std::size_t;
 
-enum class CommandQueueType {
-	None = -1,
-	Direct,
-	Compute,
-	Copy,
-	NumType,
-};
-
 enum AttachmentPoint : std::size_t {
 	Color0,
 	Color1,
@@ -61,11 +53,8 @@ enum AttachmentPoint : std::size_t {
 	Color5,
 	Color6,
 	Color7,
-	DepthStencil,
 	NumAttachmentPoints,
 };
-
-CommandQueueType toCommandQueueType(D3D12_COMMAND_LIST_TYPE type);
 
 enum class ResourceType {
 	Unknown				  = ((0x0) << 0),
@@ -83,7 +72,6 @@ enum class ResourceType {
 ResourceType operator|(const ResourceType &lhs, const ResourceType &rhs);
 bool operator&(const ResourceType &lhs, const ResourceType &rhs);
 
-constexpr static std::size_t kCommandQueueTypeCount = 3;
 constexpr static std::size_t kSwapChainBufferCount = 2;
 constexpr static std::size_t kFrameResourceCount = 3;
 constexpr static std::size_t kMaxDescriptorTables = 32;
@@ -137,5 +125,7 @@ struct NonCopyable {
 	NonCopyable(const NonCopyable &) = delete;
 	NonCopyable &operator=(const NonCopyable &) = delete;
 };
+
+struct RawData;
 
 }
