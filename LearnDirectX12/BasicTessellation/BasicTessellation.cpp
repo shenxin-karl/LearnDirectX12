@@ -103,8 +103,8 @@ void BasicTessellationApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) 
 		pIndexBuffer
 	);
 
-	_pPassCB = pDirectCtx->createStructuredConstantBuffer<d3d::PassCBType>();
-	_pObjectCB = pDirectCtx->createStructuredConstantBuffer<float4x4>(MathHelper::identity4x4());
+	_pPassCB = pDirectCtx->createFRConstantBuffer<d3d::PassCBType>();
+	_pObjectCB = pDirectCtx->createFRConstantBuffer<float4x4>(MathHelper::identity4x4());
 }
 
 void BasicTessellationApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
@@ -112,8 +112,8 @@ void BasicTessellationApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTime
 		_pCamera->pollEvent(event);
 
 	_pCamera->update(pGameTimer);
-	_pCamera->updatePassCB(_pPassCB);
 	auto pPassCBuffer = _pPassCB->map();
+	_pCamera->updatePassCB(*pPassCBuffer);
 	pPassCBuffer->totalTime = pGameTimer->getTotalTime();
 	pPassCBuffer->deltaTime = pGameTimer->getDeltaTime();
 	auto pRenderTarget = _pSwapChain->getRenderTarget();;
@@ -125,8 +125,8 @@ void BasicTessellationApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pCmdQueue = _pDevice->getCommandQueue();
 	auto pDirectCtx = pCmdQueue->createDirectContextProxy();
 	auto pRenderTarget = _pSwapChain->getRenderTarget();
-	pDirectCtx->setViewports(pRenderTarget->getViewport());
-	pDirectCtx->setScissorRects(pRenderTarget->getScissiorRect());
+	pDirectCtx->setViewport(pRenderTarget->getViewport());
+	pDirectCtx->setScissorRect(pRenderTarget->getScissiorRect());
 	{
 		dx12lib::RenderTargetTransitionBarrier barrier = {
 			pDirectCtx,
@@ -138,11 +138,11 @@ void BasicTessellationApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		auto pRenderTargetBuffer = pRenderTarget->getRenderTargetBuffer(dx12lib::Color0);
 		auto pDepthStencilBuffer = pRenderTarget->getDepthStencilBuffer();
 		pDirectCtx->setRenderTarget(pRenderTarget);
-		pDirectCtx->clearColor(pRenderTargetBuffer, float4(DX::Colors::Black));
+		pDirectCtx->clearColor(pRenderTargetBuffer, float4(DirectX::Colors::Black));
 		pDirectCtx->clearDepthStencil(pDepthStencilBuffer, 1.f, 0);
 		pDirectCtx->setGraphicsPSO(_pTessellationPSO);
-		pDirectCtx->setStructuredConstantBuffer(_pObjectCB, CB_Object);
-		pDirectCtx->setStructuredConstantBuffer(_pPassCB, CB_Pass);
+		pDirectCtx->setConstantBuffer(_pObjectCB, CB_Object);
+		pDirectCtx->setConstantBuffer(_pPassCB, CB_Pass);
 		pDirectCtx->setVertexBuffer(_pQuadMesh->getVertexBuffer());
 		pDirectCtx->setIndexBuffer(_pQuadMesh->getIndexBuffer());
 		pDirectCtx->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST);

@@ -5,7 +5,6 @@
 #include "GameTimer/GameTimer.h"
 #include "BaseApp/BaseApp.h"
 #include "Math/MathHelper.h"
-#include "dx12lib/StructuredConstantBuffer.hpp"
 
 using namespace Math;
 
@@ -31,9 +30,9 @@ struct ObjectCB {
 };
 
 struct RenderItem {
-	std::shared_ptr<Mesh>    _pMesh;
+	std::shared_ptr<Mesh> _pMesh;
+	dx12lib::FRCBPtr<ObjectCB> _pObjectCB;
 	std::shared_ptr<dx12lib::ShaderResourceBuffer> _pAlbedo;
-	GPUStructuredCBPtr<ObjectCB> _pObjectCB;
 };
 
 enum ShapeRootParameType : UINT {
@@ -44,15 +43,14 @@ enum ShapeRootParameType : UINT {
 };
 
 
-
 class Shape : public com::BaseApp {
 public:
 	Shape();
-	virtual ~Shape() override;
-	virtual void onInitialize(dx12lib::DirectContextProxy pDirectCtx) override;
-	virtual void onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
-	virtual void onTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
-	virtual void onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int height) override;
+	~Shape() override;
+	void onInitialize(dx12lib::DirectContextProxy pDirectCtx) override;
+	void onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
+	void onTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
+	void onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int height) override;
 private:
 	void buildTexturePSO(dx12lib::DirectContextProxy pDirectCtx);
 	void buildColorPSO(dx12lib::DirectContextProxy pDirectCtx);
@@ -67,8 +65,8 @@ private:
 	void updatePassCB(std::shared_ptr<com::GameTimer> pGameTimer);
 private:
 	std::unique_ptr<d3d::CoronaCamera>  _pCamera;
-	GPUStructuredCBPtr<d3d::LightCBType>    _pGameLightsCB;
-	GPUStructuredCBPtr<d3d::PassCBType>     _pPassCB;
+	dx12lib::FRCBPtr<d3d::LightCBType>  _pGameLightsCB;
+	dx12lib::FRCBPtr<d3d::PassCBType>   _pPassCB;
 	std::unique_ptr<d3d::SobelFilter>	_pSobelFilter;
 	std::unordered_map<std::string, d3d::Material> _materials;
 	std::unordered_map<std::string, std::shared_ptr<Mesh>> _geometrys;

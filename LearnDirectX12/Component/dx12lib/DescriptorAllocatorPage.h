@@ -15,17 +15,17 @@ public:
 protected:
 	DescriptorAllocatorPage(std::weak_ptr<Device> pDevice, 
 		D3D12_DESCRIPTOR_HEAP_TYPE heapType, 
-		uint32 numDescriptorPreHeap
+		size_t numDescriptorPreHeap
 	);
 public:
 	D3D12_DESCRIPTOR_HEAP_TYPE getHeapType() const;
-	DescriptorAllocation allocate(uint32 numDescriptor);
-	uint32 getFreeHandle() const;
-	bool hasSpace(uint32 numDescriptor) const;
+	DescriptorAllocation allocate(size_t numDescriptor);
+	size_t getFreeHandle() const;
+	bool hasSpace(size_t numDescriptor) const;
 	void free(DescriptorAllocation &&allocation);
 	void releaseStaleDescriptors();
 private:
-	uint32 computeOffset(D3D12_CPU_DESCRIPTOR_HANDLE handle) const;
+	size_t computeOffset(D3D12_CPU_DESCRIPTOR_HANDLE handle) const;
 	void addNewBlock(std::size_t offset, std::size_t numDescriptor);
 	void freeBlock(std::size_t offset, std::size_t numDescriptor);
 private:
@@ -42,13 +42,13 @@ private:
 	};
 
 	struct StaleDescriptorInfo {
-		uint32 offset;
-		uint32 size;
+		size_t offset;
+		size_t size;
 	};
 private:
-	uint32                            _numFreeHandle;
-	uint32                            _numDescriptorInHeap;
-	uint32                            _descriptorHandleIncrementSize;
+	size_t                            _numFreeHandle;
+	size_t                            _numDescriptorInHeap;
+	size_t                            _descriptorHandleIncrementSize;
 	CD3DX12_CPU_DESCRIPTOR_HANDLE     _baseDescriptor;
 	mutable std::mutex                _allocationMutex;
 	std::weak_ptr<Device>             _pDevice;

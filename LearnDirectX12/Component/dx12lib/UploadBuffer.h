@@ -1,3 +1,4 @@
+#pragma once
 #include "dx12libStd.h"
 #include "IResource.h"
 
@@ -5,28 +6,27 @@ namespace dx12lib {
 
 class UploadBuffer : public IResource {
 public:
-	UploadBuffer(ID3D12Device *pDevice, UINT elementCount, UINT elementByteSize, bool isConstantBuffer);
-	UploadBuffer(const UploadBuffer &) = delete;
+	UploadBuffer(ID3D12Device *pDevice, size_t elementCount, size_t elementByteSize, bool isConstantBuffer);
 	UploadBuffer(UploadBuffer &&other) noexcept;
 	UploadBuffer &operator=(UploadBuffer &&other) noexcept;
-	void copyData(UINT elementIndex, const void *pData);
-	void copyData(UINT elementIndex, const void *pData, uint32 sizeInByte, uint32 offset);
-	D3D12_GPU_VIRTUAL_ADDRESS getGPUAddressByIndex(UINT elementIndex = 0) const;
-	BYTE *getMappedDataByIndex(UINT elementIndex = 0);
-	const BYTE *getMappedDataByIndex(UINT elementIndex = 0) const;
-	uint32 getElementByteSize() const noexcept;
-	uint32 getElementCount() const noexcept;
+	void copyData(size_t elementIndex, const void *pData);
+	void copyData(size_t elementIndex, const void *pData, size_t sizeInByte, size_t offset);
+	D3D12_GPU_VIRTUAL_ADDRESS getGPUAddressByIndex(size_t elementIndex = 0) const;
+	BYTE *getMappedDataByIndex(size_t elementIndex = 0);
+	const BYTE *getMappedDataByIndex(size_t elementIndex = 0) const;
+	size_t getElementByteSize() const noexcept;
+	size_t getElementCount() const noexcept;
 	virtual WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
-	~UploadBuffer();
-	static UINT calcConstantBufferByteSize(std::size_t size) noexcept;
+	~UploadBuffer() override;
+	static size_t calcConstantBufferByteSize(std::size_t size) noexcept;
 	friend void swap(UploadBuffer &lhs, UploadBuffer &rhs) noexcept;
 private:
 	UploadBuffer();
 	WRL::ComPtr<ID3D12Resource>  _pUploadBuffer;
 	BYTE  *_pMappedData;
-	UINT   _elementByteSize;
-	UINT   _elementCount;
 	bool   _isConstantBuffer;
+	size_t _elementByteSize;
+	size_t _elementCount;
 };
 
 }

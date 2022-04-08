@@ -79,6 +79,19 @@ constexpr static std::size_t kDynamicDescriptorPerHeap = 32;
 constexpr static std::size_t kDynamicDescriptorHeapCount = 2;
 constexpr static std::size_t kVertexBufferSlotCount = 16;
 
+class FrameIndexProxy {
+	static inline std::atomic_int32_t _frameIndex = 0;
+public:
+	static const std::atomic_int32_t &getConstantFrameIndexRef() noexcept {
+		return _frameIndex;
+	}
+private:
+	friend class FrameResourceQueue;
+	static void startNewFrame() noexcept {
+		_frameIndex = (_frameIndex + 1) % kFrameResourceCount;
+	}
+};
+
 struct DeviceInitDesc;
 
 class Adapter;

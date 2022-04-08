@@ -3,7 +3,6 @@
 #include "D3D/d3dutil.h"
 #include "D3D/ShaderCommon.h"
 #include "dx12lib/dx12libStd.h"
-#include "dx12lib/StructuredConstantBuffer.hpp"
 #include "Math/MathHelper.h"
 
 using namespace Math;
@@ -38,10 +37,10 @@ protected:
 	void buildGeometry(dx12lib::GraphicsContextProxy pGraphicsCtx);
 	void buildBezierPatchPSO();
 private:
-	std::unique_ptr<d3d::CoronaCamera>    _pCamara;
-	GPUStructuredCBPtr<d3d::PassCBType>   _pPassCB;
-	GPUStructuredCBPtr<d3d::LightCBType>  _pLightCB;
-	GPUStructuredCBPtr<CBObject>		  _pObjectCB;
-	std::unique_ptr<d3d::Mesh>			  _pQuadMesh;
+	std::unique_ptr<d3d::CoronaCamera> _pCamera;
+	dx12lib::FRCBPtr<CBObject>		   _pObjectCB;
+	dx12lib::FRCBPtr<d3d::PassCBType>  _pPassCB;
+	dx12lib::FRCBPtr<d3d::LightCBType> _pLightCB;
+	std::unique_ptr<d3d::Mesh>		   _pQuadMesh;
 	std::shared_ptr<dx12lib::GraphicsPSO> _pBezierPatchPSO;
 };

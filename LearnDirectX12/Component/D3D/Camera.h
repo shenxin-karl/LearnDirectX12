@@ -1,7 +1,6 @@
 #pragma once
 #include "Math/MathHelper.h"
 #include "D3D/d3dutil.h"
-#include "dx12lib/StructuredConstantBuffer.hpp"
 
 namespace com {
 
@@ -36,7 +35,6 @@ public:
 	virtual const float4x4 &getInvProj() const = 0;
 	virtual const float4x4 &getInvViewProj() const = 0;
 	virtual void update(std::shared_ptr<com::GameTimer> pGameTimer) = 0;
-	void updatePassCB(GPUStructuredCBPtr<d3d::PassCBType> pPassCB) const;
 	void updatePassCB(d3d::PassCBType &passCB) const;
 	void setFov(float fov);
 	void setAspect(float aspect);

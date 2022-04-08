@@ -26,7 +26,7 @@
 
 void WaterParame::init(const WaterParameDesc &desc) {
 	_length = desc.length;
-	_omega = DX::XM_2PI / desc.length;
+	_omega = DirectX::XM_2PI / desc.length;
 	_speed = desc.speed * _omega;
 	_amplitude = desc.amplitude;
 	_direction = normalize(float3(desc.direction.x, 0.f, desc.direction.z));
@@ -112,8 +112,8 @@ void LandAndWater::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pCmdQueue = _pDevice->getCommandQueue();
 	auto pDirectCtx = pCmdQueue->createDirectContextProxy();
 	auto pRenderTarget = _pSwapChain->getRenderTarget();
-	pDirectCtx->setViewports(pRenderTarget->getViewport());
-	pDirectCtx->setScissorRects(pRenderTarget->getScissiorRect());
+	pDirectCtx->setViewport(pRenderTarget->getViewport());
+	pDirectCtx->setScissorRect(pRenderTarget->getScissiorRect());
 	{
 		dx12lib::RenderTargetTransitionBarrier barrierGuard = {
 			pDirectCtx,
@@ -153,8 +153,8 @@ void LandAndWater::pollEvent() {
 }
 
 void LandAndWater::updateConstantBuffer(std::shared_ptr<com::GameTimer> pGameTimer) {
-	_pCamera->updatePassCB(_pPassCB);
 	auto pGPUPassCB = _pPassCB->map();
+	_pCamera->updatePassCB(*pGPUPassCB);
 	auto pRenderTarget = _pSwapChain->getRenderTarget();
 	pGPUPassCB->renderTargetSize = pRenderTarget->getInvRenderTargetSize();
 	pGPUPassCB->invRenderTargetSize = pRenderTarget->getInvRenderTargetSize();
@@ -167,16 +167,16 @@ void LandAndWater::renderWaterPass(dx12lib::DirectContextProxy pDirectCtx) {
 	std::string_view passName = "WaterPSO";
 	auto pPSO = _psoMap[passName.data()];
 	pDirectCtx->setGraphicsPSO(pPSO);
-	pDirectCtx->setStructuredConstantBuffer(_pPassCB, CBPass);
-	pDirectCtx->setStructuredConstantBuffer(_pLightCB, CBLight);
-	pDirectCtx->setStructuredConstantBuffer(_pWaterCB, CBWater);
+	pDirectCtx->setConstantBuffer(_pPassCB, CBPass);
+	pDirectCtx->setConstantBuffer(_pLightCB, CBLight);
+	pDirectCtx->setConstantBuffer(_pWaterCB, CBWater);
 	pDirectCtx->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	auto &renderItems = _renderItemMap[passName.data()];
 	for (auto &rItem : renderItems) {
 		pDirectCtx->setVertexBuffer(rItem._pMesh->getVertexBuffer());
 		pDirectCtx->setIndexBuffer(rItem._pMesh->getIndexBuffer());
-		pDirectCtx->setStructuredConstantBuffer(rItem._pConstantBuffer, CBObject);
+		pDirectCtx->setConstantBuffer(rItem._pConstantBuffer, CBObject);
 		rItem._pMesh->drawIndexdInstanced(pDirectCtx);
 	}
 }
@@ -187,14 +187,14 @@ void LandAndWater::drawOpaqueRenderItems(dx12lib::DirectContextProxy pDirectCtx,
 {
 	auto pPSO = _psoMap[passName.data()];
 	pDirectCtx->setGraphicsPSO(pPSO);
-	pDirectCtx->setStructuredConstantBuffer(_pPassCB, CBPass);
-	pDirectCtx->setStructuredConstantBuffer(_pLightCB, CBLight);
+	pDirectCtx->setConstantBuffer(_pPassCB, CBPass);
+	pDirectCtx->setConstantBuffer(_pLightCB, CBLight);
 	auto &renderItems = _renderItemMap[passName.data()];
 	pDirectCtx->setPrimitiveTopology(primitiveType);
 	for (auto &rItem : renderItems) {
 		pDirectCtx->setVertexBuffer(rItem._pMesh->getVertexBuffer());
 		pDirectCtx->setIndexBuffer(rItem._pMesh->getIndexBuffer());
-		pDirectCtx->setStructuredConstantBuffer(rItem._pConstantBuffer, CBObject);
+		pDirectCtx->setConstantBuffer(rItem._pConstantBuffer, CBObject);
 		pDirectCtx->setShaderResourceBuffer(rItem._pAlbedoMap, SRAlbedo);
 		rItem._pMesh->drawIndexdInstanced(pDirectCtx);
 	}
@@ -208,16 +208,17 @@ void LandAndWater::buildCamera() {
 		45.f,
 		0.1f,
 		500.f,
-		float(_width) / float(_height),
+		static_cast<float>(_width) / static_cast<float>(_height),
 	};
 	_pCamera = std::make_unique<d3d::FirstPersonCamera>(desc);
+	_pCamera->_cameraMoveSpeed = 10.f;
 	_pInputSystem->pMouse->setShowCursor(false);
 }
 
 void LandAndWater::buildConstantBuffer(dx12lib::DirectContextProxy pDirectCtx) {
-	_pPassCB = pDirectCtx->createStructuredConstantBuffer<d3d::PassCBType>();
-	_pLightCB = pDirectCtx->createStructuredConstantBuffer<d3d::LightCBType>();
-	_pWaterCB = pDirectCtx->createStructuredConstantBuffer<WaterCBType>();
+	_pPassCB = pDirectCtx->createFRConstantBuffer<d3d::PassCBType>();
+	_pLightCB = pDirectCtx->createFRConstantBuffer<d3d::LightCBType>();
+	_pWaterCB = pDirectCtx->createFRConstantBuffer<WaterCBType>();
 
 	// init pass fog constant buffer
 	auto pGPUPassCB = _pPassCB->map();
@@ -409,6 +410,8 @@ void LandAndWater::loadTextures(dx12lib::DirectContextProxy pGrahpicsCtx) {
 }
 
 void LandAndWater::buildMaterials() {
+	namespace DX = DirectX;
+
 	d3d::Material landMat = {
 		float4(DX::Colors::White),
 		1.0f,
@@ -437,6 +440,8 @@ void LandAndWater::buildMaterials() {
 }
 
 void LandAndWater::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
+	namespace DX = DirectX;
+
 	auto pBoxMesh = _geometryMap["boxGeo"];
 	auto boxMat = _materialMap["boxMat"];
 	CBObjectType boxOBjectCB;
@@ -447,23 +452,23 @@ void LandAndWater::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 	);
 	DX::XMStoreFloat4x4(&boxOBjectCB.world, boxWorldMat);
 	boxOBjectCB.normalMat = MathHelper::identity4x4();
-	boxOBjectCB.matTransfrom = MathHelper::identity4x4();
+	boxOBjectCB.matTransform = MathHelper::identity4x4();
 	RenderItem boxRItem;
 	boxRItem._pMesh = pBoxMesh;
-	boxRItem._pConstantBuffer = pDirectCtx->createStructuredConstantBuffer<CBObjectType>(boxOBjectCB);
+	boxRItem._pConstantBuffer = pDirectCtx->createFRConstantBuffer<CBObjectType>(boxOBjectCB);
 	boxRItem._pAlbedoMap = _textureMap["WireFence.dds"];
 
 	auto pLandMesh = _geometryMap["landGeo"];
 	auto landMat = _materialMap["landMat"];
 	CBObjectType landOBjectCB;
 	landOBjectCB.material = landMat;
-	auto landMatTransfrom = DX::XMMatrixScaling(5.f, 5.f, 1.f);
-	DX::XMStoreFloat4x4(&landOBjectCB.matTransfrom, landMatTransfrom);
+	auto landMatTransform = DX::XMMatrixScaling(5.f, 5.f, 1.f);
+	DX::XMStoreFloat4x4(&landOBjectCB.matTransform, landMatTransform);
 	landOBjectCB.world = MathHelper::identity4x4();
 	landOBjectCB.normalMat = MathHelper::identity4x4();
 	RenderItem landRItem;
 	landRItem._pMesh = pLandMesh;
-	landRItem._pConstantBuffer = pDirectCtx->createStructuredConstantBuffer<CBObjectType>(landOBjectCB);
+	landRItem._pConstantBuffer = pDirectCtx->createFRConstantBuffer<CBObjectType>(landOBjectCB);
 	landRItem._pAlbedoMap = _textureMap["grass.dds"];
 
 	auto pWaterMesh = _geometryMap["gridGeo"];
@@ -472,19 +477,19 @@ void LandAndWater::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 	waterOBjectCB.material = waterMat;
 	waterOBjectCB.world = MathHelper::identity4x4();
 	waterOBjectCB.normalMat = MathHelper::identity4x4();
-	waterOBjectCB.matTransfrom = MathHelper::identity4x4();
+	waterOBjectCB.matTransform = MathHelper::identity4x4();
 	RenderItem waterRItem;
 	waterRItem._pMesh = pWaterMesh;
-	waterRItem._pConstantBuffer = pDirectCtx->createStructuredConstantBuffer<CBObjectType>(waterOBjectCB);
+	waterRItem._pConstantBuffer = pDirectCtx->createFRConstantBuffer<CBObjectType>(waterOBjectCB);
 
 	RenderItem treeBillboards;
-	CBObjectType treeOBjectCB;
-	treeOBjectCB.material = _materialMap["TreeBillboardMat"];
-	treeOBjectCB.world = MathHelper::identity4x4();
-	treeOBjectCB.normalMat = MathHelper::identity4x4();
-	treeOBjectCB.matTransfrom = MathHelper::identity4x4();
+	CBObjectType treeObjectCB;
+	treeObjectCB.material = _materialMap["TreeBillboardMat"];
+	treeObjectCB.world = MathHelper::identity4x4();
+	treeObjectCB.normalMat = MathHelper::identity4x4();
+	treeObjectCB.matTransform = MathHelper::identity4x4();
 	treeBillboards._pMesh = _geometryMap["TreeBillboardGeo"];
-	treeBillboards._pConstantBuffer = pDirectCtx->createStructuredConstantBuffer<CBObjectType>(treeOBjectCB);
+	treeBillboards._pConstantBuffer = pDirectCtx->createFRConstantBuffer<CBObjectType>(treeObjectCB);
 	treeBillboards._pAlbedoMap = _textureMap["treeArray2.dds"];
 	_renderItemMap["ClipPSO"].push_back(boxRItem);
 	_renderItemMap["TexturePSO"].push_back(landRItem);

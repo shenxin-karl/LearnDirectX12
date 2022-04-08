@@ -70,8 +70,8 @@ void BoxApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pCmdQueue = _pDevice->getCommandQueue();
 	auto pDirectProxy = pCmdQueue->createDirectContextProxy();
 	auto pRenderTarget = _pSwapChain->getRenderTarget();
-	pDirectProxy->setViewports(pRenderTarget->getViewport());
-	pDirectProxy->setScissorRects(pRenderTarget->getScissiorRect());
+	pDirectProxy->setViewport(pRenderTarget->getViewport());
+	pDirectProxy->setScissorRect(pRenderTarget->getScissiorRect());
 	{
 		dx12lib::RenderTargetTransitionBarrier barrierGuard = {
 			pDirectProxy,
@@ -148,7 +148,7 @@ void BoxApp::renderBoxPass(dx12lib::DirectContextProxy pDirectContext) {
 	pDirectContext->setVertexBuffer(_pBoxMesh->_pVertexBuffer);
 	pDirectContext->setIndexBuffer(_pBoxMesh->_pIndexBuffer);
 	pDirectContext->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	pDirectContext->drawIndexdInstanced(
+	pDirectContext->drawIndexedInstanced(
 		_pBoxMesh->_pIndexBuffer->getIndexCount(),
 		1,
 		_pBoxMesh->_baseVertexLocation,

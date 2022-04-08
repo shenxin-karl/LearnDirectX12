@@ -1,6 +1,5 @@
 #pragma once
 #include "dx12lib/dx12libStd.h"
-#include "dx12lib/StructuredConstantBuffer.hpp"
 #include "dx12lib/ContextProxy.hpp"
 #include "BaseApp/BaseApp.h"
 #include "GameTimer/GameTimer.h"
@@ -36,7 +35,7 @@ struct ObjectCBType {
 
 struct RenderItem {
 	std::shared_ptr<d3d::Mesh> _pMesh;
-	GPUStructuredCBPtr<ObjectCBType> _pObjectCB;
+	dx12lib::FRCBPtr<ObjectCBType> _pObjectCB;
 	std::shared_ptr<dx12lib::ShaderResourceBuffer> _pAlbedoMap;
 	d3d::SubMesh _submesh;
 };
@@ -55,10 +54,10 @@ public:
 	MirrorApp();
 	~MirrorApp();
 public:
-	virtual void onInitialize(dx12lib::DirectContextProxy pDirectCtx) override;
-	virtual void onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
-	virtual void onTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
-	virtual void onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int height) override;
+	void onInitialize(dx12lib::DirectContextProxy pDirectCtx) override;
+	void onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
+	void onTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
+	void onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int height) override;
 private:
 	void drawRenderItems(dx12lib::DirectContextProxy pDirectCtx, RenderLayer layer);
 	void buildCamera();
@@ -71,9 +70,9 @@ private:
 private:
 	std::unique_ptr<d3d::FXAA>		   _pFXAAFilter;
 	std::unique_ptr<d3d::CoronaCamera> _pCamera;
-	GPUStructuredCBPtr<d3d::PassCBType>    _pPassCB;
-	GPUStructuredCBPtr<d3d::LightCBType>   _pLightCB;
-	GPUStructuredCBPtr<d3d::LightCBType>   _pReflectedLightCB;
+	dx12lib::FRCBPtr<d3d::PassCBType>  _pPassCB;
+	dx12lib::FRCBPtr<d3d::LightCBType> _pLightCB;
+	dx12lib::FRCBPtr<d3d::LightCBType> _pReflectedLightCB;
 	std::map<std::string, d3d::Material> _materialMap;
 	std::map<std::string, std::shared_ptr<d3d::Mesh>> _meshMap;
 	std::map<RenderLayer, std::shared_ptr<dx12lib::GraphicsPSO>> _psoMap;
@@ -81,5 +80,5 @@ private:
 	std::vector<RenderItem> _renderItems[RenderLayer::Count];
 
 	float3 _skullTranslation = { 0.0f, 1.0f, -5.0f };
-	GPUStructuredCBPtr<ObjectCBType> _pSkullObjectCB;
+	dx12lib::FRCBPtr<ObjectCBType> _pSkullObjectCB;
 };

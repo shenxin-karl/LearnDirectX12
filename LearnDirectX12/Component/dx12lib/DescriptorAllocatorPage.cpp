@@ -5,7 +5,7 @@ namespace dx12lib {
 
 DescriptorAllocatorPage::DescriptorAllocatorPage() 
 : _numFreeHandle(0), _numDescriptorInHeap(0), _descriptorHandleIncrementSize(0)
-, _heapType(D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES), _baseDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE(0)) {
+, _baseDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE(0)), _heapType(D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES) {
 }
 
 DescriptorAllocatorPage::DescriptorAllocatorPage(DescriptorAllocatorPage &&other) noexcept 
@@ -16,18 +16,14 @@ DescriptorAllocatorPage::DescriptorAllocatorPage(DescriptorAllocatorPage &&other
 
 DescriptorAllocatorPage::DescriptorAllocatorPage(std::weak_ptr<Device> pDevice, 
 	D3D12_DESCRIPTOR_HEAP_TYPE heapType, 
-	uint32 numDescriptorPreHeap) 
+	size_t numDescriptorPreHeap)
 : _pDevice(pDevice), _heapType(heapType)
 {
 	ID3D12Device *pD3DDevice = pDevice.lock()->getD3DDevice();
-	auto flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	//if (_heapType == D3D12_DESCRIPTOR_HEAP_TYPE_DSV || _heapType == D3D12_DESCRIPTOR_HEAP_TYPE_RTV)
-	//	flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc;
-	heapDesc.Flags = flags;
+	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	heapDesc.NodeMask = 0;
-	heapDesc.NumDescriptors = numDescriptorPreHeap;
+	heapDesc.NumDescriptors = static_cast<UINT>(numDescriptorPreHeap);
 	heapDesc.Type = _heapType;
 	ThrowIfFailed(pD3DDevice->CreateDescriptorHeap(
 		&heapDesc,
@@ -45,15 +41,15 @@ D3D12_DESCRIPTOR_HEAP_TYPE DescriptorAllocatorPage::getHeapType() const {
 	return _heapType;
 }
 
-uint32 DescriptorAllocatorPage::getFreeHandle() const {
+size_t DescriptorAllocatorPage::getFreeHandle() const {
 	return _numFreeHandle;
 }
 
-bool DescriptorAllocatorPage::hasSpace(uint32 numDescriptor) const {
+bool DescriptorAllocatorPage::hasSpace(size_t numDescriptor) const {
 	return numDescriptor <= _numFreeHandle;
 }
 
-DescriptorAllocation DescriptorAllocatorPage::allocate(uint32 numDescriptor) {
+DescriptorAllocation DescriptorAllocatorPage::allocate(size_t numDescriptor) {
 	std::lock_guard lock(_allocationMutex);
 	if (numDescriptor > _numFreeHandle)
 		return {};
@@ -64,9 +60,9 @@ DescriptorAllocation DescriptorAllocatorPage::allocate(uint32 numDescriptor) {
 		return {};
 
 	auto [size, offsetIt] = *iter;
-	UINT offset = static_cast<UINT>(offsetIt->first);
+	UINT offset = static_cast<INT>(offsetIt->first);
 	auto descriptor = _baseDescriptor;
-	descriptor.Offset(offset, _descriptorHandleIncrementSize);
+	descriptor.Offset(offset, static_cast<UINT>(_descriptorHandleIncrementSize));
 	DescriptorAllocation ret = {
 		static_cast<D3D12_CPU_DESCRIPTOR_HANDLE>(descriptor),
 		numDescriptor,
@@ -76,8 +72,8 @@ DescriptorAllocation DescriptorAllocatorPage::allocate(uint32 numDescriptor) {
 	
 	_freeListByOffset.erase(offset);
 	_freeListBySize.erase(iter);
-	uint32 newSize = static_cast<UINT>(size) - numDescriptor;
-	uint32 newOffset = offset + numDescriptor;
+	size_t newSize = static_cast<UINT>(size) - numDescriptor;
+	size_t newOffset = offset + numDescriptor;
 	_numFreeHandle -= numDescriptor;
 	if (newSize > 0)
 		addNewBlock(newOffset, newSize);
@@ -105,9 +101,9 @@ void DescriptorAllocatorPage::releaseStaleDescriptors() {
 	}
 }
 
-uint32 DescriptorAllocatorPage::computeOffset(D3D12_CPU_DESCRIPTOR_HANDLE handle) const {
+size_t DescriptorAllocatorPage::computeOffset(D3D12_CPU_DESCRIPTOR_HANDLE handle) const {
 	auto offset = (handle.ptr - _baseDescriptor.ptr) / _descriptorHandleIncrementSize;
-	return static_cast<uint32>(offset);
+	return static_cast<size_t>(offset);
 }
 
 void DescriptorAllocatorPage::addNewBlock(std::size_t offset, std::size_t numDescriptor) {

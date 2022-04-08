@@ -2,7 +2,6 @@
 #include "dx12lib/dx12libStd.h"
 #include "dx12lib/ContextProxy.hpp"
 #include "dx12lib/CommandContext.h"
-#include "dx12lib/StructuredConstantBuffer.hpp"
 #include "dx12lib/IResource.h"
 
 namespace d3d {
@@ -34,10 +33,10 @@ public:
 
 	std::shared_ptr<dx12lib::UnorderedAccessBuffer> getOuput() const;
 private:
-	void buildUnorderedAccessResouce(dx12lib::ComputeContextProxy pComputeContext);
+	void buildUnorderedAccessResource(dx12lib::ComputeContextProxy pComputeContext);
 	static void buildBlurPSO(std::weak_ptr<dx12lib::Device> pDevice);
 	static std::vector<float> calcGaussianWeights(int blurCount, float sigma);
-	static std::size_t getBlorRadiusBySigma(float sigma);
+	static std::size_t getBlurRadiusBySigma(float sigma);
 	void updateBlurConstantBuffer(dx12lib::ComputeContextProxy pComputeList, int blurCount, float sigma);
 
 	constexpr static std::size_t kMaxBlurCount = 5;

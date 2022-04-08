@@ -2,7 +2,6 @@
 #include <map>
 #include "BaseApp/BaseApp.h"
 #include "dx12lib/dx12libStd.h"
-#include "dx12lib/StructuredConstantBuffer.hpp"
 #include "Math/MathHelper.h"
 #include "D3D/ShaderCommon.h"
 #include "D3D/d3dutil.h"
@@ -69,13 +68,13 @@ public:
 struct CBObjectType {
 	float4x4          world;
 	float4x4          normalMat;
-	float4x4          matTransfrom;
+	float4x4          matTransform;
 	d3d::Material	  material;
 };
 
 struct RenderItem {
 	std::shared_ptr<d3d::Mesh> _pMesh;
-	GPUStructuredCBPtr<CBObjectType> _pConstantBuffer;
+	dx12lib::FRCBPtr<CBObjectType> _pConstantBuffer;
 	std::shared_ptr<dx12lib::ShaderResourceBuffer> _pAlbedoMap;
 };
 
@@ -84,10 +83,10 @@ public:
 	LandAndWater();
 	~LandAndWater();
 public:
-	virtual void onInitialize(dx12lib::DirectContextProxy pDirectCtx) override;
-	virtual void onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
-	virtual void onTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
-	virtual void onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int height) override;
+	void onInitialize(dx12lib::DirectContextProxy pDirectCtx) override;
+	void onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
+	void onTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
+	void onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int height) override;
 private:
 	void pollEvent();
 	void updateConstantBuffer(std::shared_ptr<com::GameTimer> pGameTimer);
@@ -110,9 +109,9 @@ private:
 	void buildRenderItems(dx12lib::DirectContextProxy pDirectCtx);
 private:
 	std::unique_ptr<d3d::BlurFilter> _pBlurFilter;
-	GPUStructuredCBPtr<d3d::PassCBType> _pPassCB;
-	GPUStructuredCBPtr<d3d::LightCBType> _pLightCB;
-	GPUStructuredCBPtr<WaterCBType> _pWaterCB;
+	dx12lib::FRCBPtr<WaterCBType> _pWaterCB;
+	dx12lib::FRCBPtr<d3d::PassCBType> _pPassCB;
+	dx12lib::FRCBPtr<d3d::LightCBType> _pLightCB;
 	std::unique_ptr<d3d::FirstPersonCamera> _pCamera;
 	std::map<std::string, d3d::Material> _materialMap;
 	std::map<std::string, std::shared_ptr<d3d::Mesh>> _geometryMap;

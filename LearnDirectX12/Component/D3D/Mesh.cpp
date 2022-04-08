@@ -26,7 +26,7 @@ void SubMesh::drawIndexdInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx,
 	std::uint32_t startInstanceLocation /*= 0 */) const 
 {
 	assert(bool(*this) && "this submesh invalid");
-	pGrahpicsCtx->drawIndexdInstanced(
+	pGrahpicsCtx->drawIndexedInstanced(
 		_count,
 		instanceCount,
 		_startIndexLocation,
@@ -86,7 +86,7 @@ void Mesh::drawIndexdInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx,
 		for (auto &submesh : *this)
 			submesh.drawIndexdInstanced(pGrahpicsCtx, instanceCount, startInstanceLocation);
 	} else {
-		pGrahpicsCtx->drawIndexdInstanced(
+		pGrahpicsCtx->drawIndexedInstanced(
 			_pIndexBuffer->getIndexCount(),
 			instanceCount, 0, 0, startInstanceLocation
 		);

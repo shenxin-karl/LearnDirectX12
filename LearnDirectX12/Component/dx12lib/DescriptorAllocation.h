@@ -16,14 +16,14 @@ public:
 	friend void swap(DescriptorAllocation &lhs, DescriptorAllocation &rhs) noexcept;
 protected:
 	DescriptorAllocation(D3D12_CPU_DESCRIPTOR_HANDLE handle,
-		uint32 numHandle,
-		uint32 handleSize,
+		size_t numHandle,
+		size_t handleSize,
 		std::shared_ptr<DescriptorAllocatorPage> pPage
 	);
 public:
-	uint32 getNumHandle() const noexcept;
-	uint32 getHandleSize() const noexcept;
-	D3D12_CPU_DESCRIPTOR_HANDLE getCPUHandle(uint32 offset = 0) const;
+	size_t getNumHandle() const noexcept;
+	size_t getHandleSize() const noexcept;
+	D3D12_CPU_DESCRIPTOR_HANDLE getCPUHandle(size_t offset = 0) const;
 	bool isNull() const noexcept;
 	bool isValid() const noexcept;
 	void free();
@@ -31,8 +31,8 @@ private:
 	friend class DescriptorAllocatorPage;
 	void reset() noexcept;
 private:
-	uint32 _numHandle;						 
-	uint32 _handleSize;						 
+	size_t _numHandle;
+	size_t _handleSize;
 	D3D12_CPU_DESCRIPTOR_HANDLE _baseHandle; 
 	std::shared_ptr<DescriptorAllocatorPage> _pPage; 
 };

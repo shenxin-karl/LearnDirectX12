@@ -23,7 +23,7 @@ DescriptorAllocation DescriptorAllocator::allocate(uint32 numDescriptor) {
 }
 
 std::shared_ptr<DescriptorAllocatorPage> DescriptorAllocator::createAllocatorPage() {
-	auto pPage = std::make_shared<MakeDescriptorAllocatorPage>(
+	auto pPage = std::make_shared<dx12libTool::MakeDescriptorAllocatorPage>(
 		_pDevice,
 		_heapType,
 		_numDescriptorPreHeap

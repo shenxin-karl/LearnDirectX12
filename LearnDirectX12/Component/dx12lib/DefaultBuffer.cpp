@@ -3,8 +3,7 @@
 
 namespace dx12lib {
 
-DefaultBuffer::DefaultBuffer(ID3D12Device *pDevice, ID3D12GraphicsCommandList *pCmdList, const void *pData, uint32 sizeInByte)
-{
+DefaultBuffer::DefaultBuffer(ID3D12Device *pDevice, ID3D12GraphicsCommandList *pCmdList, const void *pData, size_t sizeInByte) {
 	assert(pDevice != nullptr && "createDefaultBuffer pDevice is nullptr");
 	assert(pCmdList != nullptr && "createDefaultBuffer pCmdList is nullptr");
 
@@ -40,7 +39,15 @@ DefaultBuffer::DefaultBuffer(ID3D12Device *pDevice, ID3D12GraphicsCommandList *p
 		D3D12_RESOURCE_STATE_COPY_DEST
 	)));
 
-	UpdateSubresources(pCmdList, _pDefaultBuffer.Get(), _pUploader.Get(), 0, 0, 1, &subResourceData);
+	UpdateSubresources(pCmdList, 
+		_pDefaultBuffer.Get(), 
+		_pUploader.Get(),
+		0, 
+		0, 
+		1, 
+		&subResourceData
+	);
+
 	pCmdList->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
 		_pDefaultBuffer.Get(),
 		D3D12_RESOURCE_STATE_COPY_DEST,

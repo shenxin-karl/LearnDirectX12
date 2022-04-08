@@ -28,12 +28,13 @@ void BezierPatchApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 
 void BezierPatchApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	while (auto event = _pInputSystem->pMouse->getEvent())
-		_pCamara->pollEvent(event);
+		_pCamera->pollEvent(event);
 
-	_pCamara->update(pGameTimer);
-	_pCamara->updatePassCB(_pPassCB);
 	auto pRenderTarget = _pSwapChain->getRenderTarget();
 	auto pGPUPassCB = _pPassCB->map();
+
+	_pCamera->update(pGameTimer);
+	_pCamera->updatePassCB(*pGPUPassCB);
 	pGPUPassCB->renderTargetSize = pRenderTarget->getRenderTargetSize();
 	pGPUPassCB->invRenderTargetSize = pRenderTarget->getInvRenderTargetSize();
 	pGPUPassCB->deltaTime = pGameTimer->getDeltaTime();
@@ -50,17 +51,17 @@ void BezierPatchApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 
 	// begin draw
 	pDirectCtx->setRenderTarget(pRenderTarget);
-	pDirectCtx->setViewports(pRenderTarget->getViewport());
-	pDirectCtx->setScissorRects(pRenderTarget->getScissiorRect());
+	pDirectCtx->setViewport(pRenderTarget->getViewport());
+	pDirectCtx->setScissorRect(pRenderTarget->getScissiorRect());
 	pDirectCtx->transitionBarrier(pRenderTargetBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	pDirectCtx->clearColor(pRenderTargetBuffer, float4(DirectX::Colors::Black));
 	pDirectCtx->clearDepthStencil(pDepthStencilBuffer, 1.f, 0);
 
 	// draw bezier patch triangle
 	pDirectCtx->setGraphicsPSO(_pBezierPatchPSO);
-	pDirectCtx->setStructuredConstantBuffer(_pObjectCB, CB_Object);
-	pDirectCtx->setStructuredConstantBuffer(_pPassCB, CB_Pass);
-	pDirectCtx->setStructuredConstantBuffer(_pLightCB, CB_Light);
+	pDirectCtx->setConstantBuffer(_pObjectCB, CB_Object);
+	pDirectCtx->setConstantBuffer(_pPassCB, CB_Pass);
+	pDirectCtx->setConstantBuffer(_pLightCB, CB_Light);
 	pDirectCtx->setVertexBuffer(_pQuadMesh->getVertexBuffer());
 	pDirectCtx->setIndexBuffer(_pQuadMesh->getIndexBuffer());
 	pDirectCtx->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_16_CONTROL_POINT_PATCHLIST);
@@ -73,7 +74,7 @@ void BezierPatchApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 }
 
 void BezierPatchApp::onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int height) {
-	_pCamara->setAspect(float(width) / float(height));
+	_pCamera->setAspect(float(width) / float(height));
 }
 
 void BezierPatchApp::buildCamera() {
@@ -86,14 +87,14 @@ void BezierPatchApp::buildCamera() {
 		500.f,
 		float(_width) / float(_height),
 	};
-	_pCamara = std::make_unique<d3d::CoronaCamera>(cameraDesc);
-	_pCamara->_mouseWheelSensitivity = 3.f;
+	_pCamera = std::make_unique<d3d::CoronaCamera>(cameraDesc);
+	_pCamera->_mouseWheelSensitivity = 3.f;
 }
 
 void BezierPatchApp::buildConstantBuffer(dx12lib::CommandContextProxy pCmdCtx) {
-	_pPassCB = pCmdCtx->createStructuredConstantBuffer<d3d::PassCBType>();
-	_pLightCB = pCmdCtx->createStructuredConstantBuffer<d3d::LightCBType>();
-	_pObjectCB = pCmdCtx->createStructuredConstantBuffer<CBObject>();
+	_pPassCB = pCmdCtx->createFRConstantBuffer<d3d::PassCBType>();
+	_pLightCB = pCmdCtx->createFRConstantBuffer<d3d::LightCBType>();
+	_pObjectCB = pCmdCtx->createFRConstantBuffer<CBObject>();
 
 	auto pGPULightCB = _pLightCB->map();
 	pGPULightCB->ambientLight = float4(0.1f, 0.1f, 0.1f, 1.f);

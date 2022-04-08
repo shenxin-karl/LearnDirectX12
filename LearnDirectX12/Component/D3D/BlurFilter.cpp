@@ -21,7 +21,7 @@ BlurFilter::BlurFilter(dx12lib::ComputeContextProxy pComputeContext,
 	assert(format != DXGI_FORMAT_UNKNOWN);
 	assert(width > 0);
 	assert(height > 0);
-	buildUnorderedAccessResouce(pComputeContext);
+	buildUnorderedAccessResource(pComputeContext);
 	buildBlurPSO(pComputeContext->getDevice());
 }
 
@@ -29,7 +29,7 @@ void BlurFilter::onResize(dx12lib::ComputeContextProxy pComputeList, std::uint32
 	if (_width != width || _height != height) {
 		_width = width;
 		_height = height;
-		buildUnorderedAccessResouce(pComputeList);
+		buildUnorderedAccessResource(pComputeList);
 	}
 }
 
@@ -39,7 +39,7 @@ void BlurFilter::produceImpl(dx12lib::ComputeContextProxy pComputeList,
 	float sigma)
 {
 	auto weights = calcGaussianWeights(blurCount, sigma);
-	auto blurRadius = getBlorRadiusBySigma(sigma);
+	auto blurRadius = getBlurRadiusBySigma(sigma);
 	auto updateConstantBuffer = [&]() {
 		pComputeList->setCompute32BitConstants(CB_BlurParame, 1, &blurRadius);
 		pComputeList->setCompute32BitConstants(CB_BlurParame, 11, weights.data(), 1);
@@ -74,7 +74,7 @@ std::shared_ptr<dx12lib::UnorderedAccessBuffer> BlurFilter::getOuput() const {
 	return _pBlurMap1;
 }
 
-void BlurFilter::buildUnorderedAccessResouce(dx12lib::ComputeContextProxy pComputeContext) {
+void BlurFilter::buildUnorderedAccessResource(dx12lib::ComputeContextProxy pComputeContext) {
 	_pBlurMap0 = pComputeContext->createUnorderedAccessBuffer(_width, _height, _format);
 	_pBlurMap1 = pComputeContext->createUnorderedAccessBuffer(_width, _height, _format);
 }
@@ -143,7 +143,7 @@ std::vector<float> BlurFilter::calcGaussianWeights(int blurCount, float sigma) {
 	return weights;
 }
 
-std::size_t BlurFilter::getBlorRadiusBySigma(float sigma) {
+std::size_t BlurFilter::getBlurRadiusBySigma(float sigma) {
 	return std::min(static_cast<std::size_t>(std::ceil(2.f * sigma)), kMaxBlurRadius);
 }
 

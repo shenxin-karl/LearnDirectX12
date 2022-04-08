@@ -7,7 +7,7 @@ namespace dx12lib {
 class DefaultBuffer : public IResource {
 public:
 	DefaultBuffer() = default;
-	DefaultBuffer(ID3D12Device *pDevice, ID3D12GraphicsCommandList *pCmdList, const void *pData, uint32 sizeInByte);
+	DefaultBuffer(ID3D12Device *pDevice, ID3D12GraphicsCommandList *pCmdList, const void *pData, size_t sizeInByte);
 	DefaultBuffer(const DefaultBuffer &) = delete;
 	DefaultBuffer(DefaultBuffer &&other) noexcept;
 	DefaultBuffer &operator=(DefaultBuffer &&other) noexcept;

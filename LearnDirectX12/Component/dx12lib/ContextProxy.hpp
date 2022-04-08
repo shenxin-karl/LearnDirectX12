@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include "CommandList.h"
 #include "CommandContext.h"
 
 namespace dx12lib {

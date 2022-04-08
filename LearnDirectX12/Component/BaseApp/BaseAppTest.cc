@@ -22,8 +22,8 @@ void TestApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pCmdQueue = _pDevice->getCommandQueue();
 	auto pDirectCtx = pCmdQueue->createDirectContextProxy();
 	auto pRenderTarget = _pSwapChain->getRenderTarget();
-	pDirectCtx->setViewports(pRenderTarget->getViewport());
-	pDirectCtx->setScissorRects(pRenderTarget->getScissiorRect());
+	pDirectCtx->setViewport(pRenderTarget->getViewport());
+	pDirectCtx->setScissorRect(pRenderTarget->getScissiorRect());
 
 	{
 		dx12lib::RenderTargetTransitionBarrier barrierGuard = {

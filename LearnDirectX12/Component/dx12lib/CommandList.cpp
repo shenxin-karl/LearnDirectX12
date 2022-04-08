@@ -85,6 +85,16 @@ CommandList::createConstantBuffer(std::size_t sizeInByte, const void *pData) {
 	return std::make_shared<dx12libTool::MakeConstantBuffer>(_pDevice, pData, sizeInByte);
 }
 
+std::shared_ptr<StructuredBuffer> CommandList::createStructuredBuffer(const void *pData, std::size_t sizeInByte) {
+	assert(pData != nullptr && sizeInByte > 0);
+	return std::make_shared<dx12libTool::MakeStructedBuffer>(
+		_pDevice,
+		shared_from_this(),
+		pData,
+		sizeInByte
+	);
+}
+
 std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSTextureFromFile(const std::wstring &fileName) {
 	WRL::ComPtr<ID3D12Resource> pTexture;
 	WRL::ComPtr<ID3D12Resource> pUploadHeap;
@@ -121,7 +131,7 @@ std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSTextureFromMemory(co
 	);
 }
 
-void CommandList::setShaderResourceBufferImpl(std::shared_ptr<IShaderSourceResource> pTexture, uint32 rootIndex, uint32 offset) {
+void CommandList::setShaderResourceBufferImpl(std::shared_ptr<IShaderSourceResource> pTexture, size_t rootIndex, size_t offset) {
 	assert(pTexture != nullptr);
 	assert(_currentGPUState.pRootSignature != nullptr);
 	_pDynamicDescriptorHeaps[0]->stageDescriptors(
@@ -140,9 +150,18 @@ void CommandList::setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType,
 	}
 }
 
+void CommandList::setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuffer, size_t rootIndex, size_t offset) {
+	this->setConstantBufferImpl(
+		std::static_pointer_cast<IConstantBuffer>(pConstantBuffer),
+		rootIndex,
+		offset
+	);
+}
+
 void CommandList::setConstantBufferImpl(std::shared_ptr<IConstantBuffer> pConstantBuffer,
-	uint32 rootIndex,
-	uint32 offset) {
+                                        size_t rootIndex,
+                                        size_t offset)
+{
 	assert(pConstantBuffer != nullptr);
 	assert(_currentGPUState.pRootSignature != nullptr);
 	_pDynamicDescriptorHeaps[0]->stageDescriptors(
@@ -213,26 +232,14 @@ CommandList::createIndexBuffer(const void *pData, std::size_t sizeInByte, DXGI_F
 	);
 }
 
-void CommandList::setViewports(const D3D12_VIEWPORT &viewport) {
-	_currentGPUState.isSetViewprot = true;
+void CommandList::setViewport(const D3D12_VIEWPORT &viewport) {
+	_currentGPUState.isSetViewport = true;
 	_pCommandList->RSSetViewports(1, &viewport);
 }
 
-void CommandList::setViewprots(const std::vector<D3D12_VIEWPORT> &viewports) {
-	assert(!viewports.empty());
-	_currentGPUState.isSetViewprot = true;
-	_pCommandList->RSSetViewports(static_cast<UINT>(viewports.size()), viewports.data());
-}
-
-void CommandList::setScissorRects(const D3D12_RECT &rect) {
+void CommandList::setScissorRect(const D3D12_RECT &rect) {
 	_currentGPUState.isSetScissorRect = true;
 	_pCommandList->RSSetScissorRects(1, &rect);
-}
-
-void CommandList::setScissorRects(const std::vector<D3D12_RECT> &rects) {
-	assert(!rects.empty());
-	_currentGPUState.isSetScissorRect = true;
-	_pCommandList->RSSetScissorRects(static_cast<UINT>(rects.size()), rects.data());
 }
 
 void CommandList::setRenderTarget(std::shared_ptr<RenderTarget> pRenderTarget) {
@@ -284,7 +291,7 @@ void CommandList::setGraphicsPSO(std::shared_ptr<GraphicsPSO> pPipelineStateObje
 	assert(pPipelineStateObject != nullptr);
 	assert(!pPipelineStateObject->isDirty());
 	if (StateCMove(_currentGPUState.pPSO, pPipelineStateObject.get())) {
-		setGrahicsRootSignature(pPipelineStateObject->getRootSignature());
+		setGraphicsRootSignature(pPipelineStateObject->getRootSignature());
 		_pCommandList->SetPipelineState(pPipelineStateObject->getPipelineStateObject().Get());
 	}
 }
@@ -303,39 +310,50 @@ void CommandList::setStencilRef(UINT stencilRef) {
 	}
 }
 
-void CommandList::setGraphics32BitConstants(uint32 rootIndex, uint32 numConstants, const void *pData, uint32 destOffset) {
-	assert(_currentGPUState.debugChechSet32BitConstants(rootIndex, numConstants + destOffset));
-	_pCommandList->SetGraphicsRoot32BitConstants(rootIndex, numConstants, pData, destOffset);
+void CommandList::setGraphics32BitConstants(size_t rootIndex, size_t numConstants, const void *pData, size_t destOffset) {
+	assert(_currentGPUState.debugCheckSet32BitConstants(rootIndex, numConstants + destOffset));
+	_pCommandList->SetGraphicsRoot32BitConstants(
+		static_cast<UINT>(rootIndex),
+		static_cast<UINT>(numConstants), 
+		pData,
+		static_cast<UINT>(destOffset)
+	);
 }
 
 
-void CommandList::drawInstanced(uint32 vertCount, 
-	uint32 instanceCount, 
-	uint32 baseVertexLocation,
-	uint32 startInstanceLocation)
+void CommandList::drawInstanced(size_t vertCount,
+	size_t instanceCount,
+	size_t baseVertexLocation,
+	size_t startInstanceLocation)
 {
 	assert(_currentGPUState.debugCheckDraw());
 	flushResourceBarriers();
 	for (auto &pDynamicHeap : _pDynamicDescriptorHeaps)
 		pDynamicHeap->commitStagedDescriptorForDraw(shared_from_this());
-	_pCommandList->DrawInstanced(vertCount, instanceCount, baseVertexLocation, startInstanceLocation);
+	_pCommandList->DrawInstanced(
+		static_cast<UINT>(vertCount), 
+		static_cast<UINT>(instanceCount),
+		static_cast<UINT>(baseVertexLocation),
+		static_cast<UINT>(startInstanceLocation)
+	);
 }
 
-void CommandList::drawIndexdInstanced(uint32 indexCountPerInstance, 
-	uint32 instanceCount, 
-	uint32 startIndexLocation, 
-	uint32 baseVertexLocation, 
-	uint32 startInstanceLocation) 
+void CommandList::drawIndexedInstanced(size_t indexCountPerInstance,
+	size_t instanceCount,
+	size_t startIndexLocation,
+	size_t baseVertexLocation,
+	size_t startInstanceLocation)
 {
 	assert(_currentGPUState.debugCheckDrawIndex());
 	flushResourceBarriers();
 	for (auto &pDynamicHeap : _pDynamicDescriptorHeaps)
 		pDynamicHeap->commitStagedDescriptorForDraw(shared_from_this());
-	_pCommandList->DrawIndexedInstanced(indexCountPerInstance, 
-		instanceCount, 
-		startIndexLocation, 
-		baseVertexLocation,
-		startIndexLocation
+	_pCommandList->DrawIndexedInstanced(
+		static_cast<UINT>(indexCountPerInstance), 
+		static_cast<UINT>(instanceCount), 
+		static_cast<UINT>(startIndexLocation),
+		static_cast<UINT>(baseVertexLocation),
+		static_cast<UINT>(startIndexLocation)
 	);
 }
 
@@ -392,15 +410,6 @@ void CommandList::clearDepthStencil(std::shared_ptr<DepthStencilBuffer> pResourc
 
 
 /// ******************************************** ComputeContext api ********************************************
-std::shared_ptr<StructuredBuffer> CommandList::createStructedBuffer(const void *pData, std::size_t sizeInByte) {
-	assert(pData != nullptr && sizeInByte > 0);
-	return std::make_shared<dx12libTool::MakeStructedBuffer>(
-		_pDevice,
-		shared_from_this(),
-		pData,
-		sizeInByte
-	);
-}
 
 std::shared_ptr<UnorderedAccessBuffer> CommandList::createUnorderedAccessBuffer(std::size_t width,
 	std::size_t height,
@@ -416,7 +425,7 @@ std::shared_ptr<UnorderedAccessBuffer> CommandList::createUnorderedAccessBuffer(
 	);
 }
 
-std::shared_ptr<ReadBackBuffer> CommandList::createReadbackBuffer(std::size_t sizeInByte) {
+std::shared_ptr<ReadBackBuffer> CommandList::createReadBackBuffer(std::size_t sizeInByte) {
 	assert(sizeInByte > 0);
 	return std::make_shared<dx12libTool::MakeReadbackBuffer>(
 		_pDevice,
@@ -433,22 +442,10 @@ void CommandList::setComputePSO(std::shared_ptr<ComputePSO> pPipelineStateObject
 	}
 }
 
-void CommandList::setStructedBuffer(std::shared_ptr<StructuredBuffer> pStructedBuffer,
-	uint32 rootIndex,
-	uint32 offset /*= 0 */) {
-	assert(pStructedBuffer != nullptr);
-	assert(_currentGPUState.pRootSignature != nullptr);
-	_pDynamicDescriptorHeaps[0]->stageDescriptors(
-		rootIndex,
-		offset,
-		1,
-		pStructedBuffer->getStructedBufferView()
-	);
-}
-
 void CommandList::setUnorderedAccessBuffer(std::shared_ptr<UnorderedAccessBuffer> pBuffer,
-	uint32 rootIndex,
-	uint32 offset /*= 0 */) {
+	size_t rootIndex,
+	size_t offset)
+{
 	assert(pBuffer != nullptr);
 	assert(_currentGPUState.pRootSignature != nullptr);
 	_pDynamicDescriptorHeaps[0]->stageDescriptors(
@@ -459,9 +456,13 @@ void CommandList::setUnorderedAccessBuffer(std::shared_ptr<UnorderedAccessBuffer
 	);
 }
 
-void CommandList::setCompute32BitConstants(uint32 rootIndex, uint32 numConstants, const void *pData, uint32 destOffset) {
-	assert(_currentGPUState.debugChechSet32BitConstants(rootIndex, numConstants + destOffset));
-	_pCommandList->SetComputeRoot32BitConstants(rootIndex, numConstants, pData, destOffset);
+void CommandList::setCompute32BitConstants(size_t rootIndex, size_t numConstants, const void *pData, size_t destOffset) {
+	assert(_currentGPUState.debugCheckSet32BitConstants(rootIndex, numConstants + destOffset));
+	_pCommandList->SetComputeRoot32BitConstants(
+		static_cast<UINT>(rootIndex), 
+		static_cast<UINT>(numConstants),
+		pData, 
+		static_cast<UINT>(destOffset));
 }
 
 void CommandList::dispatch(size_t GroupCountX, size_t GroupCountY, size_t GroupCountZ) {
@@ -478,11 +479,11 @@ void CommandList::dispatch(size_t GroupCountX, size_t GroupCountY, size_t GroupC
 	);
 }
 
-void CommandList::readback(std::shared_ptr<ReadBackBuffer> pReadbackBuffer) {
-	_pReadbackBuffers.push_back(pReadbackBuffer);
+void CommandList::readBack(std::shared_ptr<ReadBackBuffer> pReadBackBuffer) {
+	_pReadBackBuffers.push_back(pReadBackBuffer);
 }
 
-void CommandList::setGrahicsRootSignature(std::shared_ptr<RootSignature> pRootSignature) {
+void CommandList::setGraphicsRootSignature(std::shared_ptr<RootSignature> pRootSignature) {
 	setRootSignature(pRootSignature, &ID3D12GraphicsCommandList::SetGraphicsRootSignature);
 }
 
@@ -510,9 +511,9 @@ void CommandList::reset() {
 	for (auto &pDynamicDescriptorHeap : _pDynamicDescriptorHeaps)
 		pDynamicDescriptorHeap->reset();
 
-	for (auto &pReadbackBuffer : _pReadbackBuffers)
-		pReadbackBuffer->setCompleted(true);
-	_pReadbackBuffers.clear();
+	for (auto &pReadBackBuffer : _pReadBackBuffers)
+		pReadBackBuffer->setCompleted(true);
+	_pReadBackBuffers.clear();
 }
 
 void CommandList::setRootSignature(std::shared_ptr<RootSignature> pRootSignature, 
@@ -552,7 +553,7 @@ bool CommandList::CommandListState::debugCheckDraw() const {
 	CheckState(dynamic_cast<GraphicsPSO *>(pPSO), "PipelineStateObject cast to GraphicsPSO failed!");
 	CheckState(pRootSignature != nullptr, "RootSignature not set");
 	CheckState(pRenderTarget != nullptr, "RenderTarget not set");
-	CheckState(isSetViewprot, "Viewprot not set");
+	CheckState(isSetViewport, "Viewprot not set");
 	CheckState(isSetScissorRect, "ScissorRect not set");
 	CheckState(checkVertexBuffer(), "No bound vertex buffer");
 	CheckState(checkTextures(), "No binding render textures");
@@ -585,7 +586,7 @@ bool CommandList::CommandListState::checkTextures() const {
 	return false;
 }
 
-bool CommandList::CommandListState::debugChechSet32BitConstants(uint32 rootIndex, uint32 numConstants) const {
+bool CommandList::CommandListState::debugCheckSet32BitConstants(size_t rootIndex, size_t numConstants) const {
 	if (pRootSignature == nullptr)
 		return false;
 	const auto &desc = pRootSignature->getRootSignatureDesc();
@@ -600,9 +601,9 @@ bool CommandList::CommandListState::debugChechSet32BitConstants(uint32 rootIndex
 void CommandList::CommandListState::setRenderTarget(RenderTarget *pRenderTarget) {
 	this->pRenderTarget = pRenderTarget;
 	for (std::size_t i = 0; i < AttachmentPoint::NumAttachmentPoints; ++i) {
-		pRTbuffers[i] = nullptr;
+		pRTBuffers[i] = nullptr;
 		if (auto pRenderTargetBuffer = pRenderTarget->getRenderTargetBuffer(static_cast<AttachmentPoint>(i)))
-			pRTbuffers[i] = pRenderTargetBuffer.get();
+			pRTBuffers[i] = pRenderTargetBuffer.get();
 	}
 	pDepthStencil = pRenderTarget->getDepthStencilBuffer().get();
 }

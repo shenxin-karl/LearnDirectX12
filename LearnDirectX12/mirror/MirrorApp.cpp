@@ -61,8 +61,8 @@ void MirrorApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	}
 
 	_pCamera->update(pGameTimer);
-	_pCamera->updatePassCB(_pPassCB);
 	auto pGPUPassCB = _pPassCB->map();
+	_pCamera->updatePassCB(*pGPUPassCB);
 	auto pRenderTarget = _pSwapChain->getRenderTarget();
 	pGPUPassCB->renderTargetSize = pRenderTarget->getRenderTargetSize();
 	pGPUPassCB->invRenderTargetSize = pRenderTarget->getInvRenderTargetSize();
@@ -79,8 +79,8 @@ void MirrorApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pCmdQueue = _pDevice->getCommandQueue();
 	auto pDirectCtx = pCmdQueue->createDirectContextProxy();
 	auto pRenderTarget = _pSwapChain->getRenderTarget();
-	pDirectCtx->setViewports(pRenderTarget->getViewport());
-	pDirectCtx->setScissorRects(pRenderTarget->getScissiorRect());
+	pDirectCtx->setViewport(pRenderTarget->getViewport());
+	pDirectCtx->setScissorRect(pRenderTarget->getScissiorRect());
 	{
 		dx12lib::RenderTargetTransitionBarrier barrierGuard = {
 			pDirectCtx,
@@ -90,45 +90,45 @@ void MirrorApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		};
 		auto pRenderTargetBuffer = pRenderTarget->getRenderTargetBuffer(dx12lib::Color0);
 		auto pDepthStencilBuffer = pRenderTarget->getDepthStencilBuffer();
-		pDirectCtx->clearColor(pRenderTargetBuffer, float4(DX::Colors::LightSkyBlue));
+		pDirectCtx->clearColor(pRenderTargetBuffer, float4(DirectX::Colors::LightSkyBlue));
 		pDirectCtx->clearDepthStencil(pDepthStencilBuffer, 1.f, 0);
 		pDirectCtx->setRenderTarget(pRenderTarget);
 
 		// draw opaque
 		auto pPSO = _psoMap[RenderLayer::Opaque];
 		pDirectCtx->setGraphicsPSO(pPSO);
-		pDirectCtx->setStructuredConstantBuffer(_pPassCB, CBPass);
-		pDirectCtx->setStructuredConstantBuffer(_pLightCB, CBLight);
+		pDirectCtx->setConstantBuffer(_pPassCB, CBPass);
+		pDirectCtx->setConstantBuffer(_pLightCB, CBLight);
 		drawRenderItems(pDirectCtx, RenderLayer::Opaque);
 
 		// mark stencil 
 		pPSO = _psoMap[RenderLayer::Mirrors];
 		pDirectCtx->setGraphicsPSO(pPSO);
-		pDirectCtx->setStructuredConstantBuffer(_pPassCB, CBPass);
-		pDirectCtx->setStructuredConstantBuffer(_pLightCB, CBLight);
+		pDirectCtx->setConstantBuffer(_pPassCB, CBPass);
+		pDirectCtx->setConstantBuffer(_pLightCB, CBLight);
 		pDirectCtx->setStencilRef(1);
 		drawRenderItems(pDirectCtx, RenderLayer::Mirrors);
 
 		// draw 
 		pPSO = _psoMap[RenderLayer::Reflected];
 		pDirectCtx->setGraphicsPSO(pPSO);
-		pDirectCtx->setStructuredConstantBuffer(_pPassCB, CBPass);
-		pDirectCtx->setStructuredConstantBuffer(_pReflectedLightCB, CBLight);
+		pDirectCtx->setConstantBuffer(_pPassCB, CBPass);
+		pDirectCtx->setConstantBuffer(_pReflectedLightCB, CBLight);
 		pDirectCtx->setStencilRef(1);
 		drawRenderItems(pDirectCtx, RenderLayer::Reflected);
 
 		// draw 
 		pPSO = _psoMap[RenderLayer::Transparent];
 		pDirectCtx->setGraphicsPSO(pPSO);
-		pDirectCtx->setStructuredConstantBuffer(_pPassCB, CBPass);
-		pDirectCtx->setStructuredConstantBuffer(_pLightCB, CBLight);
+		pDirectCtx->setConstantBuffer(_pPassCB, CBPass);
+		pDirectCtx->setConstantBuffer(_pLightCB, CBLight);
 		pDirectCtx->setStencilRef(0);
 		drawRenderItems(pDirectCtx, RenderLayer::Transparent);
 
 		pPSO = _psoMap[RenderLayer::Shadow];
 		pDirectCtx->setGraphicsPSO(pPSO);
-		pDirectCtx->setStructuredConstantBuffer(_pPassCB, CBPass);
-		pDirectCtx->setStructuredConstantBuffer(_pLightCB, CBLight);
+		pDirectCtx->setConstantBuffer(_pPassCB, CBPass);
+		pDirectCtx->setConstantBuffer(_pLightCB, CBLight);
 		pDirectCtx->setStencilRef(0);
 		drawRenderItems(pDirectCtx, RenderLayer::Shadow);
 
@@ -149,7 +149,7 @@ void MirrorApp::drawRenderItems(dx12lib::DirectContextProxy pDirectCtx, RenderLa
 	for (auto &rItem : _renderItems[layer]) {
 		pDirectCtx->setVertexBuffer(rItem._pMesh->getVertexBuffer());
 		pDirectCtx->setIndexBuffer(rItem._pMesh->getIndexBuffer());
-		pDirectCtx->setStructuredConstantBuffer(rItem._pObjectCB, CBObject);
+		pDirectCtx->setConstantBuffer(rItem._pObjectCB, CBObject);
 		pDirectCtx->setShaderResourceBuffer(rItem._pAlbedoMap, SRAlbedo);
 		rItem._submesh.drawIndexdInstanced(pDirectCtx);
 	}
@@ -170,9 +170,9 @@ void MirrorApp::buildCamera() {
 }
 
 void MirrorApp::buildConstantBuffers(dx12lib::DirectContextProxy pDirectCtx) {
-	_pPassCB = pDirectCtx->createStructuredConstantBuffer<d3d::PassCBType>();
-	_pLightCB = pDirectCtx->createStructuredConstantBuffer<d3d::LightCBType>();
-	_pReflectedLightCB = pDirectCtx->createStructuredConstantBuffer<d3d::LightCBType>();
+	_pPassCB = pDirectCtx->createFRConstantBuffer<d3d::PassCBType>();
+	_pLightCB = pDirectCtx->createFRConstantBuffer<d3d::LightCBType>();
+	_pReflectedLightCB = pDirectCtx->createFRConstantBuffer<d3d::LightCBType>();
 	auto pGPULightCB = _pLightCB->map();
 	float3 directionLight = float3(0, 1, -1);
 	pGPULightCB->ambientLight = float4(0.1f, 0.1f, 0.1f, 1.f);
@@ -201,6 +201,8 @@ void MirrorApp::loadTextures(dx12lib::DirectContextProxy pDirectCtx) {
 }
 
 void MirrorApp::buildMaterials() {
+	namespace DX = DirectX;
+
 	d3d::Material skullMat;
 	skullMat.diffuseAlbedo = float4(DX::Colors::White);
 	skullMat.roughness = 0.3f;
@@ -388,6 +390,8 @@ void MirrorApp::buildPSOs(dx12lib::DirectContextProxy pDirectCtx) {
 }
 
 void MirrorApp::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
+	namespace DX = DirectX;
+
 	RenderItem floorRItem;
 	ObjectCBType floorObjectCB;
 	auto pRoomGeo = _meshMap["roomGeo"];
@@ -395,7 +399,7 @@ void MirrorApp::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 	floorObjectCB.matNormal = Math::MathHelper::identity4x4();
 	floorObjectCB.material = _materialMap["floorMat"];
 	floorRItem._pMesh = pRoomGeo;
-	floorRItem._pObjectCB = pDirectCtx->createStructuredConstantBuffer<ObjectCBType>(floorObjectCB);
+	floorRItem._pObjectCB = pDirectCtx->createFRConstantBuffer<ObjectCBType>(floorObjectCB);
 	floorRItem._pAlbedoMap = _textureMap["checkboard.dds"];
 	floorRItem._submesh = pRoomGeo->getSubmesh("floor");
 	_renderItems[RenderLayer::Opaque].push_back(floorRItem);
@@ -407,7 +411,7 @@ void MirrorApp::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 	wallObjectCB.material = _materialMap["bricksMat"];
 	wallsRItem._pAlbedoMap = _textureMap["bricks3.dds"];
 	wallsRItem._pMesh = pRoomGeo;
-	wallsRItem._pObjectCB = pDirectCtx->createStructuredConstantBuffer<ObjectCBType>(wallObjectCB);
+	wallsRItem._pObjectCB = pDirectCtx->createFRConstantBuffer<ObjectCBType>(wallObjectCB);
 	wallsRItem._submesh = pRoomGeo->getSubmesh("wall");
 	_renderItems[RenderLayer::Opaque].push_back(wallsRItem);
 
@@ -423,7 +427,7 @@ void MirrorApp::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 	skullRItem._pMesh = _meshMap["skullGeo"];
 	skullRItem._submesh = skullRItem._pMesh->getSubmesh("skull");
 	skullRItem._pAlbedoMap = _textureMap["white1x1.dds"];
-	skullRItem._pObjectCB = pDirectCtx->createStructuredConstantBuffer<ObjectCBType>(skullObjectCB);
+	skullRItem._pObjectCB = pDirectCtx->createFRConstantBuffer<ObjectCBType>(skullObjectCB);
 	_pSkullObjectCB = skullRItem._pObjectCB;
 	_renderItems[RenderLayer::Opaque].push_back(skullRItem);
 
@@ -436,7 +440,7 @@ void MirrorApp::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 	auto det = DX::XMMatrixDeterminant(reflectSkullWorld);
 	DX::XMStoreFloat4x4(&reflectedSkullCB.matNormal, DX::XMMatrixTranspose(DX::XMMatrixInverse(&det, reflectSkullWorld)));
 	RenderItem reflectedSkullRItem = skullRItem;
-	reflectedSkullRItem._pObjectCB = pDirectCtx->createStructuredConstantBuffer<ObjectCBType>(reflectedSkullCB);
+	reflectedSkullRItem._pObjectCB = pDirectCtx->createFRConstantBuffer<ObjectCBType>(reflectedSkullCB);
 	_renderItems[RenderLayer::Reflected].push_back(reflectedSkullRItem);
 
 	RenderItem shadowedSkullRItem = skullRItem;
@@ -455,7 +459,7 @@ void MirrorApp::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 	);
 	XMStoreFloat4x4(&shadowSkullCB.matNormal, matZero);
 	shadowSkullCB.material = _materialMap["shadowMat"];
-	shadowedSkullRItem._pObjectCB = pDirectCtx->createStructuredConstantBuffer<ObjectCBType>(shadowSkullCB);
+	shadowedSkullRItem._pObjectCB = pDirectCtx->createFRConstantBuffer<ObjectCBType>(shadowSkullCB);
 	_renderItems[RenderLayer::Shadow].push_back(shadowedSkullRItem);
 
 	RenderItem mirrorRItem;
@@ -465,7 +469,7 @@ void MirrorApp::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 	mirrorObjectCB.matNormal = Math::MathHelper::identity4x4();
 	mirrorRItem._pAlbedoMap = _textureMap["ice.dds"];
 	mirrorRItem._pMesh = pRoomGeo;
-	mirrorRItem._pObjectCB = pDirectCtx->createStructuredConstantBuffer<ObjectCBType>(mirrorObjectCB);
+	mirrorRItem._pObjectCB = pDirectCtx->createFRConstantBuffer<ObjectCBType>(mirrorObjectCB);
 	mirrorRItem._submesh = pRoomGeo->getSubmesh("mirror");
 	_renderItems[RenderLayer::Mirrors].push_back(mirrorRItem);
 	_renderItems[RenderLayer::Transparent].push_back(mirrorRItem);
