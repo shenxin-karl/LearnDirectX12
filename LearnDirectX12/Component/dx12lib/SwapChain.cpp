@@ -15,9 +15,8 @@ SwapChain::SwapChain(std::weak_ptr<Device> pDevice,
 		HWND hwnd,
 		DXGI_FORMAT backBufferFormat,
 		DXGI_FORMAT depthStencilFormat)
-: _pDevice(pDevice), _renderTargetFormat(backBufferFormat)
-, _depthStendilFormat(depthStencilFormat), _hwnd(hwnd)
-, _currentBackBufferIndex(0), _width(0), _height(0)
+: _hwnd(hwnd), _width(0), _height(0), _renderTargetFormat(backBufferFormat)
+, _depthStendilFormat(depthStencilFormat), _currentBackBufferIndex(0), _pDevice(pDevice)
 {
 	RECT windowRect;
 	::GetClientRect(hwnd, &windowRect);

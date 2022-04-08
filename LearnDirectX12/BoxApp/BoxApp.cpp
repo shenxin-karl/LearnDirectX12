@@ -98,6 +98,10 @@ void BoxApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	pCmdQueue->signal(_pSwapChain);
 }
 
+void BoxApp::resize(int width, int height) {
+	_pCamera->setAspect(static_cast<float>(width) / static_cast<float>(height));
+}
+
 void BoxApp::pollEvent() {
 	while (auto event = _pInputSystem->pMouse->getEvent())
 		_pCamera->pollEvent(event);

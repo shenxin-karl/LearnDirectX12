@@ -30,9 +30,10 @@ class BoxApp : public com::BaseApp {
 public:
 	BoxApp();
 protected:
-	virtual void onInitialize(dx12lib::DirectContextProxy pDirectContext) override;
-	virtual void onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
-	virtual void onTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
+	void onInitialize(dx12lib::DirectContextProxy pDirectContext) override;
+	void onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
+	void onTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
+	void resize(int width, int height) override;
 private:
 	void pollEvent();
 	void buildBoxGeometry(dx12lib::DirectContextProxy pDirectContext);

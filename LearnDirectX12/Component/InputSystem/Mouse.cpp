@@ -6,7 +6,6 @@
 namespace com {
 
 Mouse::Mouse(InputSystem *pInputSystem) : _pInputSystem(pInputSystem) {
-	adjustCursorPosition();
 	GetCursorPos(&_lastCursorPos);
 	ScreenToClient(_pInputSystem->pWindow->getHWND(), &_lastCursorPos);
 }

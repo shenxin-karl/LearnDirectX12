@@ -98,7 +98,6 @@ void Window::beginTick(std::shared_ptr<GameTimer> pGameTimer) {
 	if (_resizeDirty) {
 		_resizeDirty = false;
 		_resizeCallback(_width, _height);
-		_pInputSystem->pMouse->adjustCursorPosition();
 	}
 
 	if (!_pInputSystem->pMouse->getShowCursor())
