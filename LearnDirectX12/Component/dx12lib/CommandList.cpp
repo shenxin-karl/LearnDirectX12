@@ -57,9 +57,9 @@ CommandList::CommandList(std::weak_ptr<FrameResourceItem> pFrameResourceItem) {
 		IID_PPV_ARGS(&_pCommandList)
 	));
 
-	_pResourceStateTracker = std::make_unique<MakeResourceStateTracker>();
+	_pResourceStateTracker = std::make_unique<dx12libTool::MakeResourceStateTracker>();
 	for (std::size_t i = 0; i < kDynamicDescriptorHeapCount; ++i) {
-		_pDynamicDescriptorHeaps[i] = std::make_unique<MakeDynamicDescriptorHeap>(
+		_pDynamicDescriptorHeaps[i] = std::make_unique<dx12libTool::MakeDynamicDescriptorHeap>(
 			_pDevice,
 			static_cast<D3D12_DESCRIPTOR_HEAP_TYPE>(i),
 			static_cast<uint32>(kDynamicDescriptorPerHeap)
@@ -82,7 +82,7 @@ std::weak_ptr<dx12lib::Device> CommandList::getDevice() const {
 /// ******************************************** CommandContext api ********************************************
 std::shared_ptr<ConstantBuffer>
 CommandList::createConstantBuffer(std::size_t sizeInByte, const void *pData) {
-	return std::make_shared<MakeConstantBuffer>(_pDevice, pData, sizeInByte);
+	return std::make_shared<dx12libTool::MakeConstantBuffer>(_pDevice, pData, sizeInByte);
 }
 
 std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSTextureFromFile(const std::wstring &fileName) {
@@ -95,7 +95,7 @@ std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSTextureFromFile(cons
 		pUploadHeap
 	);
 	assert(pTexture != nullptr && pUploadHeap != nullptr);
-	return std::make_shared<MakeShaderResourceBuffer>(_pDevice,
+	return std::make_shared<dx12libTool::MakeShaderResourceBuffer>(_pDevice,
 		pTexture,
 		pUploadHeap,
 		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
@@ -114,7 +114,7 @@ std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSTextureFromMemory(co
 		pUploadHeap
 	);
 	assert(pTexture != nullptr && pUploadHeap != nullptr);
-	return std::make_shared<MakeShaderResourceBuffer>(_pDevice,
+	return std::make_shared<dx12libTool::MakeShaderResourceBuffer>(_pDevice,
 		pTexture,
 		pUploadHeap,
 		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
@@ -140,7 +140,7 @@ void CommandList::setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType,
 	}
 }
 
-void CommandList::setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuffer,
+void CommandList::setConstantBufferImpl(std::shared_ptr<IConstantBuffer> pConstantBuffer,
 	uint32 rootIndex,
 	uint32 offset) {
 	assert(pConstantBuffer != nullptr);
@@ -195,7 +195,7 @@ void CommandList::flushResourceBarriers() {
 /// ******************************************** GraphicsContext api ********************************************
 std::shared_ptr<VertexBuffer>
 CommandList::createVertexBuffer(const void *pData, std::size_t sizeInByte, std::size_t stride) {
-	return std::make_shared<MakeVertexBuffer>(_pDevice,
+	return std::make_shared<dx12libTool::MakeVertexBuffer>(_pDevice,
 		shared_from_this(),
 		pData,
 		uint32(sizeInByte),
@@ -205,7 +205,7 @@ CommandList::createVertexBuffer(const void *pData, std::size_t sizeInByte, std::
 
 std::shared_ptr<IndexBuffer>
 CommandList::createIndexBuffer(const void *pData, std::size_t sizeInByte, DXGI_FORMAT indexFormat) {
-	return std::make_shared<MakeIndexBuffer>(_pDevice,
+	return std::make_shared<dx12libTool::MakeIndexBuffer>(_pDevice,
 		shared_from_this(),
 		pData,
 		uint32(sizeInByte),
@@ -394,7 +394,7 @@ void CommandList::clearDepthStencil(std::shared_ptr<DepthStencilBuffer> pResourc
 /// ******************************************** ComputeContext api ********************************************
 std::shared_ptr<StructuredBuffer> CommandList::createStructedBuffer(const void *pData, std::size_t sizeInByte) {
 	assert(pData != nullptr && sizeInByte > 0);
-	return std::make_shared<MakeStructedBuffer>(
+	return std::make_shared<dx12libTool::MakeStructedBuffer>(
 		_pDevice,
 		shared_from_this(),
 		pData,
@@ -408,7 +408,7 @@ std::shared_ptr<UnorderedAccessBuffer> CommandList::createUnorderedAccessBuffer(
 	assert(format != DXGI_FORMAT::DXGI_FORMAT_UNKNOWN);
 	assert(width > 0);
 	assert(height > 0);
-	return std::make_shared<MakeUnorderedAccessBuffer>(
+	return std::make_shared<dx12libTool::MakeUnorderedAccessBuffer>(
 		_pDevice,
 		width,
 		height,
@@ -418,7 +418,7 @@ std::shared_ptr<UnorderedAccessBuffer> CommandList::createUnorderedAccessBuffer(
 
 std::shared_ptr<ReadBackBuffer> CommandList::createReadbackBuffer(std::size_t sizeInByte) {
 	assert(sizeInByte > 0);
-	return std::make_shared<MakeReadbackBuffer>(
+	return std::make_shared<dx12libTool::MakeReadbackBuffer>(
 		_pDevice,
 		sizeInByte
 	);

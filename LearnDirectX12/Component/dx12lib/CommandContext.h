@@ -1,9 +1,12 @@
 #pragma once
 #include <memory>
+#include "CommandQueue.h"
 #include "dx12libStd.h"
 #include "StructuredConstantBuffer.hpp"
 #include "IResource.h"
 #include "Math/MathHelper.h"
+#include "MakeObejctTool.hpp"
+#include "FRConstantBuffer.hpp"
 
 namespace dx12lib {
 
@@ -26,8 +29,8 @@ public:
 	virtual void setShaderResourceBufferImpl(std::shared_ptr<IShaderSourceResource> pTexture, uint32 rootIndex, uint32 offset) = 0;
 
 	virtual	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) = 0;
-	virtual void setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuffer, uint32 rootIndex, uint32 offset = 0) = 0;
 
+	virtual void setConstantBufferImpl(std::shared_ptr<IConstantBuffer> pConstantBuffer, uint32 rootIndex, uint32 offset) = 0;
 	virtual void copyResourceImpl(std::shared_ptr<IResource> pDest, std::shared_ptr<IResource> pSrc) = 0;
 	virtual void transitionBarrierImpl(std::shared_ptr<IResource> pBuffer, D3D12_RESOURCE_STATES state, UINT subResource, bool flushBarrier) = 0;
 	virtual void aliasBarrierImpl(std::shared_ptr<IResource> pBeforce, std::shared_ptr<IResource> pAfter, bool flushBarrier) = 0;
@@ -69,24 +72,35 @@ public:
 		);
 	}
 
-	template<StructuredConstantBufferConcept T>
-	std::shared_ptr<StructuredConstantBuffer<T>> createStructuredConstantBuffer(const T *pData = nullptr) {
-		std::shared_ptr<ConstantBuffer> pConstantBuffer = createConstantBuffer(sizeof(T), nullptr);
-		return std::make_shared<StructuredConstantBuffer<T>>(pData, pConstantBuffer);
-	}
-
-	template<StructuredConstantBufferConcept T>
-	std::shared_ptr<StructuredConstantBuffer<T>> createStructuredConstantBuffer(const T &buff) {
-		return this->template createStructuredConstantBuffer<T>(&buff);
+	template<typename T>
+	std::shared_ptr<FRConstantBuffer<T>> createFRConstantBuffer(const T &data) {
+		return this->createFRConstantBuffer(&data);
 	}
 
 	template<typename T>
-	void setStructuredConstantBuffer(std::shared_ptr<StructuredConstantBuffer<T>> pStructConstantBuffer,
-		uint32 rootIndex,
-		uint32 offset = 0) {
-		assert(pStructConstantBuffer != nullptr);
-		pStructConstantBuffer->updateConstantBuffer();
-		setConstantBuffer(pStructConstantBuffer->getConstantBuffer(), rootIndex, offset);
+	std::shared_ptr<FRConstantBuffer<T>> createFRConstantBuffer(const T *pData = nullptr) {
+		auto pDevice = getDevice();
+		auto pSharedDevice = pDevice.lock();
+		auto &frameIndex = pSharedDevice->getCommandQueue()->getFrameResourceQueue()
+											->getCurrentFrameResourceIndexRef();
+		return std::make_shared<dx12libTool::MakeFRConstantBuffer<T>>(pDevice, frameIndex);
+	}
+
+	template<typename T>
+	void setConstantBuffer(std::shared_ptr<FRConstantBuffer<T>> pConstantBuffer, uint32 rootIndex, uint32 offset = 0) {
+		this->setConstantBufferImpl(
+			std::static_pointer_cast<IConstantBuffer>(pConstantBuffer),
+			rootIndex,
+			offset
+		);
+	}
+
+	void setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuffer, uint32 rootIndex, uint32 offset = 0) {
+		this->setConstantBufferImpl(
+			std::static_pointer_cast<IConstantBuffer>(pConstantBuffer),
+			rootIndex,
+			offset
+		);
 	}
 };
 

@@ -179,7 +179,7 @@ void GraphicsPSO::finalize() {
 }
 
 std::shared_ptr<PSO> GraphicsPSO::clone(const std::string &name) {
-	auto pRes = std::make_shared<MakeGraphicsPSO>(_pDevice, name);
+	auto pRes = std::make_shared<dx12libTool::MakeGraphicsPSO>(_pDevice, name);
 	pRes->_dirty = this->_dirty;
 	pRes->_pPSO = this->_pPSO;
 	pRes->_psoDesc = this->_psoDesc;
@@ -235,7 +235,7 @@ void ComputePSO::setComputeShader(WRL::ComPtr<ID3DBlob> pBytecode) {
 }
 
 std::shared_ptr<PSO> ComputePSO::clone(const std::string &name) {
-	auto pRes = std::make_shared<MakeComputePSO>(_pDevice, name);
+	auto pRes = std::make_shared<dx12libTool::MakeComputePSO>(_pDevice, name);
 	pRes->_psoDesc = _psoDesc;
 	pRes->_pCSShaderBytecode = _pCSShaderBytecode;
 	return pRes;

@@ -26,7 +26,9 @@ public:
 };
 
 class IConstantBuffer : public IResource {
-	virtual D3D12_CPU_DESCRIPTOR_HANDLE getConstantBufferView() const = 0;
+public:
+	// todo 这里引入一个参数 frameIndex 表示当前第几帧, 为 FRConstantBuffer 使用
+ 	virtual D3D12_CPU_DESCRIPTOR_HANDLE getConstantBufferView() const = 0;
 	virtual void updateConstantBuffer(const void *pData, uint32 sizeInByte, uint32 offset = 0) = 0;
 	virtual uint32 getConstantBufferSize() const noexcept = 0;
 };

@@ -12,6 +12,7 @@
 #include "D3D/d3dutil.h"
 #include "Math/MathHelper.h"
 #include "InputSystem/mouse.h"
+#include "dx12lib/FRConstantBuffer.hpp"
 
 BoxApp::BoxApp() {
 	_title = "BoxApp";
@@ -28,7 +29,7 @@ void BoxApp::onInitialize(dx12lib::DirectContextProxy pDirectContext) {
 	cameraDesc.aspect = float(_width) / float(_height);
 
 	_pCamera = std::make_unique<d3d::CoronaCamera>(cameraDesc);
-	_pMVPConstantBuffer = pDirectContext->createStructuredConstantBuffer<WVMConstantBuffer>();
+	_pMVPConstantBuffer = pDirectContext->createFRConstantBuffer<WVMConstantBuffer>();
 
 	// initialize root signature
 	dx12lib::RootParameter rootParame0;
@@ -143,7 +144,7 @@ void BoxApp::buildBoxGeometry(dx12lib::DirectContextProxy pDirectContext) {
 
 void BoxApp::renderBoxPass(dx12lib::DirectContextProxy pDirectContext) {
 	pDirectContext->setGraphicsPSO(_pGraphicsPSO);
-	pDirectContext->setStructuredConstantBuffer(_pMVPConstantBuffer, WorldViewProjCBuffer, 0);
+	pDirectContext->setConstantBuffer(_pMVPConstantBuffer, WorldViewProjCBuffer, 0);
 	pDirectContext->setVertexBuffer(_pBoxMesh->_pVertexBuffer);
 	pDirectContext->setIndexBuffer(_pBoxMesh->_pIndexBuffer);
 	pDirectContext->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

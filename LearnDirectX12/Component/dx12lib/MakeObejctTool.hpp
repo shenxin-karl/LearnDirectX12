@@ -2,7 +2,9 @@
 #include "dx12libStd.h"
 #include <type_traits>
 
-namespace dx12lib {
+namespace dx12libTool {
+
+using namespace dx12lib;
 
 template<typename T>
 class _MakeObjectTool : public T {
@@ -36,6 +38,9 @@ using MakeUnorderedAccessBuffer = _MakeObjectTool<UnorderedAccessBuffer>;
 using MakeStructedBuffer = _MakeObjectTool<StructuredBuffer>;
 using MakeReadbackBuffer = _MakeObjectTool<ReadBackBuffer>;
 using MakeShaderResourceBuffer = _MakeObjectTool<ShaderResourceBuffer>;
+
+template<typename T>
+using MakeFRConstantBuffer = _MakeObjectTool<FRConstantBuffer<T>>;
 
 
 }

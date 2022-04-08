@@ -3,7 +3,6 @@
 #include "GameTimer/GameTimer.h"
 #include "D3D/Camera.h"
 #include "Math/MathHelper.h"
-#include "dx12lib/StructuredConstantBuffer.hpp"
 
 using namespace Math;
 
@@ -39,10 +38,10 @@ private:
 	void buildBoxGeometry(dx12lib::DirectContextProxy pDirectContext);
 	void renderBoxPass(dx12lib::DirectContextProxy pDirectContext);
 private:
-	std::shared_ptr<dx12lib::GraphicsPSO>  _pGraphicsPSO;
-	std::unique_ptr<d3d::CoronaCamera>     _pCamera;
-	GPUStructuredCBPtr<WVMConstantBuffer>      _pMVPConstantBuffer;
-	std::unique_ptr<BoxMesh>               _pBoxMesh;
+	std::shared_ptr<dx12lib::GraphicsPSO> _pGraphicsPSO;
+	std::unique_ptr<d3d::CoronaCamera>    _pCamera;
+	dx12lib::FRCBPtr<WVMConstantBuffer>   _pMVPConstantBuffer;
+	std::unique_ptr<BoxMesh>              _pBoxMesh;
 	float    _theta = 0.f;
 	float    _phi = 0.f;
 	float    _radius = 5.f;

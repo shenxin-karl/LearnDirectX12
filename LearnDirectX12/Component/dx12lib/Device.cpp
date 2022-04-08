@@ -41,10 +41,10 @@ void Device::initialize(const DeviceInitDesc &desc) {
 		));
 	}
 
-	_pCommandQueue = std::make_shared<MakeCommandQueue>(weak_from_this(), D3D12_COMMAND_LIST_TYPE_DIRECT);
+	_pCommandQueue = std::make_shared<dx12libTool::MakeCommandQueue>(weak_from_this(), D3D12_COMMAND_LIST_TYPE_DIRECT);
 
 	for (std::size_t i = 0; i < D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES; ++i) {
-		_pDescriptorAllocators[i] = std::make_unique<MakeDescriptorAllocator>(
+		_pDescriptorAllocators[i] = std::make_unique<dx12libTool::MakeDescriptorAllocator>(
 			weak_from_this(),
 			static_cast<D3D12_DESCRIPTOR_HEAP_TYPE>(i),
 			50
@@ -57,7 +57,7 @@ void Device::destory() {
 }
 
 std::shared_ptr<SwapChain> Device::createSwapChain(HWND hwnd) const {
-	return std::make_shared<MakeSwapChain>(
+	return std::make_shared<dx12libTool::MakeSwapChain>(
 		const_cast<Device *>(this)->weak_from_this(),
 		hwnd,
 		_initDesc.backBufferFormat,
@@ -66,19 +66,19 @@ std::shared_ptr<SwapChain> Device::createSwapChain(HWND hwnd) const {
 }
 
 std::shared_ptr<RootSignature> Device::createRootSignature(const D3D12_ROOT_SIGNATURE_DESC &desc) {
-	return std::make_shared<MakeRootSignature>(weak_from_this(), desc);
+	return std::make_shared<dx12libTool::MakeRootSignature>(weak_from_this(), desc);
 }
 
 std::shared_ptr<RootSignature> Device::createRootSignature(const RootSignatureDescHelper &desc) {
-	return std::make_shared<MakeRootSignature>(weak_from_this(), desc.getRootSignatureDesc());
+	return std::make_shared<dx12libTool::MakeRootSignature>(weak_from_this(), desc.getRootSignatureDesc());
 }
 
 std::shared_ptr<GraphicsPSO> Device::createGraphicsPSO(const std::string &name) {
-	return std::make_shared<MakeGraphicsPSO>(weak_from_this(), name);
+	return std::make_shared<dx12libTool::MakeGraphicsPSO>(weak_from_this(), name);
 }
 
 std::shared_ptr<ComputePSO> Device::createComputePSO(const std::string &name) {
-	return std::make_shared<MakeComputePSO>(weak_from_this(), name);
+	return std::make_shared<dx12libTool::MakeComputePSO>(weak_from_this(), name);
 }
 
 DescriptorAllocation Device::allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32 numDescriptors /*= 1*/) {

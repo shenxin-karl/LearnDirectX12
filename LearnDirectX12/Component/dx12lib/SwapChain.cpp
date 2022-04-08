@@ -60,7 +60,7 @@ void SwapChain::resize(DirectContextProxy pDirectContext, uint32 width, uint32 h
 		pTexture = nullptr;
 
 	_currentBackBufferIndex = 0;
-	_pRenderTarget = std::make_shared<MakeRenderTarget>(width, height);
+	_pRenderTarget = std::make_shared<dx12libTool::MakeRenderTarget>(width, height);
 	_width = std::max(width, uint32(1));
 	_height = std::max(height, uint32(1));
 
@@ -106,7 +106,7 @@ void SwapChain::updateBuffer(DirectContextProxy pDirectContext) {
 		name.append(std::to_wstring(i));
 		name.append(L"]");
 		pBuffer->SetName(name.c_str());
-		_pSwapChainBuffer[i] = std::make_shared<MakeRenderTargetBuffer>(
+		_pSwapChainBuffer[i] = std::make_shared<dx12libTool::MakeRenderTargetBuffer>(
 			_pDevice,
 			pBuffer, 
 			D3D12_RESOURCE_STATE_COMMON
@@ -140,7 +140,7 @@ void SwapChain::updateBuffer(DirectContextProxy pDirectContext) {
 		RVPtr(optClear),
 		IID_PPV_ARGS(&pDepthStencil)
 	));
-	_pDepthStencilBuffer = std::make_shared<MakeDepthStencilBuffer>(_pDevice, pDepthStencil, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+	_pDepthStencilBuffer = std::make_shared<dx12libTool::MakeDepthStencilBuffer>(_pDevice, pDepthStencil, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 	_pDepthStencilBuffer->getD3DResource()->SetName(L"DepthStencilBuffer");
 	_pRenderTarget->attachRenderTargetBuffer(AttachmentPoint::Color0, getCurrentBackBuffer());
 	_pRenderTarget->attachDepthStencilBuffer(_pDepthStencilBuffer);

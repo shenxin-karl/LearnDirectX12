@@ -20,7 +20,7 @@ void FrameResourceItem::setFence(uint64 fence) noexcept {
 std::shared_ptr<CommandList> FrameResourceItem::createCommandList() {
 	std::shared_ptr<CommandList> pCmdList;
 	if (!_availableCmdList.tryPop(pCmdList)) {
-		pCmdList = std::make_shared<MakeCommandList>(weak_from_this());
+		pCmdList = std::make_shared<dx12libTool::MakeCommandList>(weak_from_this());
 		_cmdListPool.push(pCmdList);
 		pCmdList->close();
 	}
@@ -46,7 +46,7 @@ FrameResourceQueue::FrameResourceQueue(std::weak_ptr<Device> pDevice, D3D12_COMM
 {
 	_frameResourceItemCount = cmdListType == D3D12_COMMAND_LIST_TYPE_DIRECT ? kFrameResourceCount : 1;
 	for (uint32 i = 0; i < _frameResourceItemCount; ++i)
-		_frameResourceQueue[i] = std::make_shared<MakeFrameResourceItem>(pDevice, cmdListType);
+		_frameResourceQueue[i] = std::make_shared<dx12libTool::MakeFrameResourceItem>(pDevice, cmdListType);
 }
 
 std::shared_ptr<CommandList> FrameResourceQueue::createCommandList() {

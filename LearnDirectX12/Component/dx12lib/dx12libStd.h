@@ -128,4 +128,14 @@ struct NonCopyable {
 
 struct RawData;
 
+template<typename T = RawData>
+class FRConstantBuffer;
+
+// frame resource constant buffer template
+
+using FRRawCBPtr = std::shared_ptr<FRConstantBuffer<RawData>>;
+
+template<typename T>
+using FRCBPtr = std::shared_ptr<FRConstantBuffer<T>>;
+
 }

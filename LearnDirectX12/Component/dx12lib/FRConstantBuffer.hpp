@@ -6,9 +6,6 @@
 
 namespace dx12lib {
 
-// frame resource constant buffer template
-template<typename T = RawData>
-class FRConstantBuffer;
 
 template<>
 class FRConstantBuffer<RawData> : public IConstantBuffer {
