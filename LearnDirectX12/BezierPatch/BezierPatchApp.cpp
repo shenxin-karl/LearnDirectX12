@@ -141,16 +141,14 @@ void BezierPatchApp::buildGeometry(dx12lib::GraphicsContextProxy pGraphicsCtx) {
 		12, 13, 14, 15
 	};
 
-	std::size_t vbSize = sizeof(PatchVertex) * vertices.size();
-	std::size_t ibSize = sizeof(std::uint16_t) * indices.size();
 	auto pVertexBuffer = pGraphicsCtx->createVertexBuffer(
 		vertices.data(), 
-		vbSize, 
+		vertices.size(),
 		sizeof(PatchVertex)
 	);
 	auto pIndexBuffer = pGraphicsCtx->createIndexBuffer(
 		indices.data(),
-		ibSize,
+		indices.size(),
 		DXGI_FORMAT_R16_UINT
 	);
 

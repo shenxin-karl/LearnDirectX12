@@ -96,8 +96,8 @@ public:
 
 class GraphicsContext : public virtual CommandContext {
 public:
-	virtual std::shared_ptr<VertexBuffer> createVertexBuffer(const void *pData, size_t sizeInByte, size_t stride) = 0;
-	virtual std::shared_ptr<IndexBuffer> createIndexBuffer(const void *pData, size_t sizeInByte, DXGI_FORMAT indexFormat) = 0;
+	virtual std::shared_ptr<VertexBuffer> createVertexBuffer(const void *pData, size_t numElements, size_t stride) = 0;
+	virtual std::shared_ptr<IndexBuffer> createIndexBuffer(const void *pData, size_t numElements, DXGI_FORMAT indexFormat) = 0;
 
 	virtual void setViewport(const D3D12_VIEWPORT &viewport) = 0;
 	virtual void setScissorRect(const D3D12_RECT &rect) = 0;

@@ -387,12 +387,12 @@ void LandAndWater::buildTreeBillBoards(dx12lib::DirectContextProxy pGrahpicsCtx)
 
 	auto pVertexBuffer = pGrahpicsCtx->createVertexBuffer(
 		vertices.data(),
-		sizeof(BillBoardVertex) *vertices.size(),
+		vertices.size(),
 		sizeof(BillBoardVertex)
 	);
 	auto pIndexBuffer = pGrahpicsCtx->createIndexBuffer(
 		indices.data(),
-		indices.size()  * sizeof(std::uint16_t),
+		indices.size(),
 		DXGI_FORMAT_R16_UINT
 	);
 	std::shared_ptr<d3d::Mesh> pMesh = std::make_shared<d3d::Mesh>(

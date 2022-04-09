@@ -87,12 +87,12 @@ CommandList::createConstantBuffer(std::size_t sizeInByte, const void *pData) {
 
 std::shared_ptr<StructuredBuffer> CommandList::createStructuredBuffer(const void *pData, std::size_t sizeInByte) {
 	assert(pData != nullptr && sizeInByte > 0);
-	return std::make_shared<dx12libTool::MakeStructedBuffer>(
-		_pDevice,
-		shared_from_this(),
-		pData,
-		sizeInByte
-	);
+	// return std::make_shared<dx12libTool::MakeStructedBuffer>(
+	// 	_pDevice,
+	// 	pData,
+	// 	sizeInByte
+	// );
+	return nullptr;
 }
 
 std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSTextureFromFile(const std::wstring &fileName) {
@@ -213,21 +213,21 @@ void CommandList::flushResourceBarriers() {
 
 /// ******************************************** GraphicsContext api ********************************************
 std::shared_ptr<VertexBuffer>
-CommandList::createVertexBuffer(const void *pData, std::size_t sizeInByte, std::size_t stride) {
+CommandList::createVertexBuffer(const void *pData, std::size_t numElements, std::size_t stride) {
 	return std::make_shared<dx12libTool::MakeVertexBuffer>(_pDevice,
 		shared_from_this(),
 		pData,
-		uint32(sizeInByte),
-		uint32(stride)
+		numElements,
+		stride
 	);
 }
 
 std::shared_ptr<IndexBuffer>
-CommandList::createIndexBuffer(const void *pData, std::size_t sizeInByte, DXGI_FORMAT indexFormat) {
+CommandList::createIndexBuffer(const void *pData, std::size_t numElements, DXGI_FORMAT indexFormat) {
 	return std::make_shared<dx12libTool::MakeIndexBuffer>(_pDevice,
 		shared_from_this(),
 		pData,
-		uint32(sizeInByte),
+		numElements,
 		indexFormat
 	);
 }

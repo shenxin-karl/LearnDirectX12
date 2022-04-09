@@ -5,14 +5,15 @@
 
 namespace dx12lib {
 
-VertexBuffer::VertexBuffer() : _bufferByteSize(0), _vertexStride(0) {
+VertexBuffer::VertexBuffer() : _vertexStride(0) {
 }
 
 VertexBuffer::VertexBuffer(std::weak_ptr<Device> pDevice, std::shared_ptr<CommandList> pCmdList,
-	const void *pData, uint32 sizeInByte, uint32 stride)
-: _bufferByteSize(sizeInByte), _vertexStride(stride)
+	const void *pData, size_t numElements, size_t stride)
+: _vertexStride(stride)
 {
-	_pGPUBuffer = std::make_unique<DefaultBuffer>(pDevice.lock()->getD3DDevice(), 
+	size_t sizeInByte = numElements * stride;
+	_pDefaultBuffer = std::make_unique<DefaultBuffer>(pDevice.lock()->getD3DDevice(), 
 		pCmdList->getD3DCommandList(), 
 		pData, 
 		sizeInByte
@@ -26,37 +27,33 @@ VertexBuffer::VertexBuffer(VertexBuffer &&other) noexcept : VertexBuffer() {
 
 D3D12_VERTEX_BUFFER_VIEW VertexBuffer::getVertexBufferView() const noexcept {
 	return {
-		_pGPUBuffer->getAddress(),
-		_bufferByteSize,
-		_vertexStride
+		_pDefaultBuffer->getAddress(),
+		static_cast<UINT>(getVertexBufferSize()),
+		static_cast<UINT>(_vertexStride)
 	};
 }
 
-//WRL::ComPtr<ID3DBlob> VertexBuffer::getCPUBuffer() const noexcept {
-//	return _pCPUBuffer;
-//}
-
-uint32 VertexBuffer::getVertexBufferSize() const noexcept {
-	return _bufferByteSize;
+size_t VertexBuffer::getVertexBufferSize() const noexcept {
+	return _pDefaultBuffer->getWidth();
 }
 
-uint32 VertexBuffer::getVertexStride() const noexcept {
+size_t VertexBuffer::getVertexStride() const noexcept {
 	return _vertexStride;
 }
 
-uint32 VertexBuffer::getVertexCount() const noexcept {
+size_t VertexBuffer::getVertexCount() const noexcept {
 	assert(_vertexStride != 0);
-	return _bufferByteSize / _vertexStride;
+	return getVertexBufferSize() / _vertexStride;
 }
 
 bool VertexBuffer::isEmpty() const noexcept {
-	return _pGPUBuffer == nullptr;
+	return _pDefaultBuffer == nullptr;
 }
 
 WRL::ComPtr<ID3D12Resource> VertexBuffer::getD3DResource() const {
-	if (_pGPUBuffer == nullptr)
+	if (_pDefaultBuffer == nullptr)
 		return nullptr;
-	return _pGPUBuffer->getD3DResource();
+	return _pDefaultBuffer->getD3DResource();
 }
 
 VertexBuffer &VertexBuffer::operator=(VertexBuffer &&other) noexcept {
@@ -68,10 +65,8 @@ VertexBuffer &VertexBuffer::operator=(VertexBuffer &&other) noexcept {
 
 void swap(VertexBuffer &lhs, VertexBuffer &rhs) noexcept {
 	using std::swap;
-	swap(lhs._bufferByteSize, rhs._bufferByteSize);
 	swap(lhs._vertexStride, rhs._vertexStride);
-	swap(lhs._pGPUBuffer, rhs._pGPUBuffer);
-	//swap(lhs._pCPUBuffer, rhs._pCPUBuffer);
+	swap(lhs._pDefaultBuffer, rhs._pDefaultBuffer);
 }
 
 }

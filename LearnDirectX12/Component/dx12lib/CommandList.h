@@ -32,8 +32,8 @@ public:
 	void flushResourceBarriers() override;
 
 /// GraphicsContext api
-	std::shared_ptr<VertexBuffer> createVertexBuffer(const void *pData, size_t sizeInByte, size_t stride) override;
-	std::shared_ptr<IndexBuffer> createIndexBuffer(const void *pData, size_t sizeInByte, DXGI_FORMAT indexFormat) override;
+	std::shared_ptr<VertexBuffer> createVertexBuffer(const void *pData, size_t numElements, size_t stride) override;
+	std::shared_ptr<IndexBuffer> createIndexBuffer(const void *pData, size_t numElements, DXGI_FORMAT indexFormat) override;
 
 	void setViewport(const D3D12_VIEWPORT &viewport) override;
 	void setScissorRect(const D3D12_RECT &rect) override;

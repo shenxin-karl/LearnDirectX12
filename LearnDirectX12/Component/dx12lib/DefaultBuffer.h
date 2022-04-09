@@ -8,16 +8,15 @@ class DefaultBuffer : public IResource {
 public:
 	DefaultBuffer() = default;
 	DefaultBuffer(ID3D12Device *pDevice, ID3D12GraphicsCommandList *pCmdList, const void *pData, size_t sizeInByte);
-	DefaultBuffer(const DefaultBuffer &) = delete;
 	DefaultBuffer(DefaultBuffer &&other) noexcept;
 	DefaultBuffer &operator=(DefaultBuffer &&other) noexcept;
-	~DefaultBuffer();
+	~DefaultBuffer() override;
 	D3D12_GPU_VIRTUAL_ADDRESS getAddress() const;
-	virtual WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
+	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
 	friend void swap(DefaultBuffer &lhs, DefaultBuffer &rhs) noexcept;
 private:
-	WRL::ComPtr<ID3D12Resource>  _pDefaultBuffer;
-	WRL::ComPtr<ID3D12Resource>  _pUploader;
+	WRL::ComPtr<ID3D12Resource>  _pDefaultResource;
+	WRL::ComPtr<ID3D12Resource>  _pUploaderResource;
 };
 
 }

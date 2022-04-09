@@ -90,12 +90,12 @@ void BasicTessellationApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) 
 
 	auto pVertexBuffer = pDirectCtx->createVertexBuffer(
 		vertices.data(), 
-		vertices.size() * sizeof(PatchVertex), 
+		vertices.size(), 
 		sizeof(PatchVertex)
 	);
 	auto pIndexBuffer = pDirectCtx->createIndexBuffer(
 		indices.data(),
-		indices.size() * sizeof(uint16_t),
+		indices.size(),
 		DXGI_FORMAT_R16_UINT
 	);
 	_pQuadMesh = std::make_shared<d3d::Mesh>(

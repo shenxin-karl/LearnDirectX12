@@ -15,7 +15,7 @@ FRConstantBuffer<RawData>::FRConstantBuffer(std::weak_ptr<Device> pDevice, size_
 		static_cast<size_t>(kFrameResourceCount),
 		sizeInByte,
 		true
-		);
+	);
 
 	_CBV = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kFrameResourceCount);
 	for (size_t i = 0; i < kFrameResourceCount; ++i) {
@@ -28,6 +28,8 @@ FRConstantBuffer<RawData>::FRConstantBuffer(std::weak_ptr<Device> pDevice, size_
 			_CBV.getCPUHandle(i)
 		);
 	}
+
+	_resourceType = ResourceType::ConstantBuffer;
 }
 
 WRL::ComPtr<ID3D12Resource> FRConstantBuffer<RawData>::getD3DResource() const {

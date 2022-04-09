@@ -135,11 +135,11 @@ void BoxApp::buildBoxGeometry(dx12lib::DirectContextProxy pDirectContext) {
 
 	_pBoxMesh = std::make_unique<BoxMesh>();
 	_pBoxMesh->_pVertexBuffer = pDirectContext->createVertexBuffer(vertices.data(),
-		sizeof(Vertex) * vertices.size(), 
+		vertices.size(), 
 		sizeof(Vertex)
 	);
 	_pBoxMesh->_pIndexBuffer = pDirectContext->createIndexBuffer(indices.data(),
-		sizeof(std::uint16_t) * indices.size(),
+		indices.size(),
 		DXGI_FORMAT_R16_UINT
 	);
 	_pBoxMesh->_baseVertexLocation = 0;

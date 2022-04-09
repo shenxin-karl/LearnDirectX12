@@ -88,7 +88,7 @@ struct MakeMeshHelper {
 		if constexpr (std::is_same_v<com::Vertex, T>) {
 			return pGrahpicsCtx->createVertexBuffer(
 				mesh.vertices.data(),
-				sizeof(com::Vertex) * mesh.vertices.size(),
+				mesh.vertices.size(),
 				sizeof(com::Vertex)
 			);
 		} else {
@@ -97,7 +97,7 @@ struct MakeMeshHelper {
 			vertices.insert(vertices.end(), mesh.vertices.begin(), mesh.vertices.end());
 			return pGrahpicsCtx->createVertexBuffer(
 				vertices.data(),
-				sizeof(T) * vertices.size(),
+				vertices.size(),
 				sizeof(T)
 			);
 		}
@@ -112,7 +112,7 @@ struct MakeMeshHelper {
 			indices.insert(indices.end(), mesh.indices.begin(), mesh.indices.end());
 			return pGrahpicsCtx->createIndexBuffer(
 				indices.data(),
-				sizeof(std::uint8_t) * indices.size(),
+				indices.size(),
 				DXGI_FORMAT_R8_UINT
 			);
 			break;
@@ -123,7 +123,7 @@ struct MakeMeshHelper {
 			indices.insert(indices.end(), mesh.indices.begin(), mesh.indices.end());
 			return pGrahpicsCtx->createIndexBuffer(
 				indices.data(),
-				sizeof(std::uint16_t) * indices.size(),
+				indices.size(),
 				DXGI_FORMAT_R16_UINT
 			);
 			break;
@@ -131,7 +131,7 @@ struct MakeMeshHelper {
 		case d3d::MeshIndexType::UINT32: {
 			return pGrahpicsCtx->createIndexBuffer(
 				mesh.indices.data(),
-				sizeof(std::uint32_t) * mesh.indices.size(),
+				mesh.indices.size(),
 				DXGI_FORMAT_R32_UINT
 			);
 			break;
@@ -193,12 +193,12 @@ struct MakeUnionMeshHelper {
 	std::shared_ptr<Mesh> build(dx12lib::GraphicsContextProxy pGrahpicsCtx) const {
 		auto pVertexBuffer = pGrahpicsCtx->createVertexBuffer(
 			_vertices.data(),
-			sizeof(T) * _vertices.size(),
+			_vertices.size(),
 			sizeof(T)
 		);
 		auto pIndexBuffer = pGrahpicsCtx->createIndexBuffer(
 			_indices.data(),
-			sizeof(index_t) * _indices.size(),
+			_indices.size(),
 			reinterpret_cast<DXGI_FORMAT>(IndexType)
 		);
 

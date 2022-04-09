@@ -14,19 +14,22 @@ public:
 	D3D12_GPU_VIRTUAL_ADDRESS getGPUAddressByIndex(size_t elementIndex = 0) const;
 	BYTE *getMappedDataByIndex(size_t elementIndex = 0);
 	const BYTE *getMappedDataByIndex(size_t elementIndex = 0) const;
+	void unmap() const;
 	size_t getElementByteSize() const noexcept;
 	size_t getElementCount() const noexcept;
-	virtual WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
+	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
 	~UploadBuffer() override;
-	static size_t calcConstantBufferByteSize(std::size_t size) noexcept;
+	static size_t calcConstantBufferByteSize(size_t size) noexcept;
 	friend void swap(UploadBuffer &lhs, UploadBuffer &rhs) noexcept;
 private:
 	UploadBuffer();
-	WRL::ComPtr<ID3D12Resource>  _pUploadBuffer;
-	BYTE  *_pMappedData;
-	bool   _isConstantBuffer;
+	void map() const;
+private:
+	WRL::ComPtr<ID3D12Resource>  _pUploadResource;
+	bool _isConstantBuffer;
 	size_t _elementByteSize;
 	size_t _elementCount;
+	mutable BYTE *_pMappedData;
 };
 
 }

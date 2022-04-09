@@ -248,12 +248,12 @@ void Shape::buildGeometry(dx12lib::DirectContextProxy pDirectCtx) {
 		std::shared_ptr<Mesh> pMesh = std::make_shared<Mesh>();
 		pMesh->_pVertexBuffer = pDirectCtx->createVertexBuffer(
 			vertices.data(),
-			sizeof(ShapeVertex) * vertices.size(),
+			vertices.size(),
 			sizeof(ShapeVertex)
 		);
 		pMesh->_pIndexBuffer = pDirectCtx->createIndexBuffer(
 			indices.data(),
-			sizeof(std::uint16_t) * indices.size(),
+			indices.size(),
 			DXGI_FORMAT_R16_UINT
 		);
 		return pMesh;
@@ -273,12 +273,12 @@ void Shape::buildGeometry(dx12lib::DirectContextProxy pDirectCtx) {
 		std::shared_ptr<Mesh> pMesh = std::make_shared<Mesh>();
 		pMesh->_pVertexBuffer = pDirectCtx->createVertexBuffer(
 			vertices.data(),
-			sizeof(SkullVertex) * vertices.size(),
+			vertices.size(),
 			sizeof(SkullVertex)
 		);
 		pMesh->_pIndexBuffer = pDirectCtx->createIndexBuffer(
 			indices.data(),
-			sizeof(std::uint16_t) * indices.size(),
+			indices.size(),
 			DXGI_FORMAT_R16_UINT
 		);
 		return pMesh;

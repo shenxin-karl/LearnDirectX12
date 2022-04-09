@@ -4,7 +4,7 @@
 namespace dx12lib {
 
 UploadBuffer::UploadBuffer(ID3D12Device *pDevice, size_t elementCount, size_t elementByteSize, bool isConstantBuffer)
-: _isConstantBuffer(isConstantBuffer), _elementByteSize(elementByteSize), _elementCount(elementCount)
+: _isConstantBuffer(isConstantBuffer), _elementByteSize(elementByteSize), _elementCount(elementCount), _pMappedData(nullptr)
 {
 	if (isConstantBuffer)
 		_elementByteSize = calcConstantBufferByteSize(elementByteSize);
@@ -15,11 +15,10 @@ UploadBuffer::UploadBuffer(ID3D12Device *pDevice, size_t elementCount, size_t el
 		RVPtr(CD3DX12_RESOURCE_DESC::Buffer(static_cast<UINT64>(elementByteSize) * _elementByteSize)),
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
-		IID_PPV_ARGS(&_pUploadBuffer)
+		IID_PPV_ARGS(&_pUploadResource)
 	));
 
-	_pUploadBuffer->Map(0, nullptr, reinterpret_cast<void **>(&_pMappedData));
-	ResourceStateTracker::addGlobalResourceState(_pUploadBuffer.Get(), D3D12_RESOURCE_STATE_GENERIC_READ);
+	ResourceStateTracker::addGlobalResourceState(_pUploadResource.Get(), D3D12_RESOURCE_STATE_GENERIC_READ);
 }
 
 UploadBuffer::UploadBuffer(UploadBuffer &&other) noexcept : UploadBuffer() {
@@ -34,12 +33,19 @@ UploadBuffer &UploadBuffer::operator=(UploadBuffer &&other) noexcept {
 }
 
 UploadBuffer::UploadBuffer() 
-: _pMappedData(nullptr), _isConstantBuffer(false), _elementByteSize(0), _elementCount(0)
+: _isConstantBuffer(false), _elementByteSize(0), _elementCount(0), _pMappedData(nullptr)
 {
+}
+
+void UploadBuffer::map() const {
+	assert(_pUploadResource != nullptr);
+	if (_pMappedData == nullptr)
+		_pUploadResource->Map(0, nullptr, reinterpret_cast<void **>(&_pMappedData));
 }
 
 void UploadBuffer::copyData(size_t elementIndex, const void *pData) {
 	assert(elementIndex < _elementCount);
+	map();
 	auto *pDest = _pMappedData + static_cast<std::ptrdiff_t>(elementIndex) * _elementByteSize;
 	memcpy(pDest, pData, _elementByteSize);
 }
@@ -47,24 +53,34 @@ void UploadBuffer::copyData(size_t elementIndex, const void *pData) {
 void UploadBuffer::copyData(size_t elementIndex, const void* pData, size_t sizeInByte, size_t offset) {
 	assert(elementIndex < _elementCount);
 	assert((sizeInByte + offset) <= _elementByteSize);
+	map();
 	auto *pDest = _pMappedData + static_cast<std::ptrdiff_t>(elementIndex) * _elementByteSize;
 	memcpy(pDest + offset, pData, sizeInByte);
 }
 
 D3D12_GPU_VIRTUAL_ADDRESS UploadBuffer::getGPUAddressByIndex(size_t elementIndex /*= 0*/) const {
-	D3D12_GPU_VIRTUAL_ADDRESS address = _pUploadBuffer->GetGPUVirtualAddress();
+	D3D12_GPU_VIRTUAL_ADDRESS address = _pUploadResource->GetGPUVirtualAddress();
 	address += static_cast<size_t>(elementIndex) * _elementByteSize;
 	return address;
 }
 
 BYTE *UploadBuffer::getMappedDataByIndex(size_t elementIndex /*= 0*/) {
 	assert(elementIndex < _elementCount);
+	map();
 	return _pMappedData + static_cast<std::ptrdiff_t>(elementIndex) * _elementByteSize;
 }
 
 const BYTE *UploadBuffer::getMappedDataByIndex(size_t elementIndex /*= 0*/) const {
 	assert(elementIndex < _elementCount);
+	map();
 	return _pMappedData + static_cast<std::ptrdiff_t>(elementIndex) * _elementByteSize;
+}
+
+void UploadBuffer::unmap() const {
+	if (_pUploadResource != nullptr && _pMappedData != nullptr) {
+		_pUploadResource->Unmap(0, nullptr);
+		_pMappedData = nullptr;
+	}
 }
 
 size_t UploadBuffer::getElementByteSize() const noexcept {
@@ -76,14 +92,12 @@ size_t UploadBuffer::getElementCount() const noexcept {
 }
 
 WRL::ComPtr<ID3D12Resource> UploadBuffer::getD3DResource() const {
-	return _pUploadBuffer;
+	return _pUploadResource;
 }
 
 UploadBuffer::~UploadBuffer() {
-	if (_pUploadBuffer != nullptr) {
-		_pUploadBuffer->Unmap(0, nullptr);
-		ResourceStateTracker::removeGlobalResourceState(_pUploadBuffer.Get());
-	}
+	unmap();
+	ResourceStateTracker::removeGlobalResourceState(_pUploadResource.Get());
 }
 
 size_t UploadBuffer::calcConstantBufferByteSize(std::size_t size) noexcept {
@@ -94,7 +108,7 @@ size_t UploadBuffer::calcConstantBufferByteSize(std::size_t size) noexcept {
 
 void swap(UploadBuffer &lhs, UploadBuffer &rhs) noexcept {
 	using std::swap;
-	swap(lhs._pUploadBuffer, rhs._pUploadBuffer);
+	swap(lhs._pUploadResource, rhs._pUploadResource);
 	swap(lhs._pMappedData, rhs._pMappedData);
 	swap(lhs._elementByteSize, rhs._elementByteSize);
 	swap(lhs._elementCount, rhs._elementCount);

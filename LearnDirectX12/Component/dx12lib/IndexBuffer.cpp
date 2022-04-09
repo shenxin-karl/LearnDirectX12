@@ -5,20 +5,20 @@
 
 namespace dx12lib {
 
-IndexBuffer::IndexBuffer() : _indexFormat(DXGI_FORMAT_UNKNOWN), _indexBufferByteSize(0) {
+IndexBuffer::IndexBuffer() : _indexFormat(DXGI_FORMAT_UNKNOWN) {
 }
 
 IndexBuffer::IndexBuffer(std::weak_ptr<Device> pDevice,
 	std::shared_ptr<CommandList> pCmdList,
 	const void *pData,
-	uint32 sizeInByte,
+	size_t numElements,
 	DXGI_FORMAT format)
-: _indexFormat(format), _indexBufferByteSize(sizeInByte) 
+: _indexFormat(format)
 {
-	assert(getIndexStrideByFormat(format) != 0 && "invalid index type");
-	//ThrowIfFailed(D3DCreateBlob(sizeInByte, &_pCPUBuffer));
-	//memcpy(_pCPUBuffer->GetBufferPointer(), pData, sizeInByte);
-	_pGPUBuffer = std::make_unique<DefaultBuffer>(
+	auto stride = getIndexStrideByFormat(format);
+	size_t sizeInByte = numElements * stride;
+	assert(stride != 0 && "invalid index type");
+	_pDefaultBUffer = std::make_unique<DefaultBuffer>(
 		pDevice.lock()->getD3DDevice(), 
 		pCmdList->getD3DCommandList(), 
 		pData, 
@@ -36,8 +36,8 @@ IndexBuffer::~IndexBuffer() {
 
 D3D12_INDEX_BUFFER_VIEW IndexBuffer::getIndexBufferView() const noexcept {
 	return {
-		_pGPUBuffer->getAddress(),
-		_indexBufferByteSize,
+		_pDefaultBUffer->getAddress(),
+		static_cast<UINT>(getIndexBufferSize()),
 		_indexFormat
 	};
 }
@@ -46,15 +46,15 @@ DXGI_FORMAT IndexBuffer::getIndexFormat() const noexcept {
 	return _indexFormat;
 }
 
-uint32 IndexBuffer::getIndexBufferSize() const noexcept {
-	return _indexBufferByteSize;
+size_t IndexBuffer::getIndexBufferSize() const noexcept {
+	return _pDefaultBUffer->getWidth();
 }
 
-uint32 IndexBuffer::getIndexCount() const noexcept {
-	return _indexBufferByteSize / getIndexStrideByFormat(_indexFormat);
+size_t IndexBuffer::getIndexCount() const noexcept {
+	return getIndexBufferSize() / getIndexStrideByFormat(_indexFormat);
 }
 
-uint32 IndexBuffer::getIndexStrideByFormat(DXGI_FORMAT format) {
+size_t IndexBuffer::getIndexStrideByFormat(DXGI_FORMAT format) {
 	switch (format) {
 	case DXGI_FORMAT_R8_SINT:
 	case DXGI_FORMAT_R8_UINT:
@@ -72,13 +72,13 @@ uint32 IndexBuffer::getIndexStrideByFormat(DXGI_FORMAT format) {
 }
 
 bool IndexBuffer::isEmpty() const noexcept {
-	return _pGPUBuffer == nullptr;
+	return _pDefaultBUffer == nullptr;
 }
 
 WRL::ComPtr<ID3D12Resource> IndexBuffer::getD3DResource() const {
-	if (_pGPUBuffer == nullptr)
+	if (_pDefaultBUffer == nullptr)
 		return nullptr;
-	return _pGPUBuffer->getD3DResource();
+	return _pDefaultBUffer->getD3DResource();
 }
 
 IndexBuffer &IndexBuffer::operator=(IndexBuffer &&other) noexcept {
@@ -90,10 +90,8 @@ IndexBuffer &IndexBuffer::operator=(IndexBuffer &&other) noexcept {
 
 void swap(IndexBuffer &lhs, IndexBuffer &rhs) noexcept {
 	using std::swap;
-	swap(lhs._pGPUBuffer, rhs._pGPUBuffer);
-	//swap(lhs._pCPUBuffer, rhs._pCPUBuffer);
+	swap(lhs._pDefaultBUffer, rhs._pDefaultBUffer);
 	swap(lhs._indexFormat, rhs._indexFormat);
-	swap(lhs._indexBufferByteSize, rhs._indexBufferByteSize);
 }
 
 

@@ -32,4 +32,11 @@ public:
 	virtual size_t getConstantBufferSize() const noexcept = 0;
 };
 
+class IStructuredBuffer : public IResource {
+public:
+	virtual D3D12_CPU_DESCRIPTOR_HANDLE getShaderResourceView() const = 0;
+	virtual void updateStructuredBuffer(const void *pData, size_t sizeInByte, size_t offset = 0) = 0;
+	virtual size_t getStructuredBufferSize() const = 0;
+};
+
 }

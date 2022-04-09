@@ -13,7 +13,7 @@ DefaultBuffer::DefaultBuffer(ID3D12Device *pDevice, ID3D12GraphicsCommandList *p
 		RVPtr(CD3DX12_RESOURCE_DESC::Buffer(sizeInByte)),
 		D3D12_RESOURCE_STATE_COMMON,
 		nullptr,
-		IID_PPV_ARGS(&_pDefaultBuffer)
+		IID_PPV_ARGS(&_pDefaultResource)
 	));
 
 	// create upload heap
@@ -23,7 +23,7 @@ DefaultBuffer::DefaultBuffer(ID3D12Device *pDevice, ID3D12GraphicsCommandList *p
 		RVPtr(CD3DX12_RESOURCE_DESC::Buffer(sizeInByte)),
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
-		IID_PPV_ARGS(&_pUploader)
+		IID_PPV_ARGS(&_pUploaderResource)
 	));
 
 	// describes the data we want to copy to the default buffer
@@ -34,14 +34,14 @@ DefaultBuffer::DefaultBuffer(ID3D12Device *pDevice, ID3D12GraphicsCommandList *p
 
 	// copy the data to upload heap using the UpdateResources function
 	pCmdList->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
-		_pDefaultBuffer.Get(),
+		_pDefaultResource.Get(),
 		D3D12_RESOURCE_STATE_COMMON,
 		D3D12_RESOURCE_STATE_COPY_DEST
 	)));
 
 	UpdateSubresources(pCmdList, 
-		_pDefaultBuffer.Get(), 
-		_pUploader.Get(),
+		_pDefaultResource.Get(), 
+		_pUploaderResource.Get(),
 		0, 
 		0, 
 		1, 
@@ -49,11 +49,11 @@ DefaultBuffer::DefaultBuffer(ID3D12Device *pDevice, ID3D12GraphicsCommandList *p
 	);
 
 	pCmdList->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
-		_pDefaultBuffer.Get(),
+		_pDefaultResource.Get(),
 		D3D12_RESOURCE_STATE_COPY_DEST,
 		D3D12_RESOURCE_STATE_GENERIC_READ
 	)));
-	ResourceStateTracker::addGlobalResourceState(_pDefaultBuffer.Get(), D3D12_RESOURCE_STATE_GENERIC_READ);
+	ResourceStateTracker::addGlobalResourceState(_pDefaultResource.Get(), D3D12_RESOURCE_STATE_GENERIC_READ);
 }
 
 DefaultBuffer::DefaultBuffer(DefaultBuffer &&other) noexcept : DefaultBuffer() {
@@ -61,15 +61,15 @@ DefaultBuffer::DefaultBuffer(DefaultBuffer &&other) noexcept : DefaultBuffer() {
 }
 
 DefaultBuffer::~DefaultBuffer() {
-	ResourceStateTracker::removeGlobalResourceState(_pDefaultBuffer.Get());
+	ResourceStateTracker::removeGlobalResourceState(_pDefaultResource.Get());
 }
 
 D3D12_GPU_VIRTUAL_ADDRESS DefaultBuffer::getAddress() const {
-	return _pDefaultBuffer->GetGPUVirtualAddress();
+	return _pDefaultResource->GetGPUVirtualAddress();
 }
 
 WRL::ComPtr<ID3D12Resource> DefaultBuffer::getD3DResource() const {
-	return _pDefaultBuffer;
+	return _pDefaultResource;
 }
 
 DefaultBuffer &DefaultBuffer::operator=(DefaultBuffer &&other) noexcept {
@@ -81,8 +81,8 @@ DefaultBuffer &DefaultBuffer::operator=(DefaultBuffer &&other) noexcept {
 
 void swap(DefaultBuffer &lhs, DefaultBuffer &rhs) noexcept {
 	using std::swap;
-	swap(lhs._pDefaultBuffer, rhs._pDefaultBuffer);
-	swap(lhs._pUploader, rhs._pUploader);
+	swap(lhs._pDefaultResource, rhs._pDefaultResource);
+	swap(lhs._pUploaderResource, rhs._pUploaderResource);
 }
 
 
