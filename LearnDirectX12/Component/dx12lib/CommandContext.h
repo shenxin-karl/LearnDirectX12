@@ -22,12 +22,16 @@ struct Context {
 class CommandContext : public Context {
 public:
 	virtual std::shared_ptr<ConstantBuffer> createConstantBuffer(size_t sizeInByte, const void *pData = nullptr) = 0;
-	virtual std::shared_ptr<StructuredBuffer> createStructuredBuffer(const void *pData, size_t sizeInByte) = 0;
+	virtual std::shared_ptr<FRConstantBuffer<RawData>> createFRRawConstantBuffer(size_t sizeInByte, const void *pData = nullptr) = 0;
+	virtual std::shared_ptr<StructuredBuffer> createStructuredBuffer(const void *pData, size_t numElements, size_t stride) = 0;
+	virtual std::shared_ptr<FRStructuredBuffer<RawData>> createFRRawStructuredBuffer(const void *pData, size_t numElements, size_t stride) = 0;
 	virtual std::shared_ptr<ShaderResourceBuffer> createDDSTextureFromFile(const std::wstring &fileName) = 0;
 	virtual std::shared_ptr<ShaderResourceBuffer> createDDSTextureFromMemory(const void *pData, size_t sizeInByte) = 0;
 	virtual void setShaderResourceBufferImpl(std::shared_ptr<IShaderSourceResource> pTexture, size_t rootIndex, size_t offset) = 0;
 	virtual	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) = 0;
 
+	virtual void setStructuredBuffer(std::shared_ptr<StructuredBuffer> pStructuredBuffer, size_t rootIndex, size_t offset = 0) = 0;
+	virtual void setStructuredBufferImpl(std::shared_ptr<IStructuredBuffer> pStructuredBuffer, size_t rootIndex, size_t offset) = 0;
 	virtual void setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuffer, size_t rootIndex, size_t offset = 0) = 0;
 	virtual void setConstantBufferImpl(std::shared_ptr<IConstantBuffer> pConstantBuffer, size_t rootIndex, size_t offset) = 0;
 	virtual void copyResourceImpl(std::shared_ptr<IResource> pDest, std::shared_ptr<IResource> pSrc) = 0;
@@ -78,7 +82,6 @@ public:
 
 	template<typename T>
 	std::shared_ptr<FRConstantBuffer<T>> createFRConstantBuffer(const T *pData = nullptr) {
-		size_t frameIndex = FrameIndexProxy::getConstantFrameIndexRef();
 		auto pDevice = getDevice();
 		const T &object = (pData != nullptr) ? *pData : T{};
 		return std::make_shared<dx12libTool::MakeFRConstantBuffer<T>>(pDevice, object);
@@ -90,6 +93,15 @@ public:
 			std::static_pointer_cast<IConstantBuffer>(pConstantBuffer),
 			rootIndex,
 			offset
+		);
+	}
+
+	template<typename T>
+	std::shared_ptr<FRStructuredBuffer<T>> createFRStructuredBuffer(const T *pData, size_t numElements) {
+		return std::make_shared<dx12libTool::MakeFRStructuredBuffer<T>>(
+			getDevice(),
+			pData,
+			numElements
 		);
 	}
 };

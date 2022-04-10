@@ -1,8 +1,8 @@
 #include "ConstantBuffer.h"
 #include "UploadBuffer.h"
 #include "Device.h"
-#include "CommandList.h"
 #include "DescriptorAllocation.h"
+#include "ResourceStateTracker.h"
 
 namespace dx12lib {
 

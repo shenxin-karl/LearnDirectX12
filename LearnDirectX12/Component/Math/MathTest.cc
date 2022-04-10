@@ -134,8 +134,42 @@ void float4Test() {
 	f4 / f1;
 }
 
+void buildBoundingFrustumTest() {
+	float near = 0.1f;
+	float far = 100.f;
+	float aspect = 1.f;
+	float radianFov = DX::XMConvertToRadians(45.f);
+	DX::XMMATRIX projection = DX::XMMatrixPerspectiveFovLH(radianFov, aspect, near, far);
+	DX::XMVECTOR det = DX::XMMatrixDeterminant(projection);
+	DX::XMMATRIX invProj = DX::XMMatrixInverse(&det, projection);
+
+	DX::XMVECTOR HomogenousPoints[6] = {
+		DX::XMVectorSet(+1, +0, +1, +1),
+		DX::XMVectorSet(-1, +0, +1, +1),
+		DX::XMVectorSet(+0, +1, +1, +1),
+		DX::XMVectorSet(+0, -1, +1, +1),
+		DX::XMVectorSet(+0, +0, +0, +1),
+		DX::XMVectorSet(+0, +0, +1, +1),
+	};
+
+	DX::XMVECTOR points[6];
+	for (size_t i = 0; i < 6; ++i)
+		points[i] = DX::XMVector4Transform(HomogenousPoints[i], invProj);
+
+	using namespace Math;
+	float depth = 1.f / float4(points[0]).w;
+	std::cout << float3(points[0]) * depth << std::endl;
+	std::cout << float3(points[1]) * depth << std::endl;
+	std::cout << float3(points[2]) * depth << std::endl;
+	std::cout << float3(points[3]) * depth << std::endl;
+	float zNear = 1.f / float4(points[4]).w;
+	float zFar = 1.f / float4(points[5]).w;
+	std::cout << "zNear: " << zNear << " zFar:" << zFar << std::endl;
+}
+
 int main() {
 	float2Test();
 	float3Test();
 	float4Test();
+	buildBoundingFrustumTest();
 }

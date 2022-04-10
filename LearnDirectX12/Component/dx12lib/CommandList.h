@@ -17,13 +17,17 @@ public:
 
 /// CommandContext api
 	std::shared_ptr<ConstantBuffer> createConstantBuffer(size_t sizeInByte, const void *pData) override;
-	std::shared_ptr<StructuredBuffer> createStructuredBuffer(const void *pData, size_t sizeInByte) override;
+	std::shared_ptr<FRConstantBuffer<RawData>> createFRRawConstantBuffer(size_t sizeInByte, const void *pData) override;
+	std::shared_ptr<StructuredBuffer> createStructuredBuffer(const void *pData, size_t numElements, size_t stride) override;
+	std::shared_ptr<FRStructuredBuffer<RawData>> createFRRawStructuredBuffer(const void *pData, size_t numElements, size_t stride) override;
 	std::shared_ptr<ShaderResourceBuffer> createDDSTextureFromFile(const std::wstring &fileName) override;
 	std::shared_ptr<ShaderResourceBuffer> createDDSTextureFromMemory(const void *pData, size_t sizeInByte) override;
 
 	void setShaderResourceBufferImpl(std::shared_ptr<IShaderSourceResource> pTexture, size_t rootIndex, size_t offset) override;
 	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) override;
 
+	void setStructuredBuffer(std::shared_ptr<StructuredBuffer> pStructuredBuffer, size_t rootIndex, size_t offset) override;
+	void setStructuredBufferImpl(std::shared_ptr<IStructuredBuffer> pStructuredBuffer, size_t rootIndex, size_t offset) override;
 	void setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuffer, size_t rootIndex, size_t offset) override;
 	void setConstantBufferImpl(std::shared_ptr<IConstantBuffer> pConstantBuffer, size_t rootIndex, size_t offset) override;
 	void copyResourceImpl(std::shared_ptr<IResource> pDest, std::shared_ptr<IResource> pSrc) override;

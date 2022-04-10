@@ -18,6 +18,7 @@
 #include "ReadBackBuffer.h"
 #include "StructuredBuffer.h"
 #include "UnorderedAccessBuffer.h"
+#include "FRStructuredBuffer.hpp"
 #include <iostream>
 
 #if defined(_DEBUG) || defined(DEBUG)
@@ -85,14 +86,35 @@ CommandList::createConstantBuffer(std::size_t sizeInByte, const void *pData) {
 	return std::make_shared<dx12libTool::MakeConstantBuffer>(_pDevice, pData, sizeInByte);
 }
 
-std::shared_ptr<StructuredBuffer> CommandList::createStructuredBuffer(const void *pData, std::size_t sizeInByte) {
+std::shared_ptr<FRConstantBuffer<>> CommandList::createFRRawConstantBuffer(size_t sizeInByte, const void *pData) {
 	assert(pData != nullptr && sizeInByte > 0);
-	// return std::make_shared<dx12libTool::MakeStructedBuffer>(
-	// 	_pDevice,
-	// 	pData,
-	// 	sizeInByte
-	// );
-	return nullptr;
+	return std::make_shared<dx12libTool::MakeFRRawConstantBuffer>(
+		_pDevice,
+		sizeInByte,
+		pData
+		);
+}
+
+std::shared_ptr<StructuredBuffer> CommandList::createStructuredBuffer(const void *pData, size_t numElements, size_t stride) {
+	assert(pData != nullptr && sizeInByte > 0);
+	return std::make_shared<dx12libTool::MakeStructuredBuffer>(
+		_pDevice,
+		pData,
+		numElements,
+		stride
+	);
+}
+
+std::shared_ptr<FRStructuredBuffer<RawData>> CommandList::createFRRawStructuredBuffer(const void *pData, size_t numElements, size_t stride) {
+	assert(pData != nullptr);
+	assert(numElements > 0);
+	assert(stride > 0);
+	return std::make_shared<dx12libTool::MakeFRRawStructuredBuffer>(
+		_pDevice,
+		pData,
+		numElements,
+		stride
+	);
 }
 
 std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSTextureFromFile(const std::wstring &fileName) {
@@ -118,7 +140,7 @@ std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSTextureFromMemory(co
 	WRL::ComPtr<ID3D12Resource> pUploadHeap;
 	DirectX::CreateDDSTextureFromMemory12(_pDevice.lock()->getD3DDevice(),
 		_pCommandList.Get(),
-		reinterpret_cast<const uint8_t *>(pData),
+		static_cast<const uint8_t *>(pData),
 		sizeInByte,
 		pTexture,
 		pUploadHeap
@@ -148,6 +170,25 @@ void CommandList::setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType,
 		_currentGPUState.pDescriptorHeaps[heapType] = pHeap.Get();
 		bindDescriptorHeaps();
 	}
+}
+
+void CommandList::setStructuredBuffer(std::shared_ptr<StructuredBuffer> pStructuredBuffer, size_t rootIndex, size_t offset) {
+	setStructuredBufferImpl(
+		std::static_pointer_cast<IStructuredBuffer>(pStructuredBuffer),
+		rootIndex,
+		offset
+	);
+}
+
+void CommandList::setStructuredBufferImpl(std::shared_ptr<IStructuredBuffer> pStructuredBuffer, size_t rootIndex, size_t offset) {
+	assert(pConstantBuffer != nullptr);
+	assert(_currentGPUState.pRootSignature != nullptr);
+	_pDynamicDescriptorHeaps[0]->stageDescriptors(
+		rootIndex,
+		offset,
+		1,
+		pStructuredBuffer->getShaderResourceView()
+	);
 }
 
 void CommandList::setConstantBuffer(std::shared_ptr<ConstantBuffer> pConstantBuffer, size_t rootIndex, size_t offset) {
@@ -427,7 +468,7 @@ std::shared_ptr<UnorderedAccessBuffer> CommandList::createUnorderedAccessBuffer(
 
 std::shared_ptr<ReadBackBuffer> CommandList::createReadBackBuffer(std::size_t sizeInByte) {
 	assert(sizeInByte > 0);
-	return std::make_shared<dx12libTool::MakeReadbackBuffer>(
+	return std::make_shared<dx12libTool::MakeReadBackBuffer>(
 		_pDevice,
 		sizeInByte
 	);

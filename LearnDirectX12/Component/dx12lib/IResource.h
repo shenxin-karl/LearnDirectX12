@@ -34,9 +34,12 @@ public:
 
 class IStructuredBuffer : public IResource {
 public:
+	bool isMapped() const override { return true; }
 	virtual D3D12_CPU_DESCRIPTOR_HANDLE getShaderResourceView() const = 0;
 	virtual void updateStructuredBuffer(const void *pData, size_t sizeInByte, size_t offset = 0) = 0;
 	virtual size_t getStructuredBufferSize() const = 0;
+	virtual size_t getElementCount() const = 0;
+	virtual size_t getStride() const = 0;
 };
 
 }

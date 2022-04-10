@@ -35,12 +35,18 @@ using MakeVertexBuffer = _MakeObjectTool<VertexBuffer>;
 using MakeRenderTargetBuffer = _MakeObjectTool<RenderTargetBuffer>;
 using MakeDepthStencilBuffer = _MakeObjectTool<DepthStencilBuffer>;
 using MakeUnorderedAccessBuffer = _MakeObjectTool<UnorderedAccessBuffer>;
-using MakeStructedBuffer = _MakeObjectTool<StructuredBuffer>;
-using MakeReadbackBuffer = _MakeObjectTool<ReadBackBuffer>;
+using MakeStructuredBuffer = _MakeObjectTool<StructuredBuffer>;
+using MakeReadBackBuffer = _MakeObjectTool<ReadBackBuffer>;
 using MakeShaderResourceBuffer = _MakeObjectTool<ShaderResourceBuffer>;
 
 template<typename T>
 using MakeFRConstantBuffer = _MakeObjectTool<FRConstantBuffer<T>>;
 
+using MakeFRRawConstantBuffer = _MakeObjectTool<FRConstantBuffer<RawData>>;
+
+using MakeFRRawStructuredBuffer = _MakeObjectTool<FRStructuredBuffer<RawData>>;
+
+template<typename T>
+using MakeFRStructuredBuffer = _MakeObjectTool<FRStructuredBuffer<T>>;
 
 }

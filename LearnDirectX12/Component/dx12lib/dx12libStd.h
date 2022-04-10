@@ -80,9 +80,9 @@ constexpr static std::size_t kDynamicDescriptorHeapCount = 2;
 constexpr static std::size_t kVertexBufferSlotCount = 16;
 
 class FrameIndexProxy {
-	static inline std::atomic_int32_t _frameIndex = 0;
+	static inline std::atomic_size_t _frameIndex = 0;
 public:
-	static const std::atomic_int32_t &getConstantFrameIndexRef() noexcept {
+	static const std::atomic_size_t &getConstantFrameIndexRef() noexcept {
 		return _frameIndex;
 	}
 private:
