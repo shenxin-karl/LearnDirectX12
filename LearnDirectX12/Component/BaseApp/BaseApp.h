@@ -3,9 +3,9 @@
 #include <windows.h>
 #include <DirectXMath.h>
 #include "dx12lib/dx12libStd.h"
+#include "dx12lib/ContextProxy.hpp"
 #include "ITick.h"
 #include "InputSystem/InputSystem.h"
-#include "ContextProxy.hpp"
 
 
 namespace com {

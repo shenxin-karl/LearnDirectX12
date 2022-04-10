@@ -96,7 +96,7 @@ std::shared_ptr<FRConstantBuffer<>> CommandList::createFRRawConstantBuffer(size_
 }
 
 std::shared_ptr<StructuredBuffer> CommandList::createStructuredBuffer(const void *pData, size_t numElements, size_t stride) {
-	assert(pData != nullptr && sizeInByte > 0);
+	assert(pData != nullptr && numElements > 0 && stride > 0);
 	return std::make_shared<dx12libTool::MakeStructuredBuffer>(
 		_pDevice,
 		pData,
@@ -181,7 +181,7 @@ void CommandList::setStructuredBuffer(std::shared_ptr<StructuredBuffer> pStructu
 }
 
 void CommandList::setStructuredBufferImpl(std::shared_ptr<IStructuredBuffer> pStructuredBuffer, size_t rootIndex, size_t offset) {
-	assert(pConstantBuffer != nullptr);
+	assert(pStructuredBuffer != nullptr);
 	assert(_currentGPUState.pRootSignature != nullptr);
 	_pDynamicDescriptorHeaps[0]->stageDescriptors(
 		rootIndex,

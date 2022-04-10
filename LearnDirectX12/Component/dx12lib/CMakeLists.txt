@@ -20,7 +20,7 @@ endforeach()
 add_library("dx12lib" ${AllFile})
 set_target_properties("dx12lib" PROPERTIES FOLDER "Component")
 
-target_include_directories(dx12lib PUBLIC 
+target_include_directories(dx12lib PRIVATE 
 	${PROJECT_COMPONENT_DIR}/
 	${CMAKE_CURRENT_SOURCE_DIR}/
 	${CMAKE_CURRENT_SOURCE_DIR}/../

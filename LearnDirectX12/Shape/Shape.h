@@ -1,5 +1,5 @@
 #pragma once
-#include "dx12libStd.h"
+#include "dx12lib/dx12libStd.h"
 #include "D3D/ShaderCommon.h"
 #include "D3D/d3dutil.h"
 #include "GameTimer/GameTimer.h"

@@ -31,6 +31,7 @@ list(APPEND allSubDir "LandAndWater")
 list(APPEND allSubDir "Mirror")
 list(APPEND allSubDir "BasicTessellation")
 list(APPEND allSubDir "BezierPatch")
+list(APPEND allSubDir "Instance")
 
 foreach(dirname ${allSubDir})
 	add_subdirectory(${dirname})

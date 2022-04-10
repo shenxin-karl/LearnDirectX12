@@ -41,7 +41,7 @@ cmrc_add_resource_library(D3D-resources ALIAS D3D::rc
 
 set_target_properties(D3D-resources PROPERTIES FOLDER "CmrcResource")
 
-target_link_libraries(${PROJECT_NAME} PUBLIC 
+target_link_libraries(${PROJECT_NAME} PRIVATE 
 	GameTimer
 	Exception
 )

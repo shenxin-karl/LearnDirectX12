@@ -1,17 +1,17 @@
 #include "BasicTessellation.h"
-#include "CommandQueue.h"
-#include "RenderTarget.h"
-#include "SwapChain.h"
+#include "dx12lib/CommandQueue.h"
+#include "dx12lib/RenderTarget.h"
+#include "dx12lib/SwapChain.h"
+#include "dx12lib/RootSignature.h"
+#include "dx12lib/Device.h"
+#include "dx12lib/PipelineStateObject.h"
 #include "D3D/Camera.h"
 #include "D3D/Mesh.h"
 #include "D3D/ShaderCommon.h"
-#include "dx12lib/Device.h"
-#include "dx12lib/PipelineStateObject.h"
 #include "GameTimer/GameTimer.h"
 #include "InputSystem/Mouse.h"
 #include <DirectXColors.h>
 
-#include "RootSignature.h"
 
 namespace DX = DirectX;
 

@@ -4,6 +4,7 @@
 #include "DescriptorAllocation.h"
 #include "DescriptorAllocatorPage.h"
 #include "CommandQueue.h"
+#include "StructuredBuffer.h"
 #include "ContextProxy.hpp"
 #include "CommandList.h"
 #include <iostream>
@@ -28,7 +29,7 @@ struct Test {
 void testStructConstantBuffer(std::shared_ptr<Device> pDevice) {
 	auto pCmdQueue = pDevice->getCommandQueue();
 	auto pDirectCtx = pCmdQueue->createDirectContextProxy();
-	auto pGPUTest = pDirectCtx->createStructuredConstantBuffer<Test>({ 10, 'a', 1.f, 10.0 });
+	auto pGPUTest = pDirectCtx->createFRConstantBuffer<Test>({ 10, 'a', 1.f, 10.0 });
 	auto pMappedTest = pGPUTest->map();
 	std::cout << pMappedTest->a << " " 
 		      << pMappedTest->b << " "
