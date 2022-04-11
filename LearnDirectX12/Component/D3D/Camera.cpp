@@ -151,7 +151,7 @@ void CoronaCamera::setTheta(float theta) {
 	_theta = theta;
 }
 
-void CoronaCamera::setRadiuse(float radius) {
+void CoronaCamera::setRadius(float radius) {
 	_radius = std::clamp(radius, 0.001f, std::numeric_limits<float>::infinity());
 }
 
@@ -169,7 +169,7 @@ void CoronaCamera::pollEvent(const com::MouseEvent &event) {
 	}
 	case com::MouseState::Wheel: {
 		auto radius = std::max(0.1f, getRadius() - event._offset * _mouseWheelSensitivity);
-		setRadiuse(radius);
+		setRadius(radius);
 		break;
 	}
 	case com::MouseState::Move: {
@@ -311,6 +311,10 @@ void FirstPersonCamera::setRoll(float roll) {
 	_roll = roll;
 }
 
+void FirstPersonCamera::setLastMousePosition(POINT pos) {
+	_lastMousePosition = pos;
+}
+
 float FirstPersonCamera::getPitch() const {
 	return _pitch;
 }
@@ -321,6 +325,10 @@ float FirstPersonCamera::getYaw() const {
 
 float FirstPersonCamera::getRoll() const {
 	return _roll;
+}
+
+POINT FirstPersonCamera::getLastMousePosition() const {
+	return _lastMousePosition;
 }
 
 void FirstPersonCamera::responseEvent(std::shared_ptr<com::GameTimer> pGameTimer) {

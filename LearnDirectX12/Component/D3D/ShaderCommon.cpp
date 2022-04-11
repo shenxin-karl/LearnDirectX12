@@ -11,27 +11,27 @@ void Light::initAsDirectionLight(float3 direction, float3 strength) {
 	this->spotPower = 0.f;
 }
 
-void Light::initAsPointLight(float3 position, float3 strength, float fallofStart, float fallofEnd) {
+void Light::initAsPointLight(float3 position, float3 strength, float falloffStart, float falloffEnd) {
 	this->direction = float3(0);
 	this->strength = strength;
 	this->position = position;
-	this->falloffStart = fallofStart;
-	this->falloffEnd = fallofEnd;
+	this->falloffStart = falloffStart;
+	this->falloffEnd = falloffEnd;
 	this->spotPower = 0.f;
 }
 
 void Light::initAsSpotLight(float3 position, 
 	float3 direction, 
 	float3 strength, 
-	float fallofStart, 
-	float fallofEnd, 
+	float falloffStart, 
+	float falloffEnd, 
 	float spotPower) 
 {
 	this->direction = normalize(direction);
 	this->strength = strength;
 	this->position = position;
-	this->falloffStart = fallofStart;
-	this->falloffEnd = fallofEnd;
+	this->falloffStart = falloffStart;
+	this->falloffEnd = falloffEnd;
 	this->spotPower = spotPower;
 }
 

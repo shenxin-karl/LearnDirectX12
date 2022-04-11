@@ -67,7 +67,7 @@ public:
 	float getRadius() const;
 	void setPhi(float phi);
 	void setTheta(float theta);
-	void setRadiuse(float radius);
+	void setRadius(float radius);
 	void pollEvent(const com::MouseEvent &event);
 public:
 	float _mouseWheelSensitivity = 0.1f;
@@ -102,9 +102,11 @@ public:
 	void setPitch(float pitch);
 	void setYaw(float yaw);
 	void setRoll(float roll);
+	void setLastMousePosition(POINT pos);
 	float getPitch() const;
 	float getYaw() const;
 	float getRoll() const;
+	POINT getLastMousePosition() const;
 public:
 	float _mouseWheelSensitivity = 1.f;		
 	float _mouseMoveSensitivity = 0.2f;		// degrees
@@ -131,7 +133,6 @@ private:
 	float4x4 _invProj;
 	float4x4 _invViewProj;
 	POINT    _lastMousePosition = POINT(-1, -1);
-	bool     _isMouseLeftPress = false;
 	bool     _moveState[6] = { false };
 };
 

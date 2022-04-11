@@ -46,6 +46,14 @@ private:
 	void onTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 	void onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int height) override;
 private:
+	void pollEvent();
+	void buildCamera();
+	void buildBuffer(dx12lib::CommandContextProxy pCommonCtx);
+	void loadTextures(dx12lib::GraphicsContextProxy pGraphicsCtx);
+	void loadSkull(dx12lib::GraphicsContextProxy pGraphicsCtx);
+	void buildPSO();
+	void buildRenderItem();
+private:
 	constexpr static size_t kMaxInstanceSize = 150;
 
 	std::unique_ptr<d3d::FirstPersonCamera> _pCamera;
@@ -57,11 +65,13 @@ private:
 	std::unordered_map<std::string, size_t> _materialIndexMap;
 	std::vector<d3d::Material> _materials;
 
-	std::unordered_map<std::string, std::shared_ptr<d3d::Mesh>> _geometrys;
+	std::unordered_map<std::string, std::shared_ptr<d3d::Mesh>> _geometryMap;
 
 	std::shared_ptr<dx12lib::ConstantBuffer>   _pLightCB;
 	std::shared_ptr<dx12lib::StructuredBuffer> _pMaterialData;
 	FRConstantBufferPtr<d3d::PassCBType>       _pPassCB;
-	FRStructuredBufferPtr<InstanceData>        _pInstanceData;
+	FRStructuredBufferPtr<InstanceData>        _pInstanceBuffer;
 	std::vector<RenderItem> _opaqueRenderItems;
+
+	bool _bMouseLeftPress = false;
 };

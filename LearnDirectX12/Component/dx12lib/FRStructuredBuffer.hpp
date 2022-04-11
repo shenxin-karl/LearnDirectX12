@@ -21,7 +21,7 @@ public:
 	size_t getStride() const override;
 
 	template<typename T>
-	std::span<T> visitor() {
+	std::span<T> visit() {
 		assert(sizeof(T) == getStride());
 		size_t frameIndex = FrameIndexProxy::getConstantFrameIndexRef();
 		size_t numElements = getElementCount();
@@ -30,7 +30,7 @@ public:
 	}
 
 	template<typename T>
-	std::span<const T> visitor() const {
+	std::span<const T> visit() const {
 		assert(sizeof(T) == getStride());
 		size_t frameIndex = FrameIndexProxy::getConstantFrameIndexRef();
 		size_t numElements = getElementCount();
@@ -57,8 +57,8 @@ public:
 	size_t getStructuredBufferSize() const override;
 	size_t getElementCount() const override;
 	size_t getStride() const override;
-	std::span<T> visitor();
-	std::span<const T> visitor() const;
+	std::span<T> visit();
+	std::span<const T> visit() const;
 private:
 	DescriptorAllocation _structuredBufferView;
 	std::unique_ptr<UploadBuffer> _pUploadBuffer;
@@ -75,7 +75,7 @@ FRStructuredBuffer<T>::FRStructuredBuffer(std::weak_ptr<Device> pDevice, size_t 
 		kFrameResourceCount,
 		sizeInByte,
 		false
-		);
+	);
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC desc = {};
 	desc.Format = _pUploadBuffer->getD3DResource()->GetDesc().Format;
@@ -132,14 +132,14 @@ size_t FRStructuredBuffer<T>::getStride() const {
 }
 
 template <typename T>
-std::span<T> FRStructuredBuffer<T>::visitor() {
+std::span<T> FRStructuredBuffer<T>::visit() {
 	size_t frameIndex = FrameIndexProxy::getConstantFrameIndexRef();
 	T *ptr = reinterpret_cast<T *>(_pUploadBuffer->getMappedDataByIndex(frameIndex));
 	return std::span<T>(ptr, getElementCount());
 }
 
 template <typename T>
-std::span<const T> FRStructuredBuffer<T>::visitor() const {
+std::span<const T> FRStructuredBuffer<T>::visit() const {
 	size_t frameIndex = FrameIndexProxy::getConstantFrameIndexRef();
 	const T *ptr = reinterpret_cast<const T *>(_pUploadBuffer->getMappedDataByIndex(frameIndex));
 	return std::span<const T>(ptr, getElementCount());

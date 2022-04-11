@@ -16,12 +16,12 @@ struct Light {
 	float   spotPower;		// 聚光灯 pow 指数
 public:
 	void initAsDirectionLight(float3 direction, float3 strength);
-	void initAsPointLight(float3 position, float3 strength, float fallofStart, float fallofEnd);
+	void initAsPointLight(float3 position, float3 strength, float falloffStart, float falloffEnd);
 	void initAsSpotLight(float3 position, 
 		float3 direction, 
 		float3 strength, 
-		float fallofStart, 
-		float fallofEnd, 
+		float falloffStart, 
+		float falloffEnd, 
 		float spotPower
 	);
 };
@@ -30,8 +30,8 @@ struct Material {
 	float4 diffuseAlbedo;   // 反照率
 	float  roughness;       // 粗糙度
 	float  metallic;        // 金属度
-	float  pading0 = 0.f;   // 填充0
-	float  pading1 = 0.f;   // 填充1
+	float  padding0 = 0.f;   // 填充0
+	float  padding1 = 0.f;   // 填充1
 };
 
 struct PassCBType {
@@ -55,13 +55,13 @@ struct PassCBType {
 	float2   cbPerPassPad1;
 };
 
-constexpr std::size_t kMaxLightCount = 16;
+constexpr inline std::size_t kMaxLightCount = 16;
 struct LightCBType {
 	int      directLightCount = 0;
 	int      pointLightCount  = 0;
 	int      spotLightCount   = 0;
 	int      objectPad0       = 0;
-	float4	 ambientLight;
+	float4	 ambientLight     = float4(0.f);
 	Light    lights[kMaxLightCount];
 };
 

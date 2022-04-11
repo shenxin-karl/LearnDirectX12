@@ -88,6 +88,16 @@ public:
 	}
 
 	template<typename T>
+	std::shared_ptr<ConstantBuffer> createConstantBuffer() {
+		return this->createConstantBuffer(sizeof(T), nullptr);
+	}
+
+	template<typename T>
+	std::shared_ptr<ConstantBuffer> createConstantBuffer(const T &data) {
+		return this->createConstantBuffer(sizeof(T), &data);
+	}
+
+	template<typename T>
 	void setConstantBuffer(std::shared_ptr<FRConstantBuffer<T>> pConstantBuffer, size_t rootIndex, size_t offset = 0) {
 		this->setConstantBufferImpl(
 			std::static_pointer_cast<IConstantBuffer>(pConstantBuffer),
@@ -103,6 +113,11 @@ public:
 			pData,
 			numElements
 		);
+	}
+
+	template<typename T>
+	std::shared_ptr<FRStructuredBuffer<T>> createFRStructuredBuffer(size_t numElements) {
+		return this->createFRStructuredBuffer<T>(nullptr, numElements);
 	}
 };
 
