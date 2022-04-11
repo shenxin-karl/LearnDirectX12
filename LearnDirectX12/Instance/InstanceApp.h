@@ -1,0 +1,67 @@
+#pragma once
+#include "dx12lib/dx12libStd.h"
+#include "BaseApp/BaseApp.h"
+#include "D3D/Camera.h"
+#include "D3D/Mesh.h"
+#include "D3D/ShaderCommon.h"
+
+using namespace Math;
+
+struct OpaqueVertex {
+	float3 position;
+	float3 normal;
+public:
+	OpaqueVertex(const com::Vertex &vert) : position(vert.position), normal(vert.normal) {}
+};
+
+struct RenderItem {
+	std::shared_ptr<d3d::Mesh> pMesh;
+	size_t diffuseMapIdx;
+	size_t materialIdx;
+};
+
+struct InstanceData {
+	float4x4 world;
+	uint32_t materialIdx;
+	uint32_t diffuseMapIdx;
+	uint32_t pad0 = 0;
+	uint32_t pad1 = 0;
+};
+
+struct MaterialData {
+	float4 diffuseAlbedo;
+	float  roughness;
+	float  metallic;
+	float  pad0 = 0.f;
+	float  pad1 = 0.f;
+};
+
+class InstanceApp : public com::BaseApp {
+public:
+	InstanceApp();
+	~InstanceApp() override;
+private:
+	void onInitialize(dx12lib::DirectContextProxy pDirectCtx) override;
+	void onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
+	void onTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
+	void onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int height) override;
+private:
+	constexpr static size_t kMaxInstanceSize = 150;
+
+	std::unique_ptr<d3d::FirstPersonCamera> _pCamera;
+	std::shared_ptr<dx12lib::GraphicsPSO>   _pInstancePSO;
+
+	std::unordered_map<std::string, size_t> _textureIndexMap;
+	std::vector<std::shared_ptr<dx12lib::ShaderResourceBuffer>> _textures;
+
+	std::unordered_map<std::string, size_t> _materialIndexMap;
+	std::vector<d3d::Material> _materials;
+
+	std::unordered_map<std::string, std::shared_ptr<d3d::Mesh>> _geometrys;
+
+	std::shared_ptr<dx12lib::ConstantBuffer>   _pLightCB;
+	std::shared_ptr<dx12lib::StructuredBuffer> _pMaterialData;
+	FRConstantBufferPtr<d3d::PassCBType>       _pPassCB;
+	FRStructuredBufferPtr<InstanceData>        _pInstanceData;
+	std::vector<RenderItem> _opaqueRenderItems;
+};
