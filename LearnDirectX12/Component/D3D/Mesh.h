@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include "Geometry/GeometryGenerator.h"
 #include "dx12lib/ContextProxy.hpp"
-#include "dx12lib/CommandList.h"
+#include <DirectXCollision.h>
 
 namespace d3d {
 
@@ -36,11 +36,13 @@ class Mesh {
 	std::shared_ptr<dx12lib::VertexBuffer> _pVertexBuffer;
 	std::shared_ptr<dx12lib::IndexBuffer>  _pIndexBuffer;
 	std::vector<SubMesh> _subMeshs;
+	DX::BoundingBox _bounds;
 public:
 	Mesh &operator=(const Mesh &) = delete;
 	Mesh(const Mesh &) = delete;
 	Mesh(std::shared_ptr<dx12lib::VertexBuffer> pVertexBuffer,
 		std::shared_ptr<dx12lib::IndexBuffer> pIndexBuffer,
+		const DX::BoundingBox &bounds = DX::BoundingBox(),
 		const std::vector<SubMesh> &subMeshs = {}
 	);
 
@@ -64,6 +66,8 @@ public:
 	) const;
 
 	SubMesh getSubmesh(const std::string &name) const;
+
+	const DX::BoundingBox &getBounds() const;
 };
 
 enum class MeshIndexType {
@@ -147,20 +151,27 @@ struct MakeMeshHelper {
 		const com::MeshData &mesh,
 		const std::string &name = "") {
 		std::uint32_t count = -1;
-		std::uint32_t vertCount = std::uint32_t(mesh.vertices.size());
-		std::uint32_t indexCount = std::uint32_t(mesh.indices.size());
+		std::uint32_t vertCount = static_cast<std::uint32_t>(mesh.vertices.size());
+		std::uint32_t indexCount = static_cast<std::uint32_t>(mesh.indices.size());
 		if (!mesh.indices.empty() || !mesh.vertices.empty())
 			count = (mesh.indices.empty()) ? vertCount : indexCount;
 
 		assert(count != -1);
 		auto pVertexBuffer = buildVertexBuffer(pGrahpicsCtx, mesh);
 		auto pIndexBuffer = buildIndexBuffer(pGrahpicsCtx, mesh);
+
+		const auto *pVertex = mesh.vertices.data();
+		DX::BoundingBox bounds;
+		DX::BoundingBox::CreateFromPoints(bounds, mesh.vertices.size(), &pVertex->position, sizeof(com::Vertex));
+
 		std::vector<SubMesh> submeshs;
 		if (!name.empty())
-			submeshs.emplace_back(name, count, std::uint32_t(0), std::uint32_t(0));
+			submeshs.emplace_back(name, count, static_cast<std::uint32_t>(0), static_cast<std::uint32_t>(0));
+
 		return std::make_shared<Mesh>(
 			pVertexBuffer,
 			pIndexBuffer,
+			bounds,
 			submeshs
 		);
 	}
@@ -187,6 +198,13 @@ struct MakeUnionMeshHelper {
 		};
 		_vertices.insert(_vertices.end(), mesh.vertices.begin(), mesh.vertices.end());
 		_indices.insert(_indices.end(), mesh.indices.begin(), mesh.indices.end());
+
+		const auto *pVertex = mesh.vertices.data();
+		DX::BoundingBox submeshBounds;
+		auto tempBounds = _bounds;
+		DX::BoundingBox::CreateFromPoints(submeshBounds, mesh.vertices.size(), &pVertex->position, sizeof(com::Vertex));
+		DX::BoundingBox::CreateMerged(_bounds, tempBounds, submeshBounds);
+
 		_subMeshs.emplace(name, subMesh);
 	}
 
@@ -217,6 +235,7 @@ private:
 	std::vector<T> _vertices;
 	std::vector<index_t> _indices;
 	std::unordered_map<std::string, SubMesh> _subMeshs;
+	DX::BoundingBox _bounds;
 };
 
 }

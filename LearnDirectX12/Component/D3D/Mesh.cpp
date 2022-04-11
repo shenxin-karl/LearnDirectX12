@@ -36,9 +36,11 @@ void SubMesh::drawIndexdInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx,
 }
 
 Mesh::Mesh(std::shared_ptr<dx12lib::VertexBuffer> pVertexBuffer, 
-	std::shared_ptr<dx12lib::IndexBuffer> pIndexBuffer, 
+	std::shared_ptr<dx12lib::IndexBuffer> pIndexBuffer,
+	const DX::BoundingBox &bounds,
 	const std::vector<SubMesh> &subMeshs) 
-: _pVertexBuffer(pVertexBuffer), _pIndexBuffer(pIndexBuffer), _subMeshs(subMeshs) {
+: _pVertexBuffer(pVertexBuffer), _pIndexBuffer(pIndexBuffer), _subMeshs(subMeshs), _bounds(bounds)
+{
 }
 
 void Mesh::appendSubMesh(const SubMesh &submesh) {
@@ -102,6 +104,10 @@ SubMesh Mesh::getSubmesh(const std::string &name) const {
 		}
 	}
 	return res;
+}
+
+const DX::BoundingBox& Mesh::getBounds() const {
+	return _bounds;
 }
 
 }

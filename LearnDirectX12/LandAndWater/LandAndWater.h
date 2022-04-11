@@ -74,7 +74,7 @@ struct CBObjectType {
 
 struct RenderItem {
 	std::shared_ptr<d3d::Mesh> _pMesh;
-	dx12lib::FRCBPtr<CBObjectType> _pConstantBuffer;
+	dx12lib::FRConstantBufferPtr<CBObjectType> _pConstantBuffer;
 	std::shared_ptr<dx12lib::ShaderResourceBuffer> _pAlbedoMap;
 };
 
@@ -109,9 +109,9 @@ private:
 	void buildRenderItems(dx12lib::DirectContextProxy pDirectCtx);
 private:
 	std::unique_ptr<d3d::BlurFilter> _pBlurFilter;
-	dx12lib::FRCBPtr<WaterCBType> _pWaterCB;
-	dx12lib::FRCBPtr<d3d::PassCBType> _pPassCB;
-	dx12lib::FRCBPtr<d3d::LightCBType> _pLightCB;
+	FRConstantBufferPtr<WaterCBType> _pWaterCB;
+	FRConstantBufferPtr<d3d::PassCBType> _pPassCB;
+	FRConstantBufferPtr<d3d::LightCBType> _pLightCB;
 	std::unique_ptr<d3d::FirstPersonCamera> _pCamera;
 	std::map<std::string, d3d::Material> _materialMap;
 	std::map<std::string, std::shared_ptr<d3d::Mesh>> _geometryMap;

@@ -31,7 +31,7 @@ struct ObjectCB {
 
 struct RenderItem {
 	std::shared_ptr<Mesh> _pMesh;
-	dx12lib::FRCBPtr<ObjectCB> _pObjectCB;
+	FRConstantBufferPtr<ObjectCB> _pObjectCB;
 	std::shared_ptr<dx12lib::ShaderResourceBuffer> _pAlbedo;
 };
 
@@ -65,8 +65,8 @@ private:
 	void updatePassCB(std::shared_ptr<com::GameTimer> pGameTimer);
 private:
 	std::unique_ptr<d3d::CoronaCamera>  _pCamera;
-	dx12lib::FRCBPtr<d3d::LightCBType>  _pGameLightsCB;
-	dx12lib::FRCBPtr<d3d::PassCBType>   _pPassCB;
+	FRConstantBufferPtr<d3d::LightCBType>  _pGameLightsCB;
+	FRConstantBufferPtr<d3d::PassCBType>   _pPassCB;
 	std::unique_ptr<d3d::SobelFilter>	_pSobelFilter;
 	std::unordered_map<std::string, d3d::Material> _materials;
 	std::unordered_map<std::string, std::shared_ptr<Mesh>> _geometrys;

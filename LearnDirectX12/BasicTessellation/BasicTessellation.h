@@ -26,8 +26,8 @@ protected:
 	void onResize(dx12lib::DirectContextProxy pCmdList, int width, int height) override;
 private:
 	std::unique_ptr<d3d::CoronaCamera>    _pCamera;
-	dx12lib::FRCBPtr<float4x4>			  _pObjectCB;
-	dx12lib::FRCBPtr<d3d::PassCBType>	  _pPassCB;
+	FRConstantBufferPtr<float4x4>		  _pObjectCB;
+	FRConstantBufferPtr<d3d::PassCBType>  _pPassCB;
 	std::shared_ptr<dx12lib::GraphicsPSO> _pTessellationPSO;
 	std::shared_ptr<d3d::Mesh>			  _pQuadMesh;
 };

@@ -37,10 +37,10 @@ protected:
 	void buildGeometry(dx12lib::GraphicsContextProxy pGraphicsCtx);
 	void buildBezierPatchPSO();
 private:
-	std::unique_ptr<d3d::CoronaCamera> _pCamera;
-	dx12lib::FRCBPtr<CBObject>		   _pObjectCB;
-	dx12lib::FRCBPtr<d3d::PassCBType>  _pPassCB;
-	dx12lib::FRCBPtr<d3d::LightCBType> _pLightCB;
-	std::unique_ptr<d3d::Mesh>		   _pQuadMesh;
+	std::unique_ptr<d3d::CoronaCamera>    _pCamera;
+	FRConstantBufferPtr<CBObject>		  _pObjectCB;
+	FRConstantBufferPtr<d3d::PassCBType>  _pPassCB;
+	FRConstantBufferPtr<d3d::LightCBType> _pLightCB;
+	std::unique_ptr<d3d::Mesh>		      _pQuadMesh;
 	std::shared_ptr<dx12lib::GraphicsPSO> _pBezierPatchPSO;
 };

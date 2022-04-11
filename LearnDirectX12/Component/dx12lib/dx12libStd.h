@@ -145,19 +145,24 @@ struct RawData;
 template<typename T = RawData>
 class FRConstantBuffer;
 
-using FRRawCBPtr = std::shared_ptr<FRConstantBuffer<RawData>>;
+using FRRawConstantBufferPtr = std::shared_ptr<FRConstantBuffer<RawData>>;
 
 template<typename T>
-using FRCBPtr = std::shared_ptr<FRConstantBuffer<T>>;
+using FRConstantBufferPtr = std::shared_ptr<FRConstantBuffer<T>>;
 
 
 // frame resource structured buffer template
 template<typename T = RawData>
 class FRStructuredBuffer;
 
-using FRRawSBPtr = std::shared_ptr<FRStructuredBuffer<RawData>>;
+using FRRawStructuredBufferPtr = std::shared_ptr<FRStructuredBuffer<RawData>>;
 
 template<typename T>
-using FRSBPtr = std::shared_ptr<FRStructuredBuffer<T>>;
+using FRStructuredBufferPtr = std::shared_ptr<FRStructuredBuffer<T>>;
 
 }
+
+using dx12lib::FRRawConstantBufferPtr;
+using dx12lib::FRConstantBufferPtr;
+using dx12lib::FRRawStructuredBufferPtr;
+using dx12lib::FRStructuredBufferPtr;
