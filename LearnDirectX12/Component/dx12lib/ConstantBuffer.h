@@ -1,25 +1,12 @@
 #pragma once
 #include "dx12libStd.h"
+#include "CBufferVisitor.hpp"
 #include "DescriptorAllocation.h"
 #include "IResource.h"
 
 namespace dx12lib {
 
 class UploadBuffer;
-
-template<typename T>
-class CBufferVisitor {
-public:
-	CBufferVisitor(T *ptr) : _ptr(ptr) {}
-	CBufferVisitor(const CBufferVisitor &) = delete;
-	CBufferVisitor(CBufferVisitor &&other) = default;
-	decltype(auto) operator->() const {
-		return _ptr;
-	}
-private:
-	T * const _ptr;
-};
-
 
 class ConstantBuffer : public IConstantBuffer {
 protected:

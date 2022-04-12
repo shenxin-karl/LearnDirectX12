@@ -35,11 +35,11 @@ struct InstanceData {
 	uint pad1;
 };
 
-StructuredBuffer<InstanceData> gInstandeData : register(t0, space1);
+StructuredBuffer<InstanceData> gInstanceData : register(t0, space1);
 
 VertexOut VS(VertexIn vin, uint instanceId : SV_InstanceID) {
 	VertexOut vout;
-	InstanceData instData = gInstandeData[instanceId];
+	InstanceData instData = gInstanceData[instanceId];
 	float4 worldPosition = mul(instData.matWorld, float4(vin.position, 1.0));
 	float4 worldNormal = mul(instData.matNormal, float4(vin.normal, 0.0));
 
@@ -52,7 +52,7 @@ VertexOut VS(VertexIn vin, uint instanceId : SV_InstanceID) {
 }
 
 Texture2D gDiffuseMapArray[NUM] : register(t0);
-StructuredBuffer<Material> gMaterialData : register(t1, space2);
+StructuredBuffer<Material> gMaterialData : register(t1, space1);
 
 float4 TriplanarMapping(Texture2D diffuseMap, float3 worldPosition, float3 normal) {
 	float3 N = abs(normalize(normal));

@@ -17,7 +17,7 @@ public:
 };
 
 struct RenderItem {
-	std::shared_ptr<d3d::Mesh> pMesh;
+	float4x4 matWorld;
 	BoundingBox bounds;
 	size_t diffuseMapIdx;
 	size_t materialIdx;
@@ -32,6 +32,13 @@ struct InstanceData {
 	uint32_t pad1 = 0;
 };
 
+enum RootParame : size_t {
+	CB_Pass = 0,
+	CB_Light = 1,
+	SR_InstanceData = 2,
+	SR_MaterialData = 3,
+	SR_DiffuseMapArray = 4,
+};
 
 class InstanceApp : public com::BaseApp {
 public:
@@ -48,18 +55,19 @@ private:
 	void buildBuffer(dx12lib::CommandContextProxy pCommonCtx);
 	void loadTextures(dx12lib::CommandContextProxy pCommonCtx);
 	void loadSkull(dx12lib::GraphicsContextProxy pGraphicsCtx);
+	void buildMaterial(dx12lib::CommandContextProxy pCommonCtx);
 	void buildPSO();
 	void buildRenderItem();
+	std::vector<RenderItem> cullingByFrustum() const;
+	void doDrawInstance(std::shared_ptr<d3d::Mesh> pMesh, const std::vector<RenderItem> &renderItems);
 private:
-	constexpr static size_t kMaxInstanceSize = 150;
+	constexpr static inline size_t kMaxInstanceSize = 150;
+	constexpr static inline size_t kMaxTextureArraySize = 5;
 
 	std::unique_ptr<d3d::FirstPersonCamera> _pCamera;
 	std::shared_ptr<dx12lib::GraphicsPSO>   _pInstancePSO;
 
-	std::unordered_map<std::string, size_t> _textureIndexMap;
 	std::vector<std::shared_ptr<dx12lib::ShaderResourceBuffer>> _textures;
-
-	std::unordered_map<std::string, size_t> _materialIndexMap;
 	std::vector<d3d::Material> _materials;
 
 	std::unordered_map<std::string, std::shared_ptr<d3d::Mesh>> _geometryMap;
@@ -69,6 +77,5 @@ private:
 	FRConstantBufferPtr<d3d::PassCBType>       _pPassCB;
 	FRStructuredBufferPtr<InstanceData>        _pInstanceBuffer;
 	std::vector<RenderItem> _opaqueRenderItems;
-
 	bool _bMouseLeftPress = false;
 };

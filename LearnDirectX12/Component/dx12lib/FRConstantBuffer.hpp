@@ -2,6 +2,7 @@
 #include "Device.h"
 #include "IResource.h"
 #include "UploadBuffer.h"
+#include "CBufferVisitor.hpp"
 #include "DescriptorAllocation.h"
 
 namespace dx12lib {
@@ -18,6 +19,18 @@ public:
 	size_t getConstantBufferSize() const noexcept override;
 	void *map();
 	const void *cmap() const;
+
+	template<typename T>
+	CBufferVisitor<T> visit() {
+		assert(sizeof(T) <= getConstantBufferSize());
+		return CBufferVisitor<T>(static_cast<T *>(map()));
+	}
+
+	template<typename T>
+	CBufferVisitor<const T> visit() const {
+		assert(sizeof(T) <= getConstantBufferSize());
+		return CBufferVisitor<T>(static_cast<const T *>(cmap()));
+	}
 private:
 	DescriptorAllocation _CBV;
 	std::unique_ptr<BYTE[]> _pObject;
@@ -41,6 +54,8 @@ public:
 	size_t getConstantBufferSize() const noexcept override;
 	T *map();
 	const T *cmap() const;
+	CBufferVisitor<T> visit();
+	CBufferVisitor<const T> visit() const;
 private:
 	T _object;
 	DescriptorAllocation _CBV;
@@ -115,6 +130,16 @@ T *FRConstantBuffer<T>::map() {
 template <typename T>
 const T *FRConstantBuffer<T>::cmap() const {
 	return &_object;
+}
+
+template <typename T>
+CBufferVisitor<T> FRConstantBuffer<T>::visit() {
+	return CBufferVisitor<T>(map());
+}
+
+template <typename T>
+CBufferVisitor<const T> FRConstantBuffer<T>::visit() const {
+	return CBufferVisitor<T>(cmap());
 }
 
 }

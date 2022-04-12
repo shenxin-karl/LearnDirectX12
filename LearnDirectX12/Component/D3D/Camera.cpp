@@ -56,6 +56,20 @@ float CameraBase::getAspect() const {
 	return _aspect;
 }
 
+DX::BoundingFrustum CameraBase::getLocalSpaceFrustum() const {
+	auto proj = XMLoadFloat4x4(&getProj());
+	DX::BoundingFrustum result;
+	DX::BoundingFrustum::CreateFromMatrix(result, proj);
+	return result;
+}
+
+DX::BoundingFrustum CameraBase::getViewSpaceFrustum() const {
+	auto result = getLocalSpaceFrustum();
+	auto invView = XMLoadFloat4x4(&getInvView());
+	BoundingFrustum(result).Transform(result, invView);
+	return result;
+}
+
 CoronaCamera::CoronaCamera(const CameraDesc &desc) : CameraBase(desc) {
 	auto direction = desc.lookAt - desc.lookFrom;
 	_radius = length(direction);
@@ -129,7 +143,6 @@ void CoronaCamera::update(std::shared_ptr<com::GameTimer> pGameTimer) {
 	DirectX::XMStoreFloat4x4(&_invProj, invProj);
 	DirectX::XMStoreFloat4x4(&_invViewProj, invViewProj);
 }
-
 
 float CoronaCamera::getPhi() const {
 	return _phi;

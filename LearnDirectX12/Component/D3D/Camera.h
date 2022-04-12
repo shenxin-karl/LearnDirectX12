@@ -1,4 +1,5 @@
 #pragma once
+#include <DirectXCollision.h>
 #include "Math/MathHelper.h"
 #include "D3D/d3dutil.h"
 
@@ -40,6 +41,8 @@ public:
 	void setAspect(float aspect);
 	float getFov() const;
 	float getAspect() const;
+	DX::BoundingFrustum getLocalSpaceFrustum() const;
+	DX::BoundingFrustum getViewSpaceFrustum() const;
 protected:
 	float  _fov;
 	float  _aspect;

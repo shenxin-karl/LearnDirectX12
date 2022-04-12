@@ -35,9 +35,9 @@ void Light::initAsSpotLight(float3 position,
 	this->spotPower = spotPower;
 }
 
-CD3DX12_STATIC_SAMPLER_DESC getPointWrapStaticSampler(UINT shaderReginster) {
+CD3DX12_STATIC_SAMPLER_DESC getPointWrapStaticSampler(UINT shaderRegister) {
 	return CD3DX12_STATIC_SAMPLER_DESC(
-		shaderReginster,
+		shaderRegister,
 		D3D12_FILTER_MIN_MAG_MIP_POINT,
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
@@ -45,9 +45,9 @@ CD3DX12_STATIC_SAMPLER_DESC getPointWrapStaticSampler(UINT shaderReginster) {
 	);
 }
 
-CD3DX12_STATIC_SAMPLER_DESC getPointClampStaticSampler(UINT shaderReginster) {
+CD3DX12_STATIC_SAMPLER_DESC getPointClampStaticSampler(UINT shaderRegister) {
 	return CD3DX12_STATIC_SAMPLER_DESC(
-		shaderReginster,
+		shaderRegister,
 		D3D12_FILTER_MIN_MAG_MIP_POINT,
 		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
 		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
@@ -55,9 +55,9 @@ CD3DX12_STATIC_SAMPLER_DESC getPointClampStaticSampler(UINT shaderReginster) {
 	);
 }
 
-CD3DX12_STATIC_SAMPLER_DESC getLinearWrapStaticSampler(UINT shaderReginster) {
+CD3DX12_STATIC_SAMPLER_DESC getLinearWrapStaticSampler(UINT shaderRegister) {
 	return CD3DX12_STATIC_SAMPLER_DESC(
-		shaderReginster,
+		shaderRegister,
 		D3D12_FILTER_MIN_MAG_MIP_LINEAR,
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
@@ -65,9 +65,9 @@ CD3DX12_STATIC_SAMPLER_DESC getLinearWrapStaticSampler(UINT shaderReginster) {
 	);
 }
 
-CD3DX12_STATIC_SAMPLER_DESC getLinearClampStaticSampler(UINT shaderReginster) {
+CD3DX12_STATIC_SAMPLER_DESC getLinearClampStaticSampler(UINT shaderRegister) {
 	return CD3DX12_STATIC_SAMPLER_DESC(
-		shaderReginster,
+		shaderRegister,
 		D3D12_FILTER_MIN_MAG_MIP_LINEAR,
 		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
 		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
@@ -75,9 +75,9 @@ CD3DX12_STATIC_SAMPLER_DESC getLinearClampStaticSampler(UINT shaderReginster) {
 	);
 }
 
-CD3DX12_STATIC_SAMPLER_DESC getAnisotropicWrapStaticSampler(UINT shaderReginster) {
+CD3DX12_STATIC_SAMPLER_DESC getAnisotropicWrapStaticSampler(UINT shaderRegister) {
 	return CD3DX12_STATIC_SAMPLER_DESC(
-		shaderReginster,
+		shaderRegister,
 		D3D12_FILTER_ANISOTROPIC,
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
@@ -85,9 +85,9 @@ CD3DX12_STATIC_SAMPLER_DESC getAnisotropicWrapStaticSampler(UINT shaderReginster
 	);
 }
 
-CD3DX12_STATIC_SAMPLER_DESC getAnisotropicClampStaticSampler(UINT shaderReginster) {
+CD3DX12_STATIC_SAMPLER_DESC getAnisotropicClampStaticSampler(UINT shaderRegister) {
 	return CD3DX12_STATIC_SAMPLER_DESC(
-		shaderReginster,
+		shaderRegister,
 		D3D12_FILTER_ANISOTROPIC,
 		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
 		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,

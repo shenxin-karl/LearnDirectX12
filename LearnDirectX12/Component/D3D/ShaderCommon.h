@@ -66,12 +66,12 @@ struct LightCBType {
 };
 
 
-CD3DX12_STATIC_SAMPLER_DESC getPointWrapStaticSampler(UINT shaderReginster);
-CD3DX12_STATIC_SAMPLER_DESC getPointClampStaticSampler(UINT shaderReginster);
-CD3DX12_STATIC_SAMPLER_DESC getLinearWrapStaticSampler(UINT shaderReginster);
-CD3DX12_STATIC_SAMPLER_DESC getLinearClampStaticSampler(UINT shaderReginster);
-CD3DX12_STATIC_SAMPLER_DESC getAnisotropicWrapStaticSampler(UINT shaderReginster);
-CD3DX12_STATIC_SAMPLER_DESC getAnisotropicClampStaticSampler(UINT shaderReginster);
+CD3DX12_STATIC_SAMPLER_DESC getPointWrapStaticSampler(UINT shaderRegister);
+CD3DX12_STATIC_SAMPLER_DESC getPointClampStaticSampler(UINT shaderRegister);
+CD3DX12_STATIC_SAMPLER_DESC getLinearWrapStaticSampler(UINT shaderRegister);
+CD3DX12_STATIC_SAMPLER_DESC getLinearClampStaticSampler(UINT shaderRegister);
+CD3DX12_STATIC_SAMPLER_DESC getAnisotropicWrapStaticSampler(UINT shaderRegister);
+CD3DX12_STATIC_SAMPLER_DESC getAnisotropicClampStaticSampler(UINT shaderRegister);
 const std::array<CD3DX12_STATIC_SAMPLER_DESC, 6> &getStaticSamplers();
 
 }
