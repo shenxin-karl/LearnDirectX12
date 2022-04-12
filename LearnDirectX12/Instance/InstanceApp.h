@@ -4,8 +4,10 @@
 #include "D3D/Camera.h"
 #include "D3D/Mesh.h"
 #include "D3D/ShaderCommon.h"
+#include <DirectXCollision.h>
 
 using namespace Math;
+using namespace DirectX;
 
 struct OpaqueVertex {
 	float3 position;
@@ -16,25 +18,20 @@ public:
 
 struct RenderItem {
 	std::shared_ptr<d3d::Mesh> pMesh;
+	BoundingBox bounds;
 	size_t diffuseMapIdx;
 	size_t materialIdx;
 };
 
 struct InstanceData {
-	float4x4 world;
+	float4x4 matWorld;
+	float4x4 matNormal;
 	uint32_t materialIdx;
 	uint32_t diffuseMapIdx;
 	uint32_t pad0 = 0;
 	uint32_t pad1 = 0;
 };
 
-struct MaterialData {
-	float4 diffuseAlbedo;
-	float  roughness;
-	float  metallic;
-	float  pad0 = 0.f;
-	float  pad1 = 0.f;
-};
 
 class InstanceApp : public com::BaseApp {
 public:
@@ -49,7 +46,7 @@ private:
 	void pollEvent();
 	void buildCamera();
 	void buildBuffer(dx12lib::CommandContextProxy pCommonCtx);
-	void loadTextures(dx12lib::GraphicsContextProxy pGraphicsCtx);
+	void loadTextures(dx12lib::CommandContextProxy pCommonCtx);
 	void loadSkull(dx12lib::GraphicsContextProxy pGraphicsCtx);
 	void buildPSO();
 	void buildRenderItem();
