@@ -119,6 +119,15 @@ public:
 	std::shared_ptr<FRStructuredBuffer<T>> createFRStructuredBuffer(size_t numElements) {
 		return this->createFRStructuredBuffer<T>(nullptr, numElements);
 	}
+
+	template<typename T>
+	void setStructuredBuffer(std::shared_ptr<FRStructuredBuffer<T>> pConstantBuffer, size_t rootIndex, size_t offset = 0) {
+		this->setStructuredBufferImpl(
+			std::static_pointer_cast<IStructuredBuffer>(pConstantBuffer),
+			rootIndex,
+			offset
+		);
+	}
 };
 
 class GraphicsContext : public virtual CommandContext {

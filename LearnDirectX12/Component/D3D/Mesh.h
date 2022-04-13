@@ -22,13 +22,13 @@ struct SubMesh {
 public:
 	explicit operator bool() const;
 	void drawInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx,
-		std::uint32_t instanceCount = 1, 
-		std::uint32_t startInstanceLocation = 0
+		size_t instanceCount = 1,
+		size_t startInstanceLocation = 0
 	) const;
 
 	void drawIndexdInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx,
-		std::uint32_t instanceCount = 1, 
-		std::uint32_t startInstanceLocation = 0
+		size_t instanceCount = 1,
+		size_t startInstanceLocation = 0
 	) const;
 };
 
@@ -56,13 +56,13 @@ public:
 	iteraotr end() const;
 
 	void drawInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx,
-		std::uint32_t instanceCount = 1,
-		std::uint32_t startInstanceLocation = 0
+		size_t instanceCount = 1,
+		size_t startInstanceLocation = 0
 	) const;
 
 	void drawIndexdInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx,
-		std::uint32_t instanceCount = 1,
-		std::uint32_t startInstanceLocation = 0
+		size_t instanceCount = 1,
+		size_t startInstanceLocation = 0
 	) const;
 
 	SubMesh getSubmesh(const std::string &name) const;

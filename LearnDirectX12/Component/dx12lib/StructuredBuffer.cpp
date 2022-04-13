@@ -21,7 +21,7 @@ size_t StructuredBuffer::getStructuredBufferSize() const {
 }
 
 size_t StructuredBuffer::getElementCount() const {
-	return _pUploadBuffer->getElementCount();
+	return getStructuredBufferSize() / getStride();
 }
 
 size_t StructuredBuffer::getStride() const {
@@ -57,7 +57,7 @@ StructuredBuffer::StructuredBuffer(std::weak_ptr<Device> pDevice, const void *pD
 
 	pSharedDevice->getD3DDevice()->CreateShaderResourceView(
 		_pUploadBuffer->getD3DResource().Get(),
-		nullptr,
+		&desc,
 		_structuredBufferView.getCPUHandle()
 	);
 	_resourceType = ResourceType::StructuredBuffer;

@@ -3,9 +3,13 @@
 #include "InstanceApp.h"
 #include "dx12lib/CommandQueue.h"
 #include "dx12lib/ConstantBuffer.h"
+#include "dx12lib/FRStructuredBuffer.hpp"
 #include "dx12lib/PipelineStateObject.h"
 #include "dx12lib/RenderTarget.h"
 #include "dx12lib/RenderTargetBuffer.h"
+#include "dx12lib/ShaderResourceBuffer.h"
+#include "dx12lib/FRStructuredBuffer.hpp"
+#include "dx12lib/StructuredBuffer.h"
 #include "dx12lib/RootSignature.h"
 #include "dx12lib/SwapChain.h"
 #include "InputSystem/Keyboard.h"
@@ -24,6 +28,7 @@ void InstanceApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 	buildBuffer(pDirectCtx);
 	loadTextures(pDirectCtx);
 	loadSkull(pDirectCtx);
+	buildMaterial(pDirectCtx);
 	buildPSO();
 	buildRenderItem();
 }
@@ -52,14 +57,20 @@ void InstanceApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		pDirectCtx->setRenderTarget(pRenderTarget);
 		pDirectCtx->transitionBarrier(pRenderTargetBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-		pDirectCtx->clearColor(pRenderTargetBuffer, float4(DirectX::Colors::White));
+		pDirectCtx->clearColor(pRenderTargetBuffer, float4(DirectX::Colors::LightSkyBlue));
 		pDirectCtx->clearDepthStencil(pDepthStencilBuffer, 1.f, 0);
 
 		pDirectCtx->setGraphicsPSO(_pInstancePSO);
 		pDirectCtx->setConstantBuffer(_pPassCB, CB_Pass);
 		pDirectCtx->setConstantBuffer(_pLightCB, CB_Light);
+		pDirectCtx->setStructuredBuffer(_pMaterialData, SR_MaterialData);
 
-		
+		size_t srvCount = std::min(_textures.size(), kMaxTextureArraySize);
+		for (size_t idx = 0; idx < srvCount; ++idx)
+			pDirectCtx->setShaderResourceBuffer(_textures[idx], SR_DiffuseMapArray, idx);
+
+		std::vector<RenderItem> renderItems = cullingByFrustum();
+		doDrawInstance(pDirectCtx, _geometryMap["skull"], renderItems);
 
 		pDirectCtx->transitionBarrier(pRenderTargetBuffer, D3D12_RESOURCE_STATE_PRESENT);
 	}
@@ -74,10 +85,12 @@ void InstanceApp::onResize(dx12lib::DirectContextProxy pDirectCtx, int width, in
 void InstanceApp::pollEvent() {
 	// poll mouse event
 	while (auto event = _pInputSystem->pMouse->getEvent()) {
-		if (event.isLPress())
+		if (event.isLPress()) {
 			_bMouseLeftPress = true;
-		else if (event.isLRelease())
+			_pCamera->setLastMousePosition(POINT(event.x, event.y));
+		} else if (event.isLRelease()) {
 			_bMouseLeftPress = false;
+		}
 
 		if (_bMouseLeftPress)
 			_pCamera->pollEvent(event);
@@ -133,14 +146,14 @@ void InstanceApp::buildMaterial(dx12lib::CommandContextProxy pCommonCtx) {
 	std::random_device rd;
 	std::mt19937 gen(rd());
 	std::uniform_int_distribution<size_t> disInt(10, 30);
-	std::uniform_real_distribution<float> disFloat(0.f, 1.f);
+	std::uniform_real_distribution<float> disFloat(0.5f, 1.f);
 
 	size_t count = disInt(gen);
 	for (size_t idx = 0; idx < count; ++idx) {
 		d3d::Material mat = {
 			float4(disFloat(gen), disFloat(gen), disFloat(gen), 1.f),
 			disFloat(gen),
-			disFloat(gen)
+			0.5f
 		};
 		_materials.push_back(mat);
 	}
@@ -149,21 +162,30 @@ void InstanceApp::buildMaterial(dx12lib::CommandContextProxy pCommonCtx) {
 }
 
 void InstanceApp::buildPSO() {
+	UINT texArrayCount = std::min(kMaxTextureArraySize, _textures.size());
+
 	dx12lib::RootSignatureDescHelper rootDesc(d3d::getStaticSamplers());
 	rootDesc.resize(5);
 	rootDesc[CB_Pass].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 	rootDesc[CB_Light].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
 	rootDesc[SR_InstanceData].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 1);
 	rootDesc[SR_MaterialData].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, 1);
-	rootDesc[SR_DiffuseMapArray].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, kMaxTextureArraySize, 0, 0);
+	rootDesc[SR_DiffuseMapArray].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, texArrayCount, 0, 0);
 	auto pRootSignature = _pDevice->createRootSignature(rootDesc);
 
 	_pInstancePSO = _pDevice->createGraphicsPSO("InstancePSO");
 	_pInstancePSO->setRootSignature(pRootSignature);
+	_pInstancePSO->setRenderTargetFormat(_pSwapChain->getRenderTargetFormat(), _pSwapChain->getDepthStencilFormat());
 
-	std::string numArraySize = std::to_string(kMaxInstanceSize);
+	std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout = {
+		{ dx12lib::VInputLayoutDescHelper(&OpaqueVertex::position, "POSITION", DXGI_FORMAT_R32G32B32_FLOAT) },
+		{ dx12lib::VInputLayoutDescHelper(&OpaqueVertex::normal, "NORMAL", DXGI_FORMAT_R32G32B32_FLOAT) },
+	};
+	_pInstancePSO->setInputLayout(inputLayout);
+
+	std::string strTexArrayCount = std::to_string(texArrayCount);
 	D3D_SHADER_MACRO pMacros[] = {
-		{ "NUM", numArraySize.c_str() },
+		{ "NUM", strTexArrayCount.c_str() },
 		{ nullptr, nullptr },
 	};
 	_pInstancePSO->setVertexShader(d3d::compileShader(
@@ -226,14 +248,47 @@ void InstanceApp::buildRenderItem() {
 
 std::vector<RenderItem> InstanceApp::cullingByFrustum() const {
 	std::vector<RenderItem> res;
-	auto viewSpaceFrustum = _pCamera->getViewSpaceFrustum();
+	auto pMesh = _geometryMap["skull"];
+	// auto viewSpaceFrustum = _pCamera->getViewSpaceFrustum();
+	DirectX::BoundingFrustum projSpaceFrustum = _pCamera->getLocalSpaceFrustum();
+	XMMATRIX invView = XMLoadFloat4x4(&_pCamera->getInvView());
 	for (const auto &rItem : _opaqueRenderItems) {
-		if (viewSpaceFrustum.Contains(rItem.bounds) != DISJOINT)
-			res.push_back(rItem);
+		// if (viewSpaceFrustum.Contains(rItem.bounds) != DISJOINT)
+		// 	res.push_back(rItem);
+		// XMMATRIX matWorld = XMLoadFloat4x4(&rItem.matWorld);
+		// XMVECTOR det = XMMatrixDeterminant(matWorld);
+		// XMMATRIX matInvWorld = XMMatrixInverse(&det, matWorld);
+		// XMMATRIX viewToWorld = XMMatrixMultiply(matInvWorld, invView);
+		// DirectX::BoundingFrustum localSpaceFrustum;
+		// projSpaceFrustum.Transform(localSpaceFrustum, viewToWorld);
+		// if (projSpaceFrustum.Contains(pMesh->getBounds()) != DISJOINT)
+		// 	res.push_back(rItem);
 	}
 	return res;
 }
 
-void InstanceApp::doDrawInstance(std::shared_ptr<d3d::Mesh> pMesh, const std::vector<RenderItem> &renderItems) {
-	
+void InstanceApp::doDrawInstance(dx12lib::GraphicsContextProxy pGraphicsCtx, 
+	std::shared_ptr<d3d::Mesh> pMesh, 
+	const std::vector<RenderItem> &renderItems)
+{
+	size_t idx = 0;
+	std::span<InstanceData> bufferVisitor = _pInstanceBuffer->visit();
+	for (const RenderItem &rItem : renderItems) {
+		InstanceData &instData = bufferVisitor[idx++];
+		instData.materialIdx = static_cast<uint32_t>(rItem.materialIdx);
+		instData.diffuseMapIdx = static_cast<uint32_t>(rItem.diffuseMapIdx);
+		instData.matWorld = rItem.matWorld;
+		XMMATRIX matWorld = XMLoadFloat4x4(&instData.matWorld);
+		XMVECTOR det = XMMatrixDeterminant(matWorld);
+		XMMATRIX invWorld = XMMatrixInverse(&det, matWorld);
+		XMMATRIX matNormal = XMMatrixTranspose(invWorld);
+		XMStoreFloat4x4(&instData.matNormal, matNormal);
+	}
+
+	pGraphicsCtx->setStructuredBuffer(_pInstanceBuffer, SR_InstanceData);
+
+	pGraphicsCtx->setVertexBuffer(pMesh->getVertexBuffer());
+	pGraphicsCtx->setIndexBuffer(pMesh->getIndexBuffer());
+	pGraphicsCtx->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	pMesh->drawIndexdInstanced(pGraphicsCtx, idx);
 }

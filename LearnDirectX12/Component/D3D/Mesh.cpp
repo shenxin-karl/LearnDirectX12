@@ -9,9 +9,8 @@ SubMesh::operator bool() const {
 }
 
 void SubMesh::drawInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx,
-	std::uint32_t instanceCount /*= 1*/, 
-	std::uint32_t startInstanceLocation /*= 0 */) const 
-{
+	size_t instanceCount /*= 1*/,
+	size_t startInstanceLocation /*= 0 */) const {
 	assert(bool(*this) && "this submesh invalid");
 	pGrahpicsCtx->drawInstanced(
 		_count,
@@ -22,8 +21,8 @@ void SubMesh::drawInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx,
 }
 
 void SubMesh::drawIndexdInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx,
-	std::uint32_t instanceCount /*= 1*/, 
-	std::uint32_t startInstanceLocation /*= 0 */) const 
+	size_t instanceCount /*= 1*/,
+	size_t startInstanceLocation /*= 0 */) const
 {
 	assert(bool(*this) && "this submesh invalid");
 	pGrahpicsCtx->drawIndexedInstanced(
@@ -65,9 +64,8 @@ Mesh::iteraotr Mesh::end() const {
 
 
 void Mesh::drawInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx,
-	std::uint32_t instanceCount /*= 1*/, 
-	std::uint32_t startInstanceLocation /*= 0 */) const 
-{
+	size_t instanceCount /*= 1*/,
+	size_t startInstanceLocation /*= 0 */) const {
 	if (!_subMeshs.empty()) {
 		for (auto &submesh : *this)
 			submesh.drawInstanced(pGrahpicsCtx, instanceCount, startInstanceLocation);
@@ -80,9 +78,9 @@ void Mesh::drawInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx,
 }
 
 
-void Mesh::drawIndexdInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx, 
-	std::uint32_t instanceCount /*= 1*/, 
-	std::uint32_t startInstanceLocation /*= 0 */) const 
+void Mesh::drawIndexdInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx,
+	size_t instanceCount /*= 1*/,
+	size_t startInstanceLocation /*= 0 */) const
 {
 	if (!_subMeshs.empty()) {
 		for (auto &submesh : *this)

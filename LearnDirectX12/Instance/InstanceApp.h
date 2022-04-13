@@ -59,7 +59,7 @@ private:
 	void buildPSO();
 	void buildRenderItem();
 	std::vector<RenderItem> cullingByFrustum() const;
-	void doDrawInstance(std::shared_ptr<d3d::Mesh> pMesh, const std::vector<RenderItem> &renderItems);
+	void doDrawInstance(dx12lib::GraphicsContextProxy pGraphicsCtx, std::shared_ptr<d3d::Mesh> pMesh, const std::vector<RenderItem> &renderItems);
 private:
 	constexpr static inline size_t kMaxInstanceSize = 150;
 	constexpr static inline size_t kMaxTextureArraySize = 5;
@@ -70,7 +70,7 @@ private:
 	std::vector<std::shared_ptr<dx12lib::ShaderResourceBuffer>> _textures;
 	std::vector<d3d::Material> _materials;
 
-	std::unordered_map<std::string, std::shared_ptr<d3d::Mesh>> _geometryMap;
+	mutable std::unordered_map<std::string, std::shared_ptr<d3d::Mesh>> _geometryMap;
 
 	std::shared_ptr<dx12lib::ConstantBuffer>   _pLightCB;
 	std::shared_ptr<dx12lib::StructuredBuffer> _pMaterialData;

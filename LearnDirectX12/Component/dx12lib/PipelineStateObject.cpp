@@ -169,7 +169,8 @@ void GraphicsPSO::finalize() {
 	if (!_dirty)
 		return;
 	
-	assert(_pRootSignature != nullptr);
+	assert(_pRootSignature != nullptr && "No root signature is provided");
+	assert(_pInputLayout != nullptr && "No vertex input is provided");
 	_psoDesc.pRootSignature = _pRootSignature->getRootSignature().Get();
 	ThrowIfFailed(_pDevice.lock()->getD3DDevice()->CreateGraphicsPipelineState(
 		&_psoDesc,

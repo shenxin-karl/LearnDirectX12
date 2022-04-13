@@ -64,9 +64,10 @@ DX::BoundingFrustum CameraBase::getLocalSpaceFrustum() const {
 }
 
 DX::BoundingFrustum CameraBase::getViewSpaceFrustum() const {
-	auto result = getLocalSpaceFrustum();
+	auto localSpaceFrustum = getLocalSpaceFrustum();
 	auto invView = XMLoadFloat4x4(&getInvView());
-	BoundingFrustum(result).Transform(result, invView);
+	DX::BoundingFrustum result;
+	localSpaceFrustum.Transform(result, invView);
 	return result;
 }
 

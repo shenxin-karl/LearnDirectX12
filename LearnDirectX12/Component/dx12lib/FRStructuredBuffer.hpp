@@ -49,7 +49,7 @@ private:
 template<typename T>
 class FRStructuredBuffer : public IStructuredBuffer {
 protected:
-	FRStructuredBuffer(std::weak_ptr<Device> pDevice, size_t numElements, const T *pData);
+	FRStructuredBuffer(std::weak_ptr<Device> pDevice, const T *pData, size_t numElements);
 public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
 	D3D12_CPU_DESCRIPTOR_HANDLE getShaderResourceView() const override;
@@ -65,7 +65,7 @@ private:
 };
 
 template <typename T>
-FRStructuredBuffer<T>::FRStructuredBuffer(std::weak_ptr<Device> pDevice, size_t numElements, const T *pData) {
+FRStructuredBuffer<T>::FRStructuredBuffer(std::weak_ptr<Device> pDevice, const T *pData, size_t numElements) {
 	size_t stride = sizeof(T);
 	size_t sizeInByte = numElements * stride;
 	auto pSharedDevice = pDevice.lock();
@@ -81,7 +81,7 @@ FRStructuredBuffer<T>::FRStructuredBuffer(std::weak_ptr<Device> pDevice, size_t 
 	desc.Format = _pUploadBuffer->getD3DResource()->GetDesc().Format;
 	desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	desc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-	desc.Buffer.NumElements = numElements;
+	desc.Buffer.NumElements = static_cast<UINT>(numElements);
 	desc.Buffer.StructureByteStride = stride;
 	desc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
@@ -123,7 +123,7 @@ size_t FRStructuredBuffer<T>::getStructuredBufferSize() const {
 
 template <typename T>
 size_t FRStructuredBuffer<T>::getElementCount() const {
-	return _pUploadBuffer->getElementCount();
+	return getStructuredBufferSize() / getStride();
 }
 
 template <typename T>
