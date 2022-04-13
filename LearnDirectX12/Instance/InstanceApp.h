@@ -70,7 +70,7 @@ private:
 	std::vector<std::shared_ptr<dx12lib::ShaderResourceBuffer>> _textures;
 	std::vector<d3d::Material> _materials;
 
-	mutable std::unordered_map<std::string, std::shared_ptr<d3d::Mesh>> _geometryMap;
+	std::unordered_map<std::string, std::shared_ptr<d3d::Mesh>> _geometryMap;
 
 	std::shared_ptr<dx12lib::ConstantBuffer>   _pLightCB;
 	std::shared_ptr<dx12lib::StructuredBuffer> _pMaterialData;

@@ -41,7 +41,7 @@ public:
 	void setAspect(float aspect);
 	float getFov() const;
 	float getAspect() const;
-	DX::BoundingFrustum getLocalSpaceFrustum() const;
+	DX::BoundingFrustum getProjSpaceFrustum() const;
 	DX::BoundingFrustum getViewSpaceFrustum() const;
 protected:
 	float  _fov;

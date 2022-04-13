@@ -92,7 +92,7 @@ void InstanceApp::pollEvent() {
 			_bMouseLeftPress = false;
 		}
 
-		if (_bMouseLeftPress)
+		if (_bMouseLeftPress || !event.isMove())
 			_pCamera->pollEvent(event);
 	}
 
@@ -112,6 +112,7 @@ void InstanceApp::buildCamera() {
 		static_cast<float>(_width) / static_cast<float>(_height)
 	};
 	_pCamera = std::make_unique<d3d::FirstPersonCamera>(cameraDesc);
+	_pCamera->_cameraMoveSpeed = 10.f;
 }
 
 void InstanceApp::buildBuffer(dx12lib::CommandContextProxy pCommonCtx) {
@@ -120,7 +121,7 @@ void InstanceApp::buildBuffer(dx12lib::CommandContextProxy pCommonCtx) {
 	_pInstanceBuffer = pCommonCtx->createFRStructuredBuffer<InstanceData>(kMaxInstanceSize);
 
 	auto pLight = _pLightCB->visit<d3d::LightCBType>();
-	pLight->ambientLight = float4(0.1f, 0.1f, 0.1f, 1.f);
+	pLight->ambientLight = float4(0.2f, 0.2f, 0.2f, 1.f);
 	pLight->directLightCount = 3;
 	pLight->lights[0].initAsDirectionLight(float3(0.57735f, 0.57735f, 0.57735f), float3(0.6f));
 	pLight->lights[1].initAsDirectionLight(float3(-0.57735f, 0.57735f, 0.57735f), float3(0.35f));
@@ -146,18 +147,17 @@ void InstanceApp::buildMaterial(dx12lib::CommandContextProxy pCommonCtx) {
 	std::random_device rd;
 	std::mt19937 gen(rd());
 	std::uniform_int_distribution<size_t> disInt(10, 30);
-	std::uniform_real_distribution<float> disFloat(0.5f, 1.f);
+	std::uniform_real_distribution<float> disFloat(0.1f, 1.f);
 
 	size_t count = disInt(gen);
 	for (size_t idx = 0; idx < count; ++idx) {
 		d3d::Material mat = {
 			float4(disFloat(gen), disFloat(gen), disFloat(gen), 1.f),
 			disFloat(gen),
-			0.5f
+			disFloat(gen),
 		};
 		_materials.push_back(mat);
 	}
-
 	_pMaterialData = pCommonCtx->createStructuredBuffer(_materials.data(), _materials.size(), sizeof(d3d::Material));
 }
 
@@ -208,8 +208,8 @@ void InstanceApp::buildRenderItem() {
 	auto pMesh = _geometryMap["skull"];
 	std::random_device rd;
 	std::mt19937 gen(rd());
-	std::uniform_int_distribution<size_t> disMat(0, _materials.size());
-	std::uniform_int_distribution<size_t> disMap(0, _textures.size());
+	std::uniform_int_distribution<size_t> disMat(0, _materials.size()-1);
+	std::uniform_int_distribution<size_t> disMap(0, _textures.size()-1);
 
 	float width = 200.0f;
 	float height = 200.0f;
@@ -238,7 +238,6 @@ void InstanceApp::buildRenderItem() {
 					0.0f, 0.0f, 1.0f, 0.0f,
 					x+j*dx, y+i*dy, z+k*dz, 1.0f
 				);
-
 				auto matWorld = XMLoadFloat4x4(&item.matWorld);
 				pMesh->getBounds().Transform(item.bounds, matWorld);
 			}
@@ -248,21 +247,10 @@ void InstanceApp::buildRenderItem() {
 
 std::vector<RenderItem> InstanceApp::cullingByFrustum() const {
 	std::vector<RenderItem> res;
-	auto pMesh = _geometryMap["skull"];
-	// auto viewSpaceFrustum = _pCamera->getViewSpaceFrustum();
-	DirectX::BoundingFrustum projSpaceFrustum = _pCamera->getLocalSpaceFrustum();
-	XMMATRIX invView = XMLoadFloat4x4(&_pCamera->getInvView());
+	DirectX::BoundingFrustum projSpaceFrustum = _pCamera->getViewSpaceFrustum();
 	for (const auto &rItem : _opaqueRenderItems) {
-		// if (viewSpaceFrustum.Contains(rItem.bounds) != DISJOINT)
-		// 	res.push_back(rItem);
-		// XMMATRIX matWorld = XMLoadFloat4x4(&rItem.matWorld);
-		// XMVECTOR det = XMMatrixDeterminant(matWorld);
-		// XMMATRIX matInvWorld = XMMatrixInverse(&det, matWorld);
-		// XMMATRIX viewToWorld = XMMatrixMultiply(matInvWorld, invView);
-		// DirectX::BoundingFrustum localSpaceFrustum;
-		// projSpaceFrustum.Transform(localSpaceFrustum, viewToWorld);
-		// if (projSpaceFrustum.Contains(pMesh->getBounds()) != DISJOINT)
-		// 	res.push_back(rItem);
+		if (projSpaceFrustum.Contains(rItem.bounds) != DISJOINT)
+			res.push_back(rItem);
 	}
 	return res;
 }

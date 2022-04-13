@@ -56,7 +56,7 @@ float CameraBase::getAspect() const {
 	return _aspect;
 }
 
-DX::BoundingFrustum CameraBase::getLocalSpaceFrustum() const {
+DX::BoundingFrustum CameraBase::getProjSpaceFrustum() const {
 	auto proj = XMLoadFloat4x4(&getProj());
 	DX::BoundingFrustum result;
 	DX::BoundingFrustum::CreateFromMatrix(result, proj);
@@ -64,7 +64,7 @@ DX::BoundingFrustum CameraBase::getLocalSpaceFrustum() const {
 }
 
 DX::BoundingFrustum CameraBase::getViewSpaceFrustum() const {
-	auto localSpaceFrustum = getLocalSpaceFrustum();
+	auto localSpaceFrustum = getProjSpaceFrustum();
 	auto invView = XMLoadFloat4x4(&getInvView());
 	DX::BoundingFrustum result;
 	localSpaceFrustum.Transform(result, invView);
@@ -130,8 +130,8 @@ void CoronaCamera::update(std::shared_ptr<com::GameTimer> pGameTimer) {
 	DirectX::XMMATRIX proj = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(_fov), _aspect, _nearClip, _farClip);
 	DirectX::XMMATRIX viewProj = view * proj;
 
-	DirectX::XMVECTOR det;
-	DirectX::XMMATRIX invView = DirectX::XMMatrixTranspose(view);
+	DirectX::XMVECTOR det = XMMatrixDeterminant(view);
+	DirectX::XMMATRIX invView = DirectX::XMMatrixInverse(&det, view);
 	det = DirectX::XMMatrixDeterminant(proj);
 	DirectX::XMMATRIX invProj = DirectX::XMMatrixInverse(&det, proj);
 	det = DirectX::XMMatrixDeterminant(viewProj);
@@ -258,8 +258,8 @@ void FirstPersonCamera::update(std::shared_ptr<com::GameTimer> pGameTimer) {
 	DirectX::XMMATRIX proj = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(_fov), _aspect, _nearClip, _farClip);
 	DirectX::XMMATRIX viewProj = view * proj;
 
-	DirectX::XMVECTOR det;
-	DirectX::XMMATRIX invView = DirectX::XMMatrixTranspose(view);
+	DirectX::XMVECTOR det = XMMatrixDeterminant(view);
+	DirectX::XMMATRIX invView = DirectX::XMMatrixInverse(&det, view);
 	det = DirectX::XMMatrixDeterminant(proj);
 	DirectX::XMMATRIX invProj = DirectX::XMMatrixInverse(&det, proj);
 	det = DirectX::XMMatrixDeterminant(viewProj);
