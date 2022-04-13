@@ -112,7 +112,7 @@ void InstanceApp::buildCamera() {
 		static_cast<float>(_width) / static_cast<float>(_height)
 	};
 	_pCamera = std::make_unique<d3d::FirstPersonCamera>(cameraDesc);
-	_pCamera->_cameraMoveSpeed = 10.f;
+	_pCamera->_cameraMoveSpeed = 25.f;
 }
 
 void InstanceApp::buildBuffer(dx12lib::CommandContextProxy pCommonCtx) {
@@ -131,8 +131,10 @@ void InstanceApp::buildBuffer(dx12lib::CommandContextProxy pCommonCtx) {
 void InstanceApp::loadTextures(dx12lib::CommandContextProxy pCommonCtx) {
 	auto pTex1 = pCommonCtx->createDDSTextureFromFile(L"resources/grass.dds");
 	auto pTex2 = pCommonCtx->createDDSTextureFromFile(L"resources/stone.dds");
+	auto pTex3 = pCommonCtx->createDDSTextureFromFile(L"resources/white1x1.dds");
 	_textures.push_back(pTex1);
 	_textures.push_back(pTex2);
+	_textures.push_back(pTex3);
 }
 
 void InstanceApp::loadSkull(dx12lib::GraphicsContextProxy pGraphicsCtx) {
