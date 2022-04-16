@@ -80,7 +80,7 @@ std::weak_ptr<dx12lib::Device> CommandList::getDevice() const {
 	return _pDevice;
 }
 
-/// ******************************************** CommandContext api ********************************************
+/// ******************************************** CommonContext api ********************************************
 std::shared_ptr<ConstantBuffer>
 CommandList::createConstantBuffer(std::size_t sizeInByte, const void *pData) {
 	return std::make_shared<dx12libTool::MakeConstantBuffer>(_pDevice, pData, sizeInByte);
@@ -150,6 +150,61 @@ std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSTextureFromMemory(co
 		pTexture,
 		pUploadHeap,
 		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+	);
+}
+
+std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSCubeTextureFromFile(const std::wstring &fileName) {
+	WRL::ComPtr<ID3D12Resource> pTexture;
+	WRL::ComPtr<ID3D12Resource> pUploadHeap;
+	DirectX::CreateDDSTextureFromFile12(_pDevice.lock()->getD3DDevice(),
+		_pCommandList.Get(),
+		fileName.c_str(),
+		pTexture,
+		pUploadHeap
+	);
+
+	assert(pTexture != nullptr && pUploadHeap != nullptr);
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+	srvDesc.TextureCube.MostDetailedMip = 0;
+	srvDesc.TextureCube.MipLevels = pTexture->GetDesc().MipLevels;
+	srvDesc.TextureCube.ResourceMinLODClamp = 0.0f;
+	srvDesc.Format = pTexture->GetDesc().Format;
+	return std::make_shared<dx12libTool::MakeShaderResourceBuffer>(_pDevice,
+		pTexture,
+		pUploadHeap,
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+		&srvDesc
+	);
+}
+
+std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSCubeTextureFromMemory(const void *pData, 
+	size_t sizeInByte)
+{
+	WRL::ComPtr<ID3D12Resource> pTexture;
+	WRL::ComPtr<ID3D12Resource> pUploadHeap;
+	DirectX::CreateDDSTextureFromMemory12(_pDevice.lock()->getD3DDevice(),
+		_pCommandList.Get(),
+		static_cast<const uint8_t *>(pData),
+		sizeInByte,
+		pTexture,
+		pUploadHeap
+	);
+
+	assert(pTexture != nullptr && pUploadHeap != nullptr);
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+	srvDesc.TextureCube.MostDetailedMip = 0;
+	srvDesc.TextureCube.MipLevels = pTexture->GetDesc().MipLevels;
+	srvDesc.TextureCube.ResourceMinLODClamp = 0.0f;
+	srvDesc.Format = pTexture->GetDesc().Format;
+	return std::make_shared<dx12libTool::MakeShaderResourceBuffer>(_pDevice,
+		pTexture,
+		pUploadHeap,
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+		&srvDesc
 	);
 }
 

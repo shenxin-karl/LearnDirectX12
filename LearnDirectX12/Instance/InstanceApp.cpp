@@ -15,6 +15,7 @@
 #include "InputSystem/Keyboard.h"
 #include "InputSystem/Mouse.h"
 #include "GameTimer/GameTimer.h"
+#include "D3D/SkyBox.h"
 
 InstanceApp::InstanceApp() {
 	_title = "InstanceApp";
@@ -24,6 +25,14 @@ InstanceApp::~InstanceApp() {
 }
 
 void InstanceApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
+	d3d::SkyBoxDesc skyBoxDesc = {
+		.pGraphicsCtx = pDirectCtx,
+		.filename = L"resources/snowcube1024.dds",
+		.renderTargetFormat = _pSwapChain->getRenderTargetFormat(),
+		.depthStencilFormat = _pSwapChain->getDepthStencilFormat(),
+	};
+	_pSkyBox = std::make_unique<d3d::SkyBox>(skyBoxDesc);
+
 	buildCamera();
 	buildBuffer(pDirectCtx);
 	loadTextures(pDirectCtx);
@@ -72,6 +81,8 @@ void InstanceApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		std::vector<RenderItem> renderItems = cullingByFrustum();
 		doDrawInstance(pDirectCtx, _geometryMap["skull"], renderItems);
 
+		_pSkyBox->render(pDirectCtx, _pCamera);
+
 		pDirectCtx->transitionBarrier(pRenderTargetBuffer, D3D12_RESOURCE_STATE_PRESENT);
 	}
 	pCmdQueue->executeCommandList(pDirectCtx);
@@ -115,7 +126,7 @@ void InstanceApp::buildCamera() {
 	_pCamera->_cameraMoveSpeed = 25.f;
 }
 
-void InstanceApp::buildBuffer(dx12lib::CommandContextProxy pCommonCtx) {
+void InstanceApp::buildBuffer(dx12lib::CommonContextProxy pCommonCtx) {
 	_pPassCB = pCommonCtx->createFRConstantBuffer<d3d::PassCBType>();
 	_pLightCB = pCommonCtx->createConstantBuffer<d3d::LightCBType>();
 	_pInstanceBuffer = pCommonCtx->createFRStructuredBuffer<InstanceData>(kMaxInstanceSize);
@@ -128,7 +139,7 @@ void InstanceApp::buildBuffer(dx12lib::CommandContextProxy pCommonCtx) {
 	pLight->lights[2].initAsDirectionLight(float3(0.0f, 0.707f, -0.707f), float3(0.15f));
 }
 
-void InstanceApp::loadTextures(dx12lib::CommandContextProxy pCommonCtx) {
+void InstanceApp::loadTextures(dx12lib::CommonContextProxy pCommonCtx) {
 	auto pTex1 = pCommonCtx->createDDSTextureFromFile(L"resources/grass.dds");
 	auto pTex2 = pCommonCtx->createDDSTextureFromFile(L"resources/stone.dds");
 	auto pTex3 = pCommonCtx->createDDSTextureFromFile(L"resources/white1x1.dds");
@@ -145,7 +156,7 @@ void InstanceApp::loadSkull(dx12lib::GraphicsContextProxy pGraphicsCtx) {
 	_geometryMap["skull"] = pSkullMesh;
 }
 
-void InstanceApp::buildMaterial(dx12lib::CommandContextProxy pCommonCtx) {
+void InstanceApp::buildMaterial(dx12lib::CommonContextProxy pCommonCtx) {
 	std::random_device rd;
 	std::mt19937 gen(rd());
 	std::uniform_int_distribution<size_t> disInt(10, 30);

@@ -91,7 +91,7 @@ void BezierPatchApp::buildCamera() {
 	_pCamera->_mouseWheelSensitivity = 3.f;
 }
 
-void BezierPatchApp::buildConstantBuffer(dx12lib::CommandContextProxy pCmdCtx) {
+void BezierPatchApp::buildConstantBuffer(dx12lib::CommonContextProxy pCmdCtx) {
 	_pPassCB = pCmdCtx->createFRConstantBuffer<d3d::PassCBType>();
 	_pLightCB = pCmdCtx->createFRConstantBuffer<d3d::LightCBType>();
 	_pObjectCB = pCmdCtx->createFRConstantBuffer<CBObject>();

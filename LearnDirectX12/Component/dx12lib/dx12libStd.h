@@ -118,7 +118,7 @@ class RootSignature;
 class PSO;
 class GraphicsPSO;
 class ComputePSO;
-class CommandContext;
+class CommonContext;
 class GraphicsContext;
 class ComputeContext;
 class StructuredBuffer;

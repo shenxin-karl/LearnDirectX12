@@ -91,7 +91,7 @@ D3D12_RECT RenderTarget::getScissiorRect() const {
 	return D3D12_RECT(0, 0, _size.x, _size.y);
 }
 
-void RenderTarget::transitionBarrier(CommandContextProxy pCmdProxy,
+void RenderTarget::transitionBarrier(CommonContextProxy pCmdProxy,
 	D3D12_RESOURCE_STATES state, 
 	UINT subresource /*= D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES */) 
 {
@@ -116,7 +116,7 @@ void swap(RenderTarget &lhs, RenderTarget &rhs) noexcept {
 
 /*************************************************************************************/
 
-RenderTargetTransitionBarrier::RenderTargetTransitionBarrier(CommandContextProxy pCmdPorxy,
+RenderTargetTransitionBarrier::RenderTargetTransitionBarrier(CommonContextProxy pCmdPorxy,
 	std::shared_ptr<RenderTarget> pRenderTarget, 
 	D3D12_RESOURCE_STATES stateBeforce, 
 	D3D12_RESOURCE_STATES stateAfter)

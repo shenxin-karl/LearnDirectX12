@@ -18,7 +18,7 @@ public:
 		UINT semanticIndex = 0, 
 		UINT slot = 0) 
 	{
-		bool isInstance = type == InputLayoutType::InstanceData;
+		constexpr bool isInstance = type == InputLayoutType::InstanceData;
 		static_assert(std::is_member_pointer_v<decltype(pMember)>, "Pmember must be a member pointer");
 		this->SemanticName = name.data();
 		this->SemanticIndex = semanticIndex;
@@ -32,7 +32,7 @@ public:
 };
 
 using VInputLayoutDescHelper = InputLayoutDescHelper<InputLayoutType::VertexData>;
-using IInputLayoutDescHepler = InputLayoutDescHelper<InputLayoutType::InstanceData>;
+using IInputLayoutDescHelper = InputLayoutDescHelper<InputLayoutType::InstanceData>;
 
 class PSO {
 public:

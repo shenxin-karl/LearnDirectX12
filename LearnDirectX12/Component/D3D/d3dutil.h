@@ -23,6 +23,7 @@ class BlurFilter;
 class SobelFilter;
 class FXAA;
 class Mesh;
+class SkyBox;
 
 using ::ThrowIfFailed;
 

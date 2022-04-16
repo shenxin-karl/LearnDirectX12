@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 #include "CommandList.h"
-#include "CommandContext.h"
+#include "CommonContext.h"
 
 namespace dx12lib {
 
@@ -53,7 +53,7 @@ private:
 };
 
 using ContextProxy = _ContextProxy<Context>;
-using CommandContextProxy = _ContextProxy<CommandContext>;
+using CommonContextProxy = _ContextProxy<CommonContext>;
 using GraphicsContextProxy = _ContextProxy<GraphicsContext>;
 using ComputeContextProxy = _ContextProxy<ComputeContext>;
 using DirectContextProxy = _ContextProxy<DirectContext>;

@@ -24,17 +24,18 @@ ShaderResourceBuffer::~ShaderResourceBuffer() {
 ShaderResourceBuffer::ShaderResourceBuffer(std::weak_ptr<Device> pDevice, 
 	WRL::ComPtr<ID3D12Resource> pResource, 
 	WRL::ComPtr<ID3D12Resource> pUploader,
-	D3D12_RESOURCE_STATES state)
+	D3D12_RESOURCE_STATES state,
+	const D3D12_SHADER_RESOURCE_VIEW_DESC *pSrvDesc)
 {
 	assert(pResource != nullptr);
 	_pResource = pResource;
 	_pUploader = pUploader;
-	createViews(pDevice);
+	createViews(pDevice, pSrvDesc);
 	ResourceStateTracker::addGlobalResourceState(_pResource.Get(), state);
 }
 
 
-void ShaderResourceBuffer::createViews(std::weak_ptr<Device> pDevice) {
+void ShaderResourceBuffer::createViews(std::weak_ptr<Device> pDevice, const D3D12_SHADER_RESOURCE_VIEW_DESC *pSrvDesc) {
 	auto pSharedDevice = pDevice.lock();
 	auto desc = _pResource->GetDesc();
 	D3D12_FEATURE_DATA_FORMAT_SUPPORT formatSupport;
@@ -51,7 +52,7 @@ void ShaderResourceBuffer::createViews(std::weak_ptr<Device> pDevice) {
 	_shaderResourceView = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	pSharedDevice->getD3DDevice()->CreateShaderResourceView(
 		_pResource.Get(),
-		nullptr,
+		pSrvDesc,
 		_shaderResourceView.getCPUHandle()
 	);
 }

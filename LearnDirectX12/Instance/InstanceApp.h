@@ -52,10 +52,10 @@ private:
 private:
 	void pollEvent();
 	void buildCamera();
-	void buildBuffer(dx12lib::CommandContextProxy pCommonCtx);
-	void loadTextures(dx12lib::CommandContextProxy pCommonCtx);
+	void buildBuffer(dx12lib::CommonContextProxy pCommonCtx);
+	void loadTextures(dx12lib::CommonContextProxy pCommonCtx);
 	void loadSkull(dx12lib::GraphicsContextProxy pGraphicsCtx);
-	void buildMaterial(dx12lib::CommandContextProxy pCommonCtx);
+	void buildMaterial(dx12lib::CommonContextProxy pCommonCtx);
 	void buildPSO();
 	void buildRenderItem();
 	std::vector<RenderItem> cullingByFrustum() const;
@@ -64,7 +64,8 @@ private:
 	constexpr static inline size_t kMaxInstanceSize = 150;
 	constexpr static inline size_t kMaxTextureArraySize = 5;
 
-	std::unique_ptr<d3d::FirstPersonCamera> _pCamera;
+	std::unique_ptr<d3d::SkyBox> _pSkyBox;
+	std::shared_ptr<d3d::FirstPersonCamera> _pCamera;
 	std::shared_ptr<dx12lib::GraphicsPSO>   _pInstancePSO;
 
 	std::vector<std::shared_ptr<dx12lib::ShaderResourceBuffer>> _textures;

@@ -33,7 +33,7 @@ protected:
 	void onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int height) override;
 protected:
 	void buildCamera();
-	void buildConstantBuffer(dx12lib::CommandContextProxy pCmdCtx);
+	void buildConstantBuffer(dx12lib::CommonContextProxy pCmdCtx);
 	void buildGeometry(dx12lib::GraphicsContextProxy pGraphicsCtx);
 	void buildBezierPatchPSO();
 private:
