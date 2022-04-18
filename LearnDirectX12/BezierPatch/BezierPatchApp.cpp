@@ -92,8 +92,8 @@ void BezierPatchApp::buildCamera() {
 }
 
 void BezierPatchApp::buildConstantBuffer(dx12lib::CommonContextProxy pCmdCtx) {
-	_pPassCB = pCmdCtx->createFRConstantBuffer<d3d::PassCBType>();
-	_pLightCB = pCmdCtx->createFRConstantBuffer<d3d::LightCBType>();
+	_pPassCB = pCmdCtx->createFRConstantBuffer<d3d::CBPassType>();
+	_pLightCB = pCmdCtx->createFRConstantBuffer<d3d::CBLightType>();
 	_pObjectCB = pCmdCtx->createFRConstantBuffer<CBObject>();
 
 	auto pGPULightCB = _pLightCB->map();

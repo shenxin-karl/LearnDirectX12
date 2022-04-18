@@ -27,6 +27,7 @@ set_property(SOURCE ${SHADER_FILES} PROPERTY VS_TOOL_OVERRIDE "shader")	# 设置
 
 target_include_directories(D3D PUBLIC 
 	${PROJECT_COMPONENT_DIR}
+	${PROJECT_LIBRAIES_DIR}
 )
 
 
@@ -38,6 +39,7 @@ cmrc_add_resource_library(D3D-resources ALIAS D3D::rc
 	"shader/SobelFilterCS.hlsl"
 	"shader/FXAACS.hlsl"
 	"shader/SkyBox.hlsl"
+	"resources/BRDF_LUT.dds"
 )
 
 set_target_properties(D3D-resources PROPERTIES FOLDER "CmrcResource")
@@ -45,6 +47,7 @@ set_target_properties(D3D-resources PROPERTIES FOLDER "CmrcResource")
 target_link_libraries(${PROJECT_NAME} PRIVATE 
 	GameTimer
 	Exception
+	stb
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE

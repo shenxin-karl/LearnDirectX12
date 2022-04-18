@@ -170,9 +170,9 @@ void MirrorApp::buildCamera() {
 }
 
 void MirrorApp::buildConstantBuffers(dx12lib::DirectContextProxy pDirectCtx) {
-	_pPassCB = pDirectCtx->createFRConstantBuffer<d3d::PassCBType>();
-	_pLightCB = pDirectCtx->createFRConstantBuffer<d3d::LightCBType>();
-	_pReflectedLightCB = pDirectCtx->createFRConstantBuffer<d3d::LightCBType>();
+	_pPassCB = pDirectCtx->createFRConstantBuffer<d3d::CBPassType>();
+	_pLightCB = pDirectCtx->createFRConstantBuffer<d3d::CBLightType>();
+	_pReflectedLightCB = pDirectCtx->createFRConstantBuffer<d3d::CBLightType>();
 	auto pGPULightCB = _pLightCB->map();
 	float3 directionLight = float3(0, 1, -1);
 	pGPULightCB->ambientLight = float4(0.1f, 0.1f, 0.1f, 1.f);

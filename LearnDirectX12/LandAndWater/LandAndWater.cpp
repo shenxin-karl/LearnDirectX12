@@ -216,8 +216,8 @@ void LandAndWater::buildCamera() {
 }
 
 void LandAndWater::buildConstantBuffer(dx12lib::DirectContextProxy pDirectCtx) {
-	_pPassCB = pDirectCtx->createFRConstantBuffer<d3d::PassCBType>();
-	_pLightCB = pDirectCtx->createFRConstantBuffer<d3d::LightCBType>();
+	_pPassCB = pDirectCtx->createFRConstantBuffer<d3d::CBPassType>();
+	_pLightCB = pDirectCtx->createFRConstantBuffer<d3d::CBLightType>();
 	_pWaterCB = pDirectCtx->createFRConstantBuffer<WaterCBType>();
 
 	// init pass fog constant buffer

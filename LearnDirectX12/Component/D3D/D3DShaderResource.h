@@ -3,6 +3,6 @@
 
 namespace d3d { 
 
-cmrc::file getD3DShaderResource(const std::string &name);
+cmrc::file getD3DResource(const std::string &name);
 
 }

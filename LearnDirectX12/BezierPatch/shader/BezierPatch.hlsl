@@ -7,11 +7,11 @@ cbuffer CBObject :  register(b0) {
 };
 
 cbuffer CBPass : register(b1) {
-	PassCBType gPass;
+	CBPassType gPass;
 };
 
 cbuffer CBLight : register(b2) {
-	LightCBType gLight;
+	CBLightType gLight;
 };
 
 struct VertexIn {

@@ -4,7 +4,7 @@ CMRC_DECLARE(D3D);
 
 namespace d3d {
 
-cmrc::file getD3DShaderResource(const std::string &name) {
+cmrc::file getD3DResource(const std::string &name) {
 	auto fs = cmrc::D3D::get_filesystem();
 	if (!fs.exists(name))
 		return {};

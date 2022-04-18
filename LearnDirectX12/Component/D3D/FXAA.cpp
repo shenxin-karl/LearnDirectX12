@@ -68,7 +68,7 @@ void FXAA::tryBuildConsolePSO(std::weak_ptr<dx12lib::Device> pDevice) {
 		return;
 
 	tryBuildRootSignature(pDevice);
-	auto fxaaCsHlsl = getD3DShaderResource("shader/FXAACS.hlsl");
+	auto fxaaCsHlsl = getD3DResource("shader/FXAACS.hlsl");
 	auto pSharedDevice = pDevice.lock();
 	_pConsolePSO = pSharedDevice->createComputePSO("FXAAConsolePSO");
 	_pConsolePSO->setRootSignature(_pRootSingnature);

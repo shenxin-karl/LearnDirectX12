@@ -64,10 +64,11 @@ private:
 	void pollEvent();
 	void updatePassCB(std::shared_ptr<com::GameTimer> pGameTimer);
 private:
+	std::unique_ptr<d3d::IBL> _pIBL;		  
+	std::unique_ptr<d3d::SobelFilter> _pSobelFilter;
 	std::unique_ptr<d3d::CoronaCamera>  _pCamera;
-	FRConstantBufferPtr<d3d::LightCBType>  _pGameLightsCB;
-	FRConstantBufferPtr<d3d::PassCBType>   _pPassCB;
-	std::unique_ptr<d3d::SobelFilter>	_pSobelFilter;
+	FRConstantBufferPtr<d3d::CBLightType> _pGameLightsCB;
+	FRConstantBufferPtr<d3d::CBPassType>  _pPassCB;
 	std::unordered_map<std::string, d3d::Material> _materials;
 	std::unordered_map<std::string, std::shared_ptr<Mesh>> _geometrys;
 	std::unordered_map<std::string, std::vector<RenderItem>> _renderItems;

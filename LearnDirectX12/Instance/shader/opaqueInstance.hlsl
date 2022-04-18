@@ -6,11 +6,11 @@
 #endif
 
 cbuffer CBPass : register(b0) {
-	PassCBType gPass;
+	CBPassType gPass;
 };
 
 cbuffer CBLight : register(b1) {
-	LightCBType gLight;
+	CBLightType gLight;
 };
 
 struct VertexIn {

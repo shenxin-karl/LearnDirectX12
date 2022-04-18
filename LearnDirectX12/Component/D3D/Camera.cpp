@@ -28,7 +28,7 @@ CameraBase::CameraBase(const CameraDesc &desc) {
 	assert(_farClip > _nearClip);
 }
 
-void CameraBase::updatePassCB(d3d::PassCBType &passCB) const {
+void CameraBase::updatePassCB(d3d::CBPassType &passCB) const {
 	passCB.view = getView();
 	passCB.invView = getInvView();
 	passCB.proj = getProj();
@@ -125,7 +125,7 @@ void CoronaCamera::update(std::shared_ptr<com::GameTimer> pGameTimer) {
 		u = float3(w.y > 0.f ? +1.f : -1.f, 0.f, 0.f);
 	_lookUp = cross(w, u);
 	_lookFrom = _lookAt + direction * _radius;
-
+	
 	DirectX::XMMATRIX view = DirectX::XMMatrixLookAtLH(_lookFrom.toVec(), _lookAt.toVec(), _lookUp.toVec());
 	DirectX::XMMATRIX proj = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(_fov), _aspect, _nearClip, _farClip);
 	DirectX::XMMATRIX viewProj = view * proj;

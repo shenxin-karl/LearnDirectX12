@@ -103,7 +103,7 @@ void BasicTessellationApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) 
 		pIndexBuffer
 	);
 
-	_pPassCB = pDirectCtx->createFRConstantBuffer<d3d::PassCBType>();
+	_pPassCB = pDirectCtx->createFRConstantBuffer<d3d::CBPassType>();
 	_pObjectCB = pDirectCtx->createFRConstantBuffer<float4x4>(MathHelper::identity4x4());
 }
 

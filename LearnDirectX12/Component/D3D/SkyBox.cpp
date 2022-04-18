@@ -57,7 +57,7 @@ SkyBox::SkyBox(const SkyBoxDesc &desc) : _pCubeMap(desc.pCubeMap) {
 	rasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
 	_pSkyBoxPSO->setRasterizerState(rasterizerDesc);
 
-	auto skyBoxContent = getD3DShaderResource("shader/SkyBox.hlsl");
+	auto skyBoxContent = getD3DResource("shader/SkyBox.hlsl");
 	_pSkyBoxPSO->setVertexShader(compileShader(
 		skyBoxContent.begin(),
 		skyBoxContent.size(),
@@ -78,7 +78,7 @@ SkyBox::SkyBox(const SkyBoxDesc &desc) : _pCubeMap(desc.pCubeMap) {
 	buildCubeVertexBuffer(pGraphicsCtx);
 }
 
-void SkyBox::render(dx12lib::GraphicsContextProxy pGraphicsCtx, std::shared_ptr<CameraBase> pCamera) {
+void SkyBox::render(dx12lib::GraphicsContextProxy pGraphicsCtx, std::shared_ptr<CameraBase> pCamera) const {
 	auto matView = pCamera->getView();
 	matView._41 = 0.f; matView._42 = 0.f; matView._43 = 0.f;
 	XMMATRIX view = XMLoadFloat4x4(&matView);

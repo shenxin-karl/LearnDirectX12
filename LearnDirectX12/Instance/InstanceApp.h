@@ -75,7 +75,7 @@ private:
 
 	std::shared_ptr<dx12lib::ConstantBuffer>   _pLightCB;
 	std::shared_ptr<dx12lib::StructuredBuffer> _pMaterialData;
-	FRConstantBufferPtr<d3d::PassCBType>       _pPassCB;
+	FRConstantBufferPtr<d3d::CBPassType>       _pPassCB;
 	FRStructuredBufferPtr<InstanceData>        _pInstanceBuffer;
 	std::vector<RenderItem> _opaqueRenderItems;
 	bool _bMouseLeftPress = false;

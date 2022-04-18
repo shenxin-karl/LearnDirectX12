@@ -110,8 +110,8 @@ private:
 private:
 	std::unique_ptr<d3d::BlurFilter> _pBlurFilter;
 	FRConstantBufferPtr<WaterCBType> _pWaterCB;
-	FRConstantBufferPtr<d3d::PassCBType> _pPassCB;
-	FRConstantBufferPtr<d3d::LightCBType> _pLightCB;
+	FRConstantBufferPtr<d3d::CBPassType> _pPassCB;
+	FRConstantBufferPtr<d3d::CBLightType> _pLightCB;
 	std::unique_ptr<d3d::FirstPersonCamera> _pCamera;
 	std::map<std::string, d3d::Material> _materialMap;
 	std::map<std::string, std::shared_ptr<d3d::Mesh>> _geometryMap;

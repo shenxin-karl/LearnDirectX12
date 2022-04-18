@@ -12,11 +12,11 @@ struct WaterParame {
 };
 
 cbuffer CPassCB : register(b0) {
-    PassCBType   gPass;
+    CBLightType   gPass;
 };
 
 cbuffer CLightCB : register(b1) {  
-    LightCBType  gLight;
+    CBLightType  gLight;
 };
 
 cbuffer CObjectCB : register(b2) {

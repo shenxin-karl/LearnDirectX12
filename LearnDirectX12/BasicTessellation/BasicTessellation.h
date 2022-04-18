@@ -27,7 +27,7 @@ protected:
 private:
 	std::unique_ptr<d3d::CoronaCamera>    _pCamera;
 	FRConstantBufferPtr<float4x4>		  _pObjectCB;
-	FRConstantBufferPtr<d3d::PassCBType>  _pPassCB;
+	FRConstantBufferPtr<d3d::CBPassType>  _pPassCB;
 	std::shared_ptr<dx12lib::GraphicsPSO> _pTessellationPSO;
 	std::shared_ptr<d3d::Mesh>			  _pQuadMesh;
 };

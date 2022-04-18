@@ -19,7 +19,7 @@ struct SkyBoxDesc {
 class SkyBox {
 public:
 	SkyBox(const SkyBoxDesc &desc);
-	void render(dx12lib::GraphicsContextProxy pGraphicsCtx, std::shared_ptr<CameraBase> pCamera);
+	void render(dx12lib::GraphicsContextProxy pGraphicsCtx, std::shared_ptr<CameraBase> pCamera) const;
 private:
 	enum RootParam : size_t {
 		CB_Setting = 0,

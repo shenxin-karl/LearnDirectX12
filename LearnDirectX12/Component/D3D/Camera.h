@@ -36,7 +36,7 @@ public:
 	virtual const float4x4 &getInvProj() const = 0;
 	virtual const float4x4 &getInvViewProj() const = 0;
 	virtual void update(std::shared_ptr<com::GameTimer> pGameTimer) = 0;
-	void updatePassCB(d3d::PassCBType &passCB) const;
+	void updatePassCB(d3d::CBPassType &passCB) const;
 	void setFov(float fov);
 	void setAspect(float aspect);
 	float getFov() const;

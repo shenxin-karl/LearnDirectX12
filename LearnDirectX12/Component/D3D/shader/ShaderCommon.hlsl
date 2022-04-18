@@ -19,12 +19,12 @@ struct Material {
     float4 diffuseAlbedo;	// 郡孚楕
     float  roughness;		// 間華業
     float  metallic;		// 署奉業
-    float  pading0;			// 野割0
-    float  pading1;			// 野割1
+    float  padding0;		// 野割0
+    float  padding1;		// 野割1
 };
 #endif
 
-struct PassCBType {
+struct CBPassType {
 	float4x4 view;
 	float4x4 invView;
 	float4x4 proj;
@@ -45,8 +45,12 @@ struct PassCBType {
 	float2   cbPerPassPad1;
 };
 
+struct SH3 {
+	float3 y00;
+};
+
 #define kMaxLightCount 16
-struct LightCBType {
+struct CBLightType {
 	int      directLightCount;
 	int      pointLightCount;
 	int      spotLightCount;

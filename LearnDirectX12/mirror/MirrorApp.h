@@ -70,9 +70,9 @@ private:
 private:
 	std::unique_ptr<d3d::FXAA>		   _pFXAAFilter;
 	std::unique_ptr<d3d::CoronaCamera> _pCamera;
-	FRConstantBufferPtr<d3d::PassCBType>  _pPassCB;
-	FRConstantBufferPtr<d3d::LightCBType> _pLightCB;
-	FRConstantBufferPtr<d3d::LightCBType> _pReflectedLightCB;
+	FRConstantBufferPtr<d3d::CBPassType>  _pPassCB;
+	FRConstantBufferPtr<d3d::CBLightType> _pLightCB;
+	FRConstantBufferPtr<d3d::CBLightType> _pReflectedLightCB;
 	std::map<std::string, d3d::Material> _materialMap;
 	std::map<std::string, std::shared_ptr<d3d::Mesh>> _meshMap;
 	std::map<RenderLayer, std::shared_ptr<dx12lib::GraphicsPSO>> _psoMap;

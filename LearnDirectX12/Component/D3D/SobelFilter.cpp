@@ -53,7 +53,7 @@ void SobelFilter::tryBuildProducePSO(dx12lib::ComputeContextProxy pComputeList) 
 	tryBuildRootSignature(pComputeList);
 	auto pSharedDevice = pComputeList->getDevice().lock();
 	_pProducePSO = pSharedDevice->createComputePSO("SobelProducePSO");
-	auto sobelFilterCSHlsl = getD3DShaderResource("shader/SobelFilterCS.hlsl");
+	auto sobelFilterCSHlsl = getD3DResource("shader/SobelFilterCS.hlsl");
 
 	D3D_SHADER_MACRO macros[] = { { "PRODUCE_MODE", "" }, { nullptr, nullptr } };
 	_pProducePSO->setRootSignature(_pRootSignature);
@@ -74,7 +74,7 @@ void SobelFilter::tryBuildApplyPSO(dx12lib::ComputeContextProxy pComputeList) {
 	tryBuildRootSignature(pComputeList);
 	auto pSharedDevice = pComputeList->getDevice().lock();
 	_pAllpyPSO = pSharedDevice->createComputePSO("SobelProducePSO");
-	auto sobelFilterCSHlsl = getD3DShaderResource("shader/SobelFilterCS.hlsl");
+	auto sobelFilterCSHlsl = getD3DResource("shader/SobelFilterCS.hlsl");
 
 	D3D_SHADER_MACRO macros[] = { { "APPLY_MODE", "" }, { nullptr, nullptr } };
 	_pAllpyPSO->setRootSignature(_pRootSignature);

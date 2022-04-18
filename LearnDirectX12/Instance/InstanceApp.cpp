@@ -127,11 +127,11 @@ void InstanceApp::buildCamera() {
 }
 
 void InstanceApp::buildBuffer(dx12lib::CommonContextProxy pCommonCtx) {
-	_pPassCB = pCommonCtx->createFRConstantBuffer<d3d::PassCBType>();
-	_pLightCB = pCommonCtx->createConstantBuffer<d3d::LightCBType>();
+	_pPassCB = pCommonCtx->createFRConstantBuffer<d3d::CBPassType>();
+	_pLightCB = pCommonCtx->createConstantBuffer<d3d::CBLightType>();
 	_pInstanceBuffer = pCommonCtx->createFRStructuredBuffer<InstanceData>(kMaxInstanceSize);
 
-	auto pLight = _pLightCB->visit<d3d::LightCBType>();
+	auto pLight = _pLightCB->visit<d3d::CBLightType>();
 	pLight->ambientLight = float4(0.2f, 0.2f, 0.2f, 1.f);
 	pLight->directLightCount = 3;
 	pLight->lights[0].initAsDirectionLight(float3(0.57735f, 0.57735f, 0.57735f), float3(0.6f));

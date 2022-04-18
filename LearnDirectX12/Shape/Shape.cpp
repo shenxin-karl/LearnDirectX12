@@ -3,6 +3,7 @@
 #include "D3D/Camera.h"
 #include "D3D/ShaderCommon.h"
 #include "D3D/SobelFilter.h"
+#include "D3D/IBL.h"
 #include "dx12lib/Device.h"
 #include "dx12lib/SwapChain.h"
 #include "dx12lib/CommandList.h"
@@ -36,11 +37,12 @@ void Shape::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 		45.f,
 		0.1f,
 		100.f,
-		float(_width) / float(_height),
+		static_cast<float>(_width) / static_cast<float>(_height),
 	};
 	_pCamera = std::make_unique<d3d::CoronaCamera>(cameraDesc);
+	_pIBL = std::make_unique<d3d::IBL>(pDirectCtx, "resource/Barce_Rooftop_C_3k.hdr");
 	_pCamera->_mouseWheelSensitivity = 1.f;
-	_pPassCB = pDirectCtx->createFRConstantBuffer<d3d::PassCBType>();
+	_pPassCB = pDirectCtx->createFRConstantBuffer<d3d::CBPassType>();
 	buildTexturePSO(pDirectCtx);
 	buildColorPSO(pDirectCtx);
 	buildGameLight(pDirectCtx);
@@ -293,7 +295,7 @@ void Shape::buildGeometry(dx12lib::DirectContextProxy pDirectCtx) {
 
 
 void Shape::buildGameLight(dx12lib::DirectContextProxy pDirectCtx) {
-	_pGameLightsCB = pDirectCtx->createFRConstantBuffer<d3d::LightCBType>();
+	_pGameLightsCB = pDirectCtx->createFRConstantBuffer<d3d::CBLightType>();
 	auto pGPUGameLightCB = _pGameLightsCB->map();
 	pGPUGameLightCB->directLightCount = 1;
 	pGPUGameLightCB->pointLightCount = 1;

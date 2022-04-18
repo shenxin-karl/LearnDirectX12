@@ -2,11 +2,11 @@
 #include "../../Component/D3D/shader/LightingUtil.hlsl"
 
 cbuffer CBPass : register(b0){
-    PassCBType gPassCB;
+    CBPassType gPassCB;
 };
 
 cbuffer CBLight : register(b1){
-    LightCBType gLight;
+    CBLightType gLight;
 };
 
 cbuffer CBObject : register(b2){

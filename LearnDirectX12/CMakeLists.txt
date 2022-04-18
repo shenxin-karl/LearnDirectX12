@@ -33,6 +33,9 @@ list(APPEND allSubDir "BasicTessellation")
 list(APPEND allSubDir "BezierPatch")
 list(APPEND allSubDir "Instance")
 
+set(PROJECT_LIBRAIES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Libraies)
+
+
 foreach(dirname ${allSubDir})
 	add_subdirectory(${dirname})
 endforeach()

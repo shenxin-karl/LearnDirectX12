@@ -39,8 +39,8 @@ protected:
 private:
 	std::unique_ptr<d3d::CoronaCamera>    _pCamera;
 	FRConstantBufferPtr<CBObject>		  _pObjectCB;
-	FRConstantBufferPtr<d3d::PassCBType>  _pPassCB;
-	FRConstantBufferPtr<d3d::LightCBType> _pLightCB;
+	FRConstantBufferPtr<d3d::CBPassType>  _pPassCB;
+	FRConstantBufferPtr<d3d::CBLightType> _pLightCB;
 	std::unique_ptr<d3d::Mesh>		      _pQuadMesh;
 	std::shared_ptr<dx12lib::GraphicsPSO> _pBezierPatchPSO;
 };

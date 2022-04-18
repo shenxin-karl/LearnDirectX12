@@ -56,7 +56,7 @@ struct PassCBType {
 };
 
 constexpr inline std::size_t kMaxLightCount = 16;
-struct LightCBType {
+struct CBLightType {
 	int      directLightCount = 0;
 	int      pointLightCount  = 0;
 	int      spotLightCount   = 0;

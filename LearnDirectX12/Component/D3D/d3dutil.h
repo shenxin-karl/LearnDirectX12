@@ -17,13 +17,14 @@ class CoronaCamera;
 class FirstPersonCamera;
 struct Light;
 struct Material;
-struct PassCBType;
-struct LightCBType;
+struct CBPassType;
+struct CBLightType;
 class BlurFilter;
 class SobelFilter;
 class FXAA;
 class Mesh;
 class SkyBox;
+class IBL;
 
 using ::ThrowIfFailed;
 
