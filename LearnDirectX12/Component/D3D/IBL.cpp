@@ -7,18 +7,16 @@
 
 namespace d3d {
 
-
-
 template<typename T>
 SH3 calcIrradianceMapSH3(const T *pData, size_t width, size_t height, size_t numSamples) {
 	SH3 coef;
 	for (auto &c : coef._m)
-		c = float3(0.f);
+		c = float4(0.f);
 
 	std::random_device rd;
 	std::mt19937 gen(rd());
 	std::uniform_real_distribution<float> dis(0.f, 1.f);
-	auto sh3BasisFuncList = SH3::getSHBasisFunc();
+	auto shBasisFuncArray = SH3::getSHBasisFunc();
 	constexpr float invPdf = 4.f * XM_PI;
 
 	size_t maxX = width - 1;
@@ -34,14 +32,15 @@ SH3 calcIrradianceMapSH3(const T *pData, size_t width, size_t height, size_t num
 		float cosPhi = std::cos(phi);
 		float sinPhi = std::sin(phi);
 
-		float3 L = normalize(float3(sinPhi * cosTh, cosPhi, sinPhi * sinTh));
+		float3 L = float3(sinPhi * cosTh, cosPhi, sinPhi * sinTh);
 		size_t x = static_cast<size_t>(u * maxX);
 		size_t y = static_cast<size_t>(v * maxY);
 		size_t index = y * width + x;
 		float3 texColor = float3(pData[index].x, pData[index].y, pData[index].z) * invPdf;
-		for (size_t j = 0; j < sh3BasisFuncList.size(); ++j) {
-			float c = sh3BasisFuncList[j](L);
-			coef._m[j] += c * texColor;
+		for (size_t j = 0; j < shBasisFuncArray.size(); ++j) {
+			float c = shBasisFuncArray[j](L);
+			float3 basisColor = c * texColor;
+			coef._m[j] += float4(basisColor.x, basisColor.y, basisColor.z, 0.0f);
 		}
 		++sampleCount;
 	}
@@ -54,7 +53,7 @@ SH3 calcIrradianceMapSH3(const T *pData, size_t width, size_t height, size_t num
 }
 
 float3 getSHRadian(SH3 lightProbe, float3 N) {
-	float3 result = float3(0.f);
+	float4 result = float4(0.f);
 	result += lightProbe.y00 * SHBasisFunction<0, 0>::eval(N);
 	result += lightProbe.y1_1 * SHBasisFunction<1, -1>::eval(N);
 	result += lightProbe.y10 * SHBasisFunction<1, 0>::eval(N);

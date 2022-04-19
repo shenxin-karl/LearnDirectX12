@@ -94,6 +94,14 @@ public:
 	FORCEINLINE explicit operator DX::XMVECTOR() const {
 		return toVec();
 	}
+	template<size_t N> requires(N <= 3)
+	FORCEINLINE operator VectorHelper<float, N> &() {
+		return reinterpret_cast<VectorHelper<float, N> &>(*this);
+	}
+	template<size_t N> requires(N <= 3)
+	FORCEINLINE operator const VectorHelper<float, N> &() const {
+		return reinterpret_cast<const VectorHelper<float, N> &>(*this);
+	}
 	FORCEINLINE float &operator[](size_t n) {
 		assert(n < 3);
 		return reinterpret_cast<float *>(this)[n];
@@ -148,6 +156,14 @@ public:
 	}
 	FORCEINLINE explicit operator DX::XMVECTOR() const {
 		return toVec();
+	}
+	template<size_t N> requires(N <= 4)
+	FORCEINLINE	operator VectorHelper<float, N> &() {
+		return reinterpret_cast<VectorHelper<float, N> &>(*this);
+	}
+	template<size_t N> requires(N <= 4)
+	FORCEINLINE	operator const VectorHelper<float, N> &() const {
+		return reinterpret_cast<const VectorHelper<float, N> &>(*this);
 	}
 	FORCEINLINE float &operator[](size_t n) {
 		assert(n < 4);

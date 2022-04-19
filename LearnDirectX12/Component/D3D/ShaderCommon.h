@@ -34,7 +34,7 @@ struct Material {
 	float  padding1 = 0.f;   // Моід1
 };
 
-struct PassCBType {
+struct CBPassType {
 	float4x4 view;			
 	float4x4 invView;		
 	float4x4 proj;

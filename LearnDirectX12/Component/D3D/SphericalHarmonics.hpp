@@ -52,13 +52,13 @@ DECLARE_SH_BASIS_FUNCTION( (4), (+2), (3.f / 8.f * sqrt(5.f / PI)), ((x * x - y 
 DECLARE_SH_BASIS_FUNCTION( (4), (+3), (0.75f * sqrt(35.f / 2.f * PI)), (x * (x * x - 3.f * y * y) * z) );
 DECLARE_SH_BASIS_FUNCTION( (4), (+4), (3.f / 16.f * sqrt(35.f / PI)), (x * x * (x * x - 3.f * y * y) - y * y * (3.f * x * x - y * y)) );
 
-union alignas(sizeof(float4)) SH3 {
+union SH3 {
 	struct {
-		float3 y00;
-		float3 y1_1; float3 y10; float3 y11;
-		float3 y2_2; float3 y2_1; float3 y20; float3 y21; float3 y22;
+		float4 y00;
+		float4 y1_1; float4 y10; float4 y11;
+		float4 y2_2; float4 y2_1; float4 y20; float4 y21; float4 y22;
 	};
-	float3 _m[9];
+	float4 _m[9];
 public:
 	constexpr static auto getSHBasisFunc() noexcept {
 		using BasisFuncType = decltype(&SHBasisFunction<0, 0>::eval);
