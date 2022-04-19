@@ -1,5 +1,5 @@
 #pragma once
-
+#include <ostream>
 #ifndef FORCEINLINE
 #define FORCEINLINE __forceinline
 #endif
@@ -8,12 +8,17 @@ namespace Math {
 
 template<typename T, bool EnableAssign, size_t...I>
 struct Swizzle {
+	template<typename = void> requires(EnableAssign)
 	FORCEINLINE T &operator=(const T &other) {
 		((at<I>() = other[I]), ...);
 		return *this;
 	}
 	FORCEINLINE operator T() const noexcept {
 		return T(at<I>()...);
+	}
+	FORCEINLINE friend std::ostream &operator<<(std::ostream &os, const Swizzle &sz) noexcept {
+		os << static_cast<T>(sz);
+		return os;
 	}
 public:
 	template<size_t Idx>

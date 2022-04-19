@@ -1,5 +1,6 @@
 #include <iostream>
 #include "VectorHelper.h"
+#include "Vector.hpp"
 
 void float2Test() {
 	using namespace Math;
@@ -11,92 +12,10 @@ void float2Test() {
 	cout << "f2: " << f2 << endl;
 	cout << "f3: " << f3 << endl;
 	f1 = float2(0);
-	cout << "dot(f2, f3): " << dot(f2, f3) << endl;
-	cout << "lengthSqr(f2): " << lengthSqr(f2) << endl;
-	auto f4 = normalize(f3);
-	cout << "length(f4): " << length(f4) << endl;
-	f4 += 1.f;
-	1 + f4;
-	f4 += f1;
-	f4 + f1;
-
-	f4 -= 1.f;
-	1 - f4;
-	f4 -= f1;
-	f4 - f1;
-
-	f4 *= 1.f;
-	1 * f4;
-	f4 *= f1;
-	f4 * f1;
-
-	f4 /= 1.f;
-	1 / f4;
-	f4 /= f1;
-	f4 /f1;
 }
 
 void float3Test() {
-	using namespace Math;
-	using namespace std;
-	float3 f1;
-	float3 f2(1);
-	float3 f3(2, 2, 2);
-	cout << "f1: " << f1 << endl;
-	cout << "f2: " << f2 << endl;
-	cout << "f3: " << f3 << endl;
-	f1 = float3(0);
-	cout << "dot(f2, f3): " << dot(f2, f3) << endl;
-	cout << "lengthSqr(f2): " << lengthSqr(f2) << endl;
-	auto f4 = normalize(f3);
-	cout << "length(f4): " << length(f4) << endl;
-	f4 += 1.f;
-	1 + f4;
-	f4 += f1;
-	f4 + f1;
 
-	f4 -= 1.f;
-	1 - f4;
-	f4 -= f1;
-	f4 - f1;
-
-	f4 *= 1.f;
-	1 * f4;
-	f4 *= f1;
-	f4 *f1;
-
-	f4 /= 1.f;
-	1 / f4;
-	f4 /= f1;
-	f4 / f1;
-
-
-	float3 p1(-0.5, 0, 0);
-	float3 p2(0, +0.5, 0);
-	float3 p3(+0.5, 0, 0);
-	float3 e1 = p2 - p1;
-	float3 e2 = p3 - p1;
-	float3 myCrossRes = cross(e1, e2);
-	std::cout << "myCrossRes: "	<< myCrossRes << std::endl;
-	float3 dxCrossRes = float3(DX::XMVector3Cross(e1.toVec(), e2.toVec()));
-	std::cout << "dxCrossRes: " << dxCrossRes << std::endl;
-	std::cout << "math base axis cross test" << std::endl;
-	float3 x = { 1, 0, 0 };
-	float3 y = { 0, 1, 0 };
-	float3 z = { 0, 0, 1 };
-	std::cout << "xCy" << cross(x, y) << std::endl;
-	std::cout << "yCx" << cross(y, x) << std::endl;
-	std::cout << "xCz" << cross(x, z) << std::endl;
-	std::cout << "zCx" << cross(z, x) << std::endl;
-	std::cout << "yCz" << cross(y, z) << std::endl;
-	std::cout << "zCy" << cross(z, y) << std::endl;
-	std::cout << "dx base axis cross test" << std::endl;
-	std::cout << "xCy" << float3(DX::XMVector3Cross(x.toVec(), y.toVec())) << std::endl;
-	std::cout << "yCx" << float3(DX::XMVector3Cross(y.toVec(), x.toVec())) << std::endl;
-	std::cout << "xCz" << float3(DX::XMVector3Cross(x.toVec(), z.toVec())) << std::endl;
-	std::cout << "zCx" << float3(DX::XMVector3Cross(z.toVec(), x.toVec())) << std::endl;
-	std::cout << "yCz" << float3(DX::XMVector3Cross(y.toVec(), z.toVec())) << std::endl;
-	std::cout << "zCy" << float3(DX::XMVector3Cross(z.toVec(), y.toVec())) << std::endl;
 }
 
 void float4Test() {
@@ -110,7 +29,6 @@ void float4Test() {
 	cout << "f3: " << f3 << endl;
 	f1 = float4(0);
 	cout << "dot(f2, f3): " << dot(f2, f3) << endl;
-	cout << "lengthSqr(f2): " << lengthSqr(f2) << endl;
 	auto f4 = normalize(f3);
 	cout << "length(f4): " << length(f4) << endl;
 	f4 += 1.f;
@@ -167,9 +85,84 @@ void buildBoundingFrustumTest() {
 	std::cout << "zNear: " << zNear << " zFar:" << zFar << std::endl;
 }
 
+void vector3Test() {
+	using namespace Math;
+	Vector3 v1;
+	Vector3 v2;
+	v1 = Vector3(1.0);
+	v2 = Vector3(2.f);
+	std::cout << "v1 + v2: " << (v1 + v2) << std::endl;
+	std::cout << "v1 - v2: " << (v1 - v2) << std::endl;
+	std::cout << "v1 * v2: " << (v1 * v2) << std::endl;
+	std::cout << "v1 / v2: " << (v1 / v2) << std::endl;
+	std::cout << "--------------------------" << std::endl;
+
+	std::cout << "v1 + 2.f: " << (v1 + 2.f) << std::endl;
+	std::cout << "v1 - 2.f: " << (v1 - 2.f) << std::endl;
+	std::cout << "v1 * 2.f: " << (v1 * 2.f) << std::endl;
+	std::cout << "v1 / 2.f: " << (v1 / 2.f) << std::endl;
+	std::cout << "--------------------------" << std::endl;
+
+	Vector3 v3 = Vector3(100.f);
+	Vector3 v4 = Vector3(100.f);
+	Vector3 v5 = Vector3(100.f);
+	Vector3 v6 = Vector3(100.f);
+
+	v3 += Vector3(0.5);
+	v4 -= Vector3(0.5);
+	v5 *= Vector3(0.5);
+	v6 /= Vector3(0.5);
+
+	std::cout << "	v3 += Vector3(0.5);: " << (v3) << std::endl;
+	std::cout << "	v4 -= Vector3(0.5);: " << (v4) << std::endl;
+	std::cout << "	v5 *= Vector3(0.5);: " << (v5) << std::endl;
+	std::cout << "	v6 /= Vector3(0.5);: " << (v6) << std::endl;
+	std::cout << "--------------------------" << std::endl;
+
+	v3 = Vector3(100.f);
+	v4 = Vector3(100.f);
+	v5 = Vector3(100.f);
+	v6 = Vector3(100.f);
+
+	v3 += (0.5);
+	v4 -= (0.5);
+	v5 *= (0.5);
+	v6 /= (0.5);
+	std::cout << "	v3 += (0.5);: " << (v3) << std::endl;
+	std::cout << "	v4 -= (0.5);: " << (v4) << std::endl;
+	std::cout << "	v5 *= (0.5);: " << (v5) << std::endl;
+	std::cout << "	v6 /= (0.5);: " << (v6) << std::endl;
+	std::cout << "--------------------------" << std::endl;
+
+	v3 = float3(100.f);
+	v4 = float3(100.f);
+	v5 = float3(100.f);
+	v6 = float3(100.f);
+
+	v3 = 0.5 + v3;
+	v4 = 0.5 - v4;
+	v5 = 0.5 * v5;
+	v6 = 0.5 / v6;
+
+	std::cout << "	v3 = 0.5 + v3: " << (v3) << std::endl;
+	std::cout << "	v4 = 0.5 - v4: " << (v4) << std::endl;
+	std::cout << "	v5 = 0.5 * v5: " << (v5) << std::endl;
+	std::cout << "	v6 = 0.5 / v6: " << (v6) << std::endl;
+	std::cout << "--------------------------" << std::endl;
+
+	std::cout << "v3.x:" << v3.x << std::endl;
+	std::cout << "v4.xy:" << v4.xy << std::endl;
+	std::cout << "v5.xyz:" << v5.xyz << std::endl;
+
+	float3 f1 = v3.xyz;
+	float3 f2 = v3.xxx;
+	float3 f3 = v3.zyx;
+}
+
 int main() {
-	float2Test();
-	float3Test();
-	float4Test();
+	//float2Test();
+	//float3Test();
+	//float4Test();
+	vector3Test();
 	buildBoundingFrustumTest();
 }

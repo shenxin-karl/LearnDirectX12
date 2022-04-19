@@ -8,242 +8,163 @@ namespace DX = DirectX;
 
 namespace Math {
 
-using size_t = std::size_t;
-template<typename T, size_t N>
-struct VectorHelper;
-
-using float2 = VectorHelper<float, 2>;
-using float3 = VectorHelper<float, 3>;
-using float4 = VectorHelper<float, 4>;
+template<size_t N>
+struct FloatStore;
 
 template<>
-struct VectorHelper<float, 2> : public DX::XMFLOAT2 {
-public:
-	FORCEINLINE VectorHelper() = default;
-	FORCEINLINE VectorHelper(const VectorHelper &) = default;
-	FORCEINLINE VectorHelper(VectorHelper &&) = default;
-	FORCEINLINE VectorHelper &operator=(const VectorHelper &) = default;
-	FORCEINLINE VectorHelper &operator=(VectorHelper &&) = default;
+struct FloatStore<2> : public DX::XMFLOAT2 {
+	FORCEINLINE FloatStore() noexcept = default;
+	FORCEINLINE FloatStore(const FloatStore &) noexcept = default;
+	FORCEINLINE FloatStore(FloatStore &&) noexcept = default;
+	FORCEINLINE FloatStore &operator=(const FloatStore &) noexcept = default;
+	FORCEINLINE FloatStore &operator=(FloatStore &&) noexcept = default;
 	using DX::XMFLOAT2::XMFLOAT2;
 	using DX::XMFLOAT2::operator=;
-	FORCEINLINE explicit VectorHelper(DX::FXMVECTOR v) {
+	FORCEINLINE explicit FloatStore(DX::FXMVECTOR v) noexcept {
 		x = DX::XMVectorGetX(v);
 		y = DX::XMVectorGetY(v);
 	}
 	template<typename T> requires(std::is_convertible_v<T, float>)
-	FORCEINLINE explicit VectorHelper(T v) 
-	: DX::XMFLOAT2(static_cast<float>(v), static_cast<float>(v)) {
-	
+	FORCEINLINE explicit FloatStore(T v) noexcept : DX::XMFLOAT2(static_cast<float>(v), static_cast<float>(v)) {
 	}
-	template<typename T1, typename T2> 
+	template<typename T1, typename T2>
 	requires(std::is_convertible_v<T1, float> && std::is_convertible_v<T2, float>)
-	FORCEINLINE VectorHelper(T1 x, T2 y)
-	: DX::XMFLOAT2(float(x), float(y)) {
-
+	FORCEINLINE FloatStore(T1 x, T2 y) noexcept : DX::XMFLOAT2(float(x), float(y)) {
 	}
-	FORCEINLINE DX::XMVECTOR toVec() const {
-		DX::XMVECTOR v = DX::XMLoadFloat2(this);
-		return v;
-	}
-	FORCEINLINE explicit operator DX::XMVECTOR() const {
-		return toVec();
-	}
-	FORCEINLINE float &operator[](size_t n) {
+	FORCEINLINE float &operator[](size_t n) noexcept {
 		assert(n < 2);
 		return reinterpret_cast<float *>(this)[n];
 	}
-	FORCEINLINE float operator[](size_t n) const {
+	FORCEINLINE float operator[](size_t n) const noexcept {
 		assert(n < 2);
 		return reinterpret_cast<const float *>(this)[n];
 	}
+	FORCEINLINE friend std::ostream &operator<<(std::ostream &os, const FloatStore &v) noexcept {
+		os << '(' << v.x << ", " << v.y << ')';
+		return os;
+	}
+	FORCEINLINE FloatStore operator-() const noexcept {
+		return FloatStore(-x, -y);
+	}
+	FORCEINLINE explicit operator DX::XMVECTOR() const noexcept {
+		return DX::XMVectorSet(x, y, 0.f, 0.f);
+	}
 };
 
-VectorHelper<float, 3> cross(const VectorHelper<float, 3> &lhs, const VectorHelper<float, 3> &rhs);
 
 template<>
-struct VectorHelper<float, 3> : public DX::XMFLOAT3 {
-public:
-	FORCEINLINE VectorHelper() = default;
-	FORCEINLINE VectorHelper(const VectorHelper &) = default;
-	FORCEINLINE VectorHelper(VectorHelper &&) = default;
-	FORCEINLINE VectorHelper &operator=(const VectorHelper &) = default;
-	FORCEINLINE VectorHelper &operator=(VectorHelper &&) = default;
+struct FloatStore<3> : public DX::XMFLOAT3 {
+	FORCEINLINE FloatStore() noexcept = default;
+	FORCEINLINE FloatStore(const FloatStore &) noexcept = default;
+	FORCEINLINE FloatStore(FloatStore &&) noexcept = default;
+	FORCEINLINE FloatStore &operator=(const FloatStore &) noexcept = default;
+	FORCEINLINE FloatStore &operator=(FloatStore &&) noexcept = default;
 	using DX::XMFLOAT3::XMFLOAT3;
 	using DX::XMFLOAT3::operator=;
-	FORCEINLINE explicit VectorHelper(DX::FXMVECTOR v) {
+	FORCEINLINE explicit FloatStore(DX::FXMVECTOR v) noexcept {
 		x = DX::XMVectorGetX(v);
 		y = DX::XMVectorGetY(v);
 		z = DX::XMVectorGetZ(v);
 	}
 	template<typename T> requires(std::is_convertible_v<T, float>)
-	FORCEINLINE explicit VectorHelper(T v) 
+	FORCEINLINE explicit FloatStore(T v)
 	: XMFLOAT3(float(v), float(v), float(v)) {
 
 	}
 	template<typename T1, typename T2, typename T3>
-	requires(std::is_convertible_v<T1, float> &&std::is_convertible_v<T2, float> &&
-			 std::is_convertible_v<T3, float>)
-	FORCEINLINE VectorHelper(T1 x, T2 y, T3 z)
+	requires(std::is_convertible_v<T1, float> && std::is_convertible_v<T2, float> &&
+	std::is_convertible_v<T3, float>)
+	FORCEINLINE FloatStore(T1 x, T2 y, T3 z) noexcept
 	: DX::XMFLOAT3(float(x), float(y), float(z)) {
 
 	}
-	FORCEINLINE DX::XMVECTOR toVec() const {
-		DX::XMVECTOR v = DX::XMLoadFloat3(this);
-		return v;
-	}
-	FORCEINLINE explicit operator DX::XMVECTOR() const {
-		return toVec();
+	template<size_t N> requires(N <= 3)
+	FORCEINLINE operator FloatStore<N> &() noexcept {
+		return reinterpret_cast<FloatStore<N> &>(*this);
 	}
 	template<size_t N> requires(N <= 3)
-	FORCEINLINE operator VectorHelper<float, N> &() {
-		return reinterpret_cast<VectorHelper<float, N> &>(*this);
+	FORCEINLINE operator const FloatStore<N> &() const noexcept {
+		return reinterpret_cast<const FloatStore<N> &>(*this);
 	}
-	template<size_t N> requires(N <= 3)
-	FORCEINLINE operator const VectorHelper<float, N> &() const {
-		return reinterpret_cast<const VectorHelper<float, N> &>(*this);
-	}
-	FORCEINLINE float &operator[](size_t n) {
+	FORCEINLINE float &operator[](size_t n) noexcept {
 		assert(n < 3);
 		return reinterpret_cast<float *>(this)[n];
 	}
-	FORCEINLINE float operator[](size_t n) const {
+	FORCEINLINE float operator[](size_t n) const noexcept {
 		assert(n < 3);
 		return reinterpret_cast<const float *>(this)[n];
 	}
-	FORCEINLINE friend VectorHelper cross(const VectorHelper &lhs, const VectorHelper &rhs) {
-		return {
-			(lhs.y*rhs.z - lhs.z*rhs.y),
-			(lhs.z*rhs.x - lhs.x*rhs.z),
-			(lhs.x*rhs.y - lhs.y*rhs.x), 
-		};
+	FORCEINLINE explicit FloatStore(const DX::XMVECTORF32 & color) noexcept
+	: FloatStore(color.operator DirectX::XMVECTOR()) {
 	}
-	FORCEINLINE explicit VectorHelper(const DX::XMVECTORF32 &color) 
-		: VectorHelper(color.operator DirectX::XMVECTOR()){
+	FORCEINLINE friend std::ostream &operator<<(std::ostream &os, const FloatStore &v) noexcept {
+		os << '(' << v.x << ", " << v.y << ", " << v.z << ')';
+		return os;
+	}
+	FloatStore operator-() const noexcept {
+		return FloatStore(-x, -y, -z);
+	}
+	FORCEINLINE explicit operator DX::XMVECTOR() const noexcept {
+		return DX::XMVectorSet(x, y, z, 0.f);
 	}
 };
 
 template<>
-struct VectorHelper<float, 4> : public DX::XMFLOAT4 {
-public:
-	FORCEINLINE VectorHelper() = default;
-	FORCEINLINE VectorHelper(const VectorHelper &) = default;
-	FORCEINLINE VectorHelper(VectorHelper &&) = default;
-	FORCEINLINE VectorHelper &operator=(const VectorHelper &) = default;
-	FORCEINLINE VectorHelper &operator=(VectorHelper &&) = default;
+struct FloatStore<4> : public DX::XMFLOAT4 {
+	FORCEINLINE FloatStore() noexcept = default;
+	FORCEINLINE FloatStore(const FloatStore &) noexcept = default;
+	FORCEINLINE FloatStore(FloatStore &&) noexcept = default;
+	FORCEINLINE FloatStore &operator=(const FloatStore &) noexcept = default;
+	FORCEINLINE FloatStore &operator=(FloatStore &&) noexcept = default;
 	using DX::XMFLOAT4::XMFLOAT4;
 	using DX::XMFLOAT4::operator=;
-	FORCEINLINE explicit VectorHelper(DX::FXMVECTOR v) {
+	FORCEINLINE explicit FloatStore(DX::FXMVECTOR v) noexcept {
 		x = DX::XMVectorGetX(v);
 		y = DX::XMVectorGetY(v);
 		z = DX::XMVectorGetZ(v);
 		w = DX::XMVectorGetW(v);
 	}
 	template<typename T> requires(std::is_convertible_v<T, float>)
-	FORCEINLINE explicit VectorHelper(T v) 
-	: DX::XMFLOAT4(float(v), float(v), float(v), float(v)) {
-
+	FORCEINLINE explicit FloatStore(T v) noexcept : DX::XMFLOAT3(float(v), float(v), float(v), float(v)) {
 	}
 	template<typename T1, typename T2, typename T3, typename T4>
-	requires(std::is_convertible_v<T1, float> && std::is_convertible_v<T2, float> &&
+	requires(std::is_convertible_v<T1, float> && std::is_convertible_v<T2, float> && 
 			 std::is_convertible_v<T3, float> && std::is_convertible_v<T4, float>)
-	FORCEINLINE VectorHelper(T1 x, T2 y, T3 z, T4 w)
-	: DX::XMFLOAT4(float(x), float(y), float(z), float(w)) {
-
-	}
-	FORCEINLINE DX::XMVECTOR toVec() const {
-		DX::XMVECTOR v = DX::XMLoadFloat4(this);
-		return v;
-	}
-	FORCEINLINE explicit operator DX::XMVECTOR() const {
-		return toVec();
+	FORCEINLINE FloatStore(T1 x, T2 y, T3 z, T4 w) noexcept : DX::XMFLOAT3(float(x), float(y), float(z), float(w)) {
 	}
 	template<size_t N> requires(N <= 4)
-	FORCEINLINE	operator VectorHelper<float, N> &() {
-		return reinterpret_cast<VectorHelper<float, N> &>(*this);
+	FORCEINLINE operator FloatStore<N> &() noexcept {
+		return reinterpret_cast<FloatStore<N> &>(*this);
 	}
 	template<size_t N> requires(N <= 4)
-	FORCEINLINE	operator const VectorHelper<float, N> &() const {
-		return reinterpret_cast<const VectorHelper<float, N> &>(*this);
+		FORCEINLINE operator const FloatStore<N> &() const noexcept {
+		return reinterpret_cast<const FloatStore<N> &>(*this);
 	}
-	FORCEINLINE float &operator[](size_t n) {
+	FORCEINLINE float &operator[](size_t n) noexcept {
 		assert(n < 4);
 		return reinterpret_cast<float *>(this)[n];
 	}
-	FORCEINLINE float operator[](size_t n) const {
+	FORCEINLINE float operator[](size_t n) const noexcept {
 		assert(n < 4);
 		return reinterpret_cast<const float *>(this)[n];
 	}
-	FORCEINLINE explicit VectorHelper(const DX::XMVECTORF32 &color)
-		: VectorHelper(color.operator DirectX::XMVECTOR())
-	{}
+	FORCEINLINE explicit FloatStore(const DX::XMVECTORF32 & color) noexcept
+	: FloatStore(color.operator DirectX::XMVECTOR()) {
+	}
+	FORCEINLINE friend std::ostream &operator<<(std::ostream &os, const FloatStore &v) noexcept {
+		os << '(' << v.x << ", " << v.y << ", " << v.z << ", " << v.w << ')';
+		return os;
+	}
+	FORCEINLINE FloatStore operator-() const noexcept {
+		return FloatStore(-x, -y, -z, -w);
+	}
+	FORCEINLINE explicit operator DX::XMVECTOR() const noexcept {
+		return DX::XMLoadFloat4(this);
+	}
 };
 
-template<typename T, size_t N>
-FORCEINLINE T dot(const VectorHelper<T, N> &lhs, const VectorHelper<T, N> &rhs);
-
-template<typename T, size_t N>
-FORCEINLINE T length(const VectorHelper<T, N> &vec);
-
-template<typename T, size_t N>
-FORCEINLINE T lengthSqr(const VectorHelper<T, N> &vec);
-
-template<typename T, size_t N>
-FORCEINLINE VectorHelper<T, N> normalize(const VectorHelper<T, N> &vec);
-
-template<typename T, size_t N>
-FORCEINLINE std::ostream &operator<<(std::ostream &os, const VectorHelper<T, N> &vec);
-
-/*----------------------------- add --------------------------------*/
-template<typename T, size_t N, typename T1> requires(std::is_convertible_v<T1, T>)
-FORCEINLINE  VectorHelper<T, N> operator+(const VectorHelper<T, N> &lhs, T1 rhs);
-template<typename T, size_t N, typename T1> requires(std::is_convertible_v<T1, T>)
-FORCEINLINE  VectorHelper<T, N> operator+(T1 lhs, const VectorHelper<T, N> &rhs);
-template<typename T, size_t N, typename T1> requires(std::is_convertible_v<T1, T>)
-FORCEINLINE VectorHelper<T, N> &operator+=(VectorHelper<T, N> &lhs, T1 rhs);
-template<typename T, size_t N>
-FORCEINLINE  VectorHelper<T, N> operator+(const VectorHelper<T, N> &lhs, const VectorHelper<T, N> &rhs);
-template<typename T, size_t N>
-FORCEINLINE VectorHelper<T, N> &operator+=(VectorHelper<T, N> &lhs, const VectorHelper<T, N> &rhs);
-/*----------------------------- add --------------------------------*/
-/*----------------------------- sub --------------------------------*/
-template<typename T, size_t N, typename T1> requires(std::is_convertible_v<T1, T>)
-FORCEINLINE  VectorHelper<T, N> operator-(const VectorHelper<T, N> &lhs, T rhs);
-template<typename T, size_t N, typename T1> requires(std::is_convertible_v<T1, T>)
-FORCEINLINE  VectorHelper<T, N> operator-(T1 lhs, const VectorHelper<T, N> &rhs);
-template<typename T, size_t N, typename T1> requires(std::is_convertible_v<T1, T>)
-FORCEINLINE VectorHelper<T, N> &operator-=(VectorHelper<T, N> &lhs, T1 rhs);
-template<typename T, size_t N>
-FORCEINLINE  VectorHelper<T, N> operator-(const VectorHelper<T, N> &lhs, const VectorHelper<T, N> &rhs);
-template<typename T, size_t N>
-FORCEINLINE VectorHelper<T, N> &operator-=(VectorHelper<T, N> &lhs, const VectorHelper<T, N> &rhs);
-/*----------------------------- sub --------------------------------*/
-/*----------------------------- mul --------------------------------*/
-template<typename T, size_t N, typename T1> requires(std::is_convertible_v<T1, T>)
-FORCEINLINE  VectorHelper<T, N> operator*(const VectorHelper<T, N> &lhs, T1 rhs);
-template<typename T, size_t N, typename T1> requires(std::is_convertible_v<T1, T>)
-FORCEINLINE  VectorHelper<T, N> operator*(T1 lhs, const VectorHelper<T, N> &rhs);
-template<typename T, size_t N, typename T1> requires(std::is_convertible_v<T1, T>)
-FORCEINLINE VectorHelper<T, N> &operator*=(VectorHelper<T, N> &lhs, T1 rhs);
-template<typename T, size_t N>
-FORCEINLINE  VectorHelper<T, N> operator*(const VectorHelper<T, N> &lhs, const VectorHelper<T, N> &rhs);
-template<typename T, size_t N>
-FORCEINLINE VectorHelper<T, N> &operator*=(VectorHelper<T, N> &lhs, const VectorHelper<T, N> &rhs);
-/*----------------------------- mul --------------------------------*/
-/*----------------------------- div --------------------------------*/
-template<typename T, size_t N, typename T1> requires(std::is_convertible_v<T1, T>)
-FORCEINLINE  VectorHelper<T, N> operator/(const VectorHelper<T, N> &lhs, T1 rhs);
-template<typename T, size_t N, typename T1> requires(std::is_convertible_v<T1, T>)
-FORCEINLINE  VectorHelper<T, N> operator/(T1 lhs, const VectorHelper<T, N> &rhs);
-template<typename T, size_t N, typename T1> requires(std::is_convertible_v<T1, T>)
-FORCEINLINE VectorHelper<T, N> &operator/=(VectorHelper<T, N> &lhs, T1 rhs);
-template<typename T, size_t N>
-FORCEINLINE  VectorHelper<T, N> operator/(const VectorHelper<T, N> &lhs, const VectorHelper<T, N> &rhs);
-template<typename T, size_t N>
-FORCEINLINE VectorHelper<T, N> &operator/=(VectorHelper<T, N> &lhs, const VectorHelper<T, N> &rhs);
-/*----------------------------- div --------------------------------*/
-template<typename T, size_t N>
-FORCEINLINE VectorHelper<T, N> operator-(const VectorHelper<T, N> &v);
+using float2 = FloatStore<2>;
+using float3 = FloatStore<3>;
+using float4 = FloatStore<4>;
 
 }
-
-#include "VectorHelper.ini"

@@ -51,7 +51,7 @@ struct Material {
     float4 diffuseAlbedo;   // 反照率
     float  roughness;       // 粗糙度
     float  metallic;        // 金属度
-    float  pading0;         // 填充0
+    float  padding0;         // 填充0
     float  pading1;         // 填充1
 };
 #endif

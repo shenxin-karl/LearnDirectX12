@@ -2,6 +2,10 @@
 #include <DirectXMath.h>
 #include "Math/VectorHelper.h"
 #include "Math/MatrixHelper.h"
+#include "Vector.hpp"
+
+#define FORCEINLINE __forceinline
+
 
 namespace Math {
 
