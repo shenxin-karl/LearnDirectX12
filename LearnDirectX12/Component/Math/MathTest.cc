@@ -1,58 +1,58 @@
 #include <iostream>
-#include "VectorHelper.h"
-#include "Vector.hpp"
+#include "MathStd.hpp"
 
-void float2Test() {
-	using namespace Math;
-	using namespace std;
-	float2 f1;
-	float2 f2(1);
-	float2 f3(2, 2);
-	cout << "f1: " << f1 << endl;
-	cout << "f2: " << f2 << endl;
-	cout << "f3: " << f3 << endl;
-	f1 = float2(0);
-}
-
-void float3Test() {
-
-}
-
-void float4Test() {
-	using namespace Math;
-	using namespace std;
-	float4 f1;
-	float4 f2(1);
-	float4 f3(2, 2, 2, 2);
-	cout << "f1: " << f1 << endl;
-	cout << "f2: " << f2 << endl;
-	cout << "f3: " << f3 << endl;
-	f1 = float4(0);
-	cout << "dot(f2, f3): " << dot(f2, f3) << endl;
-	auto f4 = normalize(f3);
-	cout << "length(f4): " << length(f4) << endl;
-	f4 += 1.f;
-	1 + f4;
-	f4 += f1;
-	f4 + f1;
-
-	f4 -= 1.f;
-	1 - f4;
-	f4 -= f1;
-	f4 - f1;
-
-	f4 *= 1.f;
-	1 * f4;
-	f4 *= f1;
-	f4 *f1;
-
-	f4 /= 1.f;
-	1 / f4;
-	f4 /= f1;
-	f4 / f1;
-}
+//void float2Test() {
+//	using namespace Math;
+//	using namespace std;
+//	float2 f1;
+//	float2 f2(1);
+//	float2 f3(2, 2);
+//	cout << "f1: " << f1 << endl;
+//	cout << "f2: " << f2 << endl;
+//	cout << "f3: " << f3 << endl;
+//	f1 = float2(0);
+//}
+//
+//void float3Test() {
+//
+//}
+//
+//void float4Test() {
+//	using namespace Math;
+//	using namespace std;
+//	float4 f1;
+//	float4 f2(1);
+//	float4 f3(2, 2, 2, 2);
+//	cout << "f1: " << f1 << endl;
+//	cout << "f2: " << f2 << endl;
+//	cout << "f3: " << f3 << endl;
+//	f1 = float4(0);
+//	cout << "dot(f2, f3): " << dot(f2, f3) << endl;
+//	auto f4 = normalize(f3);
+//	cout << "length(f4): " << length(f4) << endl;
+//	f4 += 1.f;
+//	1 + f4;
+//	f4 += f1;
+//	f4 + f1;
+//
+//	f4 -= 1.f;
+//	1 - f4;
+//	f4 -= f1;
+//	f4 - f1;
+//
+//	f4 *= 1.f;
+//	1 * f4;
+//	f4 *= f1;
+//	f4 *f1;
+//
+//	f4 /= 1.f;
+//	1 / f4;
+//	f4 /= f1;
+//	f4 / f1;
+//}
 
 void buildBoundingFrustumTest() {
+	namespace DX = DirectX;
 	float near = 0.1f;
 	float far = 100.f;
 	float aspect = 1.f;
@@ -76,10 +76,10 @@ void buildBoundingFrustumTest() {
 
 	using namespace Math;
 	float depth = 1.f / float4(points[0]).w;
-	std::cout << float3(points[0]) * depth << std::endl;
-	std::cout << float3(points[1]) * depth << std::endl;
-	std::cout << float3(points[2]) * depth << std::endl;
-	std::cout << float3(points[3]) * depth << std::endl;
+	std::cout << Vector3(points[0]) * depth << std::endl;
+	std::cout << Vector3(points[1]) * depth << std::endl;
+	std::cout << Vector3(points[2]) * depth << std::endl;
+	std::cout << Vector3(points[3]) * depth << std::endl;
 	float zNear = 1.f / float4(points[4]).w;
 	float zFar = 1.f / float4(points[5]).w;
 	std::cout << "zNear: " << zNear << " zFar:" << zFar << std::endl;
@@ -134,10 +134,10 @@ void vector3Test() {
 	std::cout << "	v6 /= (0.5);: " << (v6) << std::endl;
 	std::cout << "--------------------------" << std::endl;
 
-	v3 = float3(100.f);
-	v4 = float3(100.f);
-	v5 = float3(100.f);
-	v6 = float3(100.f);
+	v3 = Vector3(100.f);
+	v4 = Vector3(100.f);
+	v5 = Vector3(100.f);
+	v6 = Vector3(100.f);
 
 	v3 = 0.5 + v3;
 	v4 = 0.5 - v4;
