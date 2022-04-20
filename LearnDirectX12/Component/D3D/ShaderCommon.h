@@ -1,4 +1,5 @@
 #pragma once
+#include "Math/MathStd.hpp"
 #include "Math/MathHelper.h"
 #include "D3Dx12.h"
 #include <array>

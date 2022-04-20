@@ -2,6 +2,7 @@
 #include <DirectXCollision.h>
 #include "Math/MathHelper.h"
 #include "D3D/d3dutil.h"
+#include "Math/MathStd.hpp"
 
 namespace com {
 

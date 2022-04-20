@@ -652,15 +652,16 @@ MeshData GometryGenerator::loadObjFile(const std::string &path) {
 
 com::Vertex GometryGenerator::middlePoint(const Vertex &lhs, const Vertex &rhs) {
 	return {
-		MathHelper::lerp(lhs.position, rhs.position, 0.5f)
+		lerp(Vector3(lhs.position), Vector3(rhs.position), 0.5f).xyz
 	};
 }
 
 
 com::Vertex GometryGenerator::middleVertex(const Vertex &lhs, const Vertex &rhs) {
 	return {
-		MathHelper::lerp(lhs.position, rhs.position, 0.5f),
-		MathHelper::lerp(lhs.texcoord, rhs.texcoord, 0.5f),
+		lerp(Vector3(lhs.position), Vector3(rhs.position), 0.5f).xyz,
+		// todo: สนำร Vector2
+		//MathHelper::lerp(lhs.texcoord, rhs.texcoord, 0.5f),
 	};
 }
 

@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include <Math/MathStd.hpp>
 #include "dx12libStd.h"
 #include "IResource.h"
 #include "Math/MathHelper.h"

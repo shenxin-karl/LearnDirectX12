@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include "Geometry/GeometryGenerator.h"
-#include "Math/VectorHelper.h"
+#include <Math/MathStd.hpp>
 #include <set>
 #include <unordered_set>
 #include <queue>

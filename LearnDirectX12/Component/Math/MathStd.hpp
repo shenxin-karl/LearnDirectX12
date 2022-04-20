@@ -2,7 +2,8 @@
 #define NOMINMAX
 #include <DirectXMath.h>
 #include <ostream>
-
+#undef min
+#undef max
 #define FORCEINLINE __forceinline
 
 namespace Math {
@@ -52,6 +53,8 @@ struct FloatStore<3> : public DX::XMFLOAT3 {
 	FORCEINLINE FloatStore() noexcept = default;
 	FORCEINLINE FloatStore(const FloatStore &) noexcept = default;
 	FORCEINLINE FloatStore(FloatStore &&) noexcept = default;
+	FORCEINLINE FloatStore(const Vector3 &vec) noexcept;
+	FORCEINLINE FloatStore(const Vector4 &vec) noexcept;
 	FORCEINLINE FloatStore(const FloatStore<2> &f2, float z) noexcept;
 	FORCEINLINE FloatStore &operator=(const FloatStore &) noexcept = default;
 	FORCEINLINE FloatStore &operator=(FloatStore &&) noexcept = default;
@@ -259,6 +262,13 @@ FORCEINLINE FloatStore<2>::FloatStore(T1 x, T2 y) noexcept : DX::XMFLOAT2(float(
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+FORCEINLINE FloatStore<3>::FloatStore(const Vector3 &vec) noexcept {
+	*this = vec.operator float3();
+}
+
+FORCEINLINE FloatStore<3>::FloatStore(const Vector4 &vec) noexcept {
+	*this = vec.operator float3();
+}
 
 FORCEINLINE FloatStore<3>::FloatStore(const FloatStore<2> &f2, float z) noexcept : FloatStore(f2.x, f2.y, z) {
 }
