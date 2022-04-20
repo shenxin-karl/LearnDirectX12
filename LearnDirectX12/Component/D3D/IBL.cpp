@@ -9,9 +9,7 @@ namespace d3d {
 
 template<typename T>
 SH3 calcIrradianceMapSH3(const T *pData, size_t width, size_t height, size_t numSamples) {
-	SH3 coef;
-	for (auto &c : coef._m)
-		c = float4(0.f);
+	Vector3 shCoefficient[9] = { Vector3(0.f) };
 
 	std::random_device rd;
 	std::mt19937 gen(rd());
@@ -36,29 +34,32 @@ SH3 calcIrradianceMapSH3(const T *pData, size_t width, size_t height, size_t num
 		size_t x = static_cast<size_t>(u * maxX);
 		size_t y = static_cast<size_t>(v * maxY);
 		size_t index = y * width + x;
-		float3 texColor = float3(pData[index].x, pData[index].y, pData[index].z) * invPdf;
+		Vector3 texColor = Vector3(pData[index].x, pData[index].y, pData[index].z) * invPdf;
 		for (size_t j = 0; j < shBasisFuncArray.size(); ++j) {
 			float c = shBasisFuncArray[j](L);
-			float3 basisColor = c * texColor;
-			coef._m[j] += float4(basisColor.x, basisColor.y, basisColor.z, 0.0f);
+			Vector3 basisColor = c * texColor;
+			shCoefficient[j] += basisColor;
 		}
 		++sampleCount;
 	}
 
+	SH3 coeff;
 	float invSample = 1.f / static_cast<float>(sampleCount);
-	for (auto &c : coef._m)
-		c *= invSample;
+	for (size_t i = 0; i < 9; ++i) {
+		shCoefficient[i] *= invSample;
+		coeff._m[i] = float4(shCoefficient[i].xyz, 0.f);
+	}
 
-	return coef;
+	return coeff;
 }
 
 float3 getSHRadian(SH3 lightProbe, float3 N) {
-	float4 result = float4(0.f);
-	result += lightProbe.y00 * SHBasisFunction<0, 0>::eval(N);
-	result += lightProbe.y1_1 * SHBasisFunction<1, -1>::eval(N);
-	result += lightProbe.y10 * SHBasisFunction<1, 0>::eval(N);
-	result += lightProbe.y11 * SHBasisFunction<1, 1>::eval(N);
-	return result;
+	Vector4 result(0.f);
+	result += Vector4(lightProbe.y00) * SHBasisFunction<0, 0>::eval(N);
+	result += Vector4(lightProbe.y1_1)* SHBasisFunction<1, -1>::eval(N);
+	result += Vector4(lightProbe.y10) * SHBasisFunction<1, 0>::eval(N);
+	result += Vector4(lightProbe.y11) * SHBasisFunction<1, 1>::eval(N);
+	return result.xyz;
 }
 
 void test(SH3 lightProbe) {

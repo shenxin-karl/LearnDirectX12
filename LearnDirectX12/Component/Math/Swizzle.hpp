@@ -8,8 +8,9 @@ namespace Math {
 
 template<typename T, bool EnableAssign, size_t...I>
 struct Swizzle {
+	Swizzle() noexcept = default;
 	template<typename = void> requires(EnableAssign)
-	FORCEINLINE T &operator=(const T &other) {
+	FORCEINLINE T &operator=(const T &other) noexcept {
 		((at<I>() = other[I]), ...);
 		return *this;
 	}

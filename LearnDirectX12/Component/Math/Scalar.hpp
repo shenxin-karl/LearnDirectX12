@@ -14,7 +14,7 @@ public:
 
     FORCEINLINE Scalar(DX::XMVECTOR vec) noexcept : vec(vec) {
     }
-    FORCEINLINE Scalar(float v) noexcept : vec(DX::XMVectorSet(v, v, v, v)) {
+    FORCEINLINE explicit Scalar(float v) noexcept : vec(DX::XMVectorSet(v, v, v, v)) {
 	}
     FORCEINLINE operator float () const noexcept {
 		return  DX::XMVectorGetX(vec);
@@ -29,19 +29,19 @@ public:
 		return vec;
 	}
     FORCEINLINE friend Scalar operator- (Scalar s) noexcept {
-	    return Scalar(XMVectorNegate(s));
+	    return Scalar(DX::XMVectorNegate(s));
     }
     FORCEINLINE friend Scalar operator+ (Scalar s1, Scalar s2) noexcept {
-	    return Scalar(XMVectorAdd(s1, s2));
+	    return Scalar(DX::XMVectorAdd(s1, s2));
     }
     FORCEINLINE friend Scalar operator- (Scalar s1, Scalar s2) noexcept {
-	    return Scalar(XMVectorSubtract(s1, s2));
+	    return Scalar(DX::XMVectorSubtract(s1, s2));
     }
     FORCEINLINE friend Scalar operator* (Scalar s1, Scalar s2) noexcept {
-	    return Scalar(XMVectorMultiply(s1, s2));
+	    return Scalar(DX::XMVectorMultiply(s1, s2));
     }
     FORCEINLINE friend Scalar operator/ (Scalar s1, Scalar s2) noexcept {
-	    return Scalar(XMVectorDivide(s1, s2));
+	    return Scalar(DX::XMVectorDivide(s1, s2));
     }
     FORCEINLINE friend Scalar operator+ (Scalar s1, float s2) noexcept {
 	    return s1 + Scalar(s2);

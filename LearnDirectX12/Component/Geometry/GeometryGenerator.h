@@ -40,19 +40,10 @@ public:
 	) const;
 
 	MeshData createBox(float width, float height, float depth, uint32 numSubdivisions) const;
-
 	MeshData createSphere(float radius, uint32 numSubdivisions) const;
-
 	MeshData createSphere(float radius, std::size_t sliceCount, std::size_t stackCount) const;
-
 	MeshData createGrid(float width, float depth, uint32 m, uint32 n) const;
-
 	MeshData createQuad(float x, float y, float w, float h, float depth) const;
-
-	void loopSubdivision(MeshData &mesh) const;	
-
-	void simplify(MeshData &mesh, float reserve);
-
 	MeshData loadObjFile(const std::string &path);
 private:
 	static Vertex middlePoint(const Vertex &lhs, const Vertex &rhs);

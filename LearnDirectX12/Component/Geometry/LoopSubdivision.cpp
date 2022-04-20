@@ -6,6 +6,7 @@
 
 namespace loop {
 
+
 bool operator==(const LoopEdge &lhs, const LoopEdge &rhs) {
 	return lhs.v0 == rhs.v0 && lhs.v1 == rhs.v1 ||
 		   lhs.v0 == rhs.v1 && lhs.v1 == rhs.v0;
@@ -15,6 +16,7 @@ std::size_t LoopEdgeHasher::operator()(const LoopEdge &edge) const {
 	return std::hash<uint32>()(edge.v0) ^ std::hash<uint32>()(edge.v1);
 }
 
+#if 0
 com::MeshData LoopSubdivision::subdivision(const com::MeshData &mesh, int numSubdiv, bool genNrmTan) {
 	return subdivision(mesh.vertices, mesh.indices, numSubdiv);
 }
@@ -80,7 +82,7 @@ std::vector<uint32> LoopSubdivision::getSharePoint(uint32 v1, uint32 v2) const {
 
 Vertex LoopSubdivision::middlePoint(const Vertex &lhs, const Vertex &rhs) {
 	return {
-		(lhs.position + rhs.position) * 0.5f,
+		float3((Vector3(lhs.position) + Vector3(rhs.position)) * 0.5f),
 		(lhs.texcoord + rhs.texcoord) * 0.5f,
 	};
 }
@@ -222,5 +224,7 @@ void LoopSubdivision::updateBoundary() {
 		}
 	}
 }
+
+#endif
 
 }

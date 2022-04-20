@@ -1,4 +1,5 @@
 #include "Simplify.h"
+#include "Math/Vector.hpp"
 
 namespace sim {
 
@@ -56,7 +57,7 @@ sim::SimVertAdjustResult Simplify::calcAdjustEdgeResult(const SimEdge &edge) con
 float Simplify::calcEdgeLengthSqr(const SimEdge &edge) const {
 	const auto &p1 = vertices_[edge.start].position;
 	const auto &p2 = vertices_[edge.last].position;
-	return length(p1 - p2);
+	return length(Math::Vector3(p1) - Math::Vector3(p2));
 }
 
 void Simplify::pushHeap(const SimEdge &edge) {

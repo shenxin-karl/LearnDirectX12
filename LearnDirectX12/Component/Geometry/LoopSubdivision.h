@@ -9,6 +9,7 @@ namespace loop {
 using namespace Math;
 using namespace com;
 
+
 struct LoopVert {
 	float3	position;
 	float2	texcoord;
@@ -29,6 +30,8 @@ struct LoopFace {
 	uint32 v1;
 	uint32 v2;
 };
+
+#if 0
 
 class LoopSubdivision {
 	std::vector<bool> boundarys_;
@@ -61,4 +64,7 @@ private:
 	std::unordered_map<uint32, LoopEdge> insertFace(Input input, Output output);
 };
 
+#endif
+
 }
+

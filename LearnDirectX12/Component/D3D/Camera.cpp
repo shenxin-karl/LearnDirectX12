@@ -9,20 +9,20 @@
 namespace d3d {
 
 CameraBase::CameraBase(const CameraDesc &desc) {
-	float3 w = normalize(desc.lookAt - desc.lookFrom);
-	float3 u = normalize(cross(desc.lookUp, w));
-	float3 v = cross(w, u);
+	Vector3 w = normalize(Vector3(desc.lookAt) - Vector3(desc.lookFrom));
+	Vector3 u = normalize(cross(Vector3(desc.lookUp), w));
+	Vector3 v = cross(w, u);
 
 	_lookFrom = desc.lookFrom;
-	_lookUp = v;
+	_lookUp = v.xyz;
 	_lookAt = desc.lookAt;
 	_nearClip = desc.nearClip;
 	_farClip = desc.farClip;
 	_fov = desc.fov;
 	_aspect = desc.aspect;
 
-	assert(lengthSqr(_lookUp) > 0.f);
-	assert(lengthSqr(w) > 0.f);
+	assert(lengthSquare(Vector3(_lookUp)) > 0.f);
+	assert(lengthSquare(w) > 0.f);
 	assert(_fov > 1.f);
 	assert(_nearClip > 0.f);
 	assert(_farClip > _nearClip);
@@ -72,7 +72,7 @@ DX::BoundingFrustum CameraBase::getViewSpaceFrustum() const {
 }
 
 CoronaCamera::CoronaCamera(const CameraDesc &desc) : CameraBase(desc) {
-	auto direction = desc.lookAt - desc.lookFrom;
+	auto direction = Vector3(desc.lookAt) - Vector3(desc.lookFrom);
 	_radius = length(direction);
 	assert(_radius != 0.f);
 	direction = -direction / _radius;
@@ -111,22 +111,27 @@ void CoronaCamera::update(std::shared_ptr<com::GameTimer> pGameTimer) {
 	float sinTh = std::sin(thetaRadians);
 	float cosPhi = std::cos(phiRadians);
 	float sinPhi = std::sin(phiRadians);
-	float3 direction = {
+	Vector3 direction = {
 		cosPhi * cosTh,
 		sinPhi,
 		cosPhi * sinTh,
 	};
 
-	float3 w = normalize(-direction);
-	float3 u;
+	Vector3 w = normalize(-direction);
+	Vector3 u;
 	if (std::abs(w.y) != 1.f)
-		u = normalize(cross(float3(0, 1, 0), w));
+		u = normalize(cross(Vector3(0, 1, 0), w));
 	else
-		u = float3(w.y > 0.f ? +1.f : -1.f, 0.f, 0.f);
-	_lookUp = cross(w, u);
-	_lookFrom = _lookAt + direction * _radius;
+		u = Vector3(w.y > 0.f ? +1.f : -1.f, 0.f, 0.f);
+	Vector3 lookUp = cross(w, u);
+	Vector3 lookAt = Vector3(_lookAt);
+	Vector3 lookFrom = lookAt + direction * _radius;
+
+	_lookFrom = lookFrom.xyz;
+	_lookAt = lookAt.xyz;
+	_lookUp = lookUp.xyz;
 	
-	DirectX::XMMATRIX view = DirectX::XMMatrixLookAtLH(_lookFrom.toVec(), _lookAt.toVec(), _lookUp.toVec());
+	DirectX::XMMATRIX view = DirectX::XMMatrixLookAtLH(lookFrom, lookAt, lookUp);
 	DirectX::XMMATRIX proj = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(_fov), _aspect, _nearClip, _farClip);
 	DirectX::XMMATRIX viewProj = view * proj;
 
@@ -202,8 +207,12 @@ void CoronaCamera::pollEvent(const com::MouseEvent &event) {
 /******************************************************************************************/
 
 FirstPersonCamera::FirstPersonCamera(const CameraDesc &desc) : CameraBase(desc) {
-	auto target = normalize(desc.lookAt - desc.lookFrom);
-	auto upDir = normalize(desc.lookUp);
+	Vector3 lookAt = Vector3(desc.lookAt);
+	Vector3 lookFrom = Vector3(desc.lookFrom);
+	Vector3 lookUp = Vector3(desc.lookUp);
+	Vector3 target = normalize(lookAt - lookFrom);
+	Vector3 upDir = normalize(lookUp);
+
 	_pitch = std::clamp(DirectX::XMConvertToDegrees(std::asin(target.y)), -89.9f, +89.9f);
 	_yaw = DirectX::XMConvertToDegrees(std::atan2(target.x, target.z));
 	_roll = DirectX::XMConvertToDegrees(std::asin(upDir.y));
@@ -242,19 +251,26 @@ void FirstPersonCamera::update(std::shared_ptr<com::GameTimer> pGameTimer) {
 	float cosPitch = std::cos(radianPitch);
 	float sinYaw = std::sin(radianYaw);
 	float cosYaw = std::cos(radianYaw);
-	float3 target = {
+	Vector3 target = {
 		cosPitch * cosYaw,
 		sinPitch,
 		cosPitch * sinYaw,
 	};
-	_lookAt = normalize(target) + _lookFrom;
+
+	Vector3 lookFrom = Vector3(_lookFrom);
+	Vector3 lookAt = Vector3(_lookAt);
+	lookAt = normalize(lookAt) + lookFrom;
 
 	float radianRoll = DirectX::XMConvertToRadians(_roll);
 	float sinRoll = std::sin(radianRoll);
 	float cosRoll = std::cos(radianRoll);
-	_lookUp = float3(cosRoll, sinRoll, 0.f);
+	Vector3 lookUp = Vector3(cosRoll, sinRoll, 0.f);
 
-	DirectX::XMMATRIX view = DirectX::XMMatrixLookAtLH(_lookFrom.toVec(), _lookAt.toVec(), _lookUp.toVec());
+	_lookFrom = lookFrom.xyz;
+	_lookAt = lookAt.xyz;
+	_lookUp = lookUp.xyz;
+
+	DirectX::XMMATRIX view = DirectX::XMMatrixLookAtLH(lookFrom, lookAt, lookUp);
 	DirectX::XMMATRIX proj = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(_fov), _aspect, _nearClip, _farClip);
 	DirectX::XMMATRIX viewProj = view * proj;
 
@@ -358,10 +374,15 @@ void FirstPersonCamera::responseEvent(std::shared_ptr<com::GameTimer> pGameTimer
 	rotate -= static_cast<float>(_moveState[LeftRotate]);
 
 	if (advance != 0.f || deviation != 0.f) {
-		auto w = normalize(_lookAt - _lookFrom);
-		auto u = cross(_lookUp, w);
-		float3 motor = normalize(w * advance + u * deviation) * (deltaTime * _cameraMoveSpeed);
-		_lookFrom += motor;
+		Vector3 lookFrom = Vector3(_lookFrom);
+		Vector3 lookAt = Vector3(_lookAt);
+		Vector3 lookUp = Vector3(_lookUp);
+
+		Vector3 w = normalize(lookAt - lookFrom);
+		Vector3 u = cross(lookUp, w);
+		Vector3 motor = normalize(w * advance + u * deviation) * (deltaTime * _cameraMoveSpeed);
+		lookFrom += motor;
+		_lookFrom = lookFrom.xyz;
 	}
 
 	if (rotate != 0.f)

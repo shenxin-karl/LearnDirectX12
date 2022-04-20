@@ -90,24 +90,24 @@ bool GometryGenerator::generateNormal(MeshData &mesh) const {
 		return false;
 	}
 
-	std::vector<float3> normals(mesh.vertices.size(), float3(0));
+	std::vector<Vector3> normals(mesh.vertices.size(), Vector3(0));
 	for (uint32 i = 0; i < mesh.indices.size(); i += 3) {
 		uint32 idx0 = mesh.indices[i + size_t(0)];
 		uint32 idx1 = mesh.indices[i + size_t(1)];
 		uint32 idx2 = mesh.indices[i + size_t(2)];
-		const float3 &p0 = mesh.vertices[idx0].position;
-		const float3 &p1 = mesh.vertices[idx1].position;
-		const float3 &p2 = mesh.vertices[idx2].position;
-		const float3 E1 = p1 - p0;
-		const float3 E2 = p2 - p0;
-		const float3 normal = cross(E1, E2);
+		Vector3 p0 = Vector3(mesh.vertices[idx0].position);
+		Vector3 p1 = Vector3(mesh.vertices[idx1].position);
+		Vector3 p2 = Vector3(mesh.vertices[idx2].position);
+		Vector3 E1 = p1 - p0;
+		Vector3 E2 = p2 - p0;
+		Vector3 normal = cross(E1, E2);
 		normals[idx0] += normal;
 		normals[idx1] += normal;
 		normals[idx2] += normal;
 	}
 	for (uint32 i = 0; i < mesh.vertices.size(); ++i) {
-		float3 normal = normalize(normals[i]);
-		mesh.vertices[i].normal = normal;
+		Vector3 normal = normalize(normals[i]);
+		mesh.vertices[i].normal = normal.xyz;
 	}
 	return true;
 }
@@ -116,7 +116,7 @@ bool GometryGenerator::generateTangent(MeshData &mesh) const {
 	if (mesh.indices.size() < 3)
 		return false;
 
-	std::vector<float3> tangents(mesh.vertices.size(), float3(0));
+	std::vector<Vector3> tangents(mesh.vertices.size(), Vector3(0));
 	for (uint32 i = 0; i < mesh.indices.size()-2; i += 3) {
 		uint32 idx0 = mesh.indices[i + static_cast<size_t>(0)];
 		uint32 idx1 = mesh.indices[i + static_cast<size_t>(1)];
@@ -124,11 +124,11 @@ bool GometryGenerator::generateTangent(MeshData &mesh) const {
 		const Vertex &v0 = mesh.vertices[idx0];
 		const Vertex &v1 = mesh.vertices[idx1];
 		const Vertex &v2 = mesh.vertices[idx2];
-		float3 E1 = v1.position - v0.position;
-		float3 E2 = v2.position - v0.position;
+		Vector3 E1 = Vector3(v1.position) - Vector3(v0.position);
+		Vector3 E2 = Vector3(v2.position) - Vector3(v0.position);
 		float t1 = v1.texcoord.y - v0.texcoord.y;
 		float t2 = v2.texcoord.y - v0.texcoord.y;
-		float3 tangent = (t2 * E1) - (t1 * E2);
+		Vector3 tangent = (t2 * E1) - (t1 * E2);
 		tangents[idx0] += tangent;
 		tangents[idx1] += tangent;
 		tangents[idx2] += tangent;
@@ -136,10 +136,11 @@ bool GometryGenerator::generateTangent(MeshData &mesh) const {
 
 	for (uint32 i = 0; i < tangents.size(); ++i) {
 		Vertex &v = mesh.vertices[i];
-		float3 t = tangents[i];
-		t -= v.normal * dot(v.normal, t);		// 正交修正
+		Vector3 t = tangents[i];
+		Vector3 normal = Vector3(v.normal);
+		t -= normal * dot(normal, t);		// 正交修正
 		t = normalize(t);
-		v.tangent = t;
+		v.tangent = t.operator float3();
 	}
 
 	return true;
@@ -149,8 +150,8 @@ bool GometryGenerator::generateTangentAndNormal(MeshData &mesh) const {
 	if (mesh.indices.size() < 3)
 		return false;
 
-	std::vector<float3> normals(mesh.vertices.size(), float3(0));
-	std::vector<float3> tangents(mesh.vertices.size(), float3(0));
+	std::vector<Vector3> normals(mesh.vertices.size(), Vector3(0));
+	std::vector<Vector3> tangents(mesh.vertices.size(), Vector3(0));
 	for (uint32 i = 0; i < mesh.indices.size()-2; i += 3) {
 		uint32 idx0 = mesh.indices[i + static_cast<size_t>(0)];
 		uint32 idx1 = mesh.indices[i + static_cast<size_t>(1)];
@@ -158,12 +159,12 @@ bool GometryGenerator::generateTangentAndNormal(MeshData &mesh) const {
 		const Vertex &v0 = mesh.vertices[idx0];
 		const Vertex &v1 = mesh.vertices[idx1];
 		const Vertex &v2 = mesh.vertices[idx2];
-		float3 E1 = v1.position - v0.position;
-		float3 E2 = v2.position - v0.position;
-		float3 normal = cross(E1, E2);
+		Vector3 E1 = Vector3(v1.position) - Vector3(v0.position);
+		Vector3 E2 = Vector3(v2.position) - Vector3(v0.position);
+		Vector3 normal = cross(E1, E2);
 		float t1 = v1.texcoord.y - v0.texcoord.y;
 		float t2 = v2.texcoord.y - v0.texcoord.y;
-		float3 tangent = (t2 * E1) - (t1 * E2);
+		Vector3 tangent = (t2 * E1) - (t1 * E2);
 		for (uint32 j = i; j < i+3; ++j) {
 			uint32 index = mesh.indices[j];
 			normals[index] += normal;
@@ -173,12 +174,12 @@ bool GometryGenerator::generateTangentAndNormal(MeshData &mesh) const {
 
 	for (uint32 i = 0; i < tangents.size(); ++i) {
 		Vertex &v = mesh.vertices[i];
-		float3 n = normalize(normals[i]);
-		float3 t = tangents[i];
+		Vector3 n = normalize(normals[i]);
+		Vector3 t = tangents[i];
 		t -= n * dot(n, t);		// 正交修正
 		t = normalize(t);
-		v.normal = n;
-		v.tangent = t;
+		v.normal = static_cast<float3>(n);;
+		v.tangent = static_cast<float3>(t);;
 	}
 	return true;
 }
@@ -419,14 +420,14 @@ MeshData GometryGenerator::createSphere(float radius, uint32 numSubdivisions) co
 	const float PI = 3.141592654f;
 	float2 invATan = { 0.5f / PI, 1 / PI };
 	for (auto &vert : vertices) {
-		float3 n = normalize(vert.position);
-		float3 point = n * radius;
+		Vector3 n = normalize(Vector3(vert.position));
+		Vector3 point = n * radius;
 		float u = std::atan2(n.z, n.x);
 		float v = std::asin(n.y);
 		float2 texcoord(u, v);
-		texcoord *= invATan;
-		texcoord += 0.5f;
-		vert.position = point;
+		texcoord = float2{ texcoord.x * (0.5f / PI), texcoord.y * (1.f / PI) };
+		texcoord = float2(texcoord.x + 0.5f, texcoord.y + 0.5f);
+		vert.position = float3(point);
 		vert.texcoord = float2(u, v);
 	}
 	MeshData mesh = { std::move(vertices), std::move(indices) };
@@ -436,19 +437,20 @@ MeshData GometryGenerator::createSphere(float radius, uint32 numSubdivisions) co
 
 
 com::MeshData GometryGenerator::createSphere(float radius, std::size_t sliceCount, std::size_t stackCount) const {
+	namespace DX = DirectX;
 	MeshData mesh;
 	mesh.vertices.reserve((sliceCount+1) * (stackCount+1));
 	mesh.indices.reserve(sliceCount * stackCount * 2 * 3);
-	float phiStep = DX::XM_PI / float(stackCount);
-	float thetaStep = DX::XM_2PI / float(sliceCount);
+	float phiStep = DX::XM_PI / static_cast<float>(stackCount);
+	float thetaStep = DX::XM_2PI / static_cast<float>(sliceCount);
 	for (std::size_t i = 0; i <= stackCount; ++i) {
 		for (std::size_t j = 0; j <= sliceCount; ++j) {
 			float phi = DX::XM_PI - (phiStep * i);
 			float theta = j * thetaStep;
 			float cosPhi = std::cos(phi); float sinPhi = std::sin(phi);
 			float cosTh = std::cos(theta); float sinTh = std::sin(theta);
-			float3 N = { sinPhi*cosTh, cosPhi, sinPhi*sinTh };
-			float3 point = N * radius;
+			Vector3 N = { sinPhi*cosTh, cosPhi, sinPhi*sinTh };
+			Vector3 point = N * radius;
 			float2 texcoord = { float(j) / float(sliceCount), float(i) / float(stackCount) };
 			mesh.vertices.emplace_back(point, texcoord, N);
 		}
@@ -517,16 +519,6 @@ MeshData GometryGenerator::createQuad(float x, float y, float w, float h, float 
 	generateTangentAndNormal(mesh);
 	return mesh;
 }
-
-void GometryGenerator::loopSubdivision(MeshData &mesh) const {
-	loop::LoopSubdivision subdivision;
-	mesh = subdivision.subdivision(mesh);
-}
-
-void GometryGenerator::simplify(MeshData &mesh, float reserve) {
-
-}
-
 
 struct VertexDataIndex {
 	com::uint32 posIdx = 0;
