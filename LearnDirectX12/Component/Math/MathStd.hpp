@@ -1,5 +1,6 @@
 #pragma once
 #define NOMINMAX
+#include <algorithm>
 #include <DirectXMath.h>
 #include <ostream>
 #undef min
@@ -31,6 +32,8 @@ struct FloatStore<2> : public DX::XMFLOAT2 {
 	FORCEINLINE FloatStore &operator=(const FloatStore &) noexcept = default;
 	FORCEINLINE FloatStore &operator=(FloatStore &&) noexcept = default;
 	FORCEINLINE explicit FloatStore(DX::FXMVECTOR v) noexcept;
+	FORCEINLINE explicit FloatStore(const Vector3 &vec) noexcept;
+	FORCEINLINE explicit FloatStore(const Vector4 &vec) noexcept;
 	FORCEINLINE float &operator[](size_t n) noexcept;
 	FORCEINLINE float operator[](size_t n) const noexcept;
 	FORCEINLINE friend std::ostream &operator<<(std::ostream &os, const FloatStore &v) noexcept;
@@ -53,8 +56,8 @@ struct FloatStore<3> : public DX::XMFLOAT3 {
 	FORCEINLINE FloatStore() noexcept = default;
 	FORCEINLINE FloatStore(const FloatStore &) noexcept = default;
 	FORCEINLINE FloatStore(FloatStore &&) noexcept = default;
-	FORCEINLINE FloatStore(const Vector3 &vec) noexcept;
-	FORCEINLINE FloatStore(const Vector4 &vec) noexcept;
+	FORCEINLINE explicit FloatStore(const Vector3 &vec) noexcept;
+	FORCEINLINE explicit FloatStore(const Vector4 &vec) noexcept;
 	FORCEINLINE FloatStore(const FloatStore<2> &f2, float z) noexcept;
 	FORCEINLINE FloatStore &operator=(const FloatStore &) noexcept = default;
 	FORCEINLINE FloatStore &operator=(FloatStore &&) noexcept = default;
@@ -165,6 +168,31 @@ private:
 	DX::XMVECTOR _vec;
 };
 
+class Vector2 {
+public:
+	FORCEINLINE Vector2() noexcept = default;
+	FORCEINLINE Vector2(float x, float y) noexcept;
+	FORCEINLINE explicit Vector2(float val) noexcept;
+	FORCEINLINE explicit Vector2(const float2 &f2) noexcept;
+	FORCEINLINE explicit Vector2(const Vector3 &v3) noexcept;
+	FORCEINLINE explicit Vector2(const Vector4 &v4) noexcept;
+	FORCEINLINE Vector2 &operator=(const Vector2 &other) noexcept;
+	FORCEINLINE float &operator[](size_t index) noexcept;
+	FORCEINLINE float operator[](size_t index) const noexcept;
+	FORCEINLINE explicit operator float2() const noexcept;
+	FORCEINLINE friend std::ostream &operator<<(std::ostream &os, const Vector2 &v) noexcept;
+public:
+	union {
+		struct {
+			float x;
+			float y;
+		};
+#define VEC2
+#include "VectorMember.ini"
+#undef VEC2
+	};
+};
+
 class alignas(16) Vector3 {
 public:
 	FORCEINLINE Vector3() = default;
@@ -228,57 +256,55 @@ FORCEINLINE FloatStore<2>::FloatStore(DX::FXMVECTOR v) noexcept {
 	x = DX::XMVectorGetX(v);
 	y = DX::XMVectorGetY(v);
 }
-
+FORCEINLINE FloatStore<2>::FloatStore(const Vector3 &vec) noexcept {
+	x = vec.x;
+	y = vec.y;
+}
+FORCEINLINE FloatStore<2>::FloatStore(const Vector4 &vec) noexcept {
+	x = vec.x;
+	y = vec.y;
+}
 FORCEINLINE float &FloatStore<2>::operator[](size_t n) noexcept {
 	assert(n < 2);
 	return reinterpret_cast<float *>(this)[n];
 }
-
 FORCEINLINE float FloatStore<2>::operator[](size_t n) const noexcept {
 	assert(n < 2);
 	return reinterpret_cast<const float *>(this)[n];
 }
-
 FORCEINLINE std::ostream &operator<<(std::ostream &os, const FloatStore<2> &v) noexcept {
 	os << '(' << v.x << ", " << v.y << ')';
 	return os;
 }
-
 FORCEINLINE FloatStore<2> FloatStore<2>::operator-() const noexcept {
 	return FloatStore(-x, -y);
 }
-
 FORCEINLINE FloatStore<2>::operator DX::XMVECTOR() const noexcept {
 	return DX::XMVectorSet(x, y, 0.f, 0.f);
 }
-
 template<typename T> requires(std::is_convertible_v<T, float>)
 FORCEINLINE FloatStore<2>::FloatStore(T v) noexcept : DX::XMFLOAT2(static_cast<float>(v), static_cast<float>(v)) {
 }
-
 template<typename T1, typename T2>
 	requires(std::is_convertible_v<T1, float> &&std::is_convertible_v<T2, float>)
 FORCEINLINE FloatStore<2>::FloatStore(T1 x, T2 y) noexcept : DX::XMFLOAT2(float(x), float(y)) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
 FORCEINLINE FloatStore<3>::FloatStore(const Vector3 &vec) noexcept {
 	*this = vec.operator float3();
 }
-
 FORCEINLINE FloatStore<3>::FloatStore(const Vector4 &vec) noexcept {
 	*this = vec.operator float3();
 }
-
 FORCEINLINE FloatStore<3>::FloatStore(const FloatStore<2> &f2, float z) noexcept : FloatStore(f2.x, f2.y, z) {
 }
-
 FORCEINLINE FloatStore<3>::FloatStore(DX::FXMVECTOR v) noexcept {
 	x = DX::XMVectorGetX(v);
 	y = DX::XMVectorGetY(v);
 	z = DX::XMVectorGetZ(v);
 }
-
 template<typename T> requires(std::is_convertible_v<T, float>)
 FORCEINLINE FloatStore<3>::FloatStore(T v)
 	: XMFLOAT3(float(v), float(v), float(v)) {
@@ -291,46 +317,37 @@ FORCEINLINE FloatStore<3>::FloatStore(T1 x, T2 y, T3 z) noexcept
 	: DX::XMFLOAT3(float(x), float(y), float(z)) {
 
 }
-
 template<size_t N> requires(N <= 3)
 FORCEINLINE FloatStore<3>::operator FloatStore<N> &() noexcept {
 	return reinterpret_cast<FloatStore<N> &>(*this);
 }
-
 template<size_t N> requires(N <= 3)
 FORCEINLINE FloatStore<3>::operator const FloatStore<N> &() const noexcept {
 	return reinterpret_cast<const FloatStore<N> &>(*this);
 }
-
 FORCEINLINE float &FloatStore<3>::operator[](size_t n) noexcept {
 	assert(n < 3);
 	return reinterpret_cast<float *>(this)[n];
 }
-
 FORCEINLINE float FloatStore<3>::operator[](size_t n) const noexcept {
 	assert(n < 3);
 	return reinterpret_cast<const float *>(this)[n];
 }
-
 FORCEINLINE FloatStore<3>::FloatStore(const DX::XMVECTORF32 &color) noexcept
 : FloatStore(color.operator DirectX::XMVECTOR()) {
 }
-
 FORCEINLINE std::ostream &operator<<(std::ostream &os, const FloatStore<3> &v) noexcept {
 	os << '(' << v.x << ", " << v.y << ", " << v.z << ')';
 	return os;
 }
-
 FloatStore<3> FloatStore<3>::operator-() const noexcept {
 	return FloatStore(-x, -y, -z);
 }
-
 FORCEINLINE FloatStore<3>::operator DX::XMVECTOR() const noexcept {
 	return DX::XMVectorSet(x, y, z, 0.f);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 FORCEINLINE FloatStore<4>::FloatStore(DX::FXMVECTOR v) noexcept {
 	x = DX::XMVectorGetX(v);
@@ -338,84 +355,67 @@ FORCEINLINE FloatStore<4>::FloatStore(DX::FXMVECTOR v) noexcept {
 	z = DX::XMVectorGetZ(v);
 	w = DX::XMVectorGetW(v);
 }
-
-inline FloatStore<4>::FloatStore(const FloatStore<2> &f2, float z, float w) noexcept : FloatStore(f2.x, f2.y, z, w) {
+FORCEINLINE FloatStore<4>::FloatStore(const FloatStore<2> &f2, float z, float w) noexcept : FloatStore(f2.x, f2.y, z, w) {
 }
-
 FORCEINLINE FloatStore<4>::FloatStore(const FloatStore<3> &f3, float w) noexcept : DX::XMFLOAT4(f3.x, f3.y, f3.z, w) {
 }
-
 FORCEINLINE float &FloatStore<4>::operator[](size_t n) noexcept {
 	assert(n < 4);
 	return reinterpret_cast<float *>(this)[n];
 }
-
 FORCEINLINE float FloatStore<4>::operator[](size_t n) const noexcept {
 	assert(n < 4);
 	return reinterpret_cast<const float *>(this)[n];
 }
-
 FORCEINLINE FloatStore<4>::FloatStore(const DX::XMVECTORF32 &color) noexcept
-	: FloatStore(color.operator DirectX::XMVECTOR()) {
+: FloatStore(color.operator DirectX::XMVECTOR()) {
 }
-
 FORCEINLINE std::ostream &operator<<(std::ostream &os, const FloatStore<4> &v) noexcept {
 	os << '(' << v.x << ", " << v.y << ", " << v.z << ", " << v.w << ')';
 	return os;
 }
-
 FORCEINLINE FloatStore<4> FloatStore<4>::operator-() const noexcept {
 	return FloatStore(-x, -y, -z, -w);
 }
-
 FORCEINLINE FloatStore<4>::operator DX::XMVECTOR() const noexcept {
 	return DX::XMLoadFloat4(this);
 }
-
 template<typename T> requires(std::is_convertible_v<T, float>)
 FORCEINLINE FloatStore<4>::FloatStore(T v) noexcept : DX::XMFLOAT4(float(v), float(v), float(v), float(v)) {
 }
-
 template<typename T1, typename T2, typename T3, typename T4>
 	requires(std::is_convertible_v<T1, float> &&std::is_convertible_v<T2, float> &&
 std::is_convertible_v<T3, float> &&std::is_convertible_v<T4, float>)
 FORCEINLINE FloatStore<4>::FloatStore(T1 x, T2 y, T3 z, T4 w) noexcept : DX::XMFLOAT4(float(x), float(y), float(z), float(w)) {
 }
-
 template<size_t N> requires(N <= 4)
 FORCEINLINE FloatStore<4>::operator FloatStore<N> &() noexcept {
 	return reinterpret_cast<FloatStore<N> &>(*this);
 }
-
 template<size_t N> requires(N <= 4)
 FORCEINLINE FloatStore<4>::operator const FloatStore<N> &() const noexcept {
 	return reinterpret_cast<const FloatStore<N> &>(*this);
 }
-
 template <typename T, bool EnableAssign, size_t... I>
 template <typename> requires (EnableAssign)
 T &Swizzle<T, EnableAssign, I...>::operator=(const T &other) noexcept {
 	((at<I>() = other[I]), ...);
 	return *this;
 }
-
 template <typename T, bool EnableAssign, size_t... I>
 Swizzle<T, EnableAssign, I...>::operator T() const noexcept {
 	return T(at<I>()...);
 }
-
 template<typename T, bool EnableAssign, size_t... I>
 FORCEINLINE std::ostream &operator<<(std::ostream &os, const Swizzle<T, EnableAssign, I...> &sz) noexcept {
 	os << static_cast<T>(sz);
 	return os;
 }
-
 template <typename T, bool EnableAssign, size_t... I>
 template <size_t Idx>
 float &Swizzle<T, EnableAssign, I...>::at() noexcept {
 	return reinterpret_cast<float *>(this)[Idx];
 }
-
 template <typename T, bool EnableAssign, size_t... I>
 template <size_t Idx>
 float Swizzle<T, EnableAssign, I...>::at() const noexcept {
@@ -480,6 +480,143 @@ FORCEINLINE Scalar operator/ (float s1, Scalar s2) noexcept {
 	return Scalar(s1) / s2;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+FORCEINLINE Vector2 operator+(const Vector2 &lhs, const Vector2 &rhs) noexcept {
+	return Vector2(lhs.x + rhs.x, lhs.y + rhs.y);
+}
+FORCEINLINE Vector2 operator-(const Vector2 &lhs, const Vector2 &rhs) noexcept {
+	return Vector2(lhs.x - rhs.x, lhs.y - rhs.y);
+}
+FORCEINLINE Vector2 operator*(const Vector2 &lhs, const Vector2 &rhs) noexcept {
+	return Vector2(lhs.x * rhs.x, lhs.y * rhs.y);
+}
+FORCEINLINE Vector2 operator/(const Vector2 &lhs, const Vector2 &rhs) noexcept {
+	return Vector2(lhs.x / rhs.x, lhs.y / rhs.y);
+}
+FORCEINLINE Vector2 operator+(const float &lhs, const Vector2 &rhs) noexcept {
+	return Vector2(lhs + rhs.x, lhs + rhs.y);
+}
+FORCEINLINE Vector2 operator-(const float &lhs, const Vector2 &rhs) noexcept {
+	return Vector2(lhs - rhs.x, lhs - rhs.y);
+}
+FORCEINLINE Vector2 operator*(const float &lhs, const Vector2 &rhs) noexcept {
+	return Vector2(lhs * rhs.x, lhs * rhs.y);
+}
+FORCEINLINE Vector2 operator/(const float &lhs, const Vector2 &rhs) noexcept {
+	return Vector2(lhs / rhs.x, lhs / rhs.y);
+}
+FORCEINLINE Vector2 operator+(const Vector2 &lhs, const float &rhs) noexcept {
+	return Vector2(lhs.x + rhs, lhs.y + rhs);
+}
+FORCEINLINE Vector2 operator-(const Vector2 &lhs, const float &rhs) noexcept {
+	return Vector2(lhs.x - rhs, lhs.y - rhs);
+}
+FORCEINLINE Vector2 operator*(const Vector2 &lhs, const float &rhs) noexcept {
+	return Vector2(lhs.x * rhs, lhs.y * rhs);
+}
+FORCEINLINE Vector2 operator/(const Vector2 &lhs, const float &rhs) noexcept {
+	return Vector2(lhs.x / rhs, lhs.y / rhs);
+}
+FORCEINLINE Vector2 &operator+=(Vector2 &lhs, float rhs) noexcept {
+	lhs = lhs + Vector2(rhs);
+	return lhs;
+}
+FORCEINLINE Vector2 &operator-=(Vector2 &lhs, float rhs) noexcept {
+	lhs = lhs - Vector2(rhs);
+	return lhs;
+}
+FORCEINLINE Vector2 &operator*=(Vector2 &lhs, float rhs) noexcept {
+	lhs = lhs * Vector2(rhs);
+	return lhs;
+}
+FORCEINLINE Vector2 &operator/=(Vector2 &lhs, float rhs) noexcept {
+	lhs = lhs / Vector2(rhs);
+	return lhs;
+}
+FORCEINLINE Vector2 operator-(const Vector2 &v) noexcept {
+	return Vector2(-v.x, -v.y);
+}
+FORCEINLINE Vector2 sqrt(const Vector2 &v) noexcept {
+	return Vector2(std::sqrt(v.x), std::sqrt(v.y));
+}
+FORCEINLINE Vector2 inverse(const Vector2 &v) noexcept {
+	return Vector2(1.f / v.x, 1.f / v.y);
+}
+FORCEINLINE Vector2 inverseSqrt(const Vector2 &v) noexcept {
+	return Vector2(1.f / std::sqrt(v.x), 1.f / std::sqrt(v.y));
+}
+FORCEINLINE Vector2 floor(const Vector2 &v) noexcept {
+	return Vector2(std::floor(v.x), std::floor(v.y));
+}
+FORCEINLINE Vector2 ceil(const Vector2 &v) noexcept {
+	return Vector2(std::ceil(v.x), std::ceil(v.y));
+}
+FORCEINLINE Vector2 round(const Vector2 &v) noexcept {
+	return Vector2(std::round(v.x), std::round(v.y));
+}
+FORCEINLINE Vector2 abs(const Vector2 &v) noexcept {
+	return Vector2(std::abs(v.x), std::abs(v.y));
+}
+FORCEINLINE Vector2 exp(const Vector2 &v) noexcept {
+	return Vector2(std::exp(v.x), std::exp(v.y));
+}
+FORCEINLINE Vector2 pow(const Vector2 &b, const Vector2 &e) noexcept {
+	return Vector2(std::pow(b.x, e.x), std::pow(b.y, e.y));
+}
+FORCEINLINE Vector2 log(const Vector2 &v) noexcept {
+	return Vector2(std::log(v.x), std::log(v.y));
+}
+FORCEINLINE Vector2 sin(const Vector2 &v) noexcept {
+	return Vector2(std::sin(v.x), std::sin(v.y));
+}
+FORCEINLINE Vector2 cos(const Vector2 &v) noexcept {
+	return Vector2(std::cos(v.x), std::cos(v.y));
+}
+FORCEINLINE Vector2 tan(const Vector2 &v) noexcept {
+	return Vector2(std::tan(v.x), std::tan(v.y));
+}
+FORCEINLINE Vector2 asin(const Vector2 &v) noexcept {
+	return Vector2(std::asin(v.x), std::asin(v.y));
+}
+FORCEINLINE Vector2 acos(const Vector2 &v) noexcept {
+	return Vector2(std::acos(v.x), std::acos(v.y));
+}
+FORCEINLINE Vector2 atan(const Vector2 &v) noexcept {
+	return Vector2(std::atan(v.x), std::atan(v.y));
+}
+FORCEINLINE Vector2 atan2(const Vector2 y, const Vector2 x) noexcept {
+	return Vector2(std::atan2(y.x, x.x), std::atan2(y.y, x.y));
+}
+FORCEINLINE Vector2 lerp(const Vector2 &a, const Vector2 &b, const Vector2 &t) noexcept {
+	return Vector2(
+		(a.x * (1.f - t.x)) + b.x * t.x,
+		(a.y * (1.f - t.y)) + b.y * t.y
+	);
+}
+FORCEINLINE Vector2 lerp(const Vector2 &a, const Vector2 &b, float t) noexcept {
+	return Vector2(
+		(a.x * (1.f - t)) + b.x * t,
+		(a.y * (1.f - t)) + b.y * t
+	);
+}
+FORCEINLINE Vector2 max(const Vector2 &a, const Vector2 &b) noexcept {
+	return Vector2(
+		std::max(a.x, b.x),
+		std::max(a.y, b.y)
+	);
+}
+FORCEINLINE Vector2 min(const Vector2 &a, const Vector2 &b) noexcept {
+	return Vector2(
+		std::min(a.x, b.x),
+		std::min(a.y, b.y)
+	);
+}
+FORCEINLINE Vector2 clamp(const Vector2 &v, const Vector2 &a, const Vector2 &b) noexcept {
+	return Vector2(
+		std::clamp(v.x, a.x, b.x),
+		std::clamp(v.y, a.y, b.y)
+	);
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 FORCEINLINE Vector3 operator+(const Vector3 &lhs, const Vector3 &rhs) noexcept {
@@ -872,51 +1009,122 @@ FORCEINLINE Vector4 clamp(Vector4 v, Vector4 a, Vector4 b) noexcept {
 	return min(max(v, a), b);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+FORCEINLINE float dot(const Vector2 &v1, const Vector2 &v2) noexcept {
+	return v1.x * v2.x + v1.y * v2.y;
+}
+FORCEINLINE float lengthSquare(const Vector2 &v) {
+	return v.x * v.x + v.y * v.y;
+}
+FORCEINLINE float length(const Vector2 &v) {
+	float lengthSqr = lengthSquare(v);
+	if (lengthSqr > 0.f)
+		return std::sqrt(lengthSqr);
+	else
+		return 0.f;
+}
+FORCEINLINE float inverseLength(const Vector2 &v) {
+	return 1.f / length(v);
+}
+FORCEINLINE Vector2 normalize(const Vector2 &v) noexcept {
+	float lengthSqr = lengthSquare(v);;
+	if (lengthSqr > 0.f)
+		return v / std::sqrt(lengthSqr);
+	else
+		return Vector2(0.f);
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 FORCEINLINE Vector3 normalize(const Vector3 &v) noexcept {
 	return DX::XMVector3Normalize(v);
 }
-FORCEINLINE Scalar dot(Vector3 v1, Vector3 v2) noexcept {
+FORCEINLINE Scalar dot(const Vector3 &v1, const Vector3 &v2) noexcept {
 	return Scalar(DX::XMVector3Dot(v1, v2));
 }
-FORCEINLINE Vector3 cross(Vector3 v0, Vector3 v1) {
+FORCEINLINE Vector3 cross(const Vector3 &v0, const Vector3 &v1) {
 	return Scalar(DX::XMVector3Cross(v0, v1));
 }
-FORCEINLINE Scalar length(Vector3 v) {
+FORCEINLINE Scalar length(const Vector3 &v) {
 	return Scalar(DX::XMVector3Length(v));
 }
-FORCEINLINE Scalar lengthSquare(Vector3 v) {
+FORCEINLINE Scalar lengthSquare(const Vector3 &v) {
 	return Scalar(DX::XMVector3LengthSq(v));
 }
-FORCEINLINE Scalar inverseLength(Vector3 v) {
+FORCEINLINE Scalar inverseLength(const Vector3 &v) {
 	return Scalar(DX::XMVector3ReciprocalLength(v));
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////
 
 FORCEINLINE Vector4 normalize(const Vector4 &v) noexcept {
 	return DX::XMVector4Normalize(v);
 }
-FORCEINLINE Scalar dot(Vector4 v1, Vector4 v2) noexcept {
+FORCEINLINE Scalar dot(const Vector4 &v1, const Vector4 &v2) noexcept {
 	return Scalar(DX::XMVector4Dot(v1, v2));
 }
-FORCEINLINE Scalar length(Vector4 v) {
+FORCEINLINE Scalar length(const Vector4 &v) {
 	return Scalar(DX::XMVector4Length(v));
 }
-FORCEINLINE Scalar lengthSquare(Vector4 v) {
+FORCEINLINE Scalar lengthSquare(const Vector4 &v) {
 	return Scalar(DX::XMVector4LengthSq(v));
 }
-FORCEINLINE Scalar inverseLength(Vector4 v) {
+FORCEINLINE Scalar inverseLength(const Vector4 &v) {
 	return Scalar(DX::XMVector4ReciprocalLength(v));
 }
 
-///////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
+
 FORCEINLINE BoolVector::BoolVector(DX::FXMVECTOR vec) noexcept : _vec(vec) {
 }
 FORCEINLINE BoolVector::operator DX::XMVECTOR() const {
 	return _vec;
 }
+
+FORCEINLINE Vector2::Vector2(float x, float y) noexcept : x(x), y(y) {
+}
+
+FORCEINLINE Vector2::Vector2(float val) noexcept : x(val), y(val) {
+}
+
+FORCEINLINE Vector2::Vector2(const float2 &f2) noexcept : x(f2.x), y(f2.y) {
+}
+
+FORCEINLINE Vector2::Vector2(const Vector3 &v3) noexcept : x(v3.x), y(v3.y) {
+}
+
+FORCEINLINE Vector2::Vector2(const Vector4 &v4) noexcept : x(v4.x), y(v4.y) {
+}
+
+FORCEINLINE Vector2 &Vector2::operator=(const Vector2 &other) noexcept {
+	x = other.x;
+	y = other.y;
+	return *this;
+}
+
+FORCEINLINE float &Vector2::operator[](size_t index) noexcept {
+	assert(index < 2);
+	return reinterpret_cast<float *>(this)[index];
+}
+
+FORCEINLINE float Vector2::operator[](size_t index) const noexcept {
+	assert(index < 2);
+	return reinterpret_cast<const float *>(this)[index];
+}
+
+FORCEINLINE Vector2::operator float2() const noexcept {
+	return xy;
+}
+
+FORCEINLINE std::ostream &operator<<(std::ostream &os, const Vector2 &v) noexcept {
+	os << '(' << v.x << ", " << v.y << ')';
+	return os;
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////////////
+
 FORCEINLINE Vector3::Vector3(const float2 &f2, float v) noexcept : Vector3(f2.x, f2.y, v) {
 }
 
@@ -953,11 +1161,9 @@ FORCEINLINE const DX::XMVECTOR *Vector3::operator&() const noexcept {
 FORCEINLINE Vector3::operator DX::XMVECTOR() const noexcept {
 	return _vec;
 }
-
 FORCEINLINE Vector3::operator float2() const noexcept {
 	return xy;
 }
-
 FORCEINLINE Vector3::operator float3() const noexcept {
 	return xyz;
 }
@@ -965,11 +1171,10 @@ FORCEINLINE std::ostream &operator<<(std::ostream &os, const Vector3 &v) noexcep
 	os << '(' << v.x << ", " << v.y << ", " << v.z << ')';
 	return os;
 }
-
 FORCEINLINE Vector4::Vector4(const float3 &f3, float v) noexcept : Vector4(f3.x, f3.y, f3.z, v) {
-};
+}
 FORCEINLINE Vector4::Vector4(const float4 &f4) noexcept : Vector4(f4.x, f4.y, f4.z, f4.w) {
-};
+}
 FORCEINLINE Vector4::Vector4(DX::XMVECTOR vec) noexcept : vec(vec) {
 }
 FORCEINLINE Vector4::Vector4(const Scalar &s) noexcept {

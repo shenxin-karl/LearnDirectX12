@@ -259,14 +259,13 @@ void FirstPersonCamera::update(std::shared_ptr<com::GameTimer> pGameTimer) {
 
 	Vector3 lookFrom = Vector3(_lookFrom);
 	Vector3 lookAt = Vector3(_lookAt);
-	lookAt = normalize(lookAt) + lookFrom;
+	lookAt = normalize(target) + lookFrom;
 
 	float radianRoll = DirectX::XMConvertToRadians(_roll);
 	float sinRoll = std::sin(radianRoll);
 	float cosRoll = std::cos(radianRoll);
 	Vector3 lookUp = Vector3(cosRoll, sinRoll, 0.f);
 
-	_lookFrom = lookFrom.xyz;
 	_lookAt = lookAt.xyz;
 	_lookUp = lookUp.xyz;
 

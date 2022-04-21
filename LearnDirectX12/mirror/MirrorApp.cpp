@@ -157,7 +157,7 @@ void MirrorApp::drawRenderItems(dx12lib::DirectContextProxy pDirectCtx, RenderLa
 
 void MirrorApp::buildCamera() {
 	d3d::CameraDesc cameraDesc = {
-		float3(-1, 1, -1) * 10.f,
+		float3(Vector3(-1, 1, -1) * 10.f),
 		float3(0, 1, 0),
 		float3(0, 0, 0),
 		45.f,

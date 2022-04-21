@@ -95,7 +95,9 @@ com::MeshData surfaceNet(const std::function<float(int, int, int)> &implicitFunc
 	const com::Box3D &box,
 	float isovalue) 
 {
-	float3 size = box.max - box.min;
+	Vector3 boxMax = Vector3(box.max);
+	Vector3 boxMin = Vector3(box.min);
+	Vector3 size = boxMax - boxMin;
 	int sx = static_cast<int>(std::ceil(size.x));
 	int sy = static_cast<int>(std::ceil(size.y));
 	int sz = static_cast<int>(std::ceil(size.z));
@@ -158,30 +160,30 @@ com::MeshData surfaceNet(const std::function<float(int, int, int)> &implicitFunc
 				if (!isVoxelActivate)
 					continue;
 
-				float3 sumIntersectionPoint = float3(0.f);
+				Vector3 sumIntersectionPoint = Vector3(0.f);
 				std::size_t intersectionCount = 0;
 				for (std::size_t edge = 0; edge < 12; ++edge) {
 					if (!edgeActivateArray[edge])
 						continue;
 
-					const auto &p0 = float3(voxelCorrnerPositionArray[kCubeEdges[edge][0]]);
-					const auto &p1 = float3(voxelCorrnerPositionArray[kCubeEdges[edge][1]]);
+					const auto &p0 = Vector3(voxelCorrnerPositionArray[kCubeEdges[edge][0]]);
+					const auto &p1 = Vector3(voxelCorrnerPositionArray[kCubeEdges[edge][1]]);
 					const float s0 = voxelCorrnerSdfArray[kCubeEdges[edge][0]];
 					const float s1 = voxelCorrnerSdfArray[kCubeEdges[edge][1]];
 					float t = (isovalue - s0) / (s1 - s0);
-					float3 point = p0 + t * (p1 - p0);
+					Vector3 point = lerp(p0, p1, t);
 					sumIntersectionPoint += point;		// 将所有的点求和
 					++intersectionCount;
 				}
 
 				// 这里的点是局部坐标, 相对与 (0,0,0) ~ (sx, sy, sz) 访问内的局部坐标
-				sumIntersectionPoint /= float(intersectionCount);
+				sumIntersectionPoint /= static_cast<float>(intersectionCount);
 				//sumIntersectionPoint = float3{
 				//	std::floor(sumIntersectionPoint.x) + 0.5f,
 				//	std::floor(sumIntersectionPoint.y) + 0.5f,
 				//	std::floor(sumIntersectionPoint.z) + 0.5f,
 				//};
-				sumIntersectionPoint += box.min;
+				sumIntersectionPoint += boxMax;
 
 				int voxelIndex = getVoxelIndex(int3(x, y, z));
 				std::size_t vertCount = mesh.vertices.size();

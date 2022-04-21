@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <functional>
 #include <map>
-#include "Math/VectorHelper.h"
+#include "Math/MathStd.hpp"
 #include "GeometryGenerator.h"
 
 namespace HalfEdge {

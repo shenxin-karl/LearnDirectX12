@@ -175,7 +175,7 @@ void InstanceApp::buildMaterial(dx12lib::CommonContextProxy pCommonCtx) {
 }
 
 void InstanceApp::buildPSO() {
-	UINT texArrayCount = std::min(kMaxTextureArraySize, _textures.size());
+	UINT texArrayCount = static_cast<UINT>(std::min(kMaxTextureArraySize, _textures.size()));
 
 	dx12lib::RootSignatureDescHelper rootDesc(d3d::getStaticSamplers());
 	rootDesc.resize(5);

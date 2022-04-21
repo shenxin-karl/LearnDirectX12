@@ -12,7 +12,7 @@ struct WaterParame {
 };
 
 cbuffer CPassCB : register(b0) {
-    CBLightType   gPass;
+    CBPassType   gPass;
 };
 
 cbuffer CLightCB : register(b1) {  

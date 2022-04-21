@@ -452,7 +452,7 @@ com::MeshData GometryGenerator::createSphere(float radius, std::size_t sliceCoun
 			Vector3 N = { sinPhi*cosTh, cosPhi, sinPhi*sinTh };
 			Vector3 point = N * radius;
 			float2 texcoord = { float(j) / float(sliceCount), float(i) / float(stackCount) };
-			mesh.vertices.emplace_back(point, texcoord, N);
+			mesh.vertices.emplace_back(float3(point), texcoord, float3(N));
 		}
 	}
 
@@ -656,12 +656,10 @@ com::Vertex GometryGenerator::middlePoint(const Vertex &lhs, const Vertex &rhs) 
 	};
 }
 
-
 com::Vertex GometryGenerator::middleVertex(const Vertex &lhs, const Vertex &rhs) {
 	return {
 		lerp(Vector3(lhs.position), Vector3(rhs.position), 0.5f).xyz,
-		// todo: สนำร Vector2
-		//MathHelper::lerp(lhs.texcoord, rhs.texcoord, 0.5f),
+		lerp(Vector2(lhs.texcoord), Vector2(rhs.texcoord), 0.5f).xy,
 	};
 }
 

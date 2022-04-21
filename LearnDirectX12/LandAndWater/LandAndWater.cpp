@@ -29,7 +29,7 @@ void WaterParame::init(const WaterParameDesc &desc) {
 	_omega = DirectX::XM_2PI / desc.length;
 	_speed = desc.speed * _omega;
 	_amplitude = desc.amplitude;
-	_direction = normalize(float3(desc.direction.x, 0.f, desc.direction.z));
+	_direction = normalize(Vector3(desc.direction.x, 0.f, desc.direction.z)).xyz;
 	_steep = std::clamp(desc.steep, 0.f, 1.f) / (_omega * _amplitude * kMaxWaterParameCount);
 }
 
@@ -249,9 +249,9 @@ void LandAndWater::buildConstantBuffer(dx12lib::DirectContextProxy pDirectCtx) {
 	wpDesc1.amplitude = 0.41f;
 	wpDesc1.steep = 1.f;
 	WaterParameDesc wpDesc2 = wpDesc0;
-	wpDesc2.direction = normalize(float3(+0.5f, 0.f, +0.4f));
+	wpDesc2.direction = normalize(Vector3(+0.5f, 0.f, +0.4f)).xyz;
 	WaterParameDesc wpDesc3 = wpDesc0;
-	wpDesc3.direction = normalize(float3(-0.9f, 0.f, -0.3f));
+	wpDesc3.direction = normalize(Vector3(-0.9f, 0.f, -0.3f)).xyz;
 	wpDesc3.length = 26.f;
 	wpDesc3.speed = 10;
 	wpDesc3.steep = 0.6f;
