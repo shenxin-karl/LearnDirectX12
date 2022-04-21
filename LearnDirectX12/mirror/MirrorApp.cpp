@@ -187,8 +187,8 @@ void MirrorApp::buildConstantBuffers(dx12lib::DirectContextProxy pDirectCtx) {
 	auto pGPUReflectedLightCB = _pReflectedLightCB->map();
 	*pGPUReflectedLightCB = *pGPULightCB;
 	for (std::size_t i = 0; i < pGPUReflectedLightCB->directLightCount; ++i) {
-		float3 directionLight = pGPULightCB->lights[i].direction;
-		auto reflectedDirectionLight = XMVector3TransformNormal(directionLight.toVec(), mirrorReflected);
+		Vector3 directionLight = Vector3(pGPULightCB->lights[i].direction);
+		auto reflectedDirectionLight = XMVector3TransformNormal(directionLight, mirrorReflected);
 		pGPUReflectedLightCB->lights[i].direction = float3(XMVector3Normalize(reflectedDirectionLight));
 	}
 }
@@ -432,7 +432,7 @@ void MirrorApp::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 	_renderItems[RenderLayer::Opaque].push_back(skullRItem);
 
 
-	XMVECTOR mirrorPlane = DX::XMVectorSet(0.f, 0.f, 1.f, 0.f);
+	Vector4 mirrorPlane = DX::XMVectorSet(0.f, 0.f, 1.f, 0.f);
 	XMMATRIX matMirrorPlaneRelfect = DX::XMMatrixReflect(mirrorPlane);
 	ObjectCBType reflectedSkullCB = skullObjectCB;
 	XMMATRIX reflectSkullWorld = skullWorld * matMirrorPlaneRelfect;
@@ -446,8 +446,8 @@ void MirrorApp::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 	RenderItem shadowedSkullRItem = skullRItem;
 	ObjectCBType shadowSkullCB = skullObjectCB;
 	auto mainLightDirection = _pLightCB->cmap()->lights[0].direction;
-	XMVECTOR shadowPlane = XMVectorSet(0.0f, 1.0f, 0.0f, _skullTranslation.y * 2); // xz plane
-	XMVECTOR toMainLight = mainLightDirection.toVec();
+	Vector4 shadowPlane = XMVectorSet(0.0f, 1.0f, 0.0f, _skullTranslation.y * 2); // xz plane
+	Vector4 toMainLight = Vector4(mainLightDirection, 0.f);
 	XMMATRIX S = XMMatrixShadow(shadowPlane, toMainLight);
 	XMMATRIX shadowOffsetY = XMMatrixTranslation(0.0f, 0.001f, 0.0f);
 	XMStoreFloat4x4(&shadowSkullCB.matWorld, shadowOffsetY * S * skullWorld);
