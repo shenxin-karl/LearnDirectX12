@@ -17,7 +17,7 @@ public:
 	Device &operator=(const Device &) = delete;
 	~Device();
 	void initialize(const DeviceInitDesc &desc);
-	void destory();
+	void destroy();
 	std::shared_ptr<SwapChain> createSwapChain(HWND hwnd) const;
 	std::shared_ptr<RootSignature> createRootSignature(const D3D12_ROOT_SIGNATURE_DESC &desc);
 	std::shared_ptr<RootSignature> createRootSignature(const RootSignatureDescHelper &desc);

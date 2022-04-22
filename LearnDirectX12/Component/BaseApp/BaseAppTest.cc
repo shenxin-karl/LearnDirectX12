@@ -54,7 +54,7 @@ int main() {
 			app.tick(pGameTimer);
 			app.endTick(pGameTimer);
 		}
-		app.destory();
+		app.destroy();
 	} catch (const com::ExceptionBase &e) {
 		std::cerr << e.what() << std::endl;
 		OutputDebugStringA(e.what());

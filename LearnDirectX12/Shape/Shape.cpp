@@ -157,7 +157,7 @@ void Shape::buildRenderItem(dx12lib::DirectContextProxy pDirectCtx) {
 	auto &textureRenderItems = _renderItems[pTexturePSOName];
 
 	boxObjCb.material = _materials["boxMat"];
-	XMStoreFloat4x4(&boxObjCb.world, DX::XMMatrixScaling(2.f, 2.f, 2.f) * DX::XMMatrixTranslation(0.f, 0.5f, 0.f));
+	boxObjCb.world = float4x4(Matrix4::makeTranslation(0.f, 0.5f, 0.f) * Matrix4::makeScale(2.f));
 	boxItem._pMesh = _geometrys["box"];
 	boxItem._pAlbedo = _textureMap["bricks.dds"];
 	boxItem._pObjectCB = pDirectCtx->createFRConstantBuffer<ObjectCB>(boxObjCb);
@@ -183,10 +183,10 @@ void Shape::buildRenderItem(dx12lib::DirectContextProxy pDirectCtx) {
 		ObjectCB leftSphereObjCB;
 		ObjectCB rightSphereObjCB;
 
-		DX::XMStoreFloat4x4(&leftCylObjCB.world, DX::XMMatrixTranslation(-5.f, 1.5f, -10.f + i * 5.f));
-		DX::XMStoreFloat4x4(&rightCylObjCB.world, DX::XMMatrixTranslation(+5.f, 1.5f, -10.f + i * 5.f));
-		DX::XMStoreFloat4x4(&leftSphereObjCB.world, DX::XMMatrixTranslation(-5.f, 3.5f, -10.f + i * 5.f));
-		DX::XMStoreFloat4x4(&rightSphereObjCB.world, DX::XMMatrixTranslation(+5.f, 3.5f, -10.f + i * 5.f));
+		leftCylObjCB.world = float4x4(Matrix4::makeTranslation(-5.f, 1.5f, -10.f + i * 5.f));
+		rightCylObjCB.world = float4x4(Matrix4::makeTranslation(+5.f, 1.5f, -10.f + i * 5.f));
+		leftSphereObjCB.world = float4x4(Matrix4::makeTranslation(-5.f, 3.5f, -10.f + i * 5.f));
+		rightSphereObjCB.world = float4x4(Matrix4::makeTranslation(+5.f, 3.5f, -10.f + i * 5.f));
 
 		leftCylObjCB.material = _materials["cylinderMat"];
 		rightCylObjCB.material = _materials["cylinderMat"];
@@ -220,8 +220,7 @@ void Shape::buildRenderItem(dx12lib::DirectContextProxy pDirectCtx) {
 	RenderItem skullItem;
 	ObjectCB skullObjCB;
 	skullObjCB.material = _materials["skullMat"];
-	XMStoreFloat4x4(&skullObjCB.world,
-		DX::XMMatrixMultiply(DX::XMMatrixScaling(0.5f, 0.5f, 0.5f), DX::XMMatrixTranslation(0.f, 1.0f, 0.f)));
+	skullObjCB.world = float4x4(Matrix4::makeTranslation(0.f, 1.f, 0.f) * Matrix4::makeScale(0.5f));
 	skullItem._pMesh = _geometrys["skull"];
 	skullItem._pObjectCB = pDirectCtx->createFRConstantBuffer<ObjectCB>(skullObjCB);
 	colorRenderItems.push_back(skullItem);

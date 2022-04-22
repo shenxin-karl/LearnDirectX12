@@ -279,11 +279,10 @@ void InstanceApp::doDrawInstance(dx12lib::GraphicsContextProxy pGraphicsCtx,
 		instData.materialIdx = static_cast<uint32_t>(rItem.materialIdx);
 		instData.diffuseMapIdx = static_cast<uint32_t>(rItem.diffuseMapIdx);
 		instData.matWorld = rItem.matWorld;
-		XMMATRIX matWorld = XMLoadFloat4x4(&instData.matWorld);
-		XMVECTOR det = XMMatrixDeterminant(matWorld);
-		XMMATRIX invWorld = XMMatrixInverse(&det, matWorld);
-		XMMATRIX matNormal = XMMatrixTranspose(invWorld);
-		XMStoreFloat4x4(&instData.matNormal, matNormal);
+		Matrix4 matWorld = Matrix4(instData.matWorld);
+		Matrix4 invWorld = inverse(matWorld);
+		Matrix4 matNormal = transpose(invWorld);
+		instData.matNormal = float4x4(matNormal);
 	}
 
 	pGraphicsCtx->setStructuredBuffer(_pInstanceBuffer, SR_InstanceData);

@@ -5,6 +5,8 @@
 #include "dx12lib/Device.h"
 #include "dx12lib/SwapChain.h"
 #include <DirectXColors.h>
+#include <iostream>
+
 #include "dx12lib/IndexBuffer.h"
 #include "dx12lib/VertexBuffer.h"
 #include "dx12lib/CommandQueue.h"
@@ -21,7 +23,7 @@ BoxApp::BoxApp() {
 void BoxApp::onInitialize(dx12lib::DirectContextProxy pDirectContext) {
 	d3d::CameraDesc cameraDesc;
 	cameraDesc.lookAt = float3(0, 0, 0);
-	cameraDesc.lookFrom = float3(2, 2, 2);
+	cameraDesc.lookFrom = float3(5, 0, 0);
 	cameraDesc.lookUp = float3(0, 1, 0);
 	cameraDesc.nearClip = 0.1f;
 	cameraDesc.farClip = 100.f;
@@ -63,7 +65,11 @@ void BoxApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	pollEvent();
 	auto pGPUWVM = _pMVPConstantBuffer->map();
 	_pCamera->update(pGameTimer);
-	pGPUWVM->gWorldViewProj = _pCamera->getViewProj();
+
+	Matrix4 rotate = Matrix4::makeZRotationByRadian(pGameTimer->getTotalTime());
+	Matrix4 viewProj = _pCamera->getMatViewProj();
+	Matrix4 translation = Matrix4::makeTranslation(0.f, std::cos(pGameTimer->getTotalTime()), std::sin(pGameTimer->getTotalTime()));
+	pGPUWVM->gWorldViewProj = float4x4(viewProj * translation * rotate);
 }
 
 void BoxApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
@@ -108,6 +114,7 @@ void BoxApp::pollEvent() {
 }
 
 void BoxApp::buildBoxGeometry(dx12lib::DirectContextProxy pDirectContext) {
+	namespace DX = DirectX;
 	std::array<Vertex, 8> vertices = {
 		Vertex { float3(-1.f, -1.f, -1.f), float4(DX::Colors::White)   },
 		Vertex { float3(-1.f, +1.f, -1.f), float4(DX::Colors::Black)   },

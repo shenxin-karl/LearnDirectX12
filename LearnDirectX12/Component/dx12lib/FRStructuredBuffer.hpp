@@ -82,7 +82,7 @@ FRStructuredBuffer<T>::FRStructuredBuffer(std::weak_ptr<Device> pDevice, const T
 	desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	desc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
 	desc.Buffer.NumElements = static_cast<UINT>(numElements);
-	desc.Buffer.StructureByteStride = stride;
+	desc.Buffer.StructureByteStride = static_cast<UINT>(stride);
 	desc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
 	_structuredBufferView = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kFrameResourceCount);

@@ -22,7 +22,7 @@ public:
 	virtual ~BaseApp() override = default;
 
 	virtual void initialize() override;
-	virtual void destory() override;
+	virtual void destroy() override;
 	virtual void beginTick(std::shared_ptr<GameTimer> pGameTimer) override;
 	virtual void tick(std::shared_ptr<GameTimer> pGameTimer) override;
 	virtual void endTick(std::shared_ptr<GameTimer> pGameTimer) override;

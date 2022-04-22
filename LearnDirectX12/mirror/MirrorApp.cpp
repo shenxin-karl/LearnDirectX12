@@ -182,13 +182,13 @@ void MirrorApp::buildConstantBuffers(dx12lib::DirectContextProxy pDirectCtx) {
 	pGPULightCB->lights[2].initAsDirectionLight(-float3(0.0f, -0.707f, -0.707f), float3(0.15f, 0.15f, 0.15f));
 
 	using namespace DirectX;
-	XMVECTOR mirrorPlane = XMVectorSet(0.f, 0.f, 1.f, 0.f);
-	XMMATRIX mirrorReflected = XMMatrixReflect(mirrorPlane);
+	Vector4 mirrorPlane = XMVectorSet(0.f, 0.f, 1.f, 0.f);
+	Matrix4 mirrorReflected = XMMatrixReflect(mirrorPlane);
 	auto pGPUReflectedLightCB = _pReflectedLightCB->map();
 	*pGPUReflectedLightCB = *pGPULightCB;
 	for (std::size_t i = 0; i < pGPUReflectedLightCB->directLightCount; ++i) {
 		Vector3 directionLight = Vector3(pGPULightCB->lights[i].direction);
-		auto reflectedDirectionLight = XMVector3TransformNormal(directionLight, mirrorReflected);
+		auto reflectedDirectionLight = XMVector3TransformNormal(directionLight, static_cast<DirectX::XMMATRIX>(mirrorReflected));
 		pGPUReflectedLightCB->lights[i].direction = float3(XMVector3Normalize(reflectedDirectionLight));
 	}
 }
@@ -417,11 +417,11 @@ void MirrorApp::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 
 	RenderItem skullRItem;
 	ObjectCBType skullObjectCB;
-	XMMATRIX skullRotate = XMMatrixRotationY(0.5f * DX::XM_PI);
-	XMMATRIX skullScale = XMMatrixScaling(0.45f, 0.45f, 0.45f);
-	XMMATRIX skullOffset = XMMatrixTranslation(_skullTranslation.x, _skullTranslation.y, _skullTranslation.z);
-	XMMATRIX skullWorld = skullScale * skullRotate * skullOffset;
-	DX::XMStoreFloat4x4(&skullObjectCB.matWorld, skullWorld);
+	Matrix4 skullRotate = Matrix4::makeYRotationByRadian(0.5f * DX::XM_PI);
+	Matrix4 skullScale = Matrix4::makeScale(0.45f, 0.45f, 0.45f);
+	Matrix4 skullOffset = Matrix4::makeTranslation(_skullTranslation.x, _skullTranslation.y, _skullTranslation.z);
+	Matrix4 skullWorld =  skullOffset * skullRotate * skullScale;
+	skullObjectCB.matWorld = float4x4(skullWorld);
 	skullObjectCB.matNormal = Math::MathHelper::identity4x4();
 	skullObjectCB.material = _materialMap["skullMat"];
 	skullRItem._pMesh = _meshMap["skullGeo"];
@@ -433,12 +433,11 @@ void MirrorApp::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 
 
 	Vector4 mirrorPlane = DX::XMVectorSet(0.f, 0.f, 1.f, 0.f);
-	XMMATRIX matMirrorPlaneRelfect = DX::XMMatrixReflect(mirrorPlane);
+	Matrix4 matMirrorPlaneRelfect = DX::XMMatrixReflect(mirrorPlane);
 	ObjectCBType reflectedSkullCB = skullObjectCB;
-	XMMATRIX reflectSkullWorld = skullWorld * matMirrorPlaneRelfect;
-	DX::XMStoreFloat4x4(&reflectedSkullCB.matWorld, reflectSkullWorld);
-	auto det = DX::XMMatrixDeterminant(reflectSkullWorld);
-	DX::XMStoreFloat4x4(&reflectedSkullCB.matNormal, DX::XMMatrixTranspose(DX::XMMatrixInverse(&det, reflectSkullWorld)));
+	Matrix4 reflectSkullWorld = matMirrorPlaneRelfect * skullWorld;
+	reflectedSkullCB.matWorld = float4x4(reflectSkullWorld);
+	reflectedSkullCB.matNormal = float4x4(transpose(inverse(reflectSkullWorld)));
 	RenderItem reflectedSkullRItem = skullRItem;
 	reflectedSkullRItem._pObjectCB = pDirectCtx->createFRConstantBuffer<ObjectCBType>(reflectedSkullCB);
 	_renderItems[RenderLayer::Reflected].push_back(reflectedSkullRItem);
@@ -446,11 +445,11 @@ void MirrorApp::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 	RenderItem shadowedSkullRItem = skullRItem;
 	ObjectCBType shadowSkullCB = skullObjectCB;
 	auto mainLightDirection = _pLightCB->cmap()->lights[0].direction;
-	Vector4 shadowPlane = XMVectorSet(0.0f, 1.0f, 0.0f, _skullTranslation.y * 2); // xz plane
+	Vector4 shadowPlane = XMVectorSet(0.0f, 1.0f, 0.0f, 0.f); // xz plane
 	Vector4 toMainLight = Vector4(mainLightDirection, 0.f);
-	XMMATRIX S = XMMatrixShadow(shadowPlane, toMainLight);
-	XMMATRIX shadowOffsetY = XMMatrixTranslation(0.0f, 0.001f, 0.0f);
-	XMStoreFloat4x4(&shadowSkullCB.matWorld, shadowOffsetY * S * skullWorld);
+	Matrix4 S = XMMatrixShadow(shadowPlane, toMainLight);
+	Matrix4 shadowOffsetY = Matrix4::makeTranslation(0.0f, 0.001f, 0.0f);
+	shadowSkullCB.matWorld =  float4x4(shadowOffsetY * S * skullWorld);
 	auto matZero = XMMatrixSet(
 		0.f, 0.f, 0.f, 0.f,
 		0.f, 0.f, 0.f, 0.f,

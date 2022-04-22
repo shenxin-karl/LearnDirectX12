@@ -187,7 +187,7 @@ com::MeshData surfaceNet(const std::function<float(int, int, int)> &implicitFunc
 
 				int voxelIndex = getVoxelIndex(int3(x, y, z));
 				std::size_t vertCount = mesh.vertices.size();
-				mesh.vertices.emplace_back(sumIntersectionPoint);
+				mesh.vertices.emplace_back(float3(sumIntersectionPoint));
 				activateVoxelMap[voxelIndex] = vertCount;
 			}
 		}

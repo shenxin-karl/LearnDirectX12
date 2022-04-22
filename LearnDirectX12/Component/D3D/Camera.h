@@ -37,6 +37,12 @@ public:
 	virtual const float4x4 &getInvProj() const = 0;
 	virtual const float4x4 &getInvViewProj() const = 0;
 	virtual void update(std::shared_ptr<com::GameTimer> pGameTimer) = 0;
+	Matrix4 getMatView() const;
+	Matrix4 getMatProj() const;
+	Matrix4 getMatViewProj() const;
+	Matrix4 getMatInvView() const;
+	Matrix4 getMatInvProj() const;
+	Matrix4 getMatInvViewProj() const;
 	void updatePassCB(d3d::CBPassType &passCB) const;
 	void setFov(float fov);
 	void setAspect(float aspect);

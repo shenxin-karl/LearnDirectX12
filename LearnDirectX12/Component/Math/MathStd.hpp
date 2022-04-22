@@ -153,11 +153,12 @@ private:
 
 template<typename T, bool EnableAssign, size_t...I>
 struct Swizzle {
+	constexpr static size_t indices[] = { I... };
+
 	Swizzle() noexcept = default;
 	template<typename = void> requires(EnableAssign)
 	FORCEINLINE T &operator=(const T &other) noexcept;
 	FORCEINLINE operator T() const noexcept;
-	FORCEINLINE friend std::ostream &operator<<(std::ostream &os, const Swizzle &sz) noexcept;
 public:
 	template<size_t Idx>
 	FORCEINLINE float &at() noexcept;
@@ -265,6 +266,7 @@ public:
 	FORCEINLINE Matrix3 &operator=(Matrix3 &&) = default;
 	FORCEINLINE explicit Matrix3(const float3x3 &f3x3) noexcept;
 	FORCEINLINE explicit Matrix3(const DX::XMMATRIX &mat) noexcept;
+	FORCEINLINE explicit Matrix3(const Matrix4 &mat4) noexcept;
 	FORCEINLINE Matrix3(const Vector3 &x, const Vector3 &y, const Vector3 &z) noexcept;
 	FORCEINLINE void setX(const Vector3 &x) noexcept;
 	FORCEINLINE void setY(const Vector3 &y) noexcept;
@@ -273,32 +275,42 @@ public:
 	FORCEINLINE Vector3 getY() const noexcept;
 	FORCEINLINE Vector3 getZ() const noexcept;
 	FORCEINLINE explicit operator DX::XMMATRIX() const noexcept;
+	FORCEINLINE explicit operator Matrix4() const noexcept;
 	FORCEINLINE explicit operator float3x3() const noexcept;
 	FORCEINLINE Vector3 &operator[](size_t index) noexcept;
 	FORCEINLINE const Vector3 &operator[](size_t index) const noexcept;
 	FORCEINLINE Matrix3 operator*(const Scalar &s) const noexcept;
 	FORCEINLINE Vector3 operator*(const Vector3 &v) const noexcept;
 	FORCEINLINE Matrix3 operator*(const Matrix3 &mat) const noexcept;
-	static FORCEINLINE Matrix3 makeZRotation(float angle) noexcept;
-	static FORCEINLINE Matrix3 makeXRotation(float angle) noexcept;
-	static FORCEINLINE Matrix3 makeYRotation(float angle) noexcept;
+	static FORCEINLINE Matrix3 makeZRotationByRadian(float radian) noexcept;
+	static FORCEINLINE Matrix3 makeXRotationByRadian(float radian) noexcept;
+	static FORCEINLINE Matrix3 makeYRotationByRadian(float radian) noexcept;
+	static FORCEINLINE Matrix3 makeZRotationByDegree(float angle) noexcept;
+	static FORCEINLINE Matrix3 makeXRotationByDegree(float angle) noexcept;
+	static FORCEINLINE Matrix3 makeYRotationByDegree(float angle) noexcept;
+	static FORCEINLINE Matrix3 makeAxisRotationByDegree(const Vector3 &axis, float angle) noexcept;
+	static FORCEINLINE Matrix3 makeAxisRotationByRadian(const Vector3 &axis, float radian) noexcept;
 	static FORCEINLINE Matrix3 makeScale(float scale) noexcept;
 	static FORCEINLINE Matrix3 makeScale(float sx, float sy, float sz) noexcept;
 	static FORCEINLINE Matrix3 makeScale(const float3 &scale) noexcept;
 	static FORCEINLINE Matrix3 makeScale(const Vector3 &scale) noexcept;
+	static FORCEINLINE Matrix3 identity() noexcept;
 private:
 	Vector3 _mat[3];
 };
  
 class alignas(16) Matrix4 {
+public:
 	FORCEINLINE Matrix4() noexcept = default;
 	FORCEINLINE Matrix4(const Matrix4 &) noexcept = default;
 	FORCEINLINE Matrix4(Matrix4 &&) noexcept = default;
 	FORCEINLINE Matrix4 &operator=(const Matrix4 &) noexcept = default;
 	FORCEINLINE Matrix4 &operator=(Matrix4 &&) noexcept = default;
 	FORCEINLINE Matrix4(const DX::XMMATRIX &mat) noexcept;
+	FORCEINLINE explicit Matrix4(const float4x4 &f4x4) noexcept;
+	FORCEINLINE explicit Matrix4(const Matrix3 &mat3) noexcept;
+	FORCEINLINE explicit Matrix4(const float *data) noexcept;
 	FORCEINLINE Matrix4(const Vector3 &x, const Vector3 &y, const Vector3 &z, const Vector3 &w) noexcept;
-	FORCEINLINE Matrix4(const float *data) noexcept;
 	FORCEINLINE Matrix4(const Vector4&x, const Vector4&y, const Vector4&z, const Vector4&w) noexcept;
 	FORCEINLINE const Matrix3 &get3x3() const noexcept;
 	FORCEINLINE void set3x3(const Matrix3 &xyz) noexcept;
@@ -310,21 +322,32 @@ class alignas(16) Matrix4 {
 	FORCEINLINE void setY(Vector4 y) noexcept;
 	FORCEINLINE void setZ(Vector4 z) noexcept;
 	FORCEINLINE void setW(Vector4 w) noexcept;
-	FORCEINLINE operator DX::XMMATRIX() const noexcept;
+	FORCEINLINE explicit operator DX::XMMATRIX() const noexcept;
 	FORCEINLINE explicit operator float3x3() const noexcept;
 	FORCEINLINE explicit operator float4x3() const noexcept;
 	FORCEINLINE explicit operator float4x4() const noexcept;
 	FORCEINLINE DX::XMMATRIX *operator&() noexcept;
 	FORCEINLINE const DX::XMMATRIX *operator&() const noexcept;
-	FORCEINLINE Vector4 operator*(Vector3 vec) const noexcept;
-	FORCEINLINE Vector4 operator*(Vector4 vec) const noexcept;
+	FORCEINLINE Vector4 operator*(const Vector3 &vec) const noexcept;
+	FORCEINLINE Vector4 operator*(const Vector4 &vec) const noexcept;
 	FORCEINLINE Matrix4 operator*(const Matrix4 &mat) const noexcept;
+	static FORCEINLINE Matrix4 makeZRotationByRadian(float radian) noexcept;
+	static FORCEINLINE Matrix4 makeXRotationByRadian(float radian) noexcept;
+	static FORCEINLINE Matrix4 makeYRotationByRadian(float radian) noexcept;
+	static FORCEINLINE Matrix4 makeZRotationByDegree(float angle) noexcept;
+	static FORCEINLINE Matrix4 makeXRotationByDegree(float angle) noexcept;
+	static FORCEINLINE Matrix4 makeYRotationByDegree(float angle) noexcept;
+	static FORCEINLINE Matrix4 makeAxisRotationByDegree(const Vector3 &axis, float angle) noexcept;
+	static FORCEINLINE Matrix4 makeAxisRotationByRadian(const Vector3 &axis, float radian) noexcept;
 	static FORCEINLINE Matrix4 makeScale(float scale) noexcept;
-	static FORCEINLINE Matrix4 makeScale(Vector3 scale) noexcept;
-	static FORCEINLINE Matrix4 makeZRotation(float angle) noexcept;
-	static FORCEINLINE Matrix4 makeXRotation(float angle) noexcept;
-	static FORCEINLINE Matrix4 makeYRotation(float angle) noexcept;
+	static FORCEINLINE Matrix4 makeScale(float sx, float sy, float sz) noexcept;
+	static FORCEINLINE Matrix4 makeScale(const float3 &scale) noexcept;
+	static FORCEINLINE Matrix4 makeScale(const Vector3 &scale) noexcept;
 	static FORCEINLINE Matrix4 makeTranslation(const Vector3 &vec) noexcept;
+	static FORCEINLINE Matrix4 makeTranslation(float ox, float oy, float oz) noexcept;
+	static FORCEINLINE Matrix4 identity() noexcept;
+private:
+	DX::XMMATRIX _mat;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -479,15 +502,18 @@ FORCEINLINE FloatStore<4>::operator const FloatStore<N> &() const noexcept {
 #endif
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /// Swizzle
+
+
 #if 1
 template <typename T, bool EnableAssign, size_t... I>
 template <typename> requires (EnableAssign)
-T &Swizzle<T, EnableAssign, I...>::operator=(const T &other) noexcept {
+FORCEINLINE T &Swizzle<T, EnableAssign, I...>::operator=(const T &other) noexcept {
 	((at<I>() = other[I]), ...);
-	return *this;
+	constexpr size_t idx = indices[0];
+	return reinterpret_cast<T &>(at<idx>());
 }
 template <typename T, bool EnableAssign, size_t... I>
-Swizzle<T, EnableAssign, I...>::operator T() const noexcept {
+FORCEINLINE Swizzle<T, EnableAssign, I...>::operator T() const noexcept {
 	return T(at<I>()...);
 }
 template<typename T, bool EnableAssign, size_t... I>
@@ -497,12 +523,12 @@ FORCEINLINE std::ostream &operator<<(std::ostream &os, const Swizzle<T, EnableAs
 }
 template <typename T, bool EnableAssign, size_t... I>
 template <size_t Idx>
-float &Swizzle<T, EnableAssign, I...>::at() noexcept {
+FORCEINLINE float &Swizzle<T, EnableAssign, I...>::at() noexcept {
 	return reinterpret_cast<float *>(this)[Idx];
 }
 template <typename T, bool EnableAssign, size_t... I>
 template <size_t Idx>
-float Swizzle<T, EnableAssign, I...>::at() const noexcept {
+FORCEINLINE float Swizzle<T, EnableAssign, I...>::at() const noexcept {
 	return reinterpret_cast<const float *>(this)[Idx];
 }
 #endif
@@ -634,6 +660,22 @@ FORCEINLINE Vector2 operator*(const Vector2 &lhs, const float &rhs) noexcept {
 }
 FORCEINLINE Vector2 operator/(const Vector2 &lhs, const float &rhs) noexcept {
 	return Vector2(lhs.x / rhs, lhs.y / rhs);
+}
+FORCEINLINE Vector2 &operator+=(Vector2 &lhs, const Vector2 &rhs) noexcept {
+	lhs = lhs + rhs;
+	return lhs;
+}
+FORCEINLINE Vector2 &operator-=(Vector2 &lhs, const Vector2 &rhs) noexcept {
+	lhs = lhs - rhs;
+	return lhs;
+}
+FORCEINLINE Vector2 &operator*=(Vector2 &lhs, const Vector2 &rhs) noexcept {
+	lhs = lhs * rhs;
+	return lhs;
+}
+FORCEINLINE Vector2 &operator/=(Vector2 &lhs, const Vector2 &rhs) noexcept {
+	lhs = lhs / rhs;
+	return lhs;
 }
 FORCEINLINE Vector2 &operator+=(Vector2 &lhs, float rhs) noexcept {
 	lhs = lhs + Vector2(rhs);
@@ -1227,11 +1269,6 @@ FORCEINLINE Scalar lengthSquare(const Vector4 & v) {
 FORCEINLINE Scalar inverseLength(const Vector4 & v) {
 	return Scalar(DX::XMVector4ReciprocalLength(v));
 }
-///////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
 FORCEINLINE Vector4::Vector4(const float3 &f3, float v) noexcept : Vector4(f3.x, f3.y, f3.z, v) {
 }
 FORCEINLINE Vector4::Vector4(const float4 &f4) noexcept : Vector4(f4.x, f4.y, f4.z, f4.w) {
@@ -1279,7 +1316,6 @@ FORCEINLINE Vector4::operator float3() const noexcept {
 FORCEINLINE Vector4::operator float4() const noexcept {
 	return xyzw;
 }
-
 FORCEINLINE std::ostream &operator<<(std::ostream &os, const Vector4 &v) noexcept {
 	os << '(' << v.x << ", " << v.y << ", " << v.z << ", " << v.w << ')';
 	return os;
@@ -1308,7 +1344,8 @@ FORCEINLINE Matrix3::Matrix3(const DX::XMMATRIX &mat) noexcept {
 	_mat[1] = Vector3(mat.r[1]);
 	_mat[2] = Vector3(mat.r[2]);
 }
-
+FORCEINLINE Matrix3::Matrix3(const Matrix4 &mat4) noexcept : Matrix3(static_cast<DX::XMMATRIX>(mat4)) {
+}
 FORCEINLINE Matrix3::Matrix3(const Vector3 &x, const Vector3 &y, const Vector3 &z) noexcept {
 	_mat[0] = x;
 	_mat[1] = y;
@@ -1333,7 +1370,10 @@ FORCEINLINE Vector3 Matrix3::getZ() const noexcept {
 	return _mat[2];
 }
 FORCEINLINE Matrix3::operator DX::XMMATRIX() const noexcept {
-	return DX::XMMATRIX(getX(), getY(), getZ(), Vector3(0.f));
+	return DX::XMMATRIX(getX(), getY(), getZ(), Vector4(0.f, 0.f, 0.f, 1.f));
+}
+FORCEINLINE Matrix3::operator Matrix4() const noexcept {
+	return Matrix4(static_cast<DX::XMMATRIX>(*this));
 }
 FORCEINLINE Matrix3::operator float3x3() const noexcept {
 	return float3x3(
@@ -1367,14 +1407,29 @@ FORCEINLINE Matrix3 Matrix3::operator*(const Matrix3 &mat) const noexcept {
 		*this * mat.getZ()
 	);
 }
-FORCEINLINE Matrix3 Matrix3::makeZRotation(float angle) noexcept {
-	return Matrix3(DX::XMMatrixRotationZ(angle));
+FORCEINLINE Matrix3 Matrix3::makeZRotationByRadian(float radian) noexcept {
+	return Matrix3(DX::XMMatrixRotationZ(radian));
 }
-FORCEINLINE Matrix3 Matrix3::makeXRotation(float angle) noexcept {
-	return Matrix3(DX::XMMatrixRotationX(angle));
+FORCEINLINE Matrix3 Matrix3::makeXRotationByRadian(float radian) noexcept {
+	return Matrix3(DX::XMMatrixRotationX(radian));
 }
-FORCEINLINE Matrix3 Matrix3::makeYRotation(float angle) noexcept {
-	return Matrix3(DX::XMMatrixRotationY(angle));
+FORCEINLINE Matrix3 Matrix3::makeYRotationByRadian(float radian) noexcept {
+	return Matrix3(DX::XMMatrixRotationY(radian));
+}
+FORCEINLINE Matrix3 Matrix3::makeZRotationByDegree(float angle) noexcept {
+	return Matrix3(DX::XMMatrixRotationZ(DX::XMConvertToRadians(angle)));
+}
+FORCEINLINE Matrix3 Matrix3::makeXRotationByDegree(float angle) noexcept {
+	return Matrix3(DX::XMMatrixRotationX(DX::XMConvertToRadians(angle)));
+}
+FORCEINLINE Matrix3 Matrix3::makeYRotationByDegree(float angle) noexcept {
+	return Matrix3(DX::XMMatrixRotationY(DX::XMConvertToRadians(angle)));
+}
+FORCEINLINE Matrix3 Matrix3::makeAxisRotationByDegree(const Vector3 &axis, float angle) noexcept {
+	return Matrix3(DX::XMMatrixRotationAxis(axis, DX::XMConvertToRadians(angle)));
+}
+FORCEINLINE Matrix3 Matrix3::makeAxisRotationByRadian(const Vector3 &axis, float radian) noexcept {
+	return Matrix3(DX::XMMatrixRotationAxis(axis, radian));
 }
 FORCEINLINE Matrix3 Matrix3::makeScale(float scale) noexcept {
 	return Matrix3(DX::XMMatrixScaling(scale, scale, scale));
@@ -1387,6 +1442,175 @@ FORCEINLINE Matrix3 Matrix3::makeScale(const float3 &scale) noexcept {
 }
 FORCEINLINE Matrix3 Matrix3::makeScale(const Vector3 &scale) noexcept {
 	return Matrix3(DX::XMMatrixScaling(scale.x, scale.y, scale.z));
+}
+FORCEINLINE Matrix3 Matrix3::identity() noexcept {
+	static Matrix3 identity(Vector3(1.f, 0.f, 0.f), Vector3(0.f, 1.f, 0.f), Vector3(0.f, 0.f, 1.f));
+	return identity;
+}
+FORCEINLINE Matrix3 transpose(const Matrix3 &mat3) noexcept {
+	return Matrix3(DX::XMMatrixTranspose(static_cast<DX::XMMATRIX>(mat3)));
+}
+FORCEINLINE Scalar determinant(const Matrix3 &mat3) noexcept {
+	return DX::XMMatrixDeterminant(static_cast<DX::XMMATRIX>(mat3));
+}
+FORCEINLINE Matrix3 inverse(const Matrix3 &mat3, const Scalar &det) noexcept {
+	Scalar d = det;
+	return Matrix3(DX::XMMatrixInverse(&d, static_cast<DX::XMMATRIX>(mat3)));
+}
+FORCEINLINE Matrix3 inverse(const Matrix3 &mat3) noexcept {
+	Scalar det = determinant(mat3);
+	return Matrix3(DX::XMMatrixInverse(&det, static_cast<DX::XMMATRIX>(mat3)));
+}
+#endif
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/// Matrix4Сx4
+#if 1
+FORCEINLINE Matrix4::Matrix4(const DX::XMMATRIX &mat) noexcept : _mat(mat) {
+}
+FORCEINLINE Matrix4::Matrix4(const float4x4 &f4x4) noexcept {
+	_mat = DX::XMLoadFloat4x4(&f4x4);
+}
+FORCEINLINE Matrix4::Matrix4(const Matrix3 &mat3) noexcept {
+	_mat = mat3.operator DX::XMMATRIX();
+}
+FORCEINLINE Matrix4::Matrix4(const float *data) noexcept {
+	_mat = DX::XMLoadFloat4x4(reinterpret_cast<const DX::XMFLOAT4X4 *>(data));
+}
+FORCEINLINE Matrix4::Matrix4(const Vector3 &x, const Vector3 &y, const Vector3 &z, const Vector3 &w) noexcept {
+	_mat.r[0] = x;
+	_mat.r[1] = y;
+	_mat.r[2] = z;
+	_mat.r[3] = w;
+}
+FORCEINLINE Matrix4::Matrix4(const Vector4 &x, const Vector4 &y, const Vector4 &z, const Vector4 &w) noexcept {
+	_mat.r[0] = x;
+	_mat.r[1] = y;
+	_mat.r[2] = z;
+	_mat.r[3] = w;
+}
+FORCEINLINE const Matrix3 &Matrix4::get3x3() const noexcept {
+	return reinterpret_cast<const Matrix3 &>(*this);
+}
+FORCEINLINE void Matrix4::set3x3(const Matrix3 &xyz) noexcept {
+	_mat.r[0] = xyz.getX();
+	_mat.r[1] = xyz.getY();
+	_mat.r[2] = xyz.getZ();
+}
+FORCEINLINE Vector4 Matrix4::getX() const noexcept {
+	return _mat.r[0];
+}
+FORCEINLINE Vector4 Matrix4::getY() const noexcept {
+	return _mat.r[1];
+}
+FORCEINLINE Vector4 Matrix4::getZ() const noexcept {
+	return _mat.r[2];
+}
+FORCEINLINE Vector4 Matrix4::getW() const noexcept {
+	return _mat.r[3];
+}
+FORCEINLINE void Matrix4::setX(Vector4 x) noexcept {
+	_mat.r[0] = x;
+}
+FORCEINLINE void Matrix4::setY(Vector4 y) noexcept {
+	_mat.r[1] = y;
+}
+FORCEINLINE void Matrix4::setZ(Vector4 z) noexcept {
+	_mat.r[2] = z;
+}
+FORCEINLINE void Matrix4::setW(Vector4 w) noexcept {
+	_mat.r[3] = w;
+}
+FORCEINLINE Matrix4::operator DirectX::XMMATRIX() const noexcept {
+	return _mat;
+}
+FORCEINLINE Matrix4::operator float3x3() const noexcept {
+	float3x3 res;
+	DX::XMStoreFloat3x3(&res, _mat);
+	return res;
+}
+FORCEINLINE Matrix4::operator float4x3() const noexcept {
+	float4x3 res;
+	DX::XMStoreFloat4x3(&res, _mat);
+	return res;
+}
+FORCEINLINE Matrix4::operator DirectX::XMFLOAT4X4() const noexcept {
+	float4x4 res;
+	DX::XMStoreFloat4x4(&res, _mat);
+	return res;
+}
+FORCEINLINE DX::XMMATRIX *Matrix4::operator&() noexcept {
+	return &_mat;
+}
+FORCEINLINE const DX::XMMATRIX *Matrix4::operator&() const noexcept {
+	return &_mat;
+}
+FORCEINLINE Vector4 Matrix4::operator*(const Vector3 &vec) const noexcept {
+	return Vector4(DX::XMVector3Transform(vec, _mat));
+}
+FORCEINLINE Vector4 Matrix4::operator*(const Vector4 &vec) const noexcept {
+	return Vector4(DX::XMVector3Transform(vec, _mat));
+}
+FORCEINLINE Matrix4 Matrix4::operator*(const Matrix4 &mat) const noexcept {
+	return Matrix4(DX::XMMatrixMultiply(static_cast<DX::XMMATRIX>(mat), _mat));
+}
+FORCEINLINE Matrix4 Matrix4::makeZRotationByRadian(float radian) noexcept {
+	return Matrix4(DX::XMMatrixRotationZ(radian));
+}
+FORCEINLINE Matrix4 Matrix4::makeXRotationByRadian(float radian) noexcept {
+	return Matrix4(DX::XMMatrixRotationX(radian));
+}
+FORCEINLINE Matrix4 Matrix4::makeYRotationByRadian(float radian) noexcept {
+	return Matrix4(DX::XMMatrixRotationY(radian));
+}
+FORCEINLINE Matrix4 Matrix4::makeZRotationByDegree(float angle) noexcept {
+	return Matrix4(DX::XMMatrixRotationZ(DX::XMConvertToRadians(angle)));
+}
+FORCEINLINE Matrix4 Matrix4::makeXRotationByDegree(float angle) noexcept {
+	return Matrix4(DX::XMMatrixRotationX(DX::XMConvertToRadians(angle)));
+}
+FORCEINLINE Matrix4 Matrix4::makeYRotationByDegree(float angle) noexcept {
+	return Matrix4(DX::XMMatrixRotationY(DX::XMConvertToRadians(angle)));
+}
+FORCEINLINE Matrix4 Matrix4::makeAxisRotationByDegree(const Vector3 &axis, float angle) noexcept {
+	return Matrix4(DX::XMMatrixRotationAxis(axis, DX::XMConvertToRadians(angle)));
+}
+FORCEINLINE Matrix4 Matrix4::makeAxisRotationByRadian(const Vector3 &axis, float radian) noexcept {
+	return Matrix4(DX::XMMatrixRotationAxis(axis, radian));
+}
+FORCEINLINE Matrix4 Matrix4::makeScale(float scale) noexcept {
+	return Matrix4(DX::XMMatrixScaling(scale, scale, scale));
+}
+FORCEINLINE Matrix4 Matrix4::makeScale(float sx, float sy, float sz) noexcept {
+	return Matrix4(DX::XMMatrixScaling(sx, sy, sz));
+}
+FORCEINLINE Matrix4 Matrix4::makeScale(const float3 &scale) noexcept {
+	return Matrix4(DX::XMMatrixScaling(scale.x, scale.y, scale.z));
+}
+FORCEINLINE Matrix4 Matrix4::makeScale(const Vector3 &scale) noexcept {
+	return Matrix4(DX::XMMatrixScaling(scale.x, scale.y, scale.z));
+}
+FORCEINLINE Matrix4 Matrix4::makeTranslation(const Vector3 &vec) noexcept {
+	return Matrix4(DX::XMMatrixTranslation(vec.x, vec.y, vec.z));
+}
+FORCEINLINE Matrix4 Matrix4::makeTranslation(float ox, float oy, float oz) noexcept {
+	return Matrix4(DX::XMMatrixTranslation(ox, oy, oz));
+}
+FORCEINLINE Matrix4 Matrix4::identity() noexcept {
+	return DX::XMMatrixIdentity();
+}
+FORCEINLINE Matrix4 transpose(const Matrix4 &mat4) noexcept {
+	return Matrix4(DX::XMMatrixTranspose(static_cast<DX::XMMATRIX>(mat4)));
+}
+FORCEINLINE Scalar determinant(const Matrix4 &mat4) noexcept {
+	return DX::XMMatrixDeterminant(static_cast<DX::XMMATRIX>(mat4));
+}
+FORCEINLINE Matrix4 inverse(const Matrix4 &mat4, const Scalar &det) noexcept {
+	Scalar d = det;
+	return Matrix4(DX::XMMatrixInverse(&d, static_cast<DX::XMMATRIX>(mat4)));
+}
+FORCEINLINE Matrix4 inverse(const Matrix4 &mat4) noexcept {
+	Scalar det = determinant(mat4);
+	return Matrix4(DX::XMMatrixInverse(&det, static_cast<DX::XMMATRIX>(mat4)));
 }
 #endif
 }

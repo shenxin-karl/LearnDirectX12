@@ -446,11 +446,8 @@ void LandAndWater::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 	auto boxMat = _materialMap["boxMat"];
 	CBObjectType boxOBjectCB;
 	boxOBjectCB.material = boxMat;
-	auto boxWorldMat = DX::XMMatrixMultiply(
-		DX::XMMatrixScaling(5.f, 5.f, 5.f),
-		DX::XMMatrixTranslation(0.f, 2.3f, 0.f)
-	);
-	DX::XMStoreFloat4x4(&boxOBjectCB.world, boxWorldMat);
+	Matrix4 boxWorldMat = Matrix4::makeScale(5.f, 5.f, 5.f) * Matrix4::makeTranslation(0.f, 2.3f, 0.f);
+	boxOBjectCB.world = float4x4(boxWorldMat);
 	boxOBjectCB.normalMat = MathHelper::identity4x4();
 	boxOBjectCB.matTransform = MathHelper::identity4x4();
 	RenderItem boxRItem;
@@ -462,8 +459,8 @@ void LandAndWater::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 	auto landMat = _materialMap["landMat"];
 	CBObjectType landOBjectCB;
 	landOBjectCB.material = landMat;
-	auto landMatTransform = DX::XMMatrixScaling(5.f, 5.f, 1.f);
-	DX::XMStoreFloat4x4(&landOBjectCB.matTransform, landMatTransform);
+	Matrix4 landMatTransform = Matrix4::makeScale(5.f, 5.f, 1.f);
+	landOBjectCB.matTransform = float4x4(landMatTransform);
 	landOBjectCB.world = MathHelper::identity4x4();
 	landOBjectCB.normalMat = MathHelper::identity4x4();
 	RenderItem landRItem;

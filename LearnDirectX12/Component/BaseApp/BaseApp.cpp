@@ -33,10 +33,10 @@ void BaseApp::initialize() {
 	pCmdQueue->flushCommandQueue();
 }
 
-void BaseApp::destory() {
+void BaseApp::destroy() {
 	onDistory();
-	_pInputSystem->destory();
-	_pDevice->destory();
+	_pInputSystem->destroy();
+	_pDevice->destroy();
 }
 
 void BaseApp::beginTick(std::shared_ptr<GameTimer> pGameTimer) {

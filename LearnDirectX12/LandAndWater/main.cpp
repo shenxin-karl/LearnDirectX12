@@ -15,7 +15,7 @@ int main() {
 			app.tick(pGameTimer);
 			app.endTick(pGameTimer);
 		}
-		app.destory();
+		app.destroy();
 	} catch(const std::exception &e) {
 		std::cerr << e.what() << std::endl;
 		MessageBox(nullptr, e.what(), "Error", MB_OK | MB_ICONHAND);

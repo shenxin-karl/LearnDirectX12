@@ -85,6 +85,37 @@ void buildBoundingFrustumTest() {
 	std::cout << "zNear: " << zNear << " zFar:" << zFar << std::endl;
 }
 
+void vector2Test() {
+	using namespace Math;
+	Vector2 v0;
+	Vector2 v1;
+	v0.xy = float2(1.f, 0.f);
+	std::cout << v0.xy << std::endl;
+	v1 = v0;
+	std::cout << v1.yx << std::endl;
+
+	v0 = Vector2(0.f, 0.f);
+	v1 = Vector2(1.f, 1.f);
+	v0 += v1;
+	std::cout << "v0 + v1" << v0 << std::endl;
+	v0 *= 5.f;
+	std::cout << "v0 *= 5" << v0 << std::endl;
+	std::cout << "lengthSquare(v0)" << lengthSquare(v0) << std::endl;
+	std::cout << "length(v0)" << length(v0) << std::endl;
+
+	v0 = Vector2(10.f, -10.f);
+	std::cout << "sqrt(v0)" << sqrt(v0) << std::endl;
+
+
+	v0 = Vector2(0.f, 0.f);
+	v1 = Vector2(10.f);
+	std::cout << "lerp(v0, v1, 0.5)" << lerp(v0, v1, 0.5f) << std::endl;
+	std::cout << "lerp(v0, v1, Vector2(0.1, 0.5))" << lerp(v0, v1, Vector2(0.1, 0.5)) << std::endl;
+
+	v0 = Vector2(-1.f, 10.f);
+	std::cout << "clamp(v0, Vector2(0.f), Vector2(9.f))" << clamp(v0, Vector2(0.f), Vector2(9.f)) << std::endl;
+}
+
 void vector3Test() {
 	using namespace Math;
 	Vector3 v1;
@@ -159,10 +190,23 @@ void vector3Test() {
 	float3 f3 = v3.zyx;
 }
 
+void matrix3Test() {
+	using namespace Math;
+	Matrix3 rotate = Matrix3::makeXRotationByRadian(30.f);
+	Vector3 yAxist = Vector3(0.f, 1.f, 0.f);
+	auto res = rotate * yAxist;
+	std::cout << "yAxist " << res << std::endl;
+}
+
 int main() {
 	//float2Test();
 	//float3Test();
 	//float4Test();
+	std::cout << std::endl << "-----vector3Test--------" << std::endl;
+	vector2Test();
+	std::cout << std::endl << "-----vector3Test--------" << std::endl;
 	vector3Test();
+	std::cout << std::endl << "-----matrix3Test--------" << std::endl;
+	matrix3Test();
 	buildBoundingFrustumTest();
 }

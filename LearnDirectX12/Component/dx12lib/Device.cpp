@@ -52,7 +52,7 @@ void Device::initialize(const DeviceInitDesc &desc) {
 	}
 }
 
-void Device::destory() {
+void Device::destroy() {
 	_pCommandQueue->flushCommandQueue();
 }
 

@@ -28,6 +28,30 @@ CameraBase::CameraBase(const CameraDesc &desc) {
 	assert(_farClip > _nearClip);
 }
 
+Matrix4 CameraBase::getMatView() const {
+	return Matrix4(getView());
+}
+
+Matrix4 CameraBase::getMatProj() const {
+	return Matrix4(getProj());
+}
+
+Matrix4 CameraBase::getMatViewProj() const {
+	return Matrix4(getViewProj());
+}
+
+Matrix4 CameraBase::getMatInvView() const {
+	return Matrix4(getInvView());
+}
+
+Matrix4 CameraBase::getMatInvProj() const {
+	return Matrix4(getInvProj());
+}
+
+Matrix4 CameraBase::getMatInvViewProj() const {
+	return Matrix4(getInvViewProj());
+}
+
 void CameraBase::updatePassCB(d3d::CBPassType &passCB) const {
 	passCB.view = getView();
 	passCB.invView = getInvView();
@@ -77,7 +101,7 @@ CoronaCamera::CoronaCamera(const CameraDesc &desc) : CameraBase(desc) {
 	assert(_radius != 0.f);
 	direction = -direction / _radius;
 	_phi = DirectX::XMConvertToDegrees(std::asin(direction.y));
-	_theta = DirectX::XMConvertToDegrees(std::atan2(direction.x, direction.z));
+	_theta = DirectX::XMConvertToDegrees(std::atan2(direction.z, direction.x));
 }
 
 const float4x4 &CoronaCamera::getView() const {
@@ -117,7 +141,7 @@ void CoronaCamera::update(std::shared_ptr<com::GameTimer> pGameTimer) {
 		cosPhi * sinTh,
 	};
 
-	Vector3 w = normalize(-direction);
+	Vector3 w = normalize(direction);
 	Vector3 u;
 	if (std::abs(w.y) != 1.f)
 		u = normalize(cross(Vector3(0, 1, 0), w));
@@ -128,26 +152,22 @@ void CoronaCamera::update(std::shared_ptr<com::GameTimer> pGameTimer) {
 	Vector3 lookFrom = lookAt + direction * _radius;
 
 	_lookFrom = lookFrom.xyz;
-	_lookAt = lookAt.xyz;
 	_lookUp = lookUp.xyz;
 	
-	DirectX::XMMATRIX view = DirectX::XMMatrixLookAtLH(lookFrom, lookAt, lookUp);
-	DirectX::XMMATRIX proj = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(_fov), _aspect, _nearClip, _farClip);
-	DirectX::XMMATRIX viewProj = view * proj;
+	Matrix4 view = DirectX::XMMatrixLookAtLH(lookFrom, lookAt, lookUp);
+	Matrix4 proj = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(_fov), _aspect, _nearClip, _farClip);
+	Matrix4 viewProj = proj * view ;
 
-	DirectX::XMVECTOR det = XMMatrixDeterminant(view);
-	DirectX::XMMATRIX invView = DirectX::XMMatrixInverse(&det, view);
-	det = DirectX::XMMatrixDeterminant(proj);
-	DirectX::XMMATRIX invProj = DirectX::XMMatrixInverse(&det, proj);
-	det = DirectX::XMMatrixDeterminant(viewProj);
-	DirectX::XMMATRIX invViewProj = DirectX::XMMatrixInverse(&det, viewProj);
+	Matrix4 invView = inverse(view);
+	Matrix4 invProj = inverse(proj);
+	Matrix4 invViewProj = inverse(viewProj);
 
-	DirectX::XMStoreFloat4x4(&_view, view);
-	DirectX::XMStoreFloat4x4(&_proj, proj);
-	DirectX::XMStoreFloat4x4(&_viewProj, viewProj);
-	DirectX::XMStoreFloat4x4(&_invView, invView);
-	DirectX::XMStoreFloat4x4(&_invProj, invProj);
-	DirectX::XMStoreFloat4x4(&_invViewProj, invViewProj);
+	_view = float4x4(view);
+	_proj = float4x4(proj);
+	_viewProj = float4x4(viewProj);
+	_invView = float4x4(invView);
+	_invProj = float4x4(invProj);
+	_invViewProj = float4x4(invViewProj);
 }
 
 float CoronaCamera::getPhi() const {
@@ -269,23 +289,20 @@ void FirstPersonCamera::update(std::shared_ptr<com::GameTimer> pGameTimer) {
 	_lookAt = lookAt.xyz;
 	_lookUp = lookUp.xyz;
 
-	DirectX::XMMATRIX view = DirectX::XMMatrixLookAtLH(lookFrom, lookAt, lookUp);
-	DirectX::XMMATRIX proj = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(_fov), _aspect, _nearClip, _farClip);
-	DirectX::XMMATRIX viewProj = view * proj;
+	Matrix4 view = DirectX::XMMatrixLookAtLH(lookFrom, lookAt, lookUp);
+	Matrix4 proj = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(_fov), _aspect, _nearClip, _farClip);
+	Matrix4 viewProj = proj * view;
 
-	DirectX::XMVECTOR det = XMMatrixDeterminant(view);
-	DirectX::XMMATRIX invView = DirectX::XMMatrixInverse(&det, view);
-	det = DirectX::XMMatrixDeterminant(proj);
-	DirectX::XMMATRIX invProj = DirectX::XMMatrixInverse(&det, proj);
-	det = DirectX::XMMatrixDeterminant(viewProj);
-	DirectX::XMMATRIX invViewProj = DirectX::XMMatrixInverse(&det, viewProj);
+	Matrix4 invView = inverse(view);
+	Matrix4 invProj = inverse(proj);
+	Matrix4 invViewProj = inverse(viewProj);
 
-	DirectX::XMStoreFloat4x4(&_view, view);
-	DirectX::XMStoreFloat4x4(&_proj, proj);
-	DirectX::XMStoreFloat4x4(&_viewProj, viewProj);
-	DirectX::XMStoreFloat4x4(&_invView, invView);
-	DirectX::XMStoreFloat4x4(&_invProj, invProj);
-	DirectX::XMStoreFloat4x4(&_invViewProj, invViewProj);
+	_view = float4x4(view);
+	_proj = float4x4(proj);
+	_viewProj = float4x4(viewProj);
+	_invView = float4x4(invView);
+	_invProj = float4x4(invProj);
+	_invViewProj = float4x4(invViewProj);
 }
 
 void FirstPersonCamera::pollEvent(const com::MouseEvent &event) {
