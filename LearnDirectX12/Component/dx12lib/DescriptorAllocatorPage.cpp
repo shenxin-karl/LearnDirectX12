@@ -17,7 +17,7 @@ DescriptorAllocatorPage::DescriptorAllocatorPage(DescriptorAllocatorPage &&other
 DescriptorAllocatorPage::DescriptorAllocatorPage(std::weak_ptr<Device> pDevice, 
 	D3D12_DESCRIPTOR_HEAP_TYPE heapType, 
 	size_t numDescriptorPreHeap)
-: _pDevice(pDevice), _heapType(heapType)
+: _pDevice(pDevice), _heapType(heapType), _pDescriptorAllocationRefCount(new std::atomic_size_t[] {0})
 {
 	ID3D12Device *pD3DDevice = pDevice.lock()->getD3DDevice();
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc;
@@ -65,6 +65,7 @@ DescriptorAllocation DescriptorAllocatorPage::allocate(size_t numDescriptor) {
 	descriptor.Offset(offset, static_cast<UINT>(_descriptorHandleIncrementSize));
 	DescriptorAllocation ret = {
 		static_cast<D3D12_CPU_DESCRIPTOR_HANDLE>(descriptor),
+		&_pDescriptorAllocationRefCount[offset],
 		numDescriptor,
 		_descriptorHandleIncrementSize,
 		shared_from_this(),
@@ -84,6 +85,7 @@ DescriptorAllocation DescriptorAllocatorPage::allocate(size_t numDescriptor) {
 
 void DescriptorAllocatorPage::free(DescriptorAllocation &&allocation) {
 	auto temp = std::move(allocation);
+	assert(*temp._pRefCount == 0);
 	StaleDescriptorInfo staleInfo = {
 		computeOffset(temp.getCPUHandle()),
 		temp.getNumHandle(),
@@ -157,7 +159,7 @@ void swap(DescriptorAllocatorPage &lhs, DescriptorAllocatorPage &rhs) noexcept {
 	swap(lhs._numFreeHandle, rhs._numFreeHandle);
 	swap(lhs._numDescriptorInHeap, rhs._numDescriptorInHeap);
 	swap(lhs._descriptorHandleIncrementSize, rhs._descriptorHandleIncrementSize);
-	//swap(lhs._allocationMutex, rhs._allocationMutex);
+	swap(lhs._pDescriptorAllocationRefCount, rhs._pDescriptorAllocationRefCount);
 	swap(lhs._pDevice, rhs._pDevice);
 	swap(lhs._heapType, rhs._heapType);
 	swap(lhs._staleAllocation, rhs._staleAllocation);

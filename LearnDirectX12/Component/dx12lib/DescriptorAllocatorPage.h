@@ -55,9 +55,10 @@ private:
 	D3D12_DESCRIPTOR_HEAP_TYPE        _heapType;
 	std::queue<StaleDescriptorInfo>   _staleAllocation;
 	WRL::ComPtr<ID3D12DescriptorHeap> _pDescriptorHeap;
+	// std::vector<std::atomic_size_t>   _descriptorAllocationRefCount;	 
 	FreeListBySize                    _freeListBySize;
 	FreeListByOffset                  _freeListByOffset;
-
+	std::unique_ptr<std::atomic_size_t[]> _pDescriptorAllocationRefCount;
 };
 
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include "dx12libStd.h"
+#include <memory>
 
 namespace dx12lib {
 
@@ -8,14 +9,15 @@ class DescriptorAllocatorPage;
 class DescriptorAllocation {
 public:
 	DescriptorAllocation();
-	DescriptorAllocation(const DescriptorAllocation &) = delete;
+	DescriptorAllocation(const DescriptorAllocation &other);
 	DescriptorAllocation(DescriptorAllocation &&other) noexcept;
-	DescriptorAllocation &operator=(const DescriptorAllocation &) = delete;
+	DescriptorAllocation &operator=(const DescriptorAllocation &other);
 	DescriptorAllocation &operator=(DescriptorAllocation &&other) noexcept;
 	~DescriptorAllocation();
 	friend void swap(DescriptorAllocation &lhs, DescriptorAllocation &rhs) noexcept;
 protected:
 	DescriptorAllocation(D3D12_CPU_DESCRIPTOR_HANDLE handle,
+		std::atomic_size_t *pRefCount,
 		size_t numHandle,
 		size_t handleSize,
 		std::shared_ptr<DescriptorAllocatorPage> pPage
@@ -31,8 +33,9 @@ private:
 	friend class DescriptorAllocatorPage;
 	void reset() noexcept;
 private:
-	size_t _numHandle;
-	size_t _handleSize;
+	size_t  _numHandle;
+	size_t  _handleSize;
+	std::atomic_size_t *_pRefCount;
 	D3D12_CPU_DESCRIPTOR_HANDLE _baseHandle; 
 	std::shared_ptr<DescriptorAllocatorPage> _pPage; 
 };
