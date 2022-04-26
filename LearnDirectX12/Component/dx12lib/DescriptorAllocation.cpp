@@ -9,8 +9,8 @@ DescriptorAllocation::DescriptorAllocation()
 }
 
 DescriptorAllocation::DescriptorAllocation(const DescriptorAllocation &other)
-: _numHandle(other._numHandle), _handleSize(other._handleSize)
-, _pRefCount(nullptr), _baseHandle(other._baseHandle), _pPage(other._pPage)
+: _numHandle(0), _handleSize(other._handleSize)
+, _pRefCount(nullptr), _baseHandle(D3D12_CPU_DESCRIPTOR_HANDLE(0)), _pPage(other._pPage)
 {
 	if (other._pRefCount == nullptr)
 		return;
@@ -21,8 +21,11 @@ DescriptorAllocation::DescriptorAllocation(const DescriptorAllocation &other)
 			break;
 	}
 
-	if (count != 0)
+	if (count != 0) {
 		_pRefCount = other._pRefCount;
+		_numHandle = other._numHandle;
+		_baseHandle = other._baseHandle;
+	}
 }
 
 DescriptorAllocation::DescriptorAllocation(DescriptorAllocation &&other) noexcept : DescriptorAllocation() {
@@ -30,7 +33,7 @@ DescriptorAllocation::DescriptorAllocation(DescriptorAllocation &&other) noexcep
 }
 
 DescriptorAllocation &DescriptorAllocation::operator=(const DescriptorAllocation &other) {
-	DescriptorAllocation tmp = other;
+	DescriptorAllocation tmp { other };
 	swap(*this, tmp);
 	return *this;
 }
@@ -50,7 +53,7 @@ DescriptorAllocation::~DescriptorAllocation() {
 		return;
 
 	size_t refCount = _pRefCount->fetch_sub(1);
-	if (refCount == 0)
+	if (refCount == 1)
 		free();
 }
 
@@ -62,6 +65,7 @@ DescriptorAllocation::DescriptorAllocation(D3D12_CPU_DESCRIPTOR_HANDLE handle,
 : _numHandle(numHandle), _handleSize(handleSize), _pRefCount(pRefCount)
 , _baseHandle(handle), _pPage(pPage)
 {
+	assert(pRefCount->load() == 1);
 }
 
 DescriptorAllocation &DescriptorAllocation::operator=(DescriptorAllocation &&other) noexcept {

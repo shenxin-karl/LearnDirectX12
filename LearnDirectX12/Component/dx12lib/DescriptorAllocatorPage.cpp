@@ -17,7 +17,8 @@ DescriptorAllocatorPage::DescriptorAllocatorPage(DescriptorAllocatorPage &&other
 DescriptorAllocatorPage::DescriptorAllocatorPage(std::weak_ptr<Device> pDevice, 
 	D3D12_DESCRIPTOR_HEAP_TYPE heapType, 
 	size_t numDescriptorPreHeap)
-: _pDevice(pDevice), _heapType(heapType), _pDescriptorAllocationRefCount(new std::atomic_size_t[] {0})
+: _pDevice(pDevice), _heapType(heapType)
+, _pDescriptorAllocationRefCount(new std::atomic_size_t[numDescriptorPreHeap] {0})
 {
 	ID3D12Device *pD3DDevice = pDevice.lock()->getD3DDevice();
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc;
@@ -63,6 +64,8 @@ DescriptorAllocation DescriptorAllocatorPage::allocate(size_t numDescriptor) {
 	UINT offset = static_cast<INT>(offsetIt->first);
 	auto descriptor = _baseDescriptor;
 	descriptor.Offset(offset, static_cast<UINT>(_descriptorHandleIncrementSize));
+	assert(offset < _numDescriptorInHeap);
+	_pDescriptorAllocationRefCount[offset].store(1);
 	DescriptorAllocation ret = {
 		static_cast<D3D12_CPU_DESCRIPTOR_HANDLE>(descriptor),
 		&_pDescriptorAllocationRefCount[offset],
