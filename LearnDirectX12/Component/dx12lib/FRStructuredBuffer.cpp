@@ -5,7 +5,7 @@ namespace dx12lib {
 FRStructuredBuffer<RawData>::FRStructuredBuffer(std::weak_ptr<Device> pDevice, const void *pData, size_t numElements, size_t stride) {
 	size_t sizeInByte = numElements * stride;
 	auto pSharedDevice = pDevice.lock();
-	_structuredBufferView = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	_descriptor = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	_pUploadBuffer = std::make_unique<UploadBuffer>(
 		pSharedDevice->getD3DDevice(),
 		kFrameResourceCount,
@@ -21,7 +21,7 @@ FRStructuredBuffer<RawData>::FRStructuredBuffer(std::weak_ptr<Device> pDevice, c
 	desc.Buffer.StructureByteStride = static_cast<UINT>(stride);
 	desc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
-	_structuredBufferView = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kFrameResourceCount);
+	_descriptor = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kFrameResourceCount);
 	for (size_t i = 0; i < kFrameResourceCount; ++i) {
 		if (pData != nullptr)
 			_pUploadBuffer->copyData(i, pData, sizeInByte, 0);
@@ -30,7 +30,7 @@ FRStructuredBuffer<RawData>::FRStructuredBuffer(std::weak_ptr<Device> pDevice, c
 		pSharedDevice->getD3DDevice()->CreateShaderResourceView(
 			_pUploadBuffer->getD3DResource().Get(),
 			&desc,
-			_structuredBufferView.getCPUHandle(i)
+			_descriptor.getCPUHandle(i)
 		);
 	}
 }
@@ -39,9 +39,9 @@ WRL::ComPtr<ID3D12Resource> FRStructuredBuffer<RawData>::getD3DResource() const 
 	return _pUploadBuffer->getD3DResource();
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE FRStructuredBuffer<RawData>::getShaderResourceView() const {
+ShaderResourceView FRStructuredBuffer<RawData>::getShaderResourceView() const {
 	size_t frameIndex = FrameIndexProxy::getConstantFrameIndexRef();
-	return _structuredBufferView.getCPUHandle(frameIndex);
+	return ShaderResourceView(_descriptor, frameIndex);
 }
 
 void FRStructuredBuffer<RawData>::updateStructuredBuffer(const void *pData, size_t sizeInByte, size_t offset) {

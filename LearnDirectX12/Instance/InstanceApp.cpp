@@ -70,8 +70,8 @@ void InstanceApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		pDirectCtx->clearDepthStencil(pDepthStencilBuffer, 1.f, 0);
 
 		pDirectCtx->setGraphicsPSO(_pInstancePSO);
-		pDirectCtx->setConstantBuffer(_pPassCB, CB_Pass);
-		pDirectCtx->setConstantBuffer(_pLightCB, CB_Light);
+		pDirectCtx->setConstantBufferView(_pPassCB->getConstantBufferView(), CB_Pass);
+		pDirectCtx->setConstantBufferView(_pLightCB->getConstantBufferView(), CB_Light);
 		pDirectCtx->setStructuredBuffer(_pMaterialData, SR_MaterialData);
 
 		size_t srvCount = std::min(_textures.size(), kMaxTextureArraySize);

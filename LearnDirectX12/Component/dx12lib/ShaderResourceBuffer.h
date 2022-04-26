@@ -5,12 +5,11 @@
 
 namespace dx12lib {
 
-class ShaderResourceBuffer : public IShaderSourceResource {
+class ShaderResourceBuffer {
 public:
-	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
-	D3D12_CPU_DESCRIPTOR_HANDLE getShaderResourceView() const override;
-	bool isShaderSample() const override;
-	~ShaderResourceBuffer() override;
+	WRL::ComPtr<ID3D12Resource> getD3DResource() const;
+	ShaderResourceView getShaderResourceView(size_t mipSlice = 0) const;
+	~ShaderResourceBuffer();
 protected:
 	ShaderResourceBuffer(std::weak_ptr<Device> pDevice,
 		WRL::ComPtr<ID3D12Resource> pResource,

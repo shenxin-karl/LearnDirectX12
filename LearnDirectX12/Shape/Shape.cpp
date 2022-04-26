@@ -348,15 +348,15 @@ void Shape::renderShapesPass(dx12lib::DirectContextProxy pDirectCtx) {
 	auto pPSO = _PSOMap[passPSOName];
 	pDirectCtx->setGraphicsPSO(pPSO);
 
-	pDirectCtx->setConstantBuffer(_pPassCB, ShapeRootParameType::CBPass);
-	pDirectCtx->setConstantBuffer(_pGameLightsCB, ShapeRootParameType::CBLight);
+	pDirectCtx->setConstantBufferView(_pPassCB->getConstantBufferView(), ShapeRootParameType::CBPass);
+	pDirectCtx->setConstantBufferView(_pGameLightsCB->getConstantBufferView(), ShapeRootParameType::CBLight);
 
 	auto psoRenderItems = _renderItems[passPSOName];
 	for (auto &rItem : psoRenderItems) {
 		pDirectCtx->setVertexBuffer(rItem._pMesh->_pVertexBuffer);
 		pDirectCtx->setIndexBuffer(rItem._pMesh->_pIndexBuffer);
 		pDirectCtx->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		pDirectCtx->setConstantBuffer(rItem._pObjectCB, ShapeRootParameType::CBObject);
+		pDirectCtx->setConstantBufferView(rItem._pObjectCB->getConstantBufferView(), ShapeRootParameType::CBObject);
 		pDirectCtx->setShaderResourceBuffer(rItem._pAlbedo, ShapeRootParameType::SRAlbedo);
 		pDirectCtx->drawIndexedInstanced(
 			rItem._pMesh->_pIndexBuffer->getIndexCount(), 1, 0,

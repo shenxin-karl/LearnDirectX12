@@ -155,7 +155,7 @@ void BoxApp::buildBoxGeometry(dx12lib::DirectContextProxy pDirectContext) {
 
 void BoxApp::renderBoxPass(dx12lib::DirectContextProxy pDirectContext) {
 	pDirectContext->setGraphicsPSO(_pGraphicsPSO);
-	pDirectContext->setConstantBuffer(_pMVPConstantBuffer, WorldViewProjCBuffer, 0);
+	pDirectContext->setConstantBufferView(_pMVPConstantBuffer->getConstantBufferView(), WorldViewProjCBuffer, 0);
 	pDirectContext->setVertexBuffer(_pBoxMesh->_pVertexBuffer);
 	pDirectContext->setIndexBuffer(_pBoxMesh->_pIndexBuffer);
 	pDirectContext->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

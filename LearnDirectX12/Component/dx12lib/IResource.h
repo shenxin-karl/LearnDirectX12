@@ -1,5 +1,6 @@
 #pragma once
 #include "dx12libStd.h"
+#include "ResourceView.hpp"
 #include <d3d12.h>
 #include <wrl.h>
 
@@ -14,6 +15,7 @@ public:
 	virtual uint64 getDepth() const;
 	virtual bool isMapped() const;
 	virtual DXGI_FORMAT getFormat() const;
+	virtual size_t getMipmapLevels() const;
 	ResourceType getResourceType() const {  return _resourceType; }
 protected:
 	ResourceType _resourceType = ResourceType::Unknown;
@@ -21,13 +23,13 @@ protected:
 
 class IShaderSourceResource : public IResource {
 public:
-	virtual D3D12_CPU_DESCRIPTOR_HANDLE getShaderResourceView() const = 0;
+	virtual ShaderResourceView getShaderResourceView(size_t mipLevel = 0) const = 0;
 	virtual bool isShaderSample() const = 0;
 };
 
 class IConstantBuffer : public IResource {
 public:
- 	virtual D3D12_CPU_DESCRIPTOR_HANDLE getConstantBufferView() const = 0;
+ 	virtual ConstantBufferView getConstantBufferView() const = 0;
 	virtual void updateConstantBuffer(const void *pData, size_t sizeInByte, size_t offset = 0) = 0;
 	virtual size_t getConstantBufferSize() const noexcept = 0;
 };
@@ -35,7 +37,7 @@ public:
 class IStructuredBuffer : public IResource {
 public:
 	bool isMapped() const override { return true; }
-	virtual D3D12_CPU_DESCRIPTOR_HANDLE getShaderResourceView() const = 0;
+	virtual ShaderResourceView getShaderResourceView() const = 0;
 	virtual void updateStructuredBuffer(const void *pData, size_t sizeInByte, size_t offset = 0) = 0;
 	virtual size_t getStructuredBufferSize() const = 0;
 	virtual size_t getElementCount() const = 0;

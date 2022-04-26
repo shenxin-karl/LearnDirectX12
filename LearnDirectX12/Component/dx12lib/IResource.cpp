@@ -24,4 +24,8 @@ DXGI_FORMAT IResource::getFormat() const {
 	return getD3DResource()->GetDesc().Format;
 }
 
+size_t IResource::getMipmapLevels() const {
+	return getD3DResource()->GetDesc().MipLevels;
+}
+
 }

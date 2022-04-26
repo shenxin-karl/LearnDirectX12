@@ -4,8 +4,8 @@
 
 namespace dx12lib {
 
-D3D12_CPU_DESCRIPTOR_HANDLE StructuredBuffer::getShaderResourceView() const {
-	return _structuredBufferView.getCPUHandle();
+ShaderResourceView StructuredBuffer::getShaderResourceView() const {
+	return ShaderResourceView(_descriptor);
 }
 
 WRL::ComPtr<ID3D12Resource> StructuredBuffer::getD3DResource() const {
@@ -34,7 +34,7 @@ StructuredBuffer::~StructuredBuffer() {
 StructuredBuffer::StructuredBuffer(std::weak_ptr<Device> pDevice, const void *pData, size_t numElements, size_t stride) {
 	auto pSharedDevice = pDevice.lock();
 	size_t sizeInByte = numElements * stride;
-	_structuredBufferView = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	_descriptor = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	_pUploadBuffer = std::make_unique<UploadBuffer>(
 		pSharedDevice->getD3DDevice(),
 		1,
@@ -58,7 +58,7 @@ StructuredBuffer::StructuredBuffer(std::weak_ptr<Device> pDevice, const void *pD
 	pSharedDevice->getD3DDevice()->CreateShaderResourceView(
 		_pUploadBuffer->getD3DResource().Get(),
 		&desc,
-		_structuredBufferView.getCPUHandle()
+		_descriptor.getCPUHandle()
 	);
 	_resourceType = ResourceType::StructuredBuffer;
 }

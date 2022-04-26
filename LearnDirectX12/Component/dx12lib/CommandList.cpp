@@ -227,6 +227,26 @@ void CommandList::setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType,
 	}
 }
 
+void CommandList::setConstantBufferView(const ConstantBufferView &cbv, size_t rootIndex, size_t offset) {
+	assert(_currentGPUState.pRootSignature != nullptr);
+	_pDynamicDescriptorHeaps[0]->stageDescriptors(
+		rootIndex,
+		offset,
+		1,
+		cbv
+	);
+}
+
+void CommandList::setShaderResourceView(const ShaderResourceView &srv, size_t rootIndex, size_t offset) {
+	assert(_currentGPUState.pRootSignature != nullptr);
+	_pDynamicDescriptorHeaps[0]->stageDescriptors(
+		rootIndex,
+		offset,
+		1,
+		srv
+	);
+}
+
 void CommandList::setStructuredBuffer(std::shared_ptr<StructuredBuffer> pStructuredBuffer, size_t rootIndex, size_t offset) {
 	setStructuredBufferImpl(
 		std::static_pointer_cast<IStructuredBuffer>(pStructuredBuffer),

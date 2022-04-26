@@ -86,7 +86,7 @@ void SkyBox::render(dx12lib::GraphicsContextProxy pGraphicsCtx, std::shared_ptr<
 	XMStoreFloat4x4(_pViewProj->map(), view * proj);
 
 	pGraphicsCtx->setGraphicsPSO(_pSkyBoxPSO);
-	pGraphicsCtx->setConstantBuffer(_pViewProj, CB_Setting);
+	pGraphicsCtx->setConstantBufferView(_pViewProj->getConstantBufferView(), CB_Setting);
 	pGraphicsCtx->setShaderResourceBuffer(_pCubeMap, SR_CubeMap);
 	pGraphicsCtx->setPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	pGraphicsCtx->setVertexBuffer(_pCubeVertexBuffer);

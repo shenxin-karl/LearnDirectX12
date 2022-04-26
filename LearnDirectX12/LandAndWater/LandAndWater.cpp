@@ -167,16 +167,16 @@ void LandAndWater::renderWaterPass(dx12lib::DirectContextProxy pDirectCtx) {
 	std::string_view passName = "WaterPSO";
 	auto pPSO = _psoMap[passName.data()];
 	pDirectCtx->setGraphicsPSO(pPSO);
-	pDirectCtx->setConstantBuffer(_pPassCB, CBPass);
-	pDirectCtx->setConstantBuffer(_pLightCB, CBLight);
-	pDirectCtx->setConstantBuffer(_pWaterCB, CBWater);
+	pDirectCtx->setConstantBufferView(_pPassCB->getConstantBufferView(), CBPass);
+	pDirectCtx->setConstantBufferView(_pLightCB->getConstantBufferView(), CBLight);
+	pDirectCtx->setConstantBufferView(_pWaterCB->getConstantBufferView(), CBWater);
 	pDirectCtx->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	auto &renderItems = _renderItemMap[passName.data()];
 	for (auto &rItem : renderItems) {
 		pDirectCtx->setVertexBuffer(rItem._pMesh->getVertexBuffer());
 		pDirectCtx->setIndexBuffer(rItem._pMesh->getIndexBuffer());
-		pDirectCtx->setConstantBuffer(rItem._pConstantBuffer, CBObject);
+		pDirectCtx->setConstantBufferView(rItem._pConstantBuffer->getConstantBufferView(), CBObject);
 		rItem._pMesh->drawIndexdInstanced(pDirectCtx);
 	}
 }
@@ -187,8 +187,8 @@ void LandAndWater::drawOpaqueRenderItems(dx12lib::DirectContextProxy pDirectCtx,
 {
 	auto pPSO = _psoMap[passName.data()];
 	pDirectCtx->setGraphicsPSO(pPSO);
-	pDirectCtx->setConstantBuffer(_pPassCB, CBPass);
-	pDirectCtx->setConstantBuffer(_pLightCB, CBLight);
+	pDirectCtx->setConstantBufferView(_pPassCB->getConstantBufferView(), CBPass);
+	pDirectCtx->setConstantBufferView(_pLightCB->getConstantBufferView(), CBLight);
 	auto &renderItems = _renderItemMap[passName.data()];
 	pDirectCtx->setPrimitiveTopology(primitiveType);
 	for (auto &rItem : renderItems) {

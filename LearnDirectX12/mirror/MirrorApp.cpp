@@ -97,38 +97,38 @@ void MirrorApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		// draw opaque
 		auto pPSO = _psoMap[RenderLayer::Opaque];
 		pDirectCtx->setGraphicsPSO(pPSO);
-		pDirectCtx->setConstantBuffer(_pPassCB, CBPass);
-		pDirectCtx->setConstantBuffer(_pLightCB, CBLight);
+		pDirectCtx->setConstantBufferView(_pPassCB->getConstantBufferView(), CBPass);
+		pDirectCtx->setConstantBufferView(_pLightCB->getConstantBufferView(), CBLight);
 		drawRenderItems(pDirectCtx, RenderLayer::Opaque);
 
 		// mark stencil 
 		pPSO = _psoMap[RenderLayer::Mirrors];
 		pDirectCtx->setGraphicsPSO(pPSO);
-		pDirectCtx->setConstantBuffer(_pPassCB, CBPass);
-		pDirectCtx->setConstantBuffer(_pLightCB, CBLight);
+		pDirectCtx->setConstantBufferView(_pPassCB->getConstantBufferView(), CBPass);
+		pDirectCtx->setConstantBufferView(_pLightCB->getConstantBufferView(), CBLight);
 		pDirectCtx->setStencilRef(1);
 		drawRenderItems(pDirectCtx, RenderLayer::Mirrors);
 
 		// draw 
 		pPSO = _psoMap[RenderLayer::Reflected];
 		pDirectCtx->setGraphicsPSO(pPSO);
-		pDirectCtx->setConstantBuffer(_pPassCB, CBPass);
-		pDirectCtx->setConstantBuffer(_pReflectedLightCB, CBLight);
+		pDirectCtx->setConstantBufferView(_pPassCB->getConstantBufferView(), CBPass);
+		pDirectCtx->setConstantBufferView(_pReflectedLightCB->getConstantBufferView(), CBLight);
 		pDirectCtx->setStencilRef(1);
 		drawRenderItems(pDirectCtx, RenderLayer::Reflected);
 
 		// draw 
 		pPSO = _psoMap[RenderLayer::Transparent];
 		pDirectCtx->setGraphicsPSO(pPSO);
-		pDirectCtx->setConstantBuffer(_pPassCB, CBPass);
-		pDirectCtx->setConstantBuffer(_pLightCB, CBLight);
+		pDirectCtx->setConstantBufferView(_pPassCB->getConstantBufferView(), CBPass);
+		pDirectCtx->setConstantBufferView(_pLightCB->getConstantBufferView(), CBLight);
 		pDirectCtx->setStencilRef(0);
 		drawRenderItems(pDirectCtx, RenderLayer::Transparent);
 
 		pPSO = _psoMap[RenderLayer::Shadow];
 		pDirectCtx->setGraphicsPSO(pPSO);
-		pDirectCtx->setConstantBuffer(_pPassCB, CBPass);
-		pDirectCtx->setConstantBuffer(_pLightCB, CBLight);
+		pDirectCtx->setConstantBufferView(_pPassCB->getConstantBufferView(), CBPass);
+		pDirectCtx->setConstantBufferView(_pLightCB->getConstantBufferView(), CBLight);
 		pDirectCtx->setStencilRef(0);
 		drawRenderItems(pDirectCtx, RenderLayer::Shadow);
 
@@ -149,7 +149,7 @@ void MirrorApp::drawRenderItems(dx12lib::DirectContextProxy pDirectCtx, RenderLa
 	for (auto &rItem : _renderItems[layer]) {
 		pDirectCtx->setVertexBuffer(rItem._pMesh->getVertexBuffer());
 		pDirectCtx->setIndexBuffer(rItem._pMesh->getIndexBuffer());
-		pDirectCtx->setConstantBuffer(rItem._pObjectCB, CBObject);
+		pDirectCtx->setConstantBufferView(rItem._pObjectCB->getConstantBufferView(), CBObject);
 		pDirectCtx->setShaderResourceBuffer(rItem._pAlbedoMap, SRAlbedo);
 		rItem._submesh.drawIndexdInstanced(pDirectCtx);
 	}

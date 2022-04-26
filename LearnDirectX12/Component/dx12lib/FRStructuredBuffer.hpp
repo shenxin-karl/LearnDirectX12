@@ -14,7 +14,7 @@ protected:
 	FRStructuredBuffer(std::weak_ptr<Device> pDevice, const void *pData, size_t numElements, size_t stride);
 public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
-	D3D12_CPU_DESCRIPTOR_HANDLE getShaderResourceView() const override;
+	ShaderResourceView getShaderResourceView() const override;
 	void updateStructuredBuffer(const void *pData, size_t sizeInByte, size_t offset) override;
 	size_t getStructuredBufferSize() const override;
 	size_t getElementCount() const override;
@@ -38,7 +38,7 @@ public:
 		return std::span<const T>(ptr, numElements);
 	}
 private:
-	DescriptorAllocation _structuredBufferView;
+	DescriptorAllocation _descriptor;
 	std::unique_ptr<UploadBuffer> _pUploadBuffer;
 };
 
@@ -52,7 +52,7 @@ protected:
 	FRStructuredBuffer(std::weak_ptr<Device> pDevice, const T *pData, size_t numElements);
 public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
-	D3D12_CPU_DESCRIPTOR_HANDLE getShaderResourceView() const override;
+	ShaderResourceView getShaderResourceView() const override;
 	void updateStructuredBuffer(const void *pData, size_t sizeInByte, size_t offset) override;
 	size_t getStructuredBufferSize() const override;
 	size_t getElementCount() const override;
@@ -60,7 +60,7 @@ public:
 	std::span<T> visit();
 	std::span<const T> visit() const;
 private:
-	DescriptorAllocation _structuredBufferView;
+	DescriptorAllocation _descriptor;
 	std::unique_ptr<UploadBuffer> _pUploadBuffer;
 };
 
@@ -69,7 +69,7 @@ FRStructuredBuffer<T>::FRStructuredBuffer(std::weak_ptr<Device> pDevice, const T
 	size_t stride = sizeof(T);
 	size_t sizeInByte = numElements * stride;
 	auto pSharedDevice = pDevice.lock();
-	_structuredBufferView = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	_descriptor = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	_pUploadBuffer = std::make_unique<UploadBuffer>(
 		pSharedDevice->getD3DDevice(),
 		kFrameResourceCount,
@@ -85,7 +85,7 @@ FRStructuredBuffer<T>::FRStructuredBuffer(std::weak_ptr<Device> pDevice, const T
 	desc.Buffer.StructureByteStride = static_cast<UINT>(stride);
 	desc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
-	_structuredBufferView = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kFrameResourceCount);
+	_descriptor = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kFrameResourceCount);
 	for (size_t i = 0; i < kFrameResourceCount; ++i) {
 		if (pData != nullptr)
 			_pUploadBuffer->copyData(i, pData, sizeInByte, 0);
@@ -94,7 +94,7 @@ FRStructuredBuffer<T>::FRStructuredBuffer(std::weak_ptr<Device> pDevice, const T
 		pSharedDevice->getD3DDevice()->CreateShaderResourceView(
 			_pUploadBuffer->getD3DResource().Get(),
 			&desc,
-			_structuredBufferView.getCPUHandle(i)
+			_descriptor.getCPUHandle(i)
 		);
 	}
 }
@@ -105,9 +105,9 @@ WRL::ComPtr<ID3D12Resource> FRStructuredBuffer<T>::getD3DResource() const {
 }
 
 template <typename T>
-D3D12_CPU_DESCRIPTOR_HANDLE FRStructuredBuffer<T>::getShaderResourceView() const {
+ShaderResourceView FRStructuredBuffer<T>::getShaderResourceView() const {
 	size_t frameIndex = FrameIndexProxy::getConstantFrameIndexRef();
-	return _structuredBufferView.getCPUHandle(frameIndex);
+	return ShaderResourceView(_descriptor, frameIndex);
 }
 
 template <typename T>

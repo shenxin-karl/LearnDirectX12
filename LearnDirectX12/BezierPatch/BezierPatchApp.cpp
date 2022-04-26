@@ -59,9 +59,9 @@ void BezierPatchApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 
 	// draw bezier patch triangle
 	pDirectCtx->setGraphicsPSO(_pBezierPatchPSO);
-	pDirectCtx->setConstantBuffer(_pObjectCB, CB_Object);
-	pDirectCtx->setConstantBuffer(_pPassCB, CB_Pass);
-	pDirectCtx->setConstantBuffer(_pLightCB, CB_Light);
+	pDirectCtx->setConstantBufferView(_pObjectCB->getConstantBufferView(), CB_Object);
+	pDirectCtx->setConstantBufferView(_pPassCB->getConstantBufferView(), CB_Pass);
+	pDirectCtx->setConstantBufferView(_pLightCB->getConstantBufferView(), CB_Light);
 	pDirectCtx->setVertexBuffer(_pQuadMesh->getVertexBuffer());
 	pDirectCtx->setIndexBuffer(_pQuadMesh->getIndexBuffer());
 	pDirectCtx->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_16_CONTROL_POINT_PATCHLIST);

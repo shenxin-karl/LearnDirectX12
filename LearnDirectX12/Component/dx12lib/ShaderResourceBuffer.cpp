@@ -8,13 +8,8 @@ WRL::ComPtr<ID3D12Resource> ShaderResourceBuffer::getD3DResource() const {
 	return _pResource;
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE ShaderResourceBuffer::getShaderResourceView() const {
-	assert(isShaderSample());
-	return _shaderResourceView.getCPUHandle();
-}
-
-bool ShaderResourceBuffer::isShaderSample() const {
-	return _shaderResourceView.isValid();
+ShaderResourceView ShaderResourceBuffer::getShaderResourceView(size_t mipSlice) const {
+	return ShaderResourceView();
 }
 
 ShaderResourceBuffer::~ShaderResourceBuffer() {

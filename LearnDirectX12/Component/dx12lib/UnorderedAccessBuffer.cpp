@@ -9,17 +9,31 @@ WRL::ComPtr<ID3D12Resource> UnorderedAccessBuffer::getD3DResource() const {
 	return _pResource;
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE UnorderedAccessBuffer::getUnorderedAccessView() const {
-	return _unorderedAccessView.getCPUHandle();
+UnorderedAccessView UnorderedAccessBuffer::getUnorderedAccessView(size_t mipSlice) const {
+	assert(mipSlice < _pResource->GetDesc().MipLevels);
+	auto pSharedDevice = _pDevice.lock();
+	auto descriptor = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	_uavDesc.Texture2D.MipSlice = static_cast<UINT>(mipSlice);
+	pSharedDevice->getD3DDevice()->CreateUnorderedAccessView(
+		_pResource.Get(),
+		nullptr,
+		&_uavDesc,
+		descriptor.getCPUHandle()
+	);
+	return UnorderedAccessView(descriptor);
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE UnorderedAccessBuffer::getShaderResourceView() const {
-	assert(isShaderSample());
-	return _shaderResourceView.getCPUHandle();
-}
-
-bool UnorderedAccessBuffer::isShaderSample() const {
-	return _shaderResourceView.isValid();
+ShaderResourceView UnorderedAccessBuffer::getShaderResourceView(size_t mipSlice) const {
+	assert(mipSlice < _pResource->GetDesc().MipLevels);
+	auto pSharedDevice = _pDevice.lock();
+	auto descriptor = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	_uavDesc.Texture2D.MipSlice = static_cast<UINT>(mipSlice);
+	pSharedDevice->getD3DDevice()->CreateShaderResourceView(
+		_pResource.Get(),
+		&_srvDesc,
+		descriptor.getCPUHandle()
+	);
+	return ShaderResourceView(descriptor);
 }
 
 std::size_t UnorderedAccessBuffer::getBufferSize() const {
@@ -30,40 +44,11 @@ UnorderedAccessBuffer::~UnorderedAccessBuffer() {
 	ResourceStateTracker::removeGlobalResourceState(_pResource.Get());
 }
 
-void UnorderedAccessBuffer::createViews(std::weak_ptr<Device> pDevice, DXGI_FORMAT format) {
-	auto pSharedDevice = pDevice.lock();
-	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-	uavDesc.Format = format;
-	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-	uavDesc.Texture2D.MipSlice = 0;
-	uavDesc.Texture2D.PlaneSlice = 0;
-
-	_unorderedAccessView = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	pSharedDevice->getD3DDevice()->CreateUnorderedAccessView(
-		_pResource.Get(),
-		nullptr,
-		nullptr,
-		_unorderedAccessView.getCPUHandle()
-	);
-
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Format = format;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MostDetailedMip = 0;
-	srvDesc.Texture2D.MipLevels = 1;
-
-	_shaderResourceView = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	pSharedDevice->getD3DDevice()->CreateShaderResourceView(
-		_pResource.Get(),
-		&srvDesc,
-		_shaderResourceView.getCPUHandle()
-	);
-}
 
 UnorderedAccessBuffer::UnorderedAccessBuffer(std::weak_ptr<Device> pDevice, 
 	std::size_t width, std::size_t height,
-	DXGI_FORMAT format) 
+	DXGI_FORMAT format)
+: _uavDesc({}), _srvDesc({}), _pDevice(pDevice)
 {
 	D3D12_RESOURCE_DESC uavDesc = {};
 	uavDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
@@ -86,8 +71,9 @@ UnorderedAccessBuffer::UnorderedAccessBuffer(std::weak_ptr<Device> pDevice,
 		nullptr,
 		IID_PPV_ARGS(&_pResource)
 	));
-	createViews(pDevice, format);
 	ResourceStateTracker::addGlobalResourceState(_pResource.Get(), D3D12_RESOURCE_STATE_COMMON);
+	initViewDesc(format);
+	_resourceType = ResourceType::UnorderedAccessBuffer;
 }
 
 UnorderedAccessBuffer::UnorderedAccessBuffer(std::weak_ptr<Device> pDevice, 
@@ -97,8 +83,22 @@ UnorderedAccessBuffer::UnorderedAccessBuffer(std::weak_ptr<Device> pDevice,
 	assert(state == D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	_pResource = pResource;
 	auto format = pResource->GetDesc().Format;
-	createViews(pDevice, format);
 	ResourceStateTracker::addGlobalResourceState(pResource.Get(), state);
+	initViewDesc(format);
+	_resourceType = ResourceType::UnorderedAccessBuffer;
+}
+
+void UnorderedAccessBuffer::initViewDesc(DXGI_FORMAT format) {
+	_uavDesc.Format = format;
+	_uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+	_uavDesc.Texture2D.MipSlice = 0;
+	_uavDesc.Texture2D.PlaneSlice = 0;
+
+	_srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	_srvDesc.Format = format;
+	_srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	_srvDesc.Texture2D.MostDetailedMip = 0;
+	_srvDesc.Texture2D.MipLevels = 1;
 }
 
 }

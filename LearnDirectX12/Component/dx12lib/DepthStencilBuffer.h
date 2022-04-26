@@ -5,12 +5,11 @@
 
 namespace dx12lib {
 
-class DepthStencilBuffer : public IShaderSourceResource {
+class DepthStencilBuffer : public IResource {
 public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
-	D3D12_CPU_DESCRIPTOR_HANDLE getDepthStencilView() const;
-	D3D12_CPU_DESCRIPTOR_HANDLE getShaderResourceView() const override;
-	bool isShaderSample() const override;
+	DepthStencilView getDepthStencilView() const;
+	ShaderResourceView getShaderResourceView() const;
 	~DepthStencilBuffer() override;
 protected:
 	DepthStencilBuffer(std::weak_ptr<Device> pDevice, 
@@ -25,8 +24,8 @@ protected:
 	);
 	void createViews(std::weak_ptr<Device> pDevice);
 private:
-	DescriptorAllocation _depthStencilView;
-	DescriptorAllocation _shaderResourceView;
+	DepthStencilView _depthStencilView;
+	ShaderResourceView _shaderResourceView;
 	WRL::ComPtr<ID3D12Resource> _pResource;
 };
 

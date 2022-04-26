@@ -21,12 +21,13 @@ ConstantBuffer::ConstantBuffer(std::weak_ptr<Device> pDevice, const void *pData,
 
 	auto address = _pUploadBuffer->getGPUAddressByIndex(0);
 	auto pSharedDevice = pDevice.lock();
-	_CBV = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	auto descriptor = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	_constantBufferView = ConstantBufferView(descriptor);
 
 	D3D12_CONSTANT_BUFFER_VIEW_DESC cbv;
 	cbv.BufferLocation = address;
 	cbv.SizeInBytes = static_cast<UINT>(UploadBuffer::calcConstantBufferByteSize(sizeInByte));
-	pSharedDevice->getD3DDevice()->CreateConstantBufferView(&cbv, _CBV.getCPUHandle());
+	pSharedDevice->getD3DDevice()->CreateConstantBufferView(&cbv, _constantBufferView);
 	_resourceType = ResourceType::ConstantBuffer;
 }
 
@@ -53,9 +54,9 @@ size_t ConstantBuffer::getConstantBufferSize() const noexcept {
 	return _pUploadBuffer->getElementByteSize();
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE ConstantBuffer::getConstantBufferView() const {
+ConstantBufferView ConstantBuffer::getConstantBufferView() const {
 	_pUploadBuffer->unmap();
-	return _CBV.getCPUHandle();
+	return _constantBufferView;
 }
 
 }

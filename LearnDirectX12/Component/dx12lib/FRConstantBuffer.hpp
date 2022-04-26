@@ -14,7 +14,7 @@ protected:
 public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
 	bool isMapped() const override;
-	D3D12_CPU_DESCRIPTOR_HANDLE getConstantBufferView() const override;
+	ConstantBufferView getConstantBufferView() const override;
 	void updateConstantBuffer(const void *pData, size_t sizeInByte, size_t offset) override;
 	size_t getConstantBufferSize() const noexcept override;
 	void *map();
@@ -32,7 +32,7 @@ public:
 		return CBufferVisitor<T>(static_cast<const T *>(cmap()));
 	}
 private:
-	DescriptorAllocation _CBV;
+	DescriptorAllocation _descriptor;
 	std::unique_ptr<BYTE[]> _pObject;
 	std::unique_ptr<UploadBuffer> _pUploadBuffer;
 	mutable std::bitset<kFrameResourceCount> _bufferDirty;
@@ -49,7 +49,7 @@ protected:
 public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
 	bool isMapped() const override;
-	D3D12_CPU_DESCRIPTOR_HANDLE getConstantBufferView() const override;
+	ConstantBufferView getConstantBufferView() const override;
 	void updateConstantBuffer(const void *pData, size_t sizeInByte, size_t offset) override;
 	size_t getConstantBufferSize() const noexcept override;
 	T *map();
@@ -58,7 +58,7 @@ public:
 	CBufferVisitor<const T> visit() const;
 private:
 	T _object;
-	DescriptorAllocation _CBV;
+	DescriptorAllocation _descriptor;
 	std::unique_ptr<UploadBuffer> _pUploadBuffer;
 	mutable std::bitset<kFrameResourceCount> _bufferDirty;
 };
@@ -75,7 +75,7 @@ FRConstantBuffer<T>::FRConstantBuffer(std::weak_ptr<Device> pDevice, const T &ob
 		true
 	);
 
-	_CBV = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kFrameResourceCount);
+	_descriptor = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kFrameResourceCount);
 	for (size_t i = 0; i < kFrameResourceCount; ++i) {
 		_bufferDirty.set(i, true);
 		D3D12_CONSTANT_BUFFER_VIEW_DESC cbv;
@@ -83,7 +83,7 @@ FRConstantBuffer<T>::FRConstantBuffer(std::weak_ptr<Device> pDevice, const T &ob
 		cbv.SizeInBytes = static_cast<UINT>(UploadBuffer::calcConstantBufferByteSize(sizeof(T)));
 		pSharedDevice->getD3DDevice()->CreateConstantBufferView(
 			&cbv,
-			_CBV.getCPUHandle(i)
+			_descriptor.getCPUHandle(i)
 		);
 	}
 	_resourceType = ResourceType::ConstantBuffer;
@@ -100,13 +100,13 @@ bool FRConstantBuffer<T>::isMapped() const {
 }
 
 template <typename T>
-D3D12_CPU_DESCRIPTOR_HANDLE FRConstantBuffer<T>::getConstantBufferView() const {
+ConstantBufferView FRConstantBuffer<T>::getConstantBufferView() const {
 	size_t frameIndex = FrameIndexProxy::getConstantFrameIndexRef();
 	if (_bufferDirty.test(frameIndex)) {
 		_pUploadBuffer->copyData(frameIndex, &_object, getConstantBufferSize(), 0);
 		_bufferDirty.set(frameIndex, false);
 	}
-	return _CBV.getCPUHandle(frameIndex);
+	return ConstantBufferView(_descriptor, frameIndex);
 }
 
 template <typename T>

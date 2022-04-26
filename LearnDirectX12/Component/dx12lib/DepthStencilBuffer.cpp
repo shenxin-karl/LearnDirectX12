@@ -8,17 +8,12 @@ WRL::ComPtr<ID3D12Resource> DepthStencilBuffer::getD3DResource() const {
 	return _pResource;
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilBuffer::getDepthStencilView() const {
-	return _depthStencilView.getCPUHandle();
+DepthStencilView DepthStencilBuffer::getDepthStencilView() const {
+	return _depthStencilView;
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilBuffer::getShaderResourceView() const {
-	assert(_shaderResourceView.isValid());
-	return _shaderResourceView.getCPUHandle();
-}
-
-bool DepthStencilBuffer::isShaderSample() const {
-	return _shaderResourceView.isValid();
+ShaderResourceView DepthStencilBuffer::getShaderResourceView() const {
+	return _shaderResourceView;
 }
 
 DepthStencilBuffer::~DepthStencilBuffer() {
@@ -71,11 +66,11 @@ DepthStencilBuffer::DepthStencilBuffer(std::weak_ptr<Device> pDevice,
 
 void DepthStencilBuffer::createViews(std::weak_ptr<Device> pDevice) {
 	auto pSharedDevice = pDevice.lock();
-	_depthStencilView = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+	_depthStencilView = DepthStencilView(pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_DSV));
 	pSharedDevice->getD3DDevice()->CreateDepthStencilView(
 		_pResource.Get(),
 		nullptr,
-		_depthStencilView.getCPUHandle()
+		_depthStencilView
 	);
 
 	auto desc = _pResource->GetDesc();
@@ -88,11 +83,11 @@ void DepthStencilBuffer::createViews(std::weak_ptr<Device> pDevice) {
 	));
 
 	if (formatSupport.Support1 & D3D12_FORMAT_SUPPORT1_SHADER_SAMPLE) {
-		_shaderResourceView = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		_shaderResourceView = ShaderResourceView(pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 		pSharedDevice->getD3DDevice()->CreateShaderResourceView(
 			_pResource.Get(),
 			nullptr,
-			_shaderResourceView.getCPUHandle()
+			_shaderResourceView
 		);
 	}
 }

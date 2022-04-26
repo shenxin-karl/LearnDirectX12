@@ -27,6 +27,8 @@ public:
 
 	void setShaderResourceBufferImpl(std::shared_ptr<IShaderSourceResource> pTexture, size_t rootIndex, size_t offset) override;
 	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) override;
+	void setConstantBufferView(const ConstantBufferView &cbv, size_t rootIndex, size_t offset) override;
+	void setShaderResourceView(const ShaderResourceView &srv, size_t rootIndex, size_t offset) override;
 
 	void setStructuredBuffer(std::shared_ptr<StructuredBuffer> pStructuredBuffer, size_t rootIndex, size_t offset) override;
 	void setStructuredBufferImpl(std::shared_ptr<IStructuredBuffer> pStructuredBuffer, size_t rootIndex, size_t offset) override;

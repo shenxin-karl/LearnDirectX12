@@ -141,8 +141,8 @@ void BasicTessellationApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		pDirectCtx->clearColor(pRenderTargetBuffer, float4(DirectX::Colors::Black));
 		pDirectCtx->clearDepthStencil(pDepthStencilBuffer, 1.f, 0);
 		pDirectCtx->setGraphicsPSO(_pTessellationPSO);
-		pDirectCtx->setConstantBuffer(_pObjectCB, CB_Object);
-		pDirectCtx->setConstantBuffer(_pPassCB, CB_Pass);
+		pDirectCtx->setConstantBufferView(_pObjectCB->getConstantBufferView(), CB_Object);
+		pDirectCtx->setConstantBufferView(_pPassCB->getConstantBufferView(), CB_Pass);
 		pDirectCtx->setVertexBuffer(_pQuadMesh->getVertexBuffer());
 		pDirectCtx->setIndexBuffer(_pQuadMesh->getIndexBuffer());
 		pDirectCtx->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST);

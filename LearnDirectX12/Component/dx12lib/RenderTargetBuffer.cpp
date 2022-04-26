@@ -12,60 +12,49 @@ RenderTargetBuffer::~RenderTargetBuffer() {
 	ResourceStateTracker::removeGlobalResourceState(_pResource.Get());
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE RenderTargetBuffer::getRenderTargetView() const {
-	return _renderTargetView.getCPUHandle();
-}
+RenderTargetView RenderTargetBuffer::getRenderTargetView(size_t mipSlice) const {
+	assert(mipSlice < _pResource->GetDesc().MipLevels);
+	auto pSharedDevice = _pDevice.lock();
+	auto descriptor = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	_rtvDesc.Texture2D.MipSlice = static_cast<UINT>(mipSlice);
 
-D3D12_CPU_DESCRIPTOR_HANDLE RenderTargetBuffer::getShaderResourceView() const {
-	assert(_shaderResourceView.isValid());
-	return _shaderResourceView.getCPUHandle();
-}
-
-bool RenderTargetBuffer::isShaderSample() const {
-	return _shaderResourceView.isValid();
-}
-
-void RenderTargetBuffer::createViews(std::weak_ptr<Device> pDevice) {
-	auto pSharedDevice = pDevice.lock();
-	_renderTargetView = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	pSharedDevice->getD3DDevice()->CreateRenderTargetView(
+	pSharedDevice->getD3DDevice()->CreateShaderResourceView(
 		_pResource.Get(),
-		nullptr,
-		_renderTargetView.getCPUHandle()
+		&_srvDesc,
+		descriptor.getCPUHandle()
 	);
+	return RenderTargetView(descriptor);
+}
 
-	auto desc = _pResource->GetDesc();
-	D3D12_FEATURE_DATA_FORMAT_SUPPORT formatSupport;
-	formatSupport.Format = desc.Format;
-	ThrowIfFailed(pSharedDevice->getD3DDevice()->CheckFeatureSupport(
-		D3D12_FEATURE_FORMAT_SUPPORT,
-		&formatSupport,
-		sizeof(D3D12_FEATURE_DATA_FORMAT_SUPPORT)
-	));
-	if (formatSupport.Support1 & D3D12_FORMAT_SUPPORT1_SHADER_SAMPLE) {
-		_shaderResourceView = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		pSharedDevice->getD3DDevice()->CreateShaderResourceView(
-			_pResource.Get(),
-			nullptr,
-			_shaderResourceView.getCPUHandle()
-		);
-	}
+ShaderResourceView RenderTargetBuffer::getShaderResourceView(size_t mipSlice) const {
+	assert(mipSlice < _pResource->GetDesc().MipLevels);
+	auto pSharedDevice = _pDevice.lock();
+	auto descriptor = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	_srvDesc.Texture2D.MostDetailedMip = static_cast<UINT>(mipSlice);
+
+	pSharedDevice->getD3DDevice()->CreateShaderResourceView(
+		_pResource.Get(),
+		&_srvDesc,
+		descriptor.getCPUHandle()
+	);
+	return ShaderResourceView(descriptor);
 }
 
 RenderTargetBuffer::RenderTargetBuffer(std::weak_ptr<Device> 
-	pDevice, WRL::ComPtr<ID3D12Resource> pResrouce, 
+	pDevice, WRL::ComPtr<ID3D12Resource> pResource,
 	D3D12_RESOURCE_STATES state)
-: _pResource(pResrouce) 
+: _pDevice(pDevice), _pResource(pResource)
 {
-	createViews(pDevice);
 	ResourceStateTracker::addGlobalResourceState(_pResource.Get(), state);
+	initViewDesc(pResource->GetDesc().Format);
+	_resourceType = ResourceType::RenderTargetBuffer;
 }
 
 RenderTargetBuffer::RenderTargetBuffer(std::weak_ptr<Device> pDevice, 
 	uint32 width, 
 	uint32 height, 
 	D3D12_CLEAR_VALUE *pClearValue /*= nullptr*/, 
-	DXGI_FORMAT format /*= DXGI_FORMAT_UNKNOWN */) 
+	DXGI_FORMAT format /*= DXGI_FORMAT_UNKNOWN */) : _rtvDesc({}), _srvDesc({})
 {
 	D3D12_RESOURCE_DESC renderTargetDesc;
 	renderTargetDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
@@ -88,9 +77,24 @@ RenderTargetBuffer::RenderTargetBuffer(std::weak_ptr<Device> pDevice,
 		IID_PPV_ARGS(&_pResource)
 	));
 
-	createViews(pDevice);
-
 	ResourceStateTracker::addGlobalResourceState(_pResource.Get(), D3D12_RESOURCE_STATE_COMMON);
+	initViewDesc(format);
+	_resourceType = ResourceType::RenderTargetBuffer;
+}
+
+void RenderTargetBuffer::initViewDesc(DXGI_FORMAT format) {
+	_rtvDesc.Format = format;
+	_rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+	_rtvDesc.Texture2D.PlaneSlice = 0;
+	_rtvDesc.Texture2D.MipSlice = 0;
+
+	_srvDesc.Format = format;
+	_srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	_srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	_srvDesc.Texture2D.MostDetailedMip = 0;
+	_srvDesc.Texture2D.MipLevels = 1;
+	_srvDesc.Texture2D.PlaneSlice = 0;
+	_srvDesc.Texture2D.ResourceMinLODClamp = 0;
 }
 
 }

@@ -17,7 +17,7 @@ FRConstantBuffer<RawData>::FRConstantBuffer(std::weak_ptr<Device> pDevice, size_
 		true
 	);
 
-	_CBV = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kFrameResourceCount);
+	_descriptor = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kFrameResourceCount);
 	for (size_t i = 0; i < kFrameResourceCount; ++i) {
 		_bufferDirty.set(i, true);
 		D3D12_CONSTANT_BUFFER_VIEW_DESC cbv;
@@ -25,7 +25,7 @@ FRConstantBuffer<RawData>::FRConstantBuffer(std::weak_ptr<Device> pDevice, size_
 		cbv.SizeInBytes = static_cast<UINT>(UploadBuffer::calcConstantBufferByteSize(sizeInByte));
 		pSharedDevice->getD3DDevice()->CreateConstantBufferView(
 			&cbv,
-			_CBV.getCPUHandle(i)
+			_descriptor.getCPUHandle(i)
 		);
 	}
 
@@ -40,13 +40,13 @@ bool FRConstantBuffer<RawData>::isMapped() const {
 	return true;
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE FRConstantBuffer<RawData>::getConstantBufferView() const {
+ConstantBufferView FRConstantBuffer<RawData>::getConstantBufferView() const {
 	size_t frameIndex = FrameIndexProxy::getConstantFrameIndexRef();
 	if (_bufferDirty.test(frameIndex)) {
 		_pUploadBuffer->copyData(frameIndex, _pObject.get(), getConstantBufferSize(), 0);
 		_bufferDirty.set(frameIndex, false);
 	}
-	return _CBV.getCPUHandle(frameIndex);
+	return ConstantBufferView(_descriptor, frameIndex);
 }
 
 void FRConstantBuffer<RawData>::updateConstantBuffer(const void *pData, size_t sizeInByte, size_t offset) {

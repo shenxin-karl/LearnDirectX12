@@ -32,6 +32,8 @@ public:
 	virtual std::shared_ptr<ShaderResourceBuffer> createDDSCubeTextureFromMemory(const void *pData, size_t sizeInByte) = 0;
 	virtual void setShaderResourceBufferImpl(std::shared_ptr<IShaderSourceResource> pTexture, size_t rootIndex, size_t offset) = 0;
 	virtual	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) = 0;
+	virtual void setConstantBufferView(const ConstantBufferView &crv, size_t rootIndex, size_t offset = 0) = 0;
+	virtual void setShaderResourceView(const ShaderResourceView &srv, size_t rootIndex, size_t offset = 0) = 0;
 
 	virtual void setStructuredBuffer(std::shared_ptr<StructuredBuffer> pStructuredBuffer, size_t rootIndex, size_t offset = 0) = 0;
 	virtual void setStructuredBufferImpl(std::shared_ptr<IStructuredBuffer> pStructuredBuffer, size_t rootIndex, size_t offset) = 0;

@@ -17,7 +17,7 @@ public:
 	BYTE *getMappedPtr();
 	const BYTE *getMappedPtr() const;
 	size_t getConstantBufferSize() const noexcept override;
-	D3D12_CPU_DESCRIPTOR_HANDLE getConstantBufferView() const override;
+	ConstantBufferView getConstantBufferView() const override;
 
 	template<typename T>
 	CBufferVisitor<T> visit() {
@@ -31,7 +31,7 @@ public:
 		return CBufferVisitor<T>(getMappedPtr());
 	}
 private:
-	DescriptorAllocation _CBV;
+	ConstantBufferView _constantBufferView;
 	std::unique_ptr<UploadBuffer> _pUploadBuffer;
 };
 
