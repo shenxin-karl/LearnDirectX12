@@ -150,7 +150,7 @@ void MirrorApp::drawRenderItems(dx12lib::DirectContextProxy pDirectCtx, RenderLa
 		pDirectCtx->setVertexBuffer(rItem._pMesh->getVertexBuffer());
 		pDirectCtx->setIndexBuffer(rItem._pMesh->getIndexBuffer());
 		pDirectCtx->setConstantBufferView(rItem._pObjectCB->getConstantBufferView(), CBObject);
-		pDirectCtx->setShaderResourceBuffer(rItem._pAlbedoMap, SRAlbedo);
+		pDirectCtx->setShaderResourceView(rItem._pAlbedoMap->getShaderResourceView(), SRAlbedo);
 		rItem._submesh.drawIndexdInstanced(pDirectCtx);
 	}
 }
@@ -194,10 +194,10 @@ void MirrorApp::buildConstantBuffers(dx12lib::DirectContextProxy pDirectCtx) {
 }
 
 void MirrorApp::loadTextures(dx12lib::DirectContextProxy pDirectCtx) {
-	_textureMap["checkboard.dds"] = pDirectCtx->createDDSTextureFromFile(L"resource/checkboard.dds");
-	_textureMap["ice.dds"] = pDirectCtx->createDDSTextureFromFile(L"resource/ice.dds");
-	_textureMap["white1x1.dds"] = pDirectCtx->createDDSTextureFromFile(L"resource/white1x1.dds");
-	_textureMap["bricks3.dds"] = pDirectCtx->createDDSTextureFromFile(L"resource/bricks3.dds");
+	_textureMap["checkboard.dds"] = pDirectCtx->createDDSTexture2DFromFile(L"resource/checkboard.dds");
+	_textureMap["ice.dds"] = pDirectCtx->createDDSTexture2DFromFile(L"resource/ice.dds");
+	_textureMap["white1x1.dds"] = pDirectCtx->createDDSTexture2DFromFile(L"resource/white1x1.dds");
+	_textureMap["bricks3.dds"] = pDirectCtx->createDDSTexture2DFromFile(L"resource/bricks3.dds");
 }
 
 void MirrorApp::buildMaterials() {

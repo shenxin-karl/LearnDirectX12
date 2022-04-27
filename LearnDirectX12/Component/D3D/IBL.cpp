@@ -99,7 +99,7 @@ IBL::IBL(dx12lib::GraphicsContextProxy pGraphicsCtx, const std::string &fileName
 	test(_irradianceMapSH3);
 
 	cmrc::file brdfLutFile = getD3DResource("resources/BRDF_LUT.dds");
-	_pBRDFLut = pGraphicsCtx->createDDSTextureFromMemory(brdfLutFile.begin(), brdfLutFile.size());
+	_pBRDFLut = pGraphicsCtx->createDDSTexture2DFromMemory(brdfLutFile.begin(), brdfLutFile.size());
 }
 
 }

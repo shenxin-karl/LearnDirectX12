@@ -5,12 +5,13 @@
 
 namespace dx12lib {
 
-class RenderTargetBuffer : public IResource{
+class RenderTargetBuffer : public IShaderSourceResource, public IRenderTargetResource {
 public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
 	~RenderTargetBuffer() override;
-	RenderTargetView getRenderTargetView(size_t mipSlice = 0) const;
-	ShaderResourceView getShaderResourceView(size_t mipSlice = 0) const;
+	RenderTargetView getRenderTargetView(size_t mipSlice = 0) const override;
+	ShaderResourceView getShaderResourceView(size_t mipSlice = 0) const override;
+	ResourceType getResourceType() const override;
 protected:
 	RenderTargetBuffer(std::weak_ptr<Device> pDevice, 
 		WRL::ComPtr<ID3D12Resource> pResource, 

@@ -8,6 +8,10 @@ WRL::ComPtr<ID3D12Resource> ReadBackBuffer::getD3DResource() const {
 	return _pResource;
 }
 
+ResourceType ReadBackBuffer::getResourceType() const {
+	return ResourceType::ReadBackBuffer;
+}
+
 ReadBackBuffer::~ReadBackBuffer() {
 	if (_pMapped != nullptr) {
 		_pResource->Unmap(0, nullptr);
@@ -40,7 +44,6 @@ ReadBackBuffer::ReadBackBuffer(std::weak_ptr<Device> pDevice, std::size_t sizeIn
 		nullptr,
 		IID_PPV_ARGS(&_pResource)
 	));
-	_resourceType = ResourceType::ReadBackBuffer;
 	ResourceStateTracker::addGlobalResourceState(_pResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST);
 }
 

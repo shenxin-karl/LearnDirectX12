@@ -117,7 +117,7 @@ std::shared_ptr<FRStructuredBuffer<RawData>> CommandList::createFRRawStructuredB
 	);
 }
 
-std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSTextureFromFile(const std::wstring &fileName) {
+std::shared_ptr<Texture2D> CommandList::createDDSTexture2DFromFile(const std::wstring &fileName) {
 	WRL::ComPtr<ID3D12Resource> pTexture;
 	WRL::ComPtr<ID3D12Resource> pUploadHeap;
 	DirectX::CreateDDSTextureFromFile12(_pDevice.lock()->getD3DDevice(),
@@ -127,14 +127,15 @@ std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSTextureFromFile(cons
 		pUploadHeap
 	);
 	assert(pTexture != nullptr && pUploadHeap != nullptr);
-	return std::make_shared<dx12libTool::MakeShaderResourceBuffer>(_pDevice,
+	assert(pTexture->GetDesc().Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D);
+	return std::make_shared<dx12libTool::MakeTexture2D>(_pDevice,
 		pTexture,
 		pUploadHeap,
 		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
 	);
 }
 
-std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSTextureFromMemory(const void *pData,
+std::shared_ptr<Texture2D> CommandList::createDDSTexture2DFromMemory(const void *pData,
 	std::size_t sizeInByte) {
 	WRL::ComPtr<ID3D12Resource> pTexture;
 	WRL::ComPtr<ID3D12Resource> pUploadHeap;
@@ -146,14 +147,15 @@ std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSTextureFromMemory(co
 		pUploadHeap
 	);
 	assert(pTexture != nullptr && pUploadHeap != nullptr);
-	return std::make_shared<dx12libTool::MakeShaderResourceBuffer>(_pDevice,
+	assert(pTexture->GetDesc().Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D);
+	return std::make_shared<dx12libTool::MakeTexture2D>(_pDevice,
 		pTexture,
 		pUploadHeap,
 		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
 	);
 }
 
-std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSCubeTextureFromFile(const std::wstring &fileName) {
+std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSTextureCubeFromFile(const std::wstring &fileName) {
 	WRL::ComPtr<ID3D12Resource> pTexture;
 	WRL::ComPtr<ID3D12Resource> pUploadHeap;
 	DirectX::CreateDDSTextureFromFile12(_pDevice.lock()->getD3DDevice(),
@@ -179,7 +181,7 @@ std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSCubeTextureFromFile(
 	);
 }
 
-std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSCubeTextureFromMemory(const void *pData, 
+std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSTextureCubeFromMemory(const void *pData, 
 	size_t sizeInByte)
 {
 	WRL::ComPtr<ID3D12Resource> pTexture;

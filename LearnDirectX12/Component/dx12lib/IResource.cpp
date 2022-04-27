@@ -28,4 +28,9 @@ size_t IResource::getMipmapLevels() const {
 	return getD3DResource()->GetDesc().MipLevels;
 }
 
+ResourceType IResource::getResourceType() const {
+	assert(false);
+	return ResourceType::Unknown;
+}
+
 }

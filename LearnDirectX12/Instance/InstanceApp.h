@@ -68,7 +68,7 @@ private:
 	std::shared_ptr<d3d::FirstPersonCamera> _pCamera;
 	std::shared_ptr<dx12lib::GraphicsPSO>   _pInstancePSO;
 
-	std::vector<std::shared_ptr<dx12lib::ShaderResourceBuffer>> _textures;
+	std::vector<std::shared_ptr<dx12lib::Texture2D>> _textures;
 	std::vector<d3d::Material> _materials;
 
 	std::unordered_map<std::string, std::shared_ptr<d3d::Mesh>> _geometryMap;

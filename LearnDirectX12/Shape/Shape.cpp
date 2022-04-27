@@ -339,8 +339,8 @@ void Shape::buildMaterials() {
 }
 
 void Shape::loadTextures(dx12lib::DirectContextProxy pDirectCtx) {
-	_textureMap["bricks.dds"] = pDirectCtx->createDDSTextureFromFile(L"resource/bricks.dds");
-	_textureMap["tile.dds"] = pDirectCtx->createDDSTextureFromFile(L"resource/tile.dds");
+	_textureMap["bricks.dds"] = pDirectCtx->createDDSTexture2DFromFile(L"resource/bricks.dds");
+	_textureMap["tile.dds"] = pDirectCtx->createDDSTexture2DFromFile(L"resource/tile.dds");
 }
 
 void Shape::renderShapesPass(dx12lib::DirectContextProxy pDirectCtx) {
@@ -357,7 +357,7 @@ void Shape::renderShapesPass(dx12lib::DirectContextProxy pDirectCtx) {
 		pDirectCtx->setIndexBuffer(rItem._pMesh->_pIndexBuffer);
 		pDirectCtx->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		pDirectCtx->setConstantBufferView(rItem._pObjectCB->getConstantBufferView(), ShapeRootParameType::CBObject);
-		pDirectCtx->setShaderResourceBuffer(rItem._pAlbedo, ShapeRootParameType::SRAlbedo);
+		pDirectCtx->setShaderResourceView(rItem._pAlbedo->getShaderResourceView(), ShapeRootParameType::SRAlbedo);
 		pDirectCtx->drawIndexedInstanced(
 			rItem._pMesh->_pIndexBuffer->getIndexCount(), 1, 0,
 			0, 0

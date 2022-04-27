@@ -22,14 +22,13 @@ void FXAA::_produceImpl(dx12lib::ComputeContextProxy pComputeCtx,
 	std::shared_ptr<dx12lib::IShaderSourceResource> pInput) const
 {
 	assert(pInput != nullptr);
-	assert(pInput->isShaderSample());
 	tryBuildConsolePSO(pComputeCtx->getDevice());
 
 	pComputeCtx->transitionBarrier(pInput, D3D12_RESOURCE_STATE_GENERIC_READ);
 	pComputeCtx->transitionBarrier(_pOutputMap, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	pComputeCtx->setComputePSO(_pConsolePSO);
 	updateFXAASetting(pComputeCtx);
-	pComputeCtx->setShaderResourceBuffer(pInput, SR_Input);
+	pComputeCtx->setShaderResourceView(pInput->getShaderResourceView(), SR_Input);
 	pComputeCtx->setUnorderedAccessBuffer(_pOutputMap, UA_Output);
 	std::size_t numXGroup = static_cast<std::size_t>(std::ceil(float(_width) / float(kFXAAThreadCount)));
 	std::size_t numYGroup = static_cast<std::size_t>(std::ceil(float(_height) / float(kFXAAThreadCount)));

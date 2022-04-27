@@ -10,6 +10,7 @@ public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
 	DepthStencilView getDepthStencilView() const;
 	ShaderResourceView getShaderResourceView() const;
+	ResourceType getResourceType() const override;
 	~DepthStencilBuffer() override;
 protected:
 	DepthStencilBuffer(std::weak_ptr<Device> pDevice, 

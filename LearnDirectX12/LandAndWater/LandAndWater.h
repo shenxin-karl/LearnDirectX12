@@ -117,5 +117,5 @@ private:
 	std::map<std::string, std::shared_ptr<d3d::Mesh>> _geometryMap;
 	std::map<std::string, std::vector<RenderItem>> _renderItemMap;
 	std::map<std::string, std::shared_ptr<dx12lib::GraphicsPSO>> _psoMap;
-	std::map<std::string, std::shared_ptr<dx12lib::ShaderResourceBuffer>> _textureMap;
+	std::map<std::string, std::shared_ptr<dx12lib::Texture2D>> _textureMap;
 };

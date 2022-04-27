@@ -18,7 +18,6 @@ VertexBuffer::VertexBuffer(std::weak_ptr<Device> pDevice, std::shared_ptr<Comman
 		pData, 
 		sizeInByte
 	);
-	_resourceType = ResourceType::VertexBuffer;
 }
 
 VertexBuffer::VertexBuffer(VertexBuffer &&other) noexcept : VertexBuffer() {
@@ -54,6 +53,10 @@ WRL::ComPtr<ID3D12Resource> VertexBuffer::getD3DResource() const {
 	if (_pDefaultBuffer == nullptr)
 		return nullptr;
 	return _pDefaultBuffer->getD3DResource();
+}
+
+ResourceType VertexBuffer::getResourceType() const {
+	return ResourceType::VertexBuffer;
 }
 
 VertexBuffer &VertexBuffer::operator=(VertexBuffer &&other) noexcept {

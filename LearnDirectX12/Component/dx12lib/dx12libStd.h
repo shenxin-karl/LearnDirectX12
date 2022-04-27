@@ -127,7 +127,7 @@ class ReadBackBuffer;
 class DepthStencilBuffer;
 class RenderTargetBuffer;
 class ShaderResourceBuffer;
-class IShaderSourceResource;
+class Texture2D;
 class IResource;
 
 struct NonCopyable {

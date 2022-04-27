@@ -16,7 +16,7 @@ public:
 
 	void onResize(dx12lib::ComputeContextProxy pComputeList, std::uint32_t width, std::uint32_t height);
 
-	template<typename T> requires(std::is_base_of_v<dx12lib::IShaderSourceResource, T>)
+	template<typename T> 
 	void produce(dx12lib::ComputeContextProxy pComputeList,
 		std::shared_ptr<T> pShaderResource, 
 		int blurCount,
@@ -26,7 +26,7 @@ public:
 	}
 
 	void produceImpl(dx12lib::ComputeContextProxy pComputeList,
-		std::shared_ptr<dx12lib::IShaderSourceResource> pShaderResource,
+		std::shared_ptr<dx12lib::IResource> pResource,
 		int blurCount,
 		float sigma
 	);

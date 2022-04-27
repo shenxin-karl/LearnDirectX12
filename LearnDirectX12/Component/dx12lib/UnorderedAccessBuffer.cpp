@@ -36,6 +36,10 @@ ShaderResourceView UnorderedAccessBuffer::getShaderResourceView(size_t mipSlice)
 	return ShaderResourceView(descriptor);
 }
 
+ResourceType UnorderedAccessBuffer::getResourceType() const {
+	return ResourceType::UnorderedAccessBuffer | ResourceType::ShaderResourceBuffer;
+}
+
 std::size_t UnorderedAccessBuffer::getBufferSize() const {
 	return _pResource->GetDesc().Width;
 }
@@ -73,7 +77,6 @@ UnorderedAccessBuffer::UnorderedAccessBuffer(std::weak_ptr<Device> pDevice,
 	));
 	ResourceStateTracker::addGlobalResourceState(_pResource.Get(), D3D12_RESOURCE_STATE_COMMON);
 	initViewDesc(format);
-	_resourceType = ResourceType::UnorderedAccessBuffer;
 }
 
 UnorderedAccessBuffer::UnorderedAccessBuffer(std::weak_ptr<Device> pDevice, 
@@ -85,7 +88,6 @@ UnorderedAccessBuffer::UnorderedAccessBuffer(std::weak_ptr<Device> pDevice,
 	auto format = pResource->GetDesc().Format;
 	ResourceStateTracker::addGlobalResourceState(pResource.Get(), state);
 	initViewDesc(format);
-	_resourceType = ResourceType::UnorderedAccessBuffer;
 }
 
 void UnorderedAccessBuffer::initViewDesc(DXGI_FORMAT format) {

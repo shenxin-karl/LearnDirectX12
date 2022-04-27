@@ -195,7 +195,7 @@ void LandAndWater::drawOpaqueRenderItems(dx12lib::DirectContextProxy pDirectCtx,
 		pDirectCtx->setVertexBuffer(rItem._pMesh->getVertexBuffer());
 		pDirectCtx->setIndexBuffer(rItem._pMesh->getIndexBuffer());
 		pDirectCtx->setConstantBuffer(rItem._pConstantBuffer, CBObject);
-		pDirectCtx->setShaderResourceBuffer(rItem._pAlbedoMap, SRAlbedo);
+		pDirectCtx->setShaderResourceView(rItem._pAlbedoMap->getShaderResourceView(), SRAlbedo);
 		rItem._pMesh->drawIndexdInstanced(pDirectCtx);
 	}
 }
@@ -403,10 +403,10 @@ void LandAndWater::buildTreeBillBoards(dx12lib::DirectContextProxy pGrahpicsCtx)
 }
 
 void LandAndWater::loadTextures(dx12lib::DirectContextProxy pGrahpicsCtx) {
-	_textureMap["grass.dds"] = pGrahpicsCtx->createDDSTextureFromFile(L"resources/grass.dds");
-	_textureMap["WoodCrate02.dds"] = pGrahpicsCtx->createDDSTextureFromFile(L"resources/WoodCrate02.dds");
-	_textureMap["WireFence.dds"] = pGrahpicsCtx->createDDSTextureFromFile(L"resources/WireFence.dds");
-	_textureMap["treeArray2.dds"] = pGrahpicsCtx->createDDSTextureFromFile(L"resources/treeArray2.dds");
+	_textureMap["grass.dds"] = pGrahpicsCtx->createDDSTexture2DFromFile(L"resources/grass.dds");
+	_textureMap["WoodCrate02.dds"] = pGrahpicsCtx->createDDSTexture2DFromFile(L"resources/WoodCrate02.dds");
+	_textureMap["WireFence.dds"] = pGrahpicsCtx->createDDSTexture2DFromFile(L"resources/WireFence.dds");
+	_textureMap["treeArray2.dds"] = pGrahpicsCtx->createDDSTexture2DFromFile(L"resources/treeArray2.dds");
 }
 
 void LandAndWater::buildMaterials() {

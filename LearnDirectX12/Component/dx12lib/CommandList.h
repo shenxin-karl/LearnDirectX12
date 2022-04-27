@@ -20,10 +20,10 @@ public:
 	std::shared_ptr<FRConstantBuffer<RawData>> createFRRawConstantBuffer(size_t sizeInByte, const void *pData) override;
 	std::shared_ptr<StructuredBuffer> createStructuredBuffer(const void *pData, size_t numElements, size_t stride) override;
 	std::shared_ptr<FRStructuredBuffer<RawData>> createFRRawStructuredBuffer(const void *pData, size_t numElements, size_t stride) override;
-	std::shared_ptr<ShaderResourceBuffer> createDDSTextureFromFile(const std::wstring &fileName) override;
-	std::shared_ptr<ShaderResourceBuffer> createDDSTextureFromMemory(const void *pData, size_t sizeInByte) override;
-	std::shared_ptr<ShaderResourceBuffer> createDDSCubeTextureFromFile(const std::wstring &fileName) override;
-	std::shared_ptr<ShaderResourceBuffer> createDDSCubeTextureFromMemory(const void *pData, size_t sizeInByte) override;
+	std::shared_ptr<Texture2D> createDDSTexture2DFromFile(const std::wstring &fileName) override;
+	std::shared_ptr<Texture2D> createDDSTexture2DFromMemory(const void *pData, size_t sizeInByte) override;
+	std::shared_ptr<ShaderResourceBuffer> createDDSTextureCubeFromFile(const std::wstring &fileName) override;
+	std::shared_ptr<ShaderResourceBuffer> createDDSTextureCubeFromMemory(const void *pData, size_t sizeInByte) override;
 
 	void setShaderResourceBufferImpl(std::shared_ptr<IShaderSourceResource> pTexture, size_t rootIndex, size_t offset) override;
 	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) override;

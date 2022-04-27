@@ -34,7 +34,7 @@ void BlurFilter::onResize(dx12lib::ComputeContextProxy pComputeList, std::uint32
 }
 
 void BlurFilter::produceImpl(dx12lib::ComputeContextProxy pComputeList,
-	std::shared_ptr<dx12lib::IShaderSourceResource> pShaderResource,
+	std::shared_ptr<dx12lib::IResource> pResource,
 	int blurCount,
 	float sigma)
 {
@@ -45,12 +45,11 @@ void BlurFilter::produceImpl(dx12lib::ComputeContextProxy pComputeList,
 		pComputeList->setCompute32BitConstants(CB_BlurParame, 11, weights.data(), 1);
 	};
 
-	assert(pShaderResource->isShaderSample());
-	pComputeList->copyResource(_pBlurMap1, pShaderResource);
+	pComputeList->copyResource(_pBlurMap1, pResource);
 	for (int i = 0; i < blurCount; ++i) {
 		// horizonal blur
 		pComputeList->setComputePSO(_pHorzBlurPSO);
-		pComputeList->setShaderResourceBuffer(_pBlurMap1, SR_Input);
+		pComputeList->setShaderResourceView(_pBlurMap1->getShaderResourceView(), SR_Input);
 		pComputeList->setUnorderedAccessBuffer(_pBlurMap0, UA_Output);
 		updateConstantBuffer();
 		pComputeList->transitionBarrier(_pBlurMap1, D3D12_RESOURCE_STATE_GENERIC_READ);
@@ -60,12 +59,12 @@ void BlurFilter::produceImpl(dx12lib::ComputeContextProxy pComputeList,
 		
 		// vertical blur
 		pComputeList->setComputePSO(_pVertBlurPSO);
-		pComputeList->setShaderResourceBuffer(_pBlurMap0, SR_Input);
+		pComputeList->setShaderResourceView(_pBlurMap1->getShaderResourceView(), SR_Input);
 		pComputeList->setUnorderedAccessBuffer(_pBlurMap1, UA_Output);
 		updateConstantBuffer();
 		pComputeList->transitionBarrier(_pBlurMap0, D3D12_RESOURCE_STATE_GENERIC_READ);
 		pComputeList->transitionBarrier(_pBlurMap1, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-		int numYGroup = static_cast<int>(std::ceil(_height / float(kMaxThreads)));
+		int numYGroup = static_cast<int>(std::ceil(_height / static_cast<float>(kMaxThreads)));
 		pComputeList->dispatch(_width, numYGroup, 1);
 	}
 }

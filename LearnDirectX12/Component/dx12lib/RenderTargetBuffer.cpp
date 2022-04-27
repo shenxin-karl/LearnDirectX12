@@ -40,14 +40,17 @@ ShaderResourceView RenderTargetBuffer::getShaderResourceView(size_t mipSlice) co
 	return ShaderResourceView(descriptor);
 }
 
+ResourceType RenderTargetBuffer::getResourceType() const {
+	return ResourceType::RenderTargetBuffer | ResourceType::ShaderResourceBuffer;
+}
+
 RenderTargetBuffer::RenderTargetBuffer(std::weak_ptr<Device> 
-	pDevice, WRL::ComPtr<ID3D12Resource> pResource,
-	D3D12_RESOURCE_STATES state)
+                                       pDevice, WRL::ComPtr<ID3D12Resource> pResource,
+                                       D3D12_RESOURCE_STATES state)
 : _pDevice(pDevice), _pResource(pResource)
 {
 	ResourceStateTracker::addGlobalResourceState(_pResource.Get(), state);
 	initViewDesc(pResource->GetDesc().Format);
-	_resourceType = ResourceType::RenderTargetBuffer;
 }
 
 RenderTargetBuffer::RenderTargetBuffer(std::weak_ptr<Device> pDevice, 
@@ -79,7 +82,6 @@ RenderTargetBuffer::RenderTargetBuffer(std::weak_ptr<Device> pDevice,
 
 	ResourceStateTracker::addGlobalResourceState(_pResource.Get(), D3D12_RESOURCE_STATE_COMMON);
 	initViewDesc(format);
-	_resourceType = ResourceType::RenderTargetBuffer;
 }
 
 void RenderTargetBuffer::initViewDesc(DXGI_FORMAT format) {

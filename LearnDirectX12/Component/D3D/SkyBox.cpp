@@ -16,7 +16,7 @@ SkyBox::SkyBox(const SkyBoxDesc &desc) : _pCubeMap(desc.pCubeMap) {
 
 	_pViewProj = pGraphicsCtx->createFRConstantBuffer<float4x4>();
 	if (_pCubeMap == nullptr)
-		_pCubeMap = pGraphicsCtx->createDDSCubeTextureFromFile(desc.filename);
+		_pCubeMap = pGraphicsCtx->createDDSTextureCubeFromFile(desc.filename);
 
 
 	// build Root Signature
@@ -87,7 +87,7 @@ void SkyBox::render(dx12lib::GraphicsContextProxy pGraphicsCtx, std::shared_ptr<
 
 	pGraphicsCtx->setGraphicsPSO(_pSkyBoxPSO);
 	pGraphicsCtx->setConstantBufferView(_pViewProj->getConstantBufferView(), CB_Setting);
-	pGraphicsCtx->setShaderResourceBuffer(_pCubeMap, SR_CubeMap);
+	pGraphicsCtx->setShaderResourceView(_pCubeMap->getShaderResourceView(), SR_CubeMap);
 	pGraphicsCtx->setPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	pGraphicsCtx->setVertexBuffer(_pCubeVertexBuffer);
 	pGraphicsCtx->drawInstanced(_pCubeVertexBuffer->getVertexCount(), 1, 0);

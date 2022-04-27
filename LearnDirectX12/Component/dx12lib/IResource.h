@@ -16,15 +16,22 @@ public:
 	virtual bool isMapped() const;
 	virtual DXGI_FORMAT getFormat() const;
 	virtual size_t getMipmapLevels() const;
-	ResourceType getResourceType() const {  return _resourceType; }
-protected:
-	ResourceType _resourceType = ResourceType::Unknown;
+	virtual ResourceType getResourceType() const;
 };
 
 class IShaderSourceResource : public IResource {
 public:
 	virtual ShaderResourceView getShaderResourceView(size_t mipLevel = 0) const = 0;
-	virtual bool isShaderSample() const = 0;
+};
+
+class IRenderTargetResource : public IResource {
+public:
+	virtual RenderTargetView getRenderTargetView(size_t mipSlice = 0) const = 0;
+};
+
+class IUnorderedAccessBuffer : public IResource {
+public:
+	virtual UnorderedAccessView getUnorderedAccessView(size_t mipSlice = 0) const = 0;
 };
 
 class IConstantBuffer : public IResource {

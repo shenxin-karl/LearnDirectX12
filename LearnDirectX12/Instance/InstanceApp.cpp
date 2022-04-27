@@ -76,7 +76,7 @@ void InstanceApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 
 		size_t srvCount = std::min(_textures.size(), kMaxTextureArraySize);
 		for (size_t idx = 0; idx < srvCount; ++idx)
-			pDirectCtx->setShaderResourceBuffer(_textures[idx], SR_DiffuseMapArray, idx);
+			pDirectCtx->setShaderResourceView(_textures[idx]->getShaderResourceView(), SR_DiffuseMapArray, idx);
 
 		std::vector<RenderItem> renderItems = cullingByFrustum();
 		doDrawInstance(pDirectCtx, _geometryMap["skull"], renderItems);
@@ -140,9 +140,9 @@ void InstanceApp::buildBuffer(dx12lib::CommonContextProxy pCommonCtx) {
 }
 
 void InstanceApp::loadTextures(dx12lib::CommonContextProxy pCommonCtx) {
-	auto pTex1 = pCommonCtx->createDDSTextureFromFile(L"resources/grass.dds");
-	auto pTex2 = pCommonCtx->createDDSTextureFromFile(L"resources/stone.dds");
-	auto pTex3 = pCommonCtx->createDDSTextureFromFile(L"resources/white1x1.dds");
+	auto pTex1 = pCommonCtx->createDDSTexture2DFromFile(L"resources/grass.dds");
+	auto pTex2 = pCommonCtx->createDDSTexture2DFromFile(L"resources/stone.dds");
+	auto pTex3 = pCommonCtx->createDDSTexture2DFromFile(L"resources/white1x1.dds");
 	_textures.push_back(pTex1);
 	_textures.push_back(pTex2);
 	_textures.push_back(pTex3);

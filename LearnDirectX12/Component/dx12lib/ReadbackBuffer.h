@@ -8,6 +8,7 @@ namespace dx12lib {
 class ReadBackBuffer : public IResource {
 public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
+	ResourceType getResourceType() const override;
 	~ReadBackBuffer() override;
 	bool isCompleted() const;
 	bool isMapped() const override;

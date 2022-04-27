@@ -24,7 +24,6 @@ IndexBuffer::IndexBuffer(std::weak_ptr<Device> pDevice,
 		pData, 
 		sizeInByte
 	);
-	_resourceType = ResourceType::IndexBuffer;
 }
 
 IndexBuffer::IndexBuffer(IndexBuffer &&other) noexcept : IndexBuffer() {
@@ -79,6 +78,10 @@ WRL::ComPtr<ID3D12Resource> IndexBuffer::getD3DResource() const {
 	if (_pDefaultBUffer == nullptr)
 		return nullptr;
 	return _pDefaultBUffer->getD3DResource();
+}
+
+ResourceType IndexBuffer::getResourceType() const {
+	return ResourceType::IndexBuffer;
 }
 
 IndexBuffer &IndexBuffer::operator=(IndexBuffer &&other) noexcept {

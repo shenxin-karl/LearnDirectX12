@@ -26,10 +26,10 @@ public:
 	virtual std::shared_ptr<FRConstantBuffer<RawData>> createFRRawConstantBuffer(size_t sizeInByte, const void *pData = nullptr) = 0;
 	virtual std::shared_ptr<StructuredBuffer> createStructuredBuffer(const void *pData, size_t numElements, size_t stride) = 0;
 	virtual std::shared_ptr<FRStructuredBuffer<RawData>> createFRRawStructuredBuffer(const void *pData, size_t numElements, size_t stride) = 0;
-	virtual std::shared_ptr<ShaderResourceBuffer> createDDSTextureFromFile(const std::wstring &fileName) = 0;
-	virtual std::shared_ptr<ShaderResourceBuffer> createDDSTextureFromMemory(const void *pData, size_t sizeInByte) = 0;
-	virtual std::shared_ptr<ShaderResourceBuffer> createDDSCubeTextureFromFile(const std::wstring &fileName) = 0;
-	virtual std::shared_ptr<ShaderResourceBuffer> createDDSCubeTextureFromMemory(const void *pData, size_t sizeInByte) = 0;
+	virtual std::shared_ptr<Texture2D> createDDSTexture2DFromFile(const std::wstring &fileName) = 0;
+	virtual std::shared_ptr<Texture2D> createDDSTexture2DFromMemory(const void *pData, size_t sizeInByte) = 0;
+	virtual std::shared_ptr<ShaderResourceBuffer> createDDSTextureCubeFromFile(const std::wstring &fileName) = 0;
+	virtual std::shared_ptr<ShaderResourceBuffer> createDDSTextureCubeFromMemory(const void *pData, size_t sizeInByte) = 0;
 	virtual void setShaderResourceBufferImpl(std::shared_ptr<IShaderSourceResource> pTexture, size_t rootIndex, size_t offset) = 0;
 	virtual	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) = 0;
 	virtual void setConstantBufferView(const ConstantBufferView &crv, size_t rootIndex, size_t offset = 0) = 0;

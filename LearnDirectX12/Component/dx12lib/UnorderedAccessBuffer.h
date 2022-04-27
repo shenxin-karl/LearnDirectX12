@@ -10,6 +10,7 @@ public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
 	UnorderedAccessView getUnorderedAccessView(size_t mipSlice = 0) const;
 	ShaderResourceView getShaderResourceView(size_t mipSlice = 0) const;
+	ResourceType getResourceType() const override;
 	std::size_t getBufferSize() const;
 	~UnorderedAccessBuffer() override;
 protected:

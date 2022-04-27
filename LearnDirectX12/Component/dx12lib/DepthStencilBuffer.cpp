@@ -16,6 +16,10 @@ ShaderResourceView DepthStencilBuffer::getShaderResourceView() const {
 	return _shaderResourceView;
 }
 
+ResourceType DepthStencilBuffer::getResourceType() const {
+	return ResourceType::DepthStencilBuffer | ResourceType::ShaderResourceBuffer;
+}
+
 DepthStencilBuffer::~DepthStencilBuffer() {
 	ResourceStateTracker::removeGlobalResourceState(_pResource.Get());
 }

@@ -13,8 +13,14 @@ public:
 		DXGI_FORMAT format
 	);
 
-	template<typename T> requires(std::is_base_of_v<dx12lib::IShaderSourceResource, T>)
+	template<typename T> requires(std::is_base_of_v<dx12lib::IResource, T>)
 	void produce(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<T> pInput) const {
+		auto pResource = std::static_pointer_cast<dx12lib::IResource>(pInput);
+		if (!(pResource->getResourceType() & dx12lib::ResourceType::ShaderResourceBuffer)) {
+			assert(false);
+			throw std::invalid_argument("pInput resource type invalid");
+		}
+
 		_produceImpl(
 			pComputeCtx,
 			std::static_pointer_cast<dx12lib::IShaderSourceResource>(pInput)
