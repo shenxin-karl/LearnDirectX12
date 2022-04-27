@@ -24,9 +24,10 @@ public:
 	static size_t getIndexStrideByFormat(DXGI_FORMAT format);
 	bool isEmpty() const noexcept;
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
+	ResourceType getResourceType() const override;
 private:
 	DXGI_FORMAT                    _indexFormat;
-	std::unique_ptr<DefaultBuffer> _pDefaultBUffer;
+	std::unique_ptr<DefaultBuffer> _pDefaultBuffer;
 };
 
 }

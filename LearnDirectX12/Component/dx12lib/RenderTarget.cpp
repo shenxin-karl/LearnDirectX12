@@ -14,7 +14,7 @@ void RenderTarget::reset() {
 		pBuffer = nullptr;
 }
 
-void RenderTarget::attachRenderTargetBuffer(AttachmentPoint point, std::shared_ptr<RenderTargetBuffer> pBuffer) {
+void RenderTarget::attachRenderTargetBuffer(AttachmentPoint point, std::shared_ptr<RenderTarget2D> pBuffer) {
 	assert(pBuffer != nullptr);
 	assert(point < NumAttachmentPoints);
 	_pRenderTargetBuffers[point] = pBuffer;
@@ -25,7 +25,7 @@ void RenderTarget::attachDepthStencilBuffer(std::shared_ptr<DepthStencilBuffer> 
 	_pDepthStencilBuffer = pBuffer;
 }
 
-std::shared_ptr<RenderTargetBuffer> RenderTarget::getRenderTargetBuffer(AttachmentPoint point) const {
+std::shared_ptr<RenderTarget2D> RenderTarget::getRenderTargetBuffer(AttachmentPoint point) const {
 	assert(point >= Color0 && point < NumAttachmentPoints);
 	return _pRenderTargetBuffers[point];
 }

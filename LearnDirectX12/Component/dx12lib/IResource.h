@@ -19,29 +19,64 @@ public:
 	virtual ResourceType getResourceType() const;
 };
 
-class IShaderSourceResource : public IResource {
-public:
-	virtual ShaderResourceView getShaderResourceView(size_t mipLevel = 0) const = 0;
+enum ShaderResourceType {
+	RenderTarget2D,
+	RenderTarget3D,
+	RenderTargetCube,
+	Structured,
+	UnorderedAccess,
+	Texture2D,
+	Texture3D,
+	TextureCube,
+	TextureArray,
 };
 
-class IRenderTargetResource : public IResource {
+enum CubeFace : size_t {
+	Right	= 0,
+	Left	= 1,
+	Top		= 2,
+	Bottom	= 3,
+	Back	= 4,
+	Front	= 5,
+	POSITIVE_X = 0,
+	NEGATIVE_X = 1,
+	POSITIVE_Y = 2,
+	NEGATIVE_Y = 3,
+	POSITIVE_Z = 4,
+	NEGATIVE_Z = 5,
+};
+
+class IShaderResourceBuffer : virtual public IResource {
+public:
+	virtual ShaderResourceView getShaderResourceView(size_t mipLevel = 0) const = 0;
+	virtual ShaderResourceType getShaderResourceType() const = 0;
+};
+
+class IRenderTargetBuffer : virtual public IResource {
 public:
 	virtual RenderTargetView getRenderTargetView(size_t mipSlice = 0) const = 0;
 };
 
-class IUnorderedAccessBuffer : public IResource {
+class IDepthStencilBuffer : virtual public IResource {
+public:
+	virtual DepthStencilView getDepthStencilView() const = 0;
+	virtual ShaderResourceView getShaderResourceView() const = 0;
+};
+
+class IUnorderedAccessBuffer : virtual public IResource {
 public:
 	virtual UnorderedAccessView getUnorderedAccessView(size_t mipSlice = 0) const = 0;
 };
 
-class IConstantBuffer : public IResource {
+
+class IConstantBuffer : virtual public IResource {
 public:
  	virtual ConstantBufferView getConstantBufferView() const = 0;
 	virtual void updateConstantBuffer(const void *pData, size_t sizeInByte, size_t offset = 0) = 0;
 	virtual size_t getConstantBufferSize() const noexcept = 0;
 };
 
-class IStructuredBuffer : public IResource {
+class IStructuredBuffer : virtual public IResource {
 public:
 	bool isMapped() const override { return true; }
 	virtual ShaderResourceView getShaderResourceView() const = 0;

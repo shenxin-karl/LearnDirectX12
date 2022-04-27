@@ -23,6 +23,7 @@ public:
 	size_t getVertexCount() const noexcept;
 	bool isEmpty() const noexcept;
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
+	ResourceType getResourceType() const override;
 private:
 	size_t _vertexStride;
 	std::unique_ptr<DefaultBuffer> _pDefaultBuffer;

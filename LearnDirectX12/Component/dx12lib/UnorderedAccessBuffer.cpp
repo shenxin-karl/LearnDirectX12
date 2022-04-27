@@ -36,6 +36,10 @@ ShaderResourceView UnorderedAccessBuffer::getShaderResourceView(size_t mipSlice)
 	return ShaderResourceView(descriptor);
 }
 
+ShaderResourceType UnorderedAccessBuffer::getShaderResourceType() const {
+	return ShaderResourceType::UnorderedAccess;
+}
+
 ResourceType UnorderedAccessBuffer::getResourceType() const {
 	return ResourceType::UnorderedAccessBuffer | ResourceType::ShaderResourceBuffer;
 }

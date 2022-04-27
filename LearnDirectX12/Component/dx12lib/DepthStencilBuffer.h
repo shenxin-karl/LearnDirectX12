@@ -5,11 +5,11 @@
 
 namespace dx12lib {
 
-class DepthStencilBuffer : public IResource {
+class DepthStencilBuffer : public IDepthStencilBuffer {
 public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
-	DepthStencilView getDepthStencilView() const;
-	ShaderResourceView getShaderResourceView() const;
+	DepthStencilView getDepthStencilView() const override;
+	ShaderResourceView getShaderResourceView() const override;
 	ResourceType getResourceType() const override;
 	~DepthStencilBuffer() override;
 protected:

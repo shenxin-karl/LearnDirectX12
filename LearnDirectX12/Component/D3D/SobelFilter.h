@@ -11,12 +11,12 @@ public:
 	SobelFilter(dx12lib::ComputeContextProxy pComputeContext, std::uint32_t width, std::uint32_t height);
 	void onResize(dx12lib::ComputeContextProxy pComputeList, std::uint32_t width, std::uint32_t height);
 
-	template<typename T> requires(std::is_base_of_v<dx12lib::IShaderSourceResource, T>)
+	template<typename T> requires(std::is_base_of_v<dx12lib::IShaderResourceBuffer, T>)
 	void produce(dx12lib::ComputeContextProxy pComputeList, std::shared_ptr<T> pInput) {
 		this->produceImpl(pComputeList, pInput);
 	}
 
-	template<typename T> requires(std::is_base_of_v<dx12lib::IShaderSourceResource, T>)
+	template<typename T> requires(std::is_base_of_v<dx12lib::IShaderResourceBuffer, T>)
 	void apply(dx12lib::ComputeContextProxy pComputeList, std::shared_ptr<T> pInput) {
 		this->applyImpl(pComputeList, pInput);
 	}
@@ -28,10 +28,10 @@ private:
 	static void tryBuildProducePSO(dx12lib::ComputeContextProxy pComputeList);
 	static void tryBuildApplyPSO(dx12lib::ComputeContextProxy pComputeList);
 	void produceImpl(dx12lib::ComputeContextProxy pComputeList, 
-		std::shared_ptr<dx12lib::IShaderSourceResource> pInput
+		std::shared_ptr<dx12lib::IShaderResourceBuffer> pInput
 	);
 	void applyImpl(dx12lib::ComputeContextProxy pComputeList,
-		std::shared_ptr<dx12lib::IShaderSourceResource> pInput
+		std::shared_ptr<dx12lib::IShaderResourceBuffer> pInput
 	);
 
 	enum SobelRootParame {

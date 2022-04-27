@@ -30,7 +30,7 @@ public:
 	virtual std::shared_ptr<Texture2D> createDDSTexture2DFromMemory(const void *pData, size_t sizeInByte) = 0;
 	virtual std::shared_ptr<ShaderResourceBuffer> createDDSTextureCubeFromFile(const std::wstring &fileName) = 0;
 	virtual std::shared_ptr<ShaderResourceBuffer> createDDSTextureCubeFromMemory(const void *pData, size_t sizeInByte) = 0;
-	virtual void setShaderResourceBufferImpl(std::shared_ptr<IShaderSourceResource> pTexture, size_t rootIndex, size_t offset) = 0;
+	virtual void setShaderResourceBufferImpl(std::shared_ptr<IShaderResourceBuffer> pTexture, size_t rootIndex, size_t offset) = 0;
 	virtual	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) = 0;
 	virtual void setConstantBufferView(const ConstantBufferView &crv, size_t rootIndex, size_t offset = 0) = 0;
 	virtual void setShaderResourceView(const ShaderResourceView &srv, size_t rootIndex, size_t offset = 0) = 0;
@@ -71,10 +71,10 @@ public:
 		);
 	}
 
-	template<typename T> requires(sizeof(T) > 0 && std::is_base_of_v<IShaderSourceResource, T>)
+	template<typename T> requires(sizeof(T) > 0 && std::is_base_of_v<IShaderResourceBuffer, T>)
 	void setShaderResourceBuffer(std::shared_ptr<T> pResource, size_t rootIndex, size_t offset = 0) {
 		this->setShaderResourceBufferImpl(
-			std::static_pointer_cast<IShaderSourceResource>(pResource),
+			std::static_pointer_cast<IShaderResourceBuffer>(pResource),
 			rootIndex,
 			offset
 		);
@@ -153,8 +153,8 @@ public:
 	virtual void drawInstanced(size_t vertCount, size_t instanceCount, size_t baseVertexLocation, size_t startInstanceLocation = 0) = 0;
 	virtual void drawIndexedInstanced(size_t indexCountPerInstance, size_t instanceCount, size_t startIndexLocation, size_t baseVertexLocation, size_t startInstanceLocation) = 0;
 
-	virtual void clearColor(std::shared_ptr<RenderTargetBuffer> pResource, float4 color) = 0;
-	virtual void clearColor(std::shared_ptr<RenderTargetBuffer> pResource, float colors[4]) = 0;
+	virtual void clearColor(std::shared_ptr<RenderTarget2D> pResource, float4 color) = 0;
+	virtual void clearColor(std::shared_ptr<RenderTarget2D> pResource, float colors[4]) = 0;
 	virtual void clearDepth(std::shared_ptr<DepthStencilBuffer> pResource, float depth) = 0;
 	virtual void clearStencil(std::shared_ptr<DepthStencilBuffer> pResource, UINT stencil) = 0;
 	virtual void clearDepthStencil(std::shared_ptr<DepthStencilBuffer> pResource, float depth, UINT stencil) = 0;

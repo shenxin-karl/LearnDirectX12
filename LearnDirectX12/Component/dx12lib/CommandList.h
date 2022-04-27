@@ -25,7 +25,7 @@ public:
 	std::shared_ptr<ShaderResourceBuffer> createDDSTextureCubeFromFile(const std::wstring &fileName) override;
 	std::shared_ptr<ShaderResourceBuffer> createDDSTextureCubeFromMemory(const void *pData, size_t sizeInByte) override;
 
-	void setShaderResourceBufferImpl(std::shared_ptr<IShaderSourceResource> pTexture, size_t rootIndex, size_t offset) override;
+	void setShaderResourceBufferImpl(std::shared_ptr<IShaderResourceBuffer> pTexture, size_t rootIndex, size_t offset) override;
 	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) override;
 	void setConstantBufferView(const ConstantBufferView &cbv, size_t rootIndex, size_t offset) override;
 	void setShaderResourceView(const ShaderResourceView &srv, size_t rootIndex, size_t offset) override;
@@ -56,8 +56,8 @@ public:
 	void drawInstanced(size_t vertCount, size_t instanceCount, size_t baseVertexLocation, size_t startInstanceLocation) override;
 	void drawIndexedInstanced(size_t indexCountPerInstance, size_t instanceCount, size_t startIndexLocation, size_t baseVertexLocation, size_t startInstanceLocation) override;
 
-	void clearColor(std::shared_ptr<RenderTargetBuffer> pResource, float4 color) override;
-	void clearColor(std::shared_ptr<RenderTargetBuffer> pResource, float colors[4]) override;
+	void clearColor(std::shared_ptr<RenderTarget2D> pResource, float4 color) override;
+	void clearColor(std::shared_ptr<RenderTarget2D> pResource, float colors[4]) override;
 	void clearDepth(std::shared_ptr<DepthStencilBuffer> pResource, float depth) override;
 	void clearStencil(std::shared_ptr<DepthStencilBuffer> pResource, UINT stencil) override;
 	void clearDepthStencil(std::shared_ptr<DepthStencilBuffer> pResource, float depth, UINT stencil) override;

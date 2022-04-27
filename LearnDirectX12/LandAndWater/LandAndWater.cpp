@@ -18,7 +18,7 @@
 #include "dx12lib/IndexBuffer.h"
 #include "dx12lib/RootSignature.h"
 #include "dx12lib/PipelineStateObject.h"
-#include "dx12lib/RenderTargetBuffer.h"
+#include "dx12lib/RenderTarget2D.h"
 #include "dx12lib/UnorderedAccessBuffer.h"
 #include "Geometry/GeometryGenerator.h"
 #include <DirectXColors.h>

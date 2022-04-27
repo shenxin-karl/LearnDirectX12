@@ -86,7 +86,6 @@ FRConstantBuffer<T>::FRConstantBuffer(std::weak_ptr<Device> pDevice, const T &ob
 			_descriptor.getCPUHandle(i)
 		);
 	}
-	_resourceType = ResourceType::ConstantBuffer;
 }
 
 template <typename T>

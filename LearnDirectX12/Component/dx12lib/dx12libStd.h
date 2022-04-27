@@ -125,7 +125,7 @@ class StructuredBuffer;
 class UnorderedAccessBuffer;
 class ReadBackBuffer;
 class DepthStencilBuffer;
-class RenderTargetBuffer;
+class RenderTarget2D;
 class ShaderResourceBuffer;
 class Texture2D;
 class IResource;

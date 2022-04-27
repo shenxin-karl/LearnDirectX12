@@ -11,7 +11,7 @@ public:
 private:
 private:
 	SH3 _irradianceMapSH3;
-	std::shared_ptr<dx12lib::ShaderResourceBuffer> _pBRDFLut;
+	std::shared_ptr<dx12lib::Texture2D> _pBRDFLut;
 	std::shared_ptr<dx12lib::ShaderResourceBuffer> _pPerFilteredEnvMap;
 };
 

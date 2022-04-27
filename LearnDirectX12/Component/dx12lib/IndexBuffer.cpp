@@ -18,7 +18,7 @@ IndexBuffer::IndexBuffer(std::weak_ptr<Device> pDevice,
 	auto stride = getIndexStrideByFormat(format);
 	size_t sizeInByte = numElements * stride;
 	assert(stride != 0 && "invalid index type");
-	_pDefaultBUffer = std::make_unique<DefaultBuffer>(
+	_pDefaultBuffer = std::make_unique<DefaultBuffer>(
 		pDevice.lock()->getD3DDevice(), 
 		pCmdList->getD3DCommandList(), 
 		pData, 
@@ -35,7 +35,7 @@ IndexBuffer::~IndexBuffer() {
 
 D3D12_INDEX_BUFFER_VIEW IndexBuffer::getIndexBufferView() const noexcept {
 	return {
-		_pDefaultBUffer->getAddress(),
+		_pDefaultBuffer->getAddress(),
 		static_cast<UINT>(getIndexBufferSize()),
 		_indexFormat
 	};
@@ -46,7 +46,7 @@ DXGI_FORMAT IndexBuffer::getIndexFormat() const noexcept {
 }
 
 size_t IndexBuffer::getIndexBufferSize() const noexcept {
-	return _pDefaultBUffer->getWidth();
+	return _pDefaultBuffer->getWidth();
 }
 
 size_t IndexBuffer::getIndexCount() const noexcept {
@@ -71,13 +71,13 @@ size_t IndexBuffer::getIndexStrideByFormat(DXGI_FORMAT format) {
 }
 
 bool IndexBuffer::isEmpty() const noexcept {
-	return _pDefaultBUffer == nullptr;
+	return _pDefaultBuffer == nullptr;
 }
 
 WRL::ComPtr<ID3D12Resource> IndexBuffer::getD3DResource() const {
-	if (_pDefaultBUffer == nullptr)
+	if (_pDefaultBuffer == nullptr)
 		return nullptr;
-	return _pDefaultBUffer->getD3DResource();
+	return _pDefaultBuffer->getD3DResource();
 }
 
 ResourceType IndexBuffer::getResourceType() const {
@@ -93,7 +93,7 @@ IndexBuffer &IndexBuffer::operator=(IndexBuffer &&other) noexcept {
 
 void swap(IndexBuffer &lhs, IndexBuffer &rhs) noexcept {
 	using std::swap;
-	swap(lhs._pDefaultBUffer, rhs._pDefaultBUffer);
+	swap(lhs._pDefaultBuffer, rhs._pDefaultBuffer);
 	swap(lhs._indexFormat, rhs._indexFormat);
 }
 

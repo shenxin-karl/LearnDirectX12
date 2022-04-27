@@ -93,7 +93,7 @@ std::shared_ptr<RenderTarget> SwapChain::getRenderTarget() const {
 	return _pRenderTarget;
 }
 
-std::shared_ptr<RenderTargetBuffer> SwapChain::getCurrentBackBuffer() const {
+std::shared_ptr<RenderTarget2D> SwapChain::getCurrentBackBuffer() const {
 	return _pSwapChainBuffer[_currentBackBufferIndex];
 }
 

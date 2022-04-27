@@ -89,7 +89,7 @@ void SobelFilter::tryBuildApplyPSO(dx12lib::ComputeContextProxy pComputeList) {
 }
 
 void SobelFilter::produceImpl(dx12lib::ComputeContextProxy pComputeList, 
-	std::shared_ptr<dx12lib::IShaderSourceResource> pInput) 
+	std::shared_ptr<dx12lib::IShaderResourceBuffer> pInput) 
 {
 	assert(pInput != nullptr);
 	tryBuildSobelMap(pComputeList, DXGI_FORMAT_R8_UNORM);
@@ -107,7 +107,7 @@ void SobelFilter::produceImpl(dx12lib::ComputeContextProxy pComputeList,
 }
 
 void SobelFilter::applyImpl(dx12lib::ComputeContextProxy pComputeList, 
-	std::shared_ptr<dx12lib::IShaderSourceResource> pInput) 
+	std::shared_ptr<dx12lib::IShaderResourceBuffer> pInput) 
 {
 	assert(pInput != nullptr);
 	tryBuildSobelMap(pComputeList, pInput->getFormat());

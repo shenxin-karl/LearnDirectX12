@@ -5,11 +5,12 @@
 
 namespace dx12lib {
 	
-class UnorderedAccessBuffer : public IResource {
+class UnorderedAccessBuffer : public IUnorderedAccessBuffer, public IShaderResourceBuffer {
 public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
-	UnorderedAccessView getUnorderedAccessView(size_t mipSlice = 0) const;
-	ShaderResourceView getShaderResourceView(size_t mipSlice = 0) const;
+	UnorderedAccessView getUnorderedAccessView(size_t mipSlice = 0) const override;
+	ShaderResourceView getShaderResourceView(size_t mipSlice = 0) const override;
+	ShaderResourceType getShaderResourceType() const override;
 	ResourceType getResourceType() const override;
 	std::size_t getBufferSize() const;
 	~UnorderedAccessBuffer() override;

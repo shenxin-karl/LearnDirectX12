@@ -44,4 +44,34 @@ using ConstantBufferView = _ResourceView<ViewType::ConstantBuffer>;
 using ShaderResourceView = _ResourceView<ViewType::ShaderResource>;
 using UnorderedAccessView = _ResourceView<ViewType::UnorderedAccess>;
 
+
+template<typename T>
+class ViewManager {
+public:
+	ViewManager() : _viewIndices({ kMaxMipLevel }) {
+	}
+
+	bool exist(size_t mipSlice) const noexcept {
+		assert(mipSlice < kMaxMipLevel);
+		return _viewIndices[mipSlice] != kMaxMipLevel;
+	}
+
+	void set(size_t mipSlice, const T &view) noexcept {
+		assert(mipSlice < kMaxMipLevel);
+		uint32_t index = static_cast<uint32_t>(_viewArray.size());
+		_viewIndices[mipSlice] = index;
+		_viewArray.emplace_back(view);
+	}
+
+	const T &get(size_t mipSlice) const noexcept {
+		assert(mipSlice < kMaxMipLevel);
+		assert(_viewIndices[mipSlice] != kMaxMipLevel);
+		return _viewArray[_viewIndices[mipSlice]];
+	}
+private:
+	constexpr static size_t kMaxMipLevel = 16;
+	std::vector<T> _viewArray;
+	std::array<uint32_t, kMaxMipLevel> _viewIndices;
+};
+
 }

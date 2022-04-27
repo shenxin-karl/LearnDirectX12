@@ -28,8 +28,6 @@ FRConstantBuffer<RawData>::FRConstantBuffer(std::weak_ptr<Device> pDevice, size_
 			_descriptor.getCPUHandle(i)
 		);
 	}
-
-	_resourceType = ResourceType::ConstantBuffer;
 }
 
 WRL::ComPtr<ID3D12Resource> FRConstantBuffer<RawData>::getD3DResource() const {

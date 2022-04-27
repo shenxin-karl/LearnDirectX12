@@ -54,8 +54,6 @@ DepthStencilBuffer::DepthStencilBuffer(std::weak_ptr<Device> pDevice,
 		pClearValue,
 		IID_PPV_ARGS(&_pResource)
 	));
-
-	_resourceType = ResourceType::DepthStencilBuffer | ResourceType::ShaderResourceBuffer;
 	createViews(pDevice);
 }
 
@@ -63,7 +61,6 @@ DepthStencilBuffer::DepthStencilBuffer(std::weak_ptr<Device> pDevice,
 	WRL::ComPtr<ID3D12Resource> pResource, 
 	D3D12_RESOURCE_STATES state) 
 {
-	_resourceType = ResourceType::DepthStencilBuffer | ResourceType::ShaderResourceBuffer;
 	_pResource = pResource;
 	createViews(pDevice);
 }

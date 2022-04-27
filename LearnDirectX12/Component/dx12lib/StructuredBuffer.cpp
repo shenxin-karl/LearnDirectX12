@@ -60,7 +60,6 @@ StructuredBuffer::StructuredBuffer(std::weak_ptr<Device> pDevice, const void *pD
 		&desc,
 		_descriptor.getCPUHandle()
 	);
-	_resourceType = ResourceType::StructuredBuffer;
 }
 
 }

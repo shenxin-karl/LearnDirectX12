@@ -19,7 +19,7 @@ FXAA::FXAA(dx12lib::ComputeContextProxy pComputeCtx,
 }
 
 void FXAA::_produceImpl(dx12lib::ComputeContextProxy pComputeCtx,
-	std::shared_ptr<dx12lib::IShaderSourceResource> pInput) const
+	std::shared_ptr<dx12lib::IShaderResourceBuffer> pInput) const
 {
 	assert(pInput != nullptr);
 	tryBuildConsolePSO(pComputeCtx->getDevice());

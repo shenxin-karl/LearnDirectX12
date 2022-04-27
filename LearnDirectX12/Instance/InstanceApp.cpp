@@ -81,7 +81,7 @@ void InstanceApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		std::vector<RenderItem> renderItems = cullingByFrustum();
 		doDrawInstance(pDirectCtx, _geometryMap["skull"], renderItems);
 
-		_pSkyBox->render(pDirectCtx, _pCamera);
+		//_pSkyBox->render(pDirectCtx, _pCamera);
 
 		pDirectCtx->transitionBarrier(pRenderTargetBuffer, D3D12_RESOURCE_STATE_PRESENT);
 	}

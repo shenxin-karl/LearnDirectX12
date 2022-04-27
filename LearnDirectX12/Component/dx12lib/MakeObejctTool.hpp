@@ -32,7 +32,7 @@ using MakeComputePSO = _MakeObjectTool<ComputePSO>;
 
 using MakeIndexBuffer = _MakeObjectTool<IndexBuffer>;
 using MakeVertexBuffer = _MakeObjectTool<VertexBuffer>;
-using MakeRenderTargetBuffer = _MakeObjectTool<RenderTargetBuffer>;
+using MakeRenderTargetBuffer = _MakeObjectTool<RenderTarget2D>;
 using MakeDepthStencilBuffer = _MakeObjectTool<DepthStencilBuffer>;
 using MakeUnorderedAccessBuffer = _MakeObjectTool<UnorderedAccessBuffer>;
 using MakeStructuredBuffer = _MakeObjectTool<StructuredBuffer>;

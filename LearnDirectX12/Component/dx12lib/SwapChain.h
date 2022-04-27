@@ -18,7 +18,7 @@ public:
 	void present();
 	std::shared_ptr<RenderTarget> getRenderTarget() const;
 private:
-	std::shared_ptr<RenderTargetBuffer> getCurrentBackBuffer() const;
+	std::shared_ptr<RenderTarget2D> getCurrentBackBuffer() const;
 	void updateBuffer(DirectContextProxy pDirectContext);
 private:
 	HWND	_hwnd;
@@ -30,7 +30,7 @@ private:
 	std::weak_ptr<Device>				_pDevice;
 	WRL::ComPtr<IDXGISwapChain>			_pSwapChain;
 	std::shared_ptr<RenderTarget>		_pRenderTarget;
-	std::shared_ptr<RenderTargetBuffer> _pSwapChainBuffer[kSwapChainBufferCount];
+	std::shared_ptr<RenderTarget2D> _pSwapChainBuffer[kSwapChainBufferCount];
 	std::shared_ptr<DepthStencilBuffer> _pDepthStencilBuffer;
 };
 

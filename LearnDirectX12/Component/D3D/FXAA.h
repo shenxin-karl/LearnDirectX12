@@ -23,12 +23,12 @@ public:
 
 		_produceImpl(
 			pComputeCtx,
-			std::static_pointer_cast<dx12lib::IShaderSourceResource>(pInput)
+			std::static_pointer_cast<dx12lib::IShaderResourceBuffer>(pInput)
 		);
 	}
 
 	void _produceImpl(dx12lib::ComputeContextProxy pComputeCtx, 
-		std::shared_ptr<dx12lib::IShaderSourceResource> pInput
+		std::shared_ptr<dx12lib::IShaderResourceBuffer> pInput
 	) const;
 
 	void onResize(dx12lib::ComputeContextProxy pComputeCtx, uint32 width, uint32 height);

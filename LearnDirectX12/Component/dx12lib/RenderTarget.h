@@ -15,9 +15,9 @@ public:
 	RenderTarget &operator=(const RenderTarget &) = delete;
 	RenderTarget &operator=(RenderTarget &&) = default;
 	void reset();
-	void attachRenderTargetBuffer(AttachmentPoint point, std::shared_ptr<RenderTargetBuffer> pBuffer);
+	void attachRenderTargetBuffer(AttachmentPoint point, std::shared_ptr<RenderTarget2D> pBuffer);
 	void attachDepthStencilBuffer(std::shared_ptr<DepthStencilBuffer> pBuffer);
-	std::shared_ptr<RenderTargetBuffer> getRenderTargetBuffer(AttachmentPoint point) const;
+	std::shared_ptr<RenderTarget2D> getRenderTargetBuffer(AttachmentPoint point) const;
 	std::shared_ptr<DepthStencilBuffer> getDepthStencilBuffer() const;
 	uint32 getWidth() const noexcept;
 	uint32 getHeight() const noexcept;
@@ -39,7 +39,7 @@ public:
 	friend void swap(RenderTarget &lhs, RenderTarget &rhs) noexcept;
 private:
 	DX::XMUINT2 _size;
-	std::shared_ptr<RenderTargetBuffer> _pRenderTargetBuffers[NumAttachmentPoints];
+	std::shared_ptr<RenderTarget2D> _pRenderTargetBuffers[NumAttachmentPoints];
 	std::shared_ptr<DepthStencilBuffer> _pDepthStencilBuffer;
 };
 

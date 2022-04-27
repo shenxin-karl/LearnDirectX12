@@ -28,7 +28,6 @@ ConstantBuffer::ConstantBuffer(std::weak_ptr<Device> pDevice, const void *pData,
 	cbv.BufferLocation = address;
 	cbv.SizeInBytes = static_cast<UINT>(UploadBuffer::calcConstantBufferByteSize(sizeInByte));
 	pSharedDevice->getD3DDevice()->CreateConstantBufferView(&cbv, _constantBufferView);
-	_resourceType = ResourceType::ConstantBuffer;
 }
 
 WRL::ComPtr<ID3D12Resource> ConstantBuffer::getD3DResource() const {

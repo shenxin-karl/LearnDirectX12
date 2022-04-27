@@ -12,6 +12,10 @@ ShaderResourceView ShaderResourceBuffer::getShaderResourceView(size_t mipSlice) 
 	return ShaderResourceView();
 }
 
+ShaderResourceType ShaderResourceBuffer::getShaderResourceType() const {
+	return ShaderResourceType();
+}
+
 ShaderResourceBuffer::~ShaderResourceBuffer() {
 	ResourceStateTracker::removeGlobalResourceState(_pResource.Get());
 }
@@ -57,34 +61,90 @@ WRL::ComPtr<ID3D12Resource> Texture2D::getD3DResource() const {
 }
 
 ShaderResourceView Texture2D::getShaderResourceView(size_t mipSlice) const {
+	if (_srvMgr.exist(mipSlice))
+		return _srvMgr.get(mipSlice);
+
 	assert(mipSlice < _pResource->GetDesc().MipLevels);
 	auto pSharedDevice = _pDevice.lock();
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Format = _pResource.Get()->GetDesc().Format;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = -1;
+	srvDesc.Texture2D.PlaneSlice = 0;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.ResourceMinLODClamp = static_cast<float>(mipSlice);
+
 	auto descriptor = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	_srvDesc.Texture2D.MostDetailedMip = mipSlice;
 	pSharedDevice->getD3DDevice()->CreateShaderResourceView(
 		_pResource.Get(),
-		&_srvDesc,
+		&srvDesc,
 		descriptor.getCPUHandle()
 	);
-	return ShaderResourceView(descriptor);
+
+	ShaderResourceView SRV(descriptor);
+	_srvMgr.set(mipSlice, SRV);
+	return SRV;
+}
+
+ShaderResourceType Texture2D::getShaderResourceType() const {
+	return ShaderResourceType::Texture2D;
 }
 
 Texture2D::Texture2D(std::weak_ptr<Device> pDevice, WRL::ComPtr<ID3D12Resource> pResource,
-	WRL::ComPtr<ID3D12Resource> pUploader, D3D12_RESOURCE_STATES state)
-: _pDevice(pDevice), _pResource(pResource), _pUploader(pUploader), _srvDesc({})
+                     WRL::ComPtr<ID3D12Resource> pUploader, D3D12_RESOURCE_STATES state)
+: _pDevice(pDevice), _pResource(pResource), _pUploader(pUploader)
 {
-	initSrvDesc();
 	ResourceStateTracker::addGlobalResourceState(_pResource.Get(), state);
 }
 
-void Texture2D::initSrvDesc() {
-	_srvDesc.Format = _pResource.Get()->GetDesc().Format;
-	_srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	_srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	_srvDesc.Texture2D.MipLevels = _pResource.Get()->GetDesc().MipLevels;
-	_srvDesc.Texture2D.PlaneSlice = 0;
-	_srvDesc.Texture2D.MostDetailedMip = 0;
-	_srvDesc.Texture2D.ResourceMinLODClamp = 0.f;
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+WRL::ComPtr<ID3D12Resource> TextureCube::getD3DResource() const {
+	return _pResource;
 }
+
+ShaderResourceView TextureCube::getShaderResourceView(size_t mipSlice) const {
+	if (_srvMgr.exist(mipSlice))
+		return _srvMgr.get(mipSlice);
+
+	assert(mipSlice < _pResource->GetDesc().MipLevels);
+	auto pSharedDevice = _pDevice.lock();
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Format = _pResource.Get()->GetDesc().Format;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+	srvDesc.Texture2D.MipLevels = -1;
+	srvDesc.Texture2D.PlaneSlice = 0;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.ResourceMinLODClamp = static_cast<float>(mipSlice);
+
+	auto descriptor = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	pSharedDevice->getD3DDevice()->CreateShaderResourceView(
+		_pResource.Get(),
+		&srvDesc,
+		descriptor.getCPUHandle()
+	);
+
+	ShaderResourceView SRV(descriptor);
+	_srvMgr.set(mipSlice, SRV);
+	return SRV;
+}
+
+ShaderResourceType TextureCube::getShaderResourceType() const {
+	return ShaderResourceType::TextureCube;
+}
+
+TextureCube::TextureCube(std::weak_ptr<Device> pDevice, WRL::ComPtr<ID3D12Resource> pResource,
+	WRL::ComPtr<ID3D12Resource> pUploader, D3D12_RESOURCE_STATES state)
+: _pDevice(pDevice), _pResource(pResource), _pUploader(pUploader)
+{
+	ResourceStateTracker::addGlobalResourceState(_pResource.Get(), state);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 }

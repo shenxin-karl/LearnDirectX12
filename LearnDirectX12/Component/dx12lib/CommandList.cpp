@@ -210,7 +210,7 @@ std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSTextureCubeFromMemor
 	);
 }
 
-void CommandList::setShaderResourceBufferImpl(std::shared_ptr<IShaderSourceResource> pTexture, size_t rootIndex, size_t offset) {
+void CommandList::setShaderResourceBufferImpl(std::shared_ptr<IShaderResourceBuffer> pTexture, size_t rootIndex, size_t offset) {
 	assert(pTexture != nullptr);
 	assert(_currentGPUState.pRootSignature != nullptr);
 	_pDynamicDescriptorHeaps[0]->stageDescriptors(
@@ -475,7 +475,7 @@ void CommandList::drawIndexedInstanced(size_t indexCountPerInstance,
 	);
 }
 
-void CommandList::clearColor(std::shared_ptr<RenderTargetBuffer> pResource, float4 color) {
+void CommandList::clearColor(std::shared_ptr<RenderTarget2D> pResource, float4 color) {
 	_pCommandList->ClearRenderTargetView(
 		pResource->getRenderTargetView(),
 		reinterpret_cast<FLOAT *>(&color),
@@ -484,7 +484,7 @@ void CommandList::clearColor(std::shared_ptr<RenderTargetBuffer> pResource, floa
 	);
 }
 
-void CommandList::clearColor(std::shared_ptr<RenderTargetBuffer> pResource, float colors[4]) {
+void CommandList::clearColor(std::shared_ptr<RenderTarget2D> pResource, float colors[4]) {
 	_pCommandList->ClearRenderTargetView(
 		pResource->getRenderTargetView(),
 		colors,
