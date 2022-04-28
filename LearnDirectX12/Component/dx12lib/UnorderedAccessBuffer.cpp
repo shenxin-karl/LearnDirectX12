@@ -12,7 +12,7 @@ WRL::ComPtr<ID3D12Resource> UnorderedAccessBuffer::getD3DResource() const {
 UnorderedAccessView UnorderedAccessBuffer::getUnorderedAccessView(size_t mipSlice) const {
 	assert(mipSlice < _pResource->GetDesc().MipLevels);
 	auto pSharedDevice = _pDevice.lock();
-	auto descriptor = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	auto descriptor = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	_uavDesc.Texture2D.MipSlice = static_cast<UINT>(mipSlice);
 	pSharedDevice->getD3DDevice()->CreateUnorderedAccessView(
 		_pResource.Get(),
@@ -26,8 +26,8 @@ UnorderedAccessView UnorderedAccessBuffer::getUnorderedAccessView(size_t mipSlic
 ShaderResourceView UnorderedAccessBuffer::getShaderResourceView(size_t mipSlice) const {
 	assert(mipSlice < _pResource->GetDesc().MipLevels);
 	auto pSharedDevice = _pDevice.lock();
-	auto descriptor = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	_uavDesc.Texture2D.MipSlice = static_cast<UINT>(mipSlice);
+	auto descriptor = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	_srvDesc.Texture2D.ResourceMinLODClamp = static_cast<float>(mipSlice);
 	pSharedDevice->getD3DDevice()->CreateShaderResourceView(
 		_pResource.Get(),
 		&_srvDesc,

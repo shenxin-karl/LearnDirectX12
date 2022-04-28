@@ -18,7 +18,7 @@
 #include "dx12lib/IndexBuffer.h"
 #include "dx12lib/RootSignature.h"
 #include "dx12lib/PipelineStateObject.h"
-#include "dx12lib/RenderTarget2D.h"
+#include "dx12lib/RenderTargetBuffer.h"
 #include "dx12lib/UnorderedAccessBuffer.h"
 #include "Geometry/GeometryGenerator.h"
 #include <DirectXColors.h>
@@ -406,7 +406,7 @@ void LandAndWater::loadTextures(dx12lib::DirectContextProxy pGrahpicsCtx) {
 	_textureMap["grass.dds"] = pGrahpicsCtx->createDDSTexture2DFromFile(L"resources/grass.dds");
 	_textureMap["WoodCrate02.dds"] = pGrahpicsCtx->createDDSTexture2DFromFile(L"resources/WoodCrate02.dds");
 	_textureMap["WireFence.dds"] = pGrahpicsCtx->createDDSTexture2DFromFile(L"resources/WireFence.dds");
-	_textureMap["treeArray2.dds"] = pGrahpicsCtx->createDDSTexture2DFromFile(L"resources/treeArray2.dds");
+	_textureMap["treeArray2.dds"] = pGrahpicsCtx->createDDSTexture2DArrayFromFile(L"resources/treeArray2.dds");
 }
 
 void LandAndWater::buildMaterials() {

@@ -155,7 +155,7 @@ std::shared_ptr<Texture2D> CommandList::createDDSTexture2DFromMemory(const void 
 	);
 }
 
-std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSTextureCubeFromFile(const std::wstring &fileName) {
+std::shared_ptr<Texture2DArray> CommandList::createDDSTexture2DArrayFromFile(const std::wstring &fileName) {
 	WRL::ComPtr<ID3D12Resource> pTexture;
 	WRL::ComPtr<ID3D12Resource> pUploadHeap;
 	DirectX::CreateDDSTextureFromFile12(_pDevice.lock()->getD3DDevice(),
@@ -164,24 +164,57 @@ std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSTextureCubeFromFile(
 		pTexture,
 		pUploadHeap
 	);
-
 	assert(pTexture != nullptr && pUploadHeap != nullptr);
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
-	srvDesc.TextureCube.MostDetailedMip = 0;
-	srvDesc.TextureCube.MipLevels = pTexture->GetDesc().MipLevels;
-	srvDesc.TextureCube.ResourceMinLODClamp = 0.0f;
-	srvDesc.Format = pTexture->GetDesc().Format;
-	return std::make_shared<dx12libTool::MakeShaderResourceBuffer>(_pDevice,
+	assert(pTexture->GetDesc().DepthOrArraySize >= 1);
+	return std::make_shared<dx12libTool::MakeTexture2DArray>(
+		_pDevice,
 		pTexture,
 		pUploadHeap,
-		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-		&srvDesc
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
 	);
 }
 
-std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSTextureCubeFromMemory(const void *pData, 
+std::shared_ptr<Texture2DArray> CommandList::createDDSTexture2DArrayFromMemory(const void *pData, size_t sizeInByte) {
+	WRL::ComPtr<ID3D12Resource> pTexture;
+	WRL::ComPtr<ID3D12Resource> pUploadHeap;
+	DirectX::CreateDDSTextureFromMemory12(_pDevice.lock()->getD3DDevice(),
+		_pCommandList.Get(),
+		static_cast<const uint8_t *>(pData),
+		sizeInByte,
+		pTexture,
+		pUploadHeap
+	);
+
+	assert(pTexture != nullptr && pUploadHeap != nullptr);
+	assert(pTexture->GetDesc().DepthOrArraySize >= 1);
+	return std::make_shared<dx12libTool::MakeTexture2DArray>(
+		_pDevice,
+		pTexture,
+		pUploadHeap,
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+	);
+}
+
+std::shared_ptr<TextureCube> CommandList::createDDSTextureCubeFromFile(const std::wstring &fileName) {
+	WRL::ComPtr<ID3D12Resource> pTexture;
+	WRL::ComPtr<ID3D12Resource> pUploadHeap;
+	DirectX::CreateDDSTextureFromFile12(_pDevice.lock()->getD3DDevice(),
+		_pCommandList.Get(),
+		fileName.c_str(),
+		pTexture,
+		pUploadHeap
+	);
+	assert(pTexture != nullptr && pUploadHeap != nullptr);
+	assert(pTexture->GetDesc().DepthOrArraySize == 6);
+	return std::make_shared<dx12libTool::MakeTextureCube>(
+		_pDevice, 
+		pTexture, 
+		pUploadHeap, 
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+	);
+}
+
+std::shared_ptr<TextureCube> CommandList::createDDSTextureCubeFromMemory(const void *pData,
 	size_t sizeInByte)
 {
 	WRL::ComPtr<ID3D12Resource> pTexture;
@@ -195,18 +228,12 @@ std::shared_ptr<ShaderResourceBuffer> CommandList::createDDSTextureCubeFromMemor
 	);
 
 	assert(pTexture != nullptr && pUploadHeap != nullptr);
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
-	srvDesc.TextureCube.MostDetailedMip = 0;
-	srvDesc.TextureCube.MipLevels = pTexture->GetDesc().MipLevels;
-	srvDesc.TextureCube.ResourceMinLODClamp = 0.0f;
-	srvDesc.Format = pTexture->GetDesc().Format;
-	return std::make_shared<dx12libTool::MakeShaderResourceBuffer>(_pDevice,
+	assert(pTexture->GetDesc().DepthOrArraySize == 6);
+	return std::make_shared<dx12libTool::MakeTextureCube>(
+		_pDevice,
 		pTexture,
 		pUploadHeap,
-		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-		&srvDesc
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
 	);
 }
 

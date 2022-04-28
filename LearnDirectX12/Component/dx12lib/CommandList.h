@@ -22,8 +22,10 @@ public:
 	std::shared_ptr<FRStructuredBuffer<RawData>> createFRRawStructuredBuffer(const void *pData, size_t numElements, size_t stride) override;
 	std::shared_ptr<Texture2D> createDDSTexture2DFromFile(const std::wstring &fileName) override;
 	std::shared_ptr<Texture2D> createDDSTexture2DFromMemory(const void *pData, size_t sizeInByte) override;
-	std::shared_ptr<ShaderResourceBuffer> createDDSTextureCubeFromFile(const std::wstring &fileName) override;
-	std::shared_ptr<ShaderResourceBuffer> createDDSTextureCubeFromMemory(const void *pData, size_t sizeInByte) override;
+	std::shared_ptr<Texture2DArray> createDDSTexture2DArrayFromFile(const std::wstring &fileName) override;
+	std::shared_ptr<Texture2DArray> createDDSTexture2DArrayFromMemory(const void *pData, size_t sizeInByte) override;
+	std::shared_ptr<TextureCube> createDDSTextureCubeFromFile(const std::wstring &fileName) override;
+	std::shared_ptr<TextureCube> createDDSTextureCubeFromMemory(const void *pData, size_t sizeInByte) override;
 
 	void setShaderResourceBufferImpl(std::shared_ptr<IShaderResourceBuffer> pTexture, size_t rootIndex, size_t offset) override;
 	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) override;

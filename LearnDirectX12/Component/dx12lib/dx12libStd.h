@@ -128,6 +128,8 @@ class DepthStencilBuffer;
 class RenderTarget2D;
 class ShaderResourceBuffer;
 class Texture2D;
+class Texture2DArray;
+class TextureCube;
 class IResource;
 
 struct NonCopyable {

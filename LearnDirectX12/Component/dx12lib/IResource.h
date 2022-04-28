@@ -19,7 +19,7 @@ public:
 	virtual ResourceType getResourceType() const;
 };
 
-enum ShaderResourceType {
+enum class ShaderResourceType {
 	RenderTarget2D,
 	RenderTarget3D,
 	RenderTargetCube,
@@ -28,10 +28,10 @@ enum ShaderResourceType {
 	Texture2D,
 	Texture3D,
 	TextureCube,
-	TextureArray,
+	Texture2DArray,
 };
 
-enum CubeFace : size_t {
+enum class CubeFace : size_t {
 	Right	= 0,
 	Left	= 1,
 	Top		= 2,

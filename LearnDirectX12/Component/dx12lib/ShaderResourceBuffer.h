@@ -66,14 +66,14 @@ private:
 };
 
 
-class TextureArray : public IShaderResourceBuffer {
+class Texture2DArray : public IShaderResourceBuffer {
 public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
 	ShaderResourceView getShaderResourceView(size_t mipSlice = 0) const override;
 	ShaderResourceType getShaderResourceType() const override;
-	~TextureArray() override = default;
+	~Texture2DArray() override = default;
 protected:
-	TextureArray(std::weak_ptr<Device> pDevice,
+	Texture2DArray(std::weak_ptr<Device> pDevice,
 		WRL::ComPtr<ID3D12Resource> pResource,
 		WRL::ComPtr<ID3D12Resource> pUploader,
 		D3D12_RESOURCE_STATES state

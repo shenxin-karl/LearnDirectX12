@@ -39,6 +39,8 @@ using MakeStructuredBuffer = _MakeObjectTool<StructuredBuffer>;
 using MakeReadBackBuffer = _MakeObjectTool<ReadBackBuffer>;
 using MakeShaderResourceBuffer = _MakeObjectTool<ShaderResourceBuffer>;
 using MakeTexture2D = _MakeObjectTool<Texture2D>;
+using MakeTexture2DArray = _MakeObjectTool<Texture2DArray>;
+using MakeTextureCube = _MakeObjectTool<TextureCube>;
 
 template<typename T>
 using MakeFRConstantBuffer = _MakeObjectTool<FRConstantBuffer<T>>;
