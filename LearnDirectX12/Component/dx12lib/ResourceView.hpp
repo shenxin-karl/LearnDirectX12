@@ -17,16 +17,15 @@ class _ResourceView {
 public:
 	_ResourceView() = default;
 	_ResourceView(const _ResourceView &) = default;
-	_ResourceView(_ResourceView &&) = default;
+	_ResourceView(_ResourceView &&) noexcept = default;
 	_ResourceView &operator=(const _ResourceView &) = default;
-	_ResourceView &operator=(_ResourceView &&) = default;
+	_ResourceView &operator=(_ResourceView &&) noexcept = default;
 	explicit _ResourceView(const DescriptorAllocation &descriptor, size_t offset = 0)
 	: _offset(offset), _descriptor(descriptor)
 	{
 		assert(offset < descriptor.getNumHandle());
 	}
 public:
-	friend class CommandList;
 	D3D12_CPU_DESCRIPTOR_HANDLE getCPUDescriptorHandle() const {
 		return _descriptor.getCPUHandle(_offset);
 	}
@@ -38,12 +37,38 @@ private:
 	DescriptorAllocation _descriptor;
 };
 
+template<typename T>
+class _BufferView {
+public:
+	template<typename ... Args> requires(sizeof...(Args) > 0)
+	_BufferView(Args&&...args) : _view(std::forward<Args>(args)...) {}
+	_BufferView(D3D12_VERTEX_BUFFER_VIEW view) : _view(view) {}
+	_BufferView(const _BufferView &) = default;
+	_BufferView(_BufferView &&) noexcept = default;
+	_BufferView &operator=(const _BufferView &) = default;
+	_BufferView &operator=(_BufferView &&) noexcept = default;
+private:
+	friend class CommandList;
+	operator T() const {
+		return _view;
+	}
+	T *operator&() {
+		return &_view;
+	}
+	const T *operator&() const {
+		return &_view;
+	}
+private:
+	T _view;
+};
+
 using RenderTargetView = _ResourceView<ViewType::RenderTarget>;
 using DepthStencilView = _ResourceView<ViewType::DepthStencil>;
 using ConstantBufferView = _ResourceView<ViewType::ConstantBuffer>;
 using ShaderResourceView = _ResourceView<ViewType::ShaderResource>;
 using UnorderedAccessView = _ResourceView<ViewType::UnorderedAccess>;
-
+using VertexBufferView = _BufferView<D3D12_VERTEX_BUFFER_VIEW>;
+using IndexBufferView = _BufferView<D3D12_INDEX_BUFFER_VIEW>;
 
 template<typename T>
 class ViewManager {

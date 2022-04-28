@@ -4,33 +4,36 @@
 
 namespace dx12lib {
 
-uint64 IResource::getWidth() const {
-	return getD3DResource()->GetDesc().Width;
+size_t IShaderResource::getWidth() const {
+	return static_cast<size_t>(getD3DResource()->GetDesc().Width);
 }
 
-uint64 IResource::getHeight() const {
-	return getD3DResource()->GetDesc().Height;
+size_t IShaderResource::getHeight() const {
+	return static_cast<size_t>(getD3DResource()->GetDesc().Height);
 }
 
-uint64 IResource::getDepth() const {
-	return getD3DResource()->GetDesc().DepthOrArraySize;
+size_t IShaderResource::getMipmapLevels() const {
+	return static_cast<size_t>(getD3DResource()->GetDesc().MipLevels);
 }
 
-bool IResource::isMapped() const {
-	return false;
-}
-
-DXGI_FORMAT IResource::getFormat() const {
+DXGI_FORMAT IShaderResource::getFormat() const {
 	return getD3DResource()->GetDesc().Format;
 }
 
-size_t IResource::getMipmapLevels() const {
-	return getD3DResource()->GetDesc().MipLevels;
+BufferType IConstantBuffer::getBufferType() const {
+	return BufferType::ConstantBuffer;
 }
 
-ResourceType IResource::getResourceType() const {
-	assert(false);
-	return ResourceType::Unknown;
+BufferType IVertexBuffer::getBufferType() const {
+	return BufferType::IndexBuffer;
+}
+
+BufferType IStructuredBuffer::getBufferType() const {
+	return BufferType::StructuredBuffer;
+}
+
+BufferType IReadBackBuffer::getBufferType() const {
+	return BufferType::ReadBackBuffer;
 }
 
 }

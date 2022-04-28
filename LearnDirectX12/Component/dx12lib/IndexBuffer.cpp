@@ -5,9 +5,6 @@
 
 namespace dx12lib {
 
-IndexBuffer::IndexBuffer() : _indexFormat(DXGI_FORMAT_UNKNOWN) {
-}
-
 IndexBuffer::IndexBuffer(std::weak_ptr<Device> pDevice,
 	std::shared_ptr<CommandList> pCmdList,
 	const void *pData,
@@ -25,32 +22,28 @@ IndexBuffer::IndexBuffer(std::weak_ptr<Device> pDevice,
 		sizeInByte
 	);
 }
-
-IndexBuffer::IndexBuffer(IndexBuffer &&other) noexcept : IndexBuffer() {
-	swap(*this, other);
+WRL::ComPtr<ID3D12Resource> IndexBuffer::getD3DResource() const {
+	return _pDefaultBuffer->getD3DResource();
 }
 
-IndexBuffer::~IndexBuffer() {
+size_t IndexBuffer::getBufferSize() const {
+	return _pDefaultBuffer->getBufferSize();
 }
 
-D3D12_INDEX_BUFFER_VIEW IndexBuffer::getIndexBufferView() const noexcept {
-	return {
-		_pDefaultBuffer->getAddress(),
-		static_cast<UINT>(getIndexBufferSize()),
-		_indexFormat
-	};
+size_t IndexBuffer::getIndexCount() const noexcept {
+	return getBufferSize() / getIndexStrideByFormat(_indexFormat);
+}
+
+size_t IndexBuffer::getIndexStride() const {
+	return getIndexStrideByFormat(_indexFormat);
 }
 
 DXGI_FORMAT IndexBuffer::getIndexFormat() const noexcept {
 	return _indexFormat;
 }
 
-size_t IndexBuffer::getIndexBufferSize() const noexcept {
-	return _pDefaultBuffer->getWidth();
-}
-
-size_t IndexBuffer::getIndexCount() const noexcept {
-	return getIndexBufferSize() / getIndexStrideByFormat(_indexFormat);
+IndexBufferView IndexBuffer::getIndexBufferView() const noexcept {
+	return IndexBufferView(_pDefaultBuffer->getAddress(), getBufferSize(), _indexFormat);
 }
 
 size_t IndexBuffer::getIndexStrideByFormat(DXGI_FORMAT format) {
@@ -69,33 +62,5 @@ size_t IndexBuffer::getIndexStrideByFormat(DXGI_FORMAT format) {
 		return 0;
 	}
 }
-
-bool IndexBuffer::isEmpty() const noexcept {
-	return _pDefaultBuffer == nullptr;
-}
-
-WRL::ComPtr<ID3D12Resource> IndexBuffer::getD3DResource() const {
-	if (_pDefaultBuffer == nullptr)
-		return nullptr;
-	return _pDefaultBuffer->getD3DResource();
-}
-
-ResourceType IndexBuffer::getResourceType() const {
-	return ResourceType::IndexBuffer;
-}
-
-IndexBuffer &IndexBuffer::operator=(IndexBuffer &&other) noexcept {
-	IndexBuffer tmp;
-	swap(*this, tmp);
-	swap(*this, other);
-	return *this;
-}
-
-void swap(IndexBuffer &lhs, IndexBuffer &rhs) noexcept {
-	using std::swap;
-	swap(lhs._pDefaultBuffer, rhs._pDefaultBuffer);
-	swap(lhs._indexFormat, rhs._indexFormat);
-}
-
 
 }

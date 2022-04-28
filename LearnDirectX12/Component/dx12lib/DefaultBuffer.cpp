@@ -56,9 +56,6 @@ DefaultBuffer::DefaultBuffer(ID3D12Device *pDevice, ID3D12GraphicsCommandList *p
 	ResourceStateTracker::addGlobalResourceState(_pDefaultResource.Get(), D3D12_RESOURCE_STATE_GENERIC_READ);
 }
 
-DefaultBuffer::DefaultBuffer(DefaultBuffer &&other) noexcept : DefaultBuffer() {
-	swap(*this, other);
-}
 
 DefaultBuffer::~DefaultBuffer() {
 	ResourceStateTracker::removeGlobalResourceState(_pDefaultResource.Get());
@@ -72,18 +69,12 @@ WRL::ComPtr<ID3D12Resource> DefaultBuffer::getD3DResource() const {
 	return _pDefaultResource;
 }
 
-DefaultBuffer &DefaultBuffer::operator=(DefaultBuffer &&other) noexcept {
-	DefaultBuffer tmp;
-	swap(*this, tmp);
-	swap(*this, other);
-	return *this;
+BufferType DefaultBuffer::getBufferType() const {
+	return BufferType::DefaultBuffer;
 }
 
-void swap(DefaultBuffer &lhs, DefaultBuffer &rhs) noexcept {
-	using std::swap;
-	swap(lhs._pDefaultResource, rhs._pDefaultResource);
-	swap(lhs._pUploaderResource, rhs._pUploaderResource);
+size_t DefaultBuffer::getBufferSize() const {
+	return _pDefaultResource->GetDesc().Width;
 }
-
 
 }
