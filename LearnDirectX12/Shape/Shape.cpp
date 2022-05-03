@@ -10,7 +10,7 @@
 #include "dx12lib/PipelineStateObject.h"
 #include "dx12lib/RenderTarget.h"
 #include "dx12lib/RenderTargetBuffer.h"
-#include "dx12lib/ShaderResourceBuffer.h"
+#include "dx12lib/TextureShaderResource.h"
 #include "dx12lib/FRConstantBuffer.hpp"
 #include "dx12lib/IndexBuffer.h"
 #include "dx12lib/RootSignature.h"

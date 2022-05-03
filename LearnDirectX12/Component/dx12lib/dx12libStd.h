@@ -44,47 +44,19 @@ using int32 = std::int32_t;
 using int64 = std::int64_t;
 using size_t = std::size_t;
 
-enum AttachmentPoint : std::size_t {
-	Color0,
-	Color1,
-	Color2,
-	Color3,
-	Color4,
-	Color5,
-	Color6,
-	Color7,
-	NumAttachmentPoints,
-};
-
-enum class ResourceType {
-	Unknown				  = ((0x0) << 0),
-	VertexBuffer		  = ((0x1) << 0),
-	IndexBuffer			  = ((0x1) << 1),
-	ConstantBuffer		  = ((0x1) << 2),
-	DepthStencilBuffer	  = ((0x1) << 3),
-	RenderTargetBuffer	  = ((0x1) << 4),
-	ShaderResourceBuffer  = ((0x1) << 5),
-	UnorderedAccessBuffer = ((0x1) << 6),
-	ReadBackBuffer		  = ((0x1) << 7),
-	StructuredBuffer	  = ((0x1) << 8),
-};
-
-ResourceType operator|(const ResourceType &lhs, const ResourceType &rhs);
-bool operator&(const ResourceType &lhs, const ResourceType &rhs);
-
 enum class CubeFace : size_t {
-	Right = 0,
-	Left = 1,
-	Top = 2,
-	Bottom = 3,
-	Back = 4,
-	Front = 5,
-	POSITIVE_X = 0,
-	NEGATIVE_X = 1,
-	POSITIVE_Y = 2,
-	NEGATIVE_Y = 3,
-	POSITIVE_Z = 4,
-	NEGATIVE_Z = 5,
+	Right		= 0,
+	Left		= 1,
+	Top			= 2,
+	Bottom		= 3,
+	Back		= 4,
+	Front		= 5,
+	POSITIVE_X	= 0,
+	NEGATIVE_X	= 1,
+	POSITIVE_Y	= 2,
+	NEGATIVE_Y	= 3,
+	POSITIVE_Z	= 4,
+	NEGATIVE_Z	= 5,
 };
 
 enum class ShaderResourceDimension {
@@ -104,12 +76,13 @@ enum class BufferType {
 	ReadBackBuffer,
 };
 
-constexpr static std::size_t kSwapChainBufferCount = 2;
+constexpr static std::size_t kSwapChainBufferCount	= 2;
 constexpr static std::size_t kFrameResourceCount = 3;
 constexpr static std::size_t kMaxDescriptorTables = 32;
 constexpr static std::size_t kDynamicDescriptorPerHeap = 32;
 constexpr static std::size_t kDynamicDescriptorHeapCount = 2;
 constexpr static std::size_t kVertexBufferSlotCount = 16;
+constexpr static std::size_t kMaxRenderTargetCount = 8;
 
 class FrameIndexProxy {
 	static inline std::atomic_size_t _frameIndex = 0;
@@ -154,11 +127,29 @@ class ComputeContext;
 class StructuredBuffer;
 class UnorderedAccessBuffer;
 class ReadBackBuffer;
-class DepthStencilBuffer;
-class RenderTarget2D;
-class ShaderResourceBuffer;
 
-#define interface struct
+
+class Texture2D;
+class Texture2DArray;
+class TextureCube;
+
+class DepthStencil2D;
+class Texture2D;
+class Texture2DArray;
+class TextureCube;
+
+class RenderTarget2D;
+class RenderTarget2DArray;
+class RenderTargetCube;
+
+class UnorderedAccess2D;
+class UnorderedAccess2DArray;
+class UnorderedAccessCube;
+
+#ifndef interface
+	#define interface struct
+#endif
+
 interface IResource;
 interface IShaderResource;
 interface IShaderResource2D;
@@ -170,6 +161,7 @@ interface IRenderTargetCube;
 interface IUnorderedAccess2D;
 interface IUnorderedAccess2DArray;
 interface IUnorderedAccessCube;
+interface IDepthStencil2D;
 
 interface IBufferResource;
 interface IConstantBuffer;

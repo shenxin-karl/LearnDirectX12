@@ -5,7 +5,7 @@
 #include "ShaderCommon.h"
 #include "dx12lib/PipelineStateObject.h"
 #include "dx12lib/RootSignature.h"
-#include "dx12lib/ShaderResourceBuffer.h"
+#include "dx12lib/TextureShaderResource.h"
 #include "dx12lib/VertexBuffer.h"
 
 namespace d3d {

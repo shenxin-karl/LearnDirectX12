@@ -3,7 +3,7 @@
 #include "dx12lib/Device.h"
 #include "dx12lib/SwapChain.h"
 #include "dx12lib/RenderTarget.h"
-#include "dx12lib/ShaderResourceBuffer.h"
+#include "dx12lib/TextureShaderResource.h"
 #include "dx12lib/CommandList.h"
 #include "dx12lib/ContextProxy.hpp"
 #include "dx12lib/ConstantBuffer.h"

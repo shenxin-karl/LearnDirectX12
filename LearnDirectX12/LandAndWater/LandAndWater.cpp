@@ -12,7 +12,7 @@
 #include "dx12lib/ContextProxy.hpp"
 #include "dx12lib/CommandList.h"
 #include "dx12lib/CommandQueue.h"
-#include "dx12lib/ShaderResourceBuffer.h"
+#include "dx12lib/TextureShaderResource.h"
 #include "dx12lib/VertexBuffer.h"
 #include "dx12lib/ConstantBuffer.h"
 #include "dx12lib/IndexBuffer.h"
