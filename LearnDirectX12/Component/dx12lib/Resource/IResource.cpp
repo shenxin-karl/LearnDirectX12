@@ -1,6 +1,6 @@
-#include "Device.h"
-#include "IResource.h"
-#include "ResourceStateTracker.h"
+#include <dx12lib/Device/Device.h>
+#include <dx12lib/Resource/IResource.h>
+#include <dx12lib/Resource/ResourceStateTracker.h>
 
 namespace dx12lib {
 

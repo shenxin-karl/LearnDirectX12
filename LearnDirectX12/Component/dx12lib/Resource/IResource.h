@@ -1,6 +1,6 @@
 #pragma once
-#include "dx12libStd.h"
-#include "ResourceView.hpp"
+#include <dx12lib/dx12libStd.h>
+#include <dx12lib/Resource/ResourceView.hpp>
 #include <d3d12.h>
 #include <wrl.h>
 

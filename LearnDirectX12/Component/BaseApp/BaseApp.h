@@ -1,9 +1,9 @@
 #pragma once
 #define  NOMINMAX
-#include <windows.h>
+#include <Windows.h>
 #include <DirectXMath.h>
 #include "dx12lib/dx12libStd.h"
-#include "dx12lib/ContextProxy.hpp"
+#include "dx12lib/Context/ContextProxy.hpp"
 #include "ITick.h"
 #include "InputSystem/InputSystem.h"
 
@@ -27,10 +27,10 @@ public:
 	virtual void tick(std::shared_ptr<GameTimer> pGameTimer) override;
 	virtual void endTick(std::shared_ptr<GameTimer> pGameTimer) override;
 	virtual void resize(int width, int height);
-	bool isRuning() const;
+	bool isRunning() const;
 protected:
 	virtual void onInitialize(dx12lib::DirectContextProxy pDirectCtx) {}
-	virtual void onDistory() {}
+	virtual void onDestroy() {}
 	virtual void onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {}
 	virtual void onTick(std::shared_ptr<com::GameTimer> pGameTimer) {}
 	virtual void onEndTick(std::shared_ptr<com::GameTimer> pGameTimer) {}

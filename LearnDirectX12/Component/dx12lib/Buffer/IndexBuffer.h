@@ -1,5 +1,5 @@
 #pragma once
-#include "DefaultBuffer.h"
+#include <dx12lib/Buffer/DefaultBuffer.h>
 
 namespace dx12lib {
 

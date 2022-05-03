@@ -1,5 +1,5 @@
-#include "DescriptorAllocatorPage.h"
-#include "Device.h"
+#include <dx12lib/Descriptor/DescriptorAllocatorPage.h>
+#include <dx12lib/Device/Device.h>
 
 namespace dx12lib {
 

@@ -1,4 +1,4 @@
-#include "Adapter.h"
+#include <dx12lib/Device/Adapter.h>
 
 namespace dx12lib {
 

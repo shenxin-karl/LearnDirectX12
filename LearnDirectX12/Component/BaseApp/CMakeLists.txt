@@ -28,6 +28,7 @@ set_target_properties("BaseApp" PROPERTIES FOLDER "Component")
 
 target_include_directories(BaseApp PUBLIC
 	${CMAKE_CURRENT_SOURCE_DIR}/../
+	${PROJECT_COMPONENT_DIR}/dx12lib/
 )
 
 target_link_libraries(BaseApp PUBLIC

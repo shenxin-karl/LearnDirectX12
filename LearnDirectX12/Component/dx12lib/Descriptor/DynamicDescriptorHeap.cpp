@@ -1,7 +1,7 @@
-#include "RootSignature.h"
-#include "DynamicDescriptorHeap.h"
-#include "Device.h"
-#include "CommandList.h"
+#include <dx12lib/Pipeline/RootSignature.h>
+#include <dx12lib/Descriptor/DynamicDescriptorHeap.h>
+#include <dx12lib/Device/Device.h>
+#include <dx12lib/Context/CommandList.h>
 
 namespace dx12lib {
 

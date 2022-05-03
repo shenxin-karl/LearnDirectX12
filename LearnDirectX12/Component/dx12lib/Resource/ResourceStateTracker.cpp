@@ -1,8 +1,8 @@
 #include <iostream>
-#include "IResource.h"
-#include "ResourceStateTracker.h"
-#include "CommandList.h"
-#include "ContextProxy.hpp"
+#include <dx12lib/Resource/IResource.h>
+#include <dx12lib/Resource/ResourceStateTracker.h>
+#include <dx12lib/Context/CommandList.h>
+#include <dx12lib/Context/ContextProxy.hpp>
 
 namespace dx12lib {
 

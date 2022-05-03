@@ -1,7 +1,7 @@
-#include "CommandList.h"
-#include "FrameResourceQueue.h"
-#include "Device.h"
-#include "MakeObejctTool.hpp"
+#include <dx12lib/Context/CommandList.h>
+#include <dx12lib/Context/FrameResourceQueue.h>
+#include <dx12lib/Device/Device.h>
+#include <dx12lib/Tool/MakeObejctTool.hpp>
 
 namespace dx12lib {
 

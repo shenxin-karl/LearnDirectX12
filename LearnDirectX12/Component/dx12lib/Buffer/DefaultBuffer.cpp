@@ -1,5 +1,5 @@
-#include "DefaultBuffer.h"
-#include "ResourceStateTracker.h"
+#include <dx12lib/Buffer/DefaultBuffer.h>
+#include <dx12lib/Resource/ResourceStateTracker.h>
 
 namespace dx12lib {
 

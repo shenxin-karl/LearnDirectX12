@@ -1,3 +1,3 @@
 #pragma once
-#include "IResource.h"
-#include "ResourceView.hpp"
+#include <dx12lib/Resource/IResource.h>
+#include <dx12lib/Resource/ResourceView.hpp>

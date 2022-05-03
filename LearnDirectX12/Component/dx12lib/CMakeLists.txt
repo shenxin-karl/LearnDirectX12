@@ -22,16 +22,6 @@ set_target_properties("dx12lib" PROPERTIES FOLDER "Component")
 
 target_include_directories(dx12lib PRIVATE 
 	${PROJECT_COMPONENT_DIR}/
-	${CMAKE_CURRENT_SOURCE_DIR}/
-	${CMAKE_CURRENT_SOURCE_DIR}/../
-	${CMAKE_CURRENT_SOURCE_DIR}/Buffer/
-	${CMAKE_CURRENT_SOURCE_DIR}/Context/
-	${CMAKE_CURRENT_SOURCE_DIR}/Descriptor/
-	${CMAKE_CURRENT_SOURCE_DIR}/Device/
-	${CMAKE_CURRENT_SOURCE_DIR}/Pipeline/
-	${CMAKE_CURRENT_SOURCE_DIR}/Resource/
-	${CMAKE_CURRENT_SOURCE_DIR}/Texture/
-	${CMAKE_CURRENT_SOURCE_DIR}/Tool/
 )
 
 target_link_libraries(dx12lib PUBLIC 

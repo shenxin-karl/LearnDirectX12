@@ -1,6 +1,6 @@
-#include "TextureShaderResource.h"
-#include "ResourceStateTracker.h"
-#include "Device.h"
+#include <dx12lib/Texture/TextureShaderResource.h>
+#include <dx12lib/Resource/ResourceStateTracker.h>
+#include <dx12lib/Device/Device.h>
 
 namespace dx12lib {
 
@@ -95,7 +95,7 @@ ShaderResourceView Texture2DArray::getSRV(size_t planeSlice, size_t mipSlice) co
 	srvDesc.Texture2DArray.PlaneSlice = 0;
 	srvDesc.Texture2DArray.MostDetailedMip = 0;
 	srvDesc.Texture2DArray.ResourceMinLODClamp = static_cast<float>(mipSlice);
-	srvDesc.Texture2DArray.FirstArraySlice = planeSlice;
+	srvDesc.Texture2DArray.FirstArraySlice = static_cast<UINT>(planeSlice);
 	srvDesc.Texture2DArray.ArraySize = 1;
 	auto descriptor = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	pSharedDevice->getD3DDevice()->CreateShaderResourceView(

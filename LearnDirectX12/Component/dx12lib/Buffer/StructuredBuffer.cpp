@@ -1,6 +1,6 @@
-#include "StructuredBuffer.h"
-#include "Device.h"
-#include "UploadBuffer.h"
+#include "dx12lib/Device/Device.h"
+#include "dx12lib/Buffer/StructuredBuffer.h"
+#include "dx12lib/Buffer/UploadBuffer.h"
 
 namespace dx12lib {
 

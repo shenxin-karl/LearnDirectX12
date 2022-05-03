@@ -1,7 +1,7 @@
 #pragma once
-#include "dx12libStd.h"
-#include "ContextProxy.hpp"
-#include "FrameResourceQueue.h"
+#include <dx12lib/dx12libStd.h>
+#include <dx12lib/Context/ContextProxy.hpp>
+#include <dx12lib/Context/FrameResourceQueue.h>
 
 namespace dx12lib {
 

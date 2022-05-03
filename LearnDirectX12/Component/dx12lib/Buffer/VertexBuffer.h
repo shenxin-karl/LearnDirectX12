@@ -1,6 +1,6 @@
 #pragma once
-#include "dx12libStd.h"
-#include "UploadBuffer.h"
+#include <dx12lib/dx12libStd.h>
+#include <dx12lib/Buffer/UploadBuffer.h>
 #include <memory>
 
 namespace dx12lib {

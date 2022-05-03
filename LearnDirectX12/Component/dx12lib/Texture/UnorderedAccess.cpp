@@ -1,7 +1,7 @@
-#include "UnorderedAccess.h"
-#include "Device.h"
-#include "D3Dx12.h"
-#include "ResourceStateTracker.h"
+#include <dx12lib/Texture/UnorderedAccess.h>
+#include <dx12lib/Device/Device.h>
+#include <dx12lib/Tool/D3Dx12.h>
+#include <dx12lib/Resource/ResourceStateTracker.h>
 
 namespace dx12lib {
 
@@ -112,7 +112,7 @@ ShaderResourceView UnorderedAccess2DArray::getSRV(size_t mipSlice) const {
 	srvDesc.Texture2DArray.MostDetailedMip = 0;
 	srvDesc.Texture2DArray.MipLevels = -1;
 	srvDesc.Texture2DArray.FirstArraySlice = 0;
-	srvDesc.Texture2DArray.ArraySize = getPlaneSlice();
+	srvDesc.Texture2DArray.ArraySize = static_cast<UINT>(getPlaneSlice());
 	srvDesc.Texture2DArray.PlaneSlice = 0;
 	srvDesc.Texture2DArray.ResourceMinLODClamp = static_cast<float>(mipSlice);
 	pSharedDevice->getD3DDevice()->CreateShaderResourceView(
@@ -138,7 +138,7 @@ ShaderResourceView UnorderedAccess2DArray::getSRV(size_t planeSlice, size_t mipS
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
 	srvDesc.Texture2DArray.MostDetailedMip = 0;
 	srvDesc.Texture2DArray.MipLevels = -1;
-	srvDesc.Texture2DArray.FirstArraySlice = planeSlice;
+	srvDesc.Texture2DArray.FirstArraySlice = static_cast<UINT>(planeSlice);
 	srvDesc.Texture2DArray.ArraySize = 1;
 	srvDesc.Texture2DArray.PlaneSlice = 0;
 	srvDesc.Texture2DArray.ResourceMinLODClamp = static_cast<float>(mipSlice);
@@ -164,8 +164,8 @@ UnorderedAccessView UnorderedAccess2DArray::getUAV(size_t planeSlice, size_t mip
 	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 	uavDesc.Format = _pResource->GetDesc().Format;
 	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-	uavDesc.Texture2DArray.MipSlice = mipSlice;
-	uavDesc.Texture2DArray.FirstArraySlice = planeSlice;
+	uavDesc.Texture2DArray.MipSlice = static_cast<UINT>(mipSlice);
+	uavDesc.Texture2DArray.FirstArraySlice = static_cast<UINT>(planeSlice);
 	uavDesc.Texture2DArray.ArraySize = 1;
 	uavDesc.Texture2DArray.PlaneSlice = 0;
 	pSharedDevice->getD3DDevice()->CreateUnorderedAccessView(
@@ -199,7 +199,7 @@ UnorderedAccess2DArray::UnorderedAccess2DArray(std::weak_ptr<Device> pDevice, si
 	unorderedAccessDesc.Alignment = 0;
 	unorderedAccessDesc.Width = width;
 	unorderedAccessDesc.Height = static_cast<UINT>(height);
-	unorderedAccessDesc.DepthOrArraySize = planeSlice;
+	unorderedAccessDesc.DepthOrArraySize = static_cast<UINT>(planeSlice);
 	unorderedAccessDesc.MipLevels = 1;
 	unorderedAccessDesc.Format = format;
 	unorderedAccessDesc.SampleDesc.Count = 1;
@@ -257,7 +257,7 @@ ShaderResourceView UnorderedAccessCube::getSRV(CubeFace face, size_t mipSlice) c
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
 	srvDesc.Texture2DArray.MostDetailedMip = 0;
 	srvDesc.Texture2DArray.MipLevels = -1;
-	srvDesc.Texture2DArray.FirstArraySlice = static_cast<size_t>(face);
+	srvDesc.Texture2DArray.FirstArraySlice = static_cast<UINT>(face);
 	srvDesc.Texture2DArray.ArraySize = 1;
 	srvDesc.Texture2DArray.PlaneSlice = 0;
 	srvDesc.Texture2DArray.ResourceMinLODClamp = static_cast<float>(mipSlice);
@@ -282,8 +282,8 @@ UnorderedAccessView UnorderedAccessCube::getUAV(CubeFace face, size_t mipSlice) 
 	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 	uavDesc.Format = _pResource->GetDesc().Format;
 	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-	uavDesc.Texture2DArray.MipSlice = mipSlice;
-	uavDesc.Texture2DArray.FirstArraySlice = static_cast<size_t>(face);
+	uavDesc.Texture2DArray.MipSlice = static_cast<UINT>(mipSlice);
+	uavDesc.Texture2DArray.FirstArraySlice = static_cast<UINT>(face);
 	uavDesc.Texture2DArray.ArraySize = 1;
 	uavDesc.Texture2DArray.PlaneSlice = 0;
 	pSharedDevice->getD3DDevice()->CreateUnorderedAccessView(

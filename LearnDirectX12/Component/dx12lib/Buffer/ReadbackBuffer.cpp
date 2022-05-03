@@ -1,6 +1,6 @@
-#include "ReadBackBuffer.h"
-#include "ResourceStateTracker.h"
-#include "Device.h"
+#include <dx12lib/Buffer/ReadBackBuffer.h>
+#include <dx12lib/Resource/ResourceStateTracker.h>
+#include <dx12lib/Device/Device.h>
 
 namespace dx12lib {
 

@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
-#include "CommandList.h"
-#include "CommonContext.h"
+#include <dx12lib/Context/CommandList.h>
+#include <dx12lib/Context/CommonContext.h>
 
 namespace dx12lib {
 

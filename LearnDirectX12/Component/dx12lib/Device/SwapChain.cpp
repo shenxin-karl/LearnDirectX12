@@ -1,11 +1,11 @@
-#include "SwapChain.h"
-#include "Device.h"
-#include "Adapter.h"
-#include "CommandQueue.h"
-#include "CommandList.h"
-#include "MakeObejctTool.hpp"
-#include "DepthStencil.h"
-#include "RenderTarget.h"
+#include <dx12lib/Device/SwapChain.h>
+#include <dx12lib/Device/Device.h>
+#include <dx12lib/Device/Adapter.h>
+#include <dx12lib/Context/CommandQueue.h>
+#include <dx12lib/Context/CommandList.h>
+#include <dx12lib/Tool/MakeObejctTool.hpp>
+#include <dx12lib/Texture/DepthStencil.h>
+#include <dx12lib/Texture/RenderTarget.h>
 #include <string>
 
 namespace dx12lib {

@@ -1,7 +1,7 @@
-#include "IndexBuffer.h"
-#include "DefaultBuffer.h"
-#include "Device.h"
-#include "CommandList.h"
+#include <dx12lib/Buffer/IndexBuffer.h>
+#include <dx12lib/Buffer/DefaultBuffer.h>
+#include <dx12lib/Device/Device.h>
+#include <dx12lib/Context/CommandList.h>
 
 namespace dx12lib {
 

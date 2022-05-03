@@ -1,5 +1,5 @@
-#include "UploadBuffer.h"
-#include "ResourceStateTracker.h"
+#include <dx12lib/Buffer/UploadBuffer.h>
+#include <dx12lib/Resource/ResourceStateTracker.h>
 
 namespace dx12lib {
 

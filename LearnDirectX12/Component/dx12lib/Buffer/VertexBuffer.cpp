@@ -1,7 +1,7 @@
-#include "VertexBuffer.h"
-#include "DefaultBuffer.h"
-#include "CommandList.h"
-#include "Device.h"
+#include <dx12lib/Buffer/VertexBuffer.h>
+#include <dx12lib/Buffer/DefaultBuffer.h>
+#include <dx12lib/Context/CommandList.h>
+#include <dx12lib/Device/Device.h>
 
 namespace dx12lib {
 

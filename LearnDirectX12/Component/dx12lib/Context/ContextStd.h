@@ -1,4 +1,4 @@
 #pragma once
-#include "CommandList.h"
-#include "CommandQueue.h"
-#include "CommonContext.h"
+#include <dx12lib/Context/CommandList.h>
+#include <dx12lib/Context/CommandQueue.h>
+#include <dx12lib/Context/CommonContext.h>

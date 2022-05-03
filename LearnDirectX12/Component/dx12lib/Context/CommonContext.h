@@ -1,11 +1,10 @@
 #pragma once
 #include <memory>
 #include <Math/MathStd.hpp>
-
-#include "dx12libStd.h"
-#include "IResource.h"
-#include "MakeObejctTool.hpp"
-#include "FRConstantBuffer.hpp"
+#include <dx12lib/dx12libStd.h>
+#include <dx12lib/Resource/IResource.h>
+#include <dx12lib/Tool/MakeObejctTool.hpp>
+#include <dx12lib/Buffer/FRConstantBuffer.hpp>
 
 namespace dx12lib {
 

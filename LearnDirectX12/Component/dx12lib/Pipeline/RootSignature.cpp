@@ -1,5 +1,5 @@
-#include "Device.h"
-#include "RootSignature.h"
+#include <dx12lib/Device/Device.h>
+#include <dx12lib/Pipeline/RootSignature.h>
 
 namespace dx12lib {
 

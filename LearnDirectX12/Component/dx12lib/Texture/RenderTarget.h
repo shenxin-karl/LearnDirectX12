@@ -1,5 +1,5 @@
 #pragma once
-#include "IResource.h"
+#include <dx12lib/Resource/IResource.h>
 
 namespace dx12lib {
 

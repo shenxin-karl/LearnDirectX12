@@ -1,9 +1,11 @@
 #pragma once
-#include "Device.h"
-#include "UploadBuffer.h"
-#include "DescriptorAllocation.h"
-#include "UploadBuffer.h"
+#include <dx12lib/Device/Device.h>
+#include <dx12lib/Buffer/UploadBuffer.h>
+#include <dx12lib/Descriptor/DescriptorAllocation.h>
+#include <dx12lib/Resource/ResourceView.hpp>
+#include <dx12lib/Resource/IResource.h>
 #include <span>
+
 
 namespace dx12lib {
 

@@ -1,6 +1,6 @@
-#include "RenderTarget.h"
-#include "Device.h"
-#include "ResourceStateTracker.h"
+#include <dx12lib/Texture/RenderTarget.h>
+#include <dx12lib/Device/Device.h>
+#include <dx12lib/Resource/ResourceStateTracker.h>
 
 namespace dx12lib {
 

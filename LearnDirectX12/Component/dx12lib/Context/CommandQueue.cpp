@@ -1,11 +1,11 @@
-#include "CommandQueue.h"
-#include "CommandList.h"
-#include "SwapChain.h"
-#include "FrameResourceQueue.h"
-#include "Device.h"
-#include "ResourceStateTracker.h"
-#include "MakeObejctTool.hpp"
-#include "ContextProxy.hpp"
+#include <dx12lib/Context/CommandQueue.h>
+#include <dx12lib/Context/CommandList.h>
+#include <dx12lib/Context/FrameResourceQueue.h>
+#include <dx12lib/Context/ContextProxy.hpp>
+#include <dx12lib/Device/SwapChain.h>
+#include <dx12lib/Device/Device.h>
+#include <dx12lib/Resource/ResourceStateTracker.h>
+#include <dx12lib/Tool/MakeObejctTool.hpp>
 
 namespace dx12lib {
 

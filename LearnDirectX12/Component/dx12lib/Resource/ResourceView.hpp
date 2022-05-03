@@ -1,6 +1,6 @@
 #pragma once
-#include "dx12libStd.h"
-#include "DescriptorAllocation.h"
+#include <dx12lib/dx12libStd.h>
+#include <dx12lib/Descriptor/DescriptorAllocation.h>
 
 namespace dx12lib {
 
@@ -25,7 +25,6 @@ public:
 	{
 		assert(offset < descriptor.getNumHandle());
 	}
-public:
 	D3D12_CPU_DESCRIPTOR_HANDLE getCPUDescriptorHandle() const {
 		return _descriptor.getCPUHandle(_offset);
 	}

@@ -1,9 +1,9 @@
 #pragma once
-#include "Device.h"
-#include "DescriptorAllocator.h"
-#include "DescriptorAllocatorPage.h"
-#include "DescriptorAllocation.h"
-#include "MakeObejctTool.hpp"
+#include <dx12lib/Device/Device.h>
+#include <dx12lib/Descriptor/DescriptorAllocator.h>
+#include <dx12lib/Descriptor/DescriptorAllocatorPage.h>
+#include <dx12lib/Descriptor/DescriptorAllocation.h>
+#include <dx12lib/Tool/MakeObejctTool.hpp>
 
 namespace dx12lib {
 

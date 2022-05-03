@@ -14,7 +14,6 @@ LIST(APPEND ComponentAllSubDir "Geometry")
 LIST(APPEND ComponentAllSubDir "dx12lib")
 LIST(APPEND ComponentAllSubDir "VoxelTerrain")
 
-set(PROJECT_COMPONENT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(AllTestDir "")
 foreach(dirname ${ComponentAllSubDir}) 
 	if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${dirname}/CMakeLists.txt")

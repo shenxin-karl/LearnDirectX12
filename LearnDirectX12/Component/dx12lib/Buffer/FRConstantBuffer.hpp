@@ -1,9 +1,9 @@
 #pragma once
-#include "Device.h"
-#include "IResource.h"
-#include "UploadBuffer.h"
-#include "CBufferVisitor.hpp"
-#include "DescriptorAllocation.h"
+#include <dx12lib/Device/Device.h>
+#include <dx12lib/Resource/IResource.h>
+#include <dx12lib/Buffer/UploadBuffer.h>
+#include <dx12lib/Buffer/CBufferVisitor.hpp>
+#include <dx12lib/Descriptor/DescriptorAllocation.h>
 
 namespace dx12lib {
 

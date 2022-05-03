@@ -1,6 +1,6 @@
 #pragma once
-#include "dx12libStd.h"
-#include "ContextProxy.hpp"
+#include <dx12lib/dx12libStd.h>
+#include <dx12lib/Context/ContextProxy.hpp>
 
 namespace dx12lib {
 

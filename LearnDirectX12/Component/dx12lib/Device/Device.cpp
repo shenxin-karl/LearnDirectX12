@@ -1,15 +1,12 @@
-#include "Device.h"
-#include "Adapter.h"
-#include "SwapChain.h"
-#include "CommandQueue.h"
-#include "IndexBuffer.h"
-#include "VertexBuffer.h"
-#include "ConstantBuffer.h"
-#include "DescriptorAllocator.h"
-#include "DescriptorAllocation.h"
-#include "RootSignature.h"
-#include "PipelineStateObject.h"
-#include "MakeObejctTool.hpp"
+#include <dx12lib/Device/Device.h>
+#include <dx12lib/Device/Adapter.h>
+#include <dx12lib/Device/SwapChain.h>
+#include <dx12lib/Tool/MakeObejctTool.hpp>
+#include <dx12lib/Descriptor/DescriptorAllocation.h>
+#include <dx12lib/Descriptor/DescriptorAllocator.h>
+#include <dx12lib/Context/CommandQueue.h>
+#include <dx12lib/Pipeline/PipelineStateObject.h>
+#include <dx12lib/Pipeline/RootSignature.h>
 
 namespace dx12lib {
 	

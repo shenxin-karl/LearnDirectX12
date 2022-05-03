@@ -1,6 +1,6 @@
 #pragma once
-#include "dx12libStd.h"
-#include "IResource.h"
+#include <dx12lib/dx12libStd.h>
+#include <dx12lib/Resource/IResource.h>
 
 namespace dx12lib {
 
