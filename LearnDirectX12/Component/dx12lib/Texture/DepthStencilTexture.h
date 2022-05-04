@@ -13,8 +13,8 @@ public:
 	~DepthStencil2D() override;
 protected:
 	DepthStencil2D(std::weak_ptr<Device> pDevice, 
-		uint32 width, 
-		uint32 height,
+		size_t width, 
+		size_t height,
 		const D3D12_CLEAR_VALUE *pClearValue = nullptr,
 		DXGI_FORMAT depthStencilFormat = DXGI_FORMAT_UNKNOWN
 	);

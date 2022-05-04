@@ -35,10 +35,10 @@ target_include_directories(D3D PUBLIC
 include(CmakeRC.cmake)
 cmrc_add_resource_library(D3D-resources ALIAS D3D::rc
 	NAMESPACE D3D			# 指定命名空间
-	"shader/BlurFilterCS.hlsl"
-	"shader/SobelFilterCS.hlsl"
-	"shader/FXAACS.hlsl"
-	"shader/SkyBox.hlsl"
+	"HlslShader/BlurFilterCS.hlsl"
+	"HlslShader/SobelFilterCS.hlsl"
+	"HlslShader/FXAACS.hlsl"
+	"HlslShader/SkyBox.hlsl"
 	"resources/BRDF_LUT.dds"
 )
 

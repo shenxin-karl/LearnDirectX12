@@ -1,7 +1,7 @@
 #pragma once
 #include "BaseApp/BaseApp.h"
+#include "D3D/Tool/Camera.h"
 #include "GameTimer/GameTimer.h"
-#include "D3D/Camera.h"
 #include "Math/MathHelper.h"
 
 using namespace Math;

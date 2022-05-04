@@ -1,7 +1,7 @@
 #pragma once
-#include "dx12lib/dx12libStd.h"
-#include "dx12lib/ContextProxy.hpp"
-#include "d3dUtil.h"
+#include <dx12lib/dx12libStd.h>
+#include <dx12lib/Context/ContextStd.h>
+#include "D3D/d3dUtil.h"
 
 namespace d3d {
 	
@@ -13,26 +13,20 @@ public:
 		DXGI_FORMAT format
 	);
 
-	template<typename T> requires(std::is_base_of_v<dx12lib::IResource, T>)
+	template<typename T> requires(std::is_base_of_v<dx12lib::IShaderResource2D, T>)
 	void produce(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<T> pInput) const {
-		auto pResource = std::static_pointer_cast<dx12lib::IResource>(pInput);
-		if (!(pResource->getResourceType() & dx12lib::ResourceType::ShaderResourceBuffer)) {
-			assert(false);
-			throw std::invalid_argument("pInput resource type invalid");
-		}
-
 		_produceImpl(
 			pComputeCtx,
-			std::static_pointer_cast<dx12lib::IShaderResourceBuffer>(pInput)
+			std::static_pointer_cast<dx12lib::IShaderResource2D>(pInput)
 		);
 	}
 
 	void _produceImpl(dx12lib::ComputeContextProxy pComputeCtx, 
-		std::shared_ptr<dx12lib::IShaderResourceBuffer> pInput
+		std::shared_ptr<dx12lib::IShaderResource2D> pInput
 	) const;
 
 	void onResize(dx12lib::ComputeContextProxy pComputeCtx, uint32 width, uint32 height);
-	std::shared_ptr<dx12lib::UnorderedAccessBuffer> getOutput() const;
+	std::shared_ptr<dx12lib::UnorderedAccess2D> getOutput() const;
 public:
 	float _minThreshold = 0.0312f;
 	float _threshold = 0.125f;
@@ -52,7 +46,7 @@ private:
 	std::uint32_t _width;
 	std::uint32_t _height;
 	DXGI_FORMAT   _format;
-	std::shared_ptr<dx12lib::UnorderedAccessBuffer> _pOutputMap;
+	std::shared_ptr<dx12lib::UnorderedAccess2D> _pOutputMap;
 	static inline std::shared_ptr<dx12lib::ComputePSO>	_pConsolePSO;
 	static inline std::shared_ptr<dx12lib::RootSignature> _pRootSingnature;
 };

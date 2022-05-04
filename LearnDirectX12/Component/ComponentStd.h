@@ -3,7 +3,7 @@
 #include <Windows.h>
 #include <source_location>
 #include <sstream>
-#include "D3D/D3DException.h"
+#include "D3D/Exception/D3DException.h"
 
 inline void ThrowIfFailed(HRESULT hr, const std::source_location &sl = std::source_location::current()) {
 	if (FAILED(hr))

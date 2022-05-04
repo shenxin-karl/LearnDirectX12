@@ -1,20 +1,12 @@
 #include "BoxApp.h"
-#include "dx12lib/CommandList.h"
-#include "dx12lib/PipelineStateObject.h"
-#include "dx12lib/RootSignature.h"
-#include "dx12lib/Device.h"
-#include "dx12lib/SwapChain.h"
-#include <DirectXColors.h>
-#include <iostream>
-
-#include "dx12lib/IndexBuffer.h"
-#include "dx12lib/VertexBuffer.h"
-#include "dx12lib/CommandQueue.h"
-#include "dx12lib/RenderTarget.h"
 #include "D3D/d3dutil.h"
-#include "Math/MathHelper.h"
 #include "InputSystem/mouse.h"
-#include "dx12lib/FRConstantBuffer.hpp"
+#include <DirectXColors.h>
+#include <dx12lib/Device/DeviceStd.h>
+#include <dx12lib/Context/ContextStd.h>
+#include <dx12lib/Texture/TextureStd.h>
+#include <dx12lib/Buffer/BufferStd.h>
+#include <dx12lib/Pipeline/PipelineStd.h>
 
 BoxApp::BoxApp() {
 	_title = "BoxApp";

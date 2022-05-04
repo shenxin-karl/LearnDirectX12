@@ -1,13 +1,10 @@
 #include "SobelFilter.h"
-#include "D3Dx12.h"
-#include "dx12lib/IResource.h"
-#include "dx12lib/PipelineStateObject.h"
-#include "dx12lib/RootSignature.h"
-#include "dx12lib/Device.h"
-#include "D3DShaderResource.h"
-#include "d3dutil.h" 
-#include "dx12lib/UnorderedAccessBuffer.h"
-#include "dx12lib/ResourceStateTracker.h"
+#include "D3D/d3dutil.h"
+#include "D3D/Shader/D3DShaderResource.h"
+#include <dx12lib/Resource/ResourceStd.h>
+#include <dx12lib/Texture/TextureStd.h>
+#include <dx12lib/Pipeline/PipelineStd.h>
+#include <dx12lib/Device/Device.h>
 
 namespace d3d {
 
@@ -22,7 +19,7 @@ void SobelFilter::onResize(dx12lib::ComputeContextProxy pComputeList, std::uint3
 	}
 }
 
-std::shared_ptr<dx12lib::UnorderedAccessBuffer> SobelFilter::getOutput() const {
+std::shared_ptr<dx12lib::UnorderedAccess2D> SobelFilter::getOutput() const {
 	return _pSobelMap;
 }
 
@@ -30,7 +27,7 @@ void SobelFilter::tryBuildSobelMap(dx12lib::ComputeContextProxy pComputeList, DX
 	if (_pSobelMap == nullptr || _pSobelMap->getWidth() != _width ||
 		_pSobelMap->getHeight() != _height || _pSobelMap->getFormat() != format) 
 	{
-		_pSobelMap = pComputeList->createUnorderedAccessBuffer(_width, _height, format);
+		_pSobelMap = pComputeList->createUnorderedAccess2D(_width, _height, nullptr, format);
 	}
 }
 
@@ -68,28 +65,28 @@ void SobelFilter::tryBuildProducePSO(dx12lib::ComputeContextProxy pComputeList) 
 }
 
 void SobelFilter::tryBuildApplyPSO(dx12lib::ComputeContextProxy pComputeList) {
-	if (_pAllpyPSO != nullptr)
+	if (_pApplyPSO != nullptr)
 		return;
 
 	tryBuildRootSignature(pComputeList);
 	auto pSharedDevice = pComputeList->getDevice().lock();
-	_pAllpyPSO = pSharedDevice->createComputePSO("SobelProducePSO");
+	_pApplyPSO = pSharedDevice->createComputePSO("SobelProducePSO");
 	auto sobelFilterCSHlsl = getD3DResource("shader/SobelFilterCS.hlsl");
 
 	D3D_SHADER_MACRO macros[] = { { "APPLY_MODE", "" }, { nullptr, nullptr } };
-	_pAllpyPSO->setRootSignature(_pRootSignature);
-	_pAllpyPSO->setComputeShader(compileShader(
+	_pApplyPSO->setRootSignature(_pRootSignature);
+	_pApplyPSO->setComputeShader(compileShader(
 		sobelFilterCSHlsl.begin(),
 		sobelFilterCSHlsl.size(),
 		macros,
 		"SobelApply",
 		"cs_5_0"
 	));
-	_pAllpyPSO->finalize();
+	_pApplyPSO->finalize();
 }
 
 void SobelFilter::produceImpl(dx12lib::ComputeContextProxy pComputeList, 
-	std::shared_ptr<dx12lib::IShaderResourceBuffer> pInput) 
+	std::shared_ptr<dx12lib::IShaderResource2D> pInput) 
 {
 	assert(pInput != nullptr);
 	tryBuildSobelMap(pComputeList, DXGI_FORMAT_R8_UNORM);
@@ -99,15 +96,15 @@ void SobelFilter::produceImpl(dx12lib::ComputeContextProxy pComputeList,
 	pComputeList->transitionBarrier(_pSobelMap, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
 	pComputeList->setComputePSO(_pProducePSO);
-	pComputeList->setShaderResourceBuffer(pInput, SR_Input);
-	pComputeList->setUnorderedAccessBuffer(_pSobelMap, UA_Output);
+	pComputeList->setShaderResourceView(pInput->getSRV(), SR_Input);
+	pComputeList->setUnorderedAccessView(_pSobelMap->getUAV(), UA_Output);
 	uint32 numXGroup = static_cast<uint32>(std::ceil(float(_width) / kMaxSobelThreadCount));
 	uint32 numYGroup = static_cast<uint32>(std::ceil(float(_height) / kMaxSobelThreadCount));
 	pComputeList->dispatch(numXGroup, numYGroup);
 }
 
 void SobelFilter::applyImpl(dx12lib::ComputeContextProxy pComputeList, 
-	std::shared_ptr<dx12lib::IShaderResourceBuffer> pInput) 
+	std::shared_ptr<dx12lib::IShaderResource2D> pInput) 
 {
 	assert(pInput != nullptr);
 	tryBuildSobelMap(pComputeList, pInput->getFormat());
@@ -116,9 +113,9 @@ void SobelFilter::applyImpl(dx12lib::ComputeContextProxy pComputeList,
 	pComputeList->transitionBarrier(pInput, D3D12_RESOURCE_STATE_GENERIC_READ);
 	pComputeList->transitionBarrier(_pSobelMap, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
-	pComputeList->setComputePSO(_pAllpyPSO);
-	pComputeList->setShaderResourceBuffer(pInput, SR_Input);
-	pComputeList->setUnorderedAccessBuffer(_pSobelMap, UA_Output);
+	pComputeList->setComputePSO(_pApplyPSO);
+	pComputeList->setShaderResourceView(pInput->getSRV(), SR_Input);
+	pComputeList->setUnorderedAccessView(_pSobelMap->getUAV(), UA_Output);
 	uint32 numXGroup = static_cast<uint32>(std::ceil(float(_width) / kMaxSobelThreadCount));
 	uint32 numYGroup = static_cast<uint32>(std::ceil(float(_height) / kMaxSobelThreadCount));
 	pComputeList->dispatch(numXGroup, numYGroup);

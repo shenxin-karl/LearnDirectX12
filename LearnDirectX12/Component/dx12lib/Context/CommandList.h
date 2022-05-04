@@ -17,12 +17,12 @@ public:
 	std::shared_ptr<CommandList> getCommandList() noexcept override;
 
 /// CommonContext api
-	std::shared_ptr<Texture2D> createDDSTexture2DFromFile(const std::wstring &fileName) override;
-	std::shared_ptr<Texture2D> createDDSTexture2DFromMemory(const void *pData, size_t sizeInByte) override;
-	std::shared_ptr<Texture2DArray> createDDSTexture2DArrayFromFile(const std::wstring &fileName) override;
-	std::shared_ptr<Texture2DArray> createDDSTexture2DArrayFromMemory(const void *pData, size_t sizeInByte) override;
-	std::shared_ptr<TextureCube> createDDSTextureCubeFromFile(const std::wstring &fileName) override;
-	std::shared_ptr<TextureCube> createDDSTextureCubeFromMemory(const void *pData, size_t sizeInByte) override;
+	std::shared_ptr<Sampler2D> createDDSTexture2DFromFile(const std::wstring &fileName) override;
+	std::shared_ptr<Sampler2D> createDDSTexture2DFromMemory(const void *pData, size_t sizeInByte) override;
+	std::shared_ptr<Sampler2DArray> createDDSTexture2DArrayFromFile(const std::wstring &fileName) override;
+	std::shared_ptr<Sampler2DArray> createDDSTexture2DArrayFromMemory(const void *pData, size_t sizeInByte) override;
+	std::shared_ptr<SamplerCube> createDDSTextureCubeFromFile(const std::wstring &fileName) override;
+	std::shared_ptr<SamplerCube> createDDSTextureCubeFromMemory(const void *pData, size_t sizeInByte) override;
 
 	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) override;
 	void setConstantBufferView(const ConstantBufferView &cbv, size_t rootIndex, size_t offset) override;
@@ -91,7 +91,6 @@ private:
 		IResource     *pRTBuffers[kMaxRenderTargetCount];
 		IResource     *pDepthStencil;
 		IndexBuffer   *pIndexBuffer;
-		RenderTarget  *pRenderTarget;
 		bool           isSetViewport;
 		bool           isSetScissorRect;
 		UINT           stencilRef;

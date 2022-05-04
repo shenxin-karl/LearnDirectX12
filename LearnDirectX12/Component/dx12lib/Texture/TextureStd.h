@@ -1,5 +1,5 @@
 #pragma once
-#include <dx12lib/Texture/DepthStencil.h>
-#include <dx12lib/Texture/RenderTarget.h>
-#include <dx12lib/Texture/TextureShaderResource.h>
-#include <dx12lib/Texture/UnorderedAccess.h>
+#include <dx12lib/Texture/DepthStencilTexture.h>
+#include <dx12lib/Texture/RenderTargetTexture.h>
+#include <dx12lib/Texture/SamplerTexture.h>
+#include <dx12lib/Texture/UnorderedAccessTexture.h>

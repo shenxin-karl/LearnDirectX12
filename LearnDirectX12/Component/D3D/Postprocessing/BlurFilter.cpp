@@ -1,13 +1,8 @@
 #include "BlurFilter.h"
-#include "D3Dx12.h"
-#include "dx12lib/IResource.h"
-#include "dx12lib/PipelineStateObject.h"
-#include "dx12lib/RootSignature.h"
-#include "dx12lib/Device.h"
-#include "D3DShaderResource.h"
-#include "d3dutil.h" 
-#include "dx12lib/UnorderedAccessBuffer.h"
-#include "dx12lib/ResourceStateTracker.h"
+#include "D3D/d3dutil.h"
+#include "D3D/Shader/D3DShaderResource.h"
+#include <dx12lib/Texture/TextureStd.h>
+#include <dx12lib/Pipeline/PipelineStd.h>
 
 
 namespace d3d {
@@ -49,18 +44,18 @@ void BlurFilter::produceImpl(dx12lib::ComputeContextProxy pComputeList,
 	for (int i = 0; i < blurCount; ++i) {
 		// horizonal blur
 		pComputeList->setComputePSO(_pHorzBlurPSO);
-		pComputeList->setShaderResourceView(_pBlurMap1->getShaderResourceView(), SR_Input);
-		pComputeList->setUnorderedAccessBuffer(_pBlurMap0, UA_Output);
+		pComputeList->setShaderResourceView(_pBlurMap1->getSRV(), SR_Input);
+		pComputeList->setUnorderedAccessView(_pBlurMap0->getUAV(), UA_Output);
 		updateConstantBuffer();
 		pComputeList->transitionBarrier(_pBlurMap1, D3D12_RESOURCE_STATE_GENERIC_READ);
 		pComputeList->transitionBarrier(_pBlurMap0, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-		int numXGroup = static_cast<int>(std::ceil(_width / float(kMaxThreads)));
+		int numXGroup = static_cast<int>(std::ceil(_width / static_cast<float>(kMaxThreads)));
 		pComputeList->dispatch(numXGroup, _height, 1);
 		
 		// vertical blur
 		pComputeList->setComputePSO(_pVertBlurPSO);
-		pComputeList->setShaderResourceView(_pBlurMap1->getShaderResourceView(), SR_Input);
-		pComputeList->setUnorderedAccessBuffer(_pBlurMap1, UA_Output);
+		pComputeList->setShaderResourceView(_pBlurMap1->getSRV(), SR_Input);
+		pComputeList->setUnorderedAccessView(_pBlurMap1->getUAV(), UA_Output);
 		updateConstantBuffer();
 		pComputeList->transitionBarrier(_pBlurMap0, D3D12_RESOURCE_STATE_GENERIC_READ);
 		pComputeList->transitionBarrier(_pBlurMap1, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
@@ -69,13 +64,13 @@ void BlurFilter::produceImpl(dx12lib::ComputeContextProxy pComputeList,
 	}
 }
 
-std::shared_ptr<dx12lib::UnorderedAccessBuffer> BlurFilter::getOuput() const {
+std::shared_ptr<dx12lib::UnorderedAccess2D> BlurFilter::getOutput() const {
 	return _pBlurMap1;
 }
 
 void BlurFilter::buildUnorderedAccessResource(dx12lib::ComputeContextProxy pComputeContext) {
-	_pBlurMap0 = pComputeContext->createUnorderedAccessBuffer(_width, _height, _format);
-	_pBlurMap1 = pComputeContext->createUnorderedAccessBuffer(_width, _height, _format);
+	_pBlurMap0 = pComputeContext->createUnorderedAccess2D(_width, _height, nullptr, _format);
+	_pBlurMap1 = pComputeContext->createUnorderedAccess2D(_width, _height, nullptr, _format);
 }
 
 void BlurFilter::buildBlurPSO(std::weak_ptr<dx12lib::Device> pDevice) {

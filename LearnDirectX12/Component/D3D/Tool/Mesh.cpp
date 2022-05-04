@@ -1,6 +1,6 @@
 #include "Mesh.h"
-#include "dx12lib/VertexBuffer.h"
-#include "dx12lib/IndexBuffer.h"
+#include <dx12lib/Buffer/VertexBuffer.h>
+#include <dx12lib/Buffer/IndexBuffer.h>
 
 namespace d3d {
 

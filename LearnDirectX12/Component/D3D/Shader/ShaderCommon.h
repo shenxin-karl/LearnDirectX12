@@ -1,7 +1,6 @@
 #pragma once
 #include "Math/MathStd.hpp"
-#include "Math/MathHelper.h"
-#include "D3Dx12.h"
+#include "D3D/Tool/D3Dx12.h"
 #include <array>
 
 namespace d3d {

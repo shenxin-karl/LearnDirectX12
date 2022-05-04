@@ -10,6 +10,7 @@ namespace dx12lib {
 
 using namespace Math;
 
+
 interface IContext {
 	IContext() = default;
 	IContext(const IContext &) = delete;
@@ -21,12 +22,12 @@ interface IContext {
 };
 
 interface ICommonContext : IContext {
-	virtual std::shared_ptr<Texture2D> createDDSTexture2DFromFile(const std::wstring &fileName) = 0;
-	virtual std::shared_ptr<Texture2D> createDDSTexture2DFromMemory(const void *pData, size_t sizeInByte) = 0;
-	virtual std::shared_ptr<Texture2DArray> createDDSTexture2DArrayFromFile(const std::wstring &fileName) = 0;
-	virtual std::shared_ptr<Texture2DArray> createDDSTexture2DArrayFromMemory(const void *pData, size_t sizeInByte) = 0;
-	virtual std::shared_ptr<TextureCube> createDDSTextureCubeFromFile(const std::wstring &fileName) = 0;
-	virtual std::shared_ptr<TextureCube> createDDSTextureCubeFromMemory(const void *pData, size_t sizeInByte) = 0;
+	virtual std::shared_ptr<Sampler2D> createDDSTexture2DFromFile(const std::wstring &fileName) = 0;
+	virtual std::shared_ptr<Sampler2D> createDDSTexture2DFromMemory(const void *pData, size_t sizeInByte) = 0;
+	virtual std::shared_ptr<Sampler2DArray> createDDSTexture2DArrayFromFile(const std::wstring &fileName) = 0;
+	virtual std::shared_ptr<Sampler2DArray> createDDSTexture2DArrayFromMemory(const void *pData, size_t sizeInByte) = 0;
+	virtual std::shared_ptr<SamplerCube> createDDSTextureCubeFromFile(const std::wstring &fileName) = 0;
+	virtual std::shared_ptr<SamplerCube> createDDSTextureCubeFromMemory(const void *pData, size_t sizeInByte) = 0;
 	virtual	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) = 0;
 	virtual void setConstantBufferView(const ConstantBufferView &crv, size_t rootIndex, size_t offset = 0) = 0;
 	virtual void setShaderResourceView(const ShaderResourceView &srv, size_t rootIndex, size_t offset = 0) = 0;

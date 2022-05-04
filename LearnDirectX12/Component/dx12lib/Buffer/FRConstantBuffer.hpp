@@ -58,6 +58,7 @@ template<typename T>
 class FRConstantBuffer : public IConstantBuffer {
 protected:
 	FRConstantBuffer(std::weak_ptr<Device> pDevice, const T &object);
+	FRConstantBuffer(std::weak_ptr<Device> pDevice, const T *pObject = nullptr);
 public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
 	size_t getBufferSize() const override;
@@ -100,6 +101,11 @@ FRConstantBuffer<T>::FRConstantBuffer(std::weak_ptr<Device> pDevice, const T &ob
 			_descriptor.getCPUHandle(i)
 		);
 	}
+}
+template <typename T>
+FRConstantBuffer<T>::FRConstantBuffer(std::weak_ptr<Device> pDevice, const T *pObject)
+: FRConstantBuffer(pDevice, (pObject != nullptr ? *pObject : T()))
+{
 }
 
 template <typename T>

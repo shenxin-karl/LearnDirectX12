@@ -1,8 +1,7 @@
 #pragma once
-#include "dx12lib/dx12libStd.h"
-#include "dx12lib/ContextProxy.hpp"
-#include "dx12lib/CommonContext.h"
-#include "dx12lib/IResource.h"
+#include <dx12lib/dx12libStd.h>
+#include <dx12lib/Context/ContextStd.h>
+#include <dx12lib/Resource/ResourceStd.h>
 
 namespace d3d {
 
@@ -31,7 +30,7 @@ public:
 		float sigma
 	);
 
-	std::shared_ptr<dx12lib::UnorderedAccessBuffer> getOuput() const;
+	std::shared_ptr<dx12lib::UnorderedAccess2D> getOutput() const;
 private:
 	void buildUnorderedAccessResource(dx12lib::ComputeContextProxy pComputeContext);
 	static void buildBlurPSO(std::weak_ptr<dx12lib::Device> pDevice);
@@ -56,8 +55,8 @@ private:
 	std::uint32_t _width;
 	std::uint32_t _height;
 	DXGI_FORMAT   _format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	std::shared_ptr<dx12lib::UnorderedAccessBuffer> _pBlurMap0;
-	std::shared_ptr<dx12lib::UnorderedAccessBuffer> _pBlurMap1;
+	std::shared_ptr<dx12lib::UnorderedAccess2D> _pBlurMap0;
+	std::shared_ptr<dx12lib::UnorderedAccess2D> _pBlurMap1;
 	static inline std::shared_ptr<dx12lib::ComputePSO> _pHorzBlurPSO;
 	static inline std::shared_ptr<dx12lib::ComputePSO> _pVertBlurPSO;
 };

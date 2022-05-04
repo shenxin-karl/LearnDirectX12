@@ -3,8 +3,8 @@
 #include <cassert>
 #include <d3dcompiler.h>
 #include "d3dutil.h"
-#include "D3DX12.h"
-#include "D3DException.h"
+#include "D3D/Tool/D3Dx12.h"
+#include "D3D/Exception/D3DException.h"
 
 namespace d3d {
 

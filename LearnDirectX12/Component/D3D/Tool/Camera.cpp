@@ -1,7 +1,7 @@
 #define NOMINMAX
 #include <algorithm>
 #include "Camera.h"
-#include "D3D/ShaderCommon.h"
+#include "D3D/Shader/ShaderCommon.h"
 #include "GameTimer/GameTimer.h"
 #include "InputSystem/Mouse.h"
 #include "InputSystem/Keyboard.h"

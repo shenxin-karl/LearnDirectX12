@@ -8,10 +8,10 @@
 #include <dx12lib/Pipeline/RootSignature.h>
 #include <dx12lib/Tool/MakeObejctTool.hpp>
 #include <dx12lib/Tool/DDSTextureLoader.h>
-#include <dx12lib/Texture/RenderTarget.h>
-#include <dx12lib/Texture/DepthStencil.h>
-#include <dx12lib/Texture/TextureShaderResource.h>
-#include <dx12lib/Texture/UnorderedAccess.h>
+#include <dx12lib/Texture/RenderTargetTexture.h>
+#include <dx12lib/Texture/DepthStencilTexture.h>
+#include <dx12lib/Texture/SamplerTexture.h>
+#include <dx12lib/Texture/UnorderedAccessTexture.h>
 #include <dx12lib/Buffer/ReadBackBuffer.h>
 #include <dx12lib/Buffer/StructuredBuffer.h>
 #include <dx12lib/Buffer/FRStructuredBuffer.hpp>
@@ -84,7 +84,7 @@ std::weak_ptr<dx12lib::Device> CommandList::getDevice() const {
 }
 
 /// ******************************************** CommonContext api ********************************************
-std::shared_ptr<Texture2D> CommandList::createDDSTexture2DFromFile(const std::wstring &fileName) {
+std::shared_ptr<Sampler2D> CommandList::createDDSTexture2DFromFile(const std::wstring &fileName) {
 	WRL::ComPtr<ID3D12Resource> pTexture;
 	WRL::ComPtr<ID3D12Resource> pUploadHeap;
 	DirectX::CreateDDSTextureFromFile12(_pDevice.lock()->getD3DDevice(),
@@ -102,7 +102,7 @@ std::shared_ptr<Texture2D> CommandList::createDDSTexture2DFromFile(const std::ws
 	);
 }
 
-std::shared_ptr<Texture2D> CommandList::createDDSTexture2DFromMemory(const void *pData,
+std::shared_ptr<Sampler2D> CommandList::createDDSTexture2DFromMemory(const void *pData,
 	std::size_t sizeInByte) {
 	WRL::ComPtr<ID3D12Resource> pTexture;
 	WRL::ComPtr<ID3D12Resource> pUploadHeap;
@@ -122,7 +122,7 @@ std::shared_ptr<Texture2D> CommandList::createDDSTexture2DFromMemory(const void 
 	);
 }
 
-std::shared_ptr<Texture2DArray> CommandList::createDDSTexture2DArrayFromFile(const std::wstring &fileName) {
+std::shared_ptr<Sampler2DArray> CommandList::createDDSTexture2DArrayFromFile(const std::wstring &fileName) {
 	WRL::ComPtr<ID3D12Resource> pTexture;
 	WRL::ComPtr<ID3D12Resource> pUploadHeap;
 	DirectX::CreateDDSTextureFromFile12(_pDevice.lock()->getD3DDevice(),
@@ -141,7 +141,7 @@ std::shared_ptr<Texture2DArray> CommandList::createDDSTexture2DArrayFromFile(con
 	);
 }
 
-std::shared_ptr<Texture2DArray> CommandList::createDDSTexture2DArrayFromMemory(const void *pData, size_t sizeInByte) {
+std::shared_ptr<Sampler2DArray> CommandList::createDDSTexture2DArrayFromMemory(const void *pData, size_t sizeInByte) {
 	WRL::ComPtr<ID3D12Resource> pTexture;
 	WRL::ComPtr<ID3D12Resource> pUploadHeap;
 	DirectX::CreateDDSTextureFromMemory12(_pDevice.lock()->getD3DDevice(),
@@ -162,7 +162,7 @@ std::shared_ptr<Texture2DArray> CommandList::createDDSTexture2DArrayFromMemory(c
 	);
 }
 
-std::shared_ptr<TextureCube> CommandList::createDDSTextureCubeFromFile(const std::wstring &fileName) {
+std::shared_ptr<SamplerCube> CommandList::createDDSTextureCubeFromFile(const std::wstring &fileName) {
 	WRL::ComPtr<ID3D12Resource> pTexture;
 	WRL::ComPtr<ID3D12Resource> pUploadHeap;
 	DirectX::CreateDDSTextureFromFile12(_pDevice.lock()->getD3DDevice(),
@@ -181,7 +181,7 @@ std::shared_ptr<TextureCube> CommandList::createDDSTextureCubeFromFile(const std
 	);
 }
 
-std::shared_ptr<TextureCube> CommandList::createDDSTextureCubeFromMemory(const void *pData,
+std::shared_ptr<SamplerCube> CommandList::createDDSTextureCubeFromMemory(const void *pData,
 	size_t sizeInByte)
 {
 	WRL::ComPtr<ID3D12Resource> pTexture;
@@ -569,7 +569,6 @@ bool CommandList::CommandListState::debugCheckDraw() const {
 	CheckState(pPSO != nullptr, "PipelineStateObject not set");
 	CheckState(dynamic_cast<GraphicsPSO *>(pPSO), "PipelineStateObject cast to GraphicsPSO failed!");
 	CheckState(pRootSignature != nullptr, "RootSignature not set");
-	CheckState(pRenderTarget != nullptr, "RenderTarget not set");
 	CheckState(isSetViewport, "Viewprot not set");
 	CheckState(isSetScissorRect, "ScissorRect not set");
 	CheckState(checkVertexBuffer(), "No bound vertex buffer");

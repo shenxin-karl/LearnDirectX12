@@ -1,9 +1,10 @@
 #include "IBL.h"
-#include "D3DShaderResource.h"
+#include "D3D/Shader/D3DShaderResource.h"
+
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 #include <random>
-#include "dx12lib/Device.h"
+#include <dx12lib/Device/Device.h>
 
 namespace d3d {
 
@@ -15,7 +16,7 @@ SH3 calcIrradianceMapSH3(const T *pData, size_t width, size_t height, size_t num
 	std::mt19937 gen(rd());
 	std::uniform_real_distribution<float> dis(0.f, 1.f);
 	auto shBasisFuncArray = SH3::getSHBasisFunc();
-	constexpr float invPdf = 4.f * XM_PI;
+	constexpr float invPdf = 4.f * DirectX::XM_PI;
 
 	size_t maxX = width - 1;
 	size_t maxY = height - 1;
@@ -24,7 +25,7 @@ SH3 calcIrradianceMapSH3(const T *pData, size_t width, size_t height, size_t num
 		float u = dis(gen);
 		float v = dis(gen);
 		float theta = 2.f * std::acos(std::sqrt(1.f - u));
-		float phi = 2.f * XM_PI * v;
+		float phi = 2.f * DirectX::XM_PI * v;
 		float cosTh = std::cos(theta);
 		float sinTh = std::sin(theta);
 		float cosPhi = std::cos(phi);
@@ -56,9 +57,9 @@ SH3 calcIrradianceMapSH3(const T *pData, size_t width, size_t height, size_t num
 float3 getSHRadian(SH3 lightProbe, float3 N) {
 	Vector4 result(0.f);
 	result += Vector4(lightProbe.y00) * SHBasisFunction<0, 0>::eval(N);
-	result += Vector4(lightProbe.y1_1)* SHBasisFunction<1, -1>::eval(N);
+	result += Vector4(lightProbe.y1n1)* SHBasisFunction<1, -1>::eval(N);
 	result += Vector4(lightProbe.y10) * SHBasisFunction<1, 0>::eval(N);
-	result += Vector4(lightProbe.y11) * SHBasisFunction<1, 1>::eval(N);
+	result += Vector4(lightProbe.y1p1) * SHBasisFunction<1, 1>::eval(N);
 	return result.xyz;
 }
 

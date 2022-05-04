@@ -10,7 +10,7 @@
 namespace dx12lib {
 
 CommandQueue::CommandQueue(std::weak_ptr<Device> pDevice, D3D12_COMMAND_LIST_TYPE queueType)
-: _queueType(queueType), _pDevice(pDevice), _fenceValue(0) 
+: _fenceValue(0), _pDevice(pDevice), _queueType(queueType) 
 {
 	auto *pD3DDevice = _pDevice.lock()->getD3DDevice();
 	D3D12_COMMAND_QUEUE_DESC desc;

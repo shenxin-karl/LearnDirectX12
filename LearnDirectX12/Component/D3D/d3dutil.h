@@ -26,6 +26,8 @@ class Mesh;
 class SkyBox;
 class IBL;
 
+class RenderTarget;
+
 using ::ThrowIfFailed;
 
 WRL::ComPtr<ID3DBlob> compileShader(

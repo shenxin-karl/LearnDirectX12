@@ -1,11 +1,11 @@
 #include "FXAA.h"
-#include "D3D/D3DShaderResource.h"
 #include "D3D/d3dutil.h"
-#include "D3D/ShaderCommon.h"
-#include "dx12lib/Device.h"
-#include "dx12lib/RootSignature.h"
-#include "dx12lib/PipelineStateObject.h"
-#include "dx12lib/UnorderedAccessBuffer.h"
+#include "D3D/Shader/D3DShaderResource.h"
+#include "D3D/Shader/ShaderCommon.h"
+#include <dx12lib/Device/DeviceStd.h>
+#include <dx12lib/Pipeline/RootSignature.h>
+#include <dx12lib/Pipeline/PipelineStateObject.h>
+#include <dx12lib/Texture/TextureStd.h>
 
 namespace d3d {
 
@@ -19,7 +19,7 @@ FXAA::FXAA(dx12lib::ComputeContextProxy pComputeCtx,
 }
 
 void FXAA::_produceImpl(dx12lib::ComputeContextProxy pComputeCtx,
-	std::shared_ptr<dx12lib::IShaderResourceBuffer> pInput) const
+	std::shared_ptr<dx12lib::IShaderResource2D> pInput) const
 {
 	assert(pInput != nullptr);
 	tryBuildConsolePSO(pComputeCtx->getDevice());
@@ -28,8 +28,8 @@ void FXAA::_produceImpl(dx12lib::ComputeContextProxy pComputeCtx,
 	pComputeCtx->transitionBarrier(_pOutputMap, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	pComputeCtx->setComputePSO(_pConsolePSO);
 	updateFXAASetting(pComputeCtx);
-	pComputeCtx->setShaderResourceView(pInput->getShaderResourceView(), SR_Input);
-	pComputeCtx->setUnorderedAccessBuffer(_pOutputMap, UA_Output);
+	pComputeCtx->setShaderResourceView(pInput->getSRV(), SR_Input);
+	pComputeCtx->setUnorderedAccessView(_pOutputMap->getUAV(), UA_Output);
 	std::size_t numXGroup = static_cast<std::size_t>(std::ceil(float(_width) / float(kFXAAThreadCount)));
 	std::size_t numYGroup = static_cast<std::size_t>(std::ceil(float(_height) / float(kFXAAThreadCount)));
 	pComputeCtx->dispatch(numXGroup, numYGroup);
@@ -39,11 +39,11 @@ void FXAA::onResize(dx12lib::ComputeContextProxy pComputeCtx, uint32 width, uint
 	if (_width != width || _height != height) {
 		_width = width;
 		_height = height;
-		_pOutputMap = pComputeCtx->createUnorderedAccessBuffer(_width, _height, _format);
+		_pOutputMap = pComputeCtx->createUnorderedAccess2D(_width, _height, nullptr, _format);
 	}
 }
 
-std::shared_ptr<dx12lib::UnorderedAccessBuffer> FXAA::getOutput() const {
+std::shared_ptr<dx12lib::UnorderedAccess2D> FXAA::getOutput() const {
 	return _pOutputMap;
 }
 

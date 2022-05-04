@@ -4,8 +4,8 @@
 #include <dx12lib/Context/CommandQueue.h>
 #include <dx12lib/Context/CommandList.h>
 #include <dx12lib/Tool/MakeObejctTool.hpp>
-#include <dx12lib/Texture/DepthStencil.h>
-#include <dx12lib/Texture/RenderTarget.h>
+#include <dx12lib/Texture/DepthStencilTexture.h>
+#include <dx12lib/Texture/RenderTargetTexture.h>
 #include <string>
 
 namespace dx12lib {

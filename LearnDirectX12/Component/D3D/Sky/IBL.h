@@ -1,6 +1,6 @@
 #pragma once
-#include "dx12lib/dx12libStd.h"
-#include "dx12lib/ContextProxy.hpp"
+#include <dx12lib/dx12libStd.h>
+#include <dx12lib/Context/ContextProxy.hpp>
 #include "SphericalHarmonics.hpp"
 
 namespace d3d {
@@ -11,8 +11,8 @@ public:
 private:
 private:
 	SH3 _irradianceMapSH3;
-	std::shared_ptr<dx12lib::Texture2D> _pBRDFLut;
-	std::shared_ptr<dx12lib::ShaderResourceBuffer> _pPerFilteredEnvMap;
+	std::shared_ptr<dx12lib::Sampler2D> _pBRDFLut;
+	std::shared_ptr<dx12lib::Sampler2D> _pPerFilteredEnvMap;
 };
 
 }

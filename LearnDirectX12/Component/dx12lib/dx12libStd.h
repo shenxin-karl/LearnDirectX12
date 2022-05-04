@@ -111,7 +111,6 @@ class FrameResourceItem;
 class FrameResourceQueue;
 class IndexBuffer;
 class VertexBuffer;
-class RenderTarget;
 class SwapChain;
 class UploadBuffer;
 class ResourceStateTracker;
@@ -121,22 +120,23 @@ class RootSignature;
 class PSO;
 class GraphicsPSO;
 class ComputePSO;
-class CommonContext;
-class GraphicsContext;
-class ComputeContext;
+
+interface IContext;
+interface ICommonContext;
+interface IGraphicsContext;
+interface IComputeContext;
+
 class StructuredBuffer;
-class UnorderedAccessBuffer;
 class ReadBackBuffer;
 
-
-class Texture2D;
-class Texture2DArray;
-class TextureCube;
+class Sampler2D;
+class Sampler2DArray;
+class SamplerCube;
 
 class DepthStencil2D;
-class Texture2D;
-class Texture2DArray;
-class TextureCube;
+class Sampler2D;
+class Sampler2DArray;
+class SamplerCube;
 
 class RenderTarget2D;
 class RenderTarget2DArray;
@@ -149,6 +149,7 @@ class UnorderedAccessCube;
 #ifndef interface
 	#define interface struct
 #endif
+
 
 interface IResource;
 interface IShaderResource;

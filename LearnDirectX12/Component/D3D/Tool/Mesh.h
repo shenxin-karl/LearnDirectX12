@@ -7,7 +7,7 @@
 #include <string>
 #include <unordered_map>
 #include "Geometry/GeometryGenerator.h"
-#include "dx12lib/ContextProxy.hpp"
+#include <dx12lib/Context/ContextProxy.hpp>
 #include <DirectXCollision.h>
 
 namespace d3d {

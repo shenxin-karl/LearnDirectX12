@@ -1,4 +1,5 @@
-#include "Math/MathHelper.h"
+#pragma once
+#include <Math/MathStd.hpp>
 #include <cmath>
 
 namespace d3d {
@@ -55,8 +56,8 @@ DECLARE_SH_BASIS_FUNCTION( (4), (+4), (3.f / 16.f * sqrt(35.f / PI)), (x * x * (
 union SH3 {
 	struct {
 		float4 y00;
-		float4 y1_1; float4 y10; float4 y11;
-		float4 y2_2; float4 y2_1; float4 y20; float4 y21; float4 y22;
+		float4 y1n1; float4 y10; float4 y1p1;
+		float4 y2n2; float4 y2n1; float4 y20; float4 y2p1; float4 y2p2;
 	};
 	float4 _m[9];
 public:

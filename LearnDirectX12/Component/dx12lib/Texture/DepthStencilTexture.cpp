@@ -1,4 +1,4 @@
-#include <dx12lib/Texture/DepthStencil.h>
+#include <dx12lib/Texture/DepthStencilTexture.h>
 #include <dx12lib/Resource/ResourceStateTracker.h>
 #include <dx12lib/Device/Device.h>
 
@@ -22,8 +22,8 @@ DepthStencil2D::~DepthStencil2D() {
 }
 
 DepthStencil2D::DepthStencil2D(std::weak_ptr<Device> pDevice, 
-	uint32 width, 
-	uint32 height, 
+	size_t width,
+	size_t height,
 	const D3D12_CLEAR_VALUE *pClearValue,
 	DXGI_FORMAT depthStencilFormat)
 {
