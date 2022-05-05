@@ -1,10 +1,9 @@
 #pragma once
 #include "dx12lib/dx12libStd.h"
-#include "D3D/ShaderCommon.h"
+#include "D3D/Shader/ShaderCommon.h"
 #include "D3D/d3dutil.h"
 #include "GameTimer/GameTimer.h"
 #include "BaseApp/BaseApp.h"
-#include "Math/MathHelper.h"
 
 using namespace Math;
 
@@ -32,7 +31,7 @@ struct ObjectCB {
 struct RenderItem {
 	std::shared_ptr<Mesh> _pMesh;
 	FRConstantBufferPtr<ObjectCB> _pObjectCB;
-	std::shared_ptr<dx12lib::ShaderResourceBuffer> _pAlbedo;
+	std::shared_ptr<dx12lib::SamplerTexture2D> _pAlbedo;
 };
 
 enum ShapeRootParameType : UINT {
@@ -73,5 +72,5 @@ private:
 	std::unordered_map<std::string, std::shared_ptr<Mesh>> _geometrys;
 	std::unordered_map<std::string, std::vector<RenderItem>> _renderItems;
 	std::unordered_map<std::string, std::shared_ptr<dx12lib::GraphicsPSO>> _PSOMap;
-	std::unordered_map<std::string, std::shared_ptr<dx12lib::Texture2D>> _textureMap;
+	std::unordered_map<std::string, std::shared_ptr<dx12lib::SamplerTexture2D>> _textureMap;
 };

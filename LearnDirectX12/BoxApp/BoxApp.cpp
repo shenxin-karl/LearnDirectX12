@@ -7,6 +7,7 @@
 #include <dx12lib/Texture/TextureStd.h>
 #include <dx12lib/Buffer/BufferStd.h>
 #include <dx12lib/Pipeline/PipelineStd.h>
+#include "D3D/dx12libHelper/RenderTarget.h"
 
 BoxApp::BoxApp() {
 	_title = "BoxApp";
@@ -67,30 +68,20 @@ void BoxApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 void BoxApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pCmdQueue = _pDevice->getCommandQueue();
 	auto pDirectProxy = pCmdQueue->createDirectContextProxy();
-	auto pRenderTarget = _pSwapChain->getRenderTarget();
-	pDirectProxy->setViewport(pRenderTarget->getViewport());
-	pDirectProxy->setScissorRect(pRenderTarget->getScissiorRect());
 	{
-		dx12lib::RenderTargetTransitionBarrier barrierGuard = {
-			pDirectProxy,
-			pRenderTarget,
-			D3D12_RESOURCE_STATE_RENDER_TARGET,
-			D3D12_RESOURCE_STATE_PRESENT,
-		};
-
+		d3d::RenderTarget renderTarget(_pSwapChain);
+		renderTarget.bind(pDirectProxy);
 		float cosine = std::cos(pGameTimer->getTotalTime());
 		float sine = std::sin(pGameTimer->getTotalTime());
-		auto pRenderTargetBuffer = pRenderTarget->getRenderTargetBuffer(dx12lib::Color0);
-		auto pDepthStencilBuffer = pRenderTarget->getDepthStencilBuffer();
-		pDirectProxy->clearColor(pRenderTargetBuffer, float4{
+		float4 color = {
 			cosine * 0.5f + 0.5f,
 			sine * 0.5f + 0.5f,
 			0.6f,
 			1.f
-			});
-		pDirectProxy->clearDepthStencil(pDepthStencilBuffer, 1.f, 0);
-		pDirectProxy->setRenderTarget(pRenderTarget);
+		};
+		renderTarget.clear(pDirectProxy, color);
 		renderBoxPass(pDirectProxy);
+		renderTarget.unbind(pDirectProxy);
 	}
 	pCmdQueue->executeCommandList(pDirectProxy);
 	pCmdQueue->signal(_pSwapChain);
@@ -145,9 +136,9 @@ void BoxApp::buildBoxGeometry(dx12lib::DirectContextProxy pDirectContext) {
 	_pBoxMesh->_startIndexLocation = 0;
 }
 
-void BoxApp::renderBoxPass(dx12lib::DirectContextProxy pDirectContext) {
+void BoxApp::renderBoxPass(dx12lib::DirectContextProxy pDirectContext) const {
 	pDirectContext->setGraphicsPSO(_pGraphicsPSO);
-	pDirectContext->setConstantBufferView(_pMVPConstantBuffer->getConstantBufferView(), WorldViewProjCBuffer, 0);
+	pDirectContext->setConstantBuffer(_pMVPConstantBuffer, WorldViewProjCBuffer, 0);
 	pDirectContext->setVertexBuffer(_pBoxMesh->_pVertexBuffer);
 	pDirectContext->setIndexBuffer(_pBoxMesh->_pIndexBuffer);
 	pDirectContext->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

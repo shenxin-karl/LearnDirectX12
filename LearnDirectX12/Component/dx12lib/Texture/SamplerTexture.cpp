@@ -4,11 +4,11 @@
 
 namespace dx12lib {
 
-WRL::ComPtr<ID3D12Resource> Sampler2D::getD3DResource() const {
+WRL::ComPtr<ID3D12Resource> SamplerTexture2D::getD3DResource() const {
 	return _pResource;
 }
 
-ShaderResourceView Sampler2D::getSRV(size_t mipSlice) const {
+ShaderResourceView SamplerTexture2D::getSRV(size_t mipSlice) const {
 	if (_srvMgr.exist(mipSlice))
 		return _srvMgr.get(mipSlice);
 
@@ -36,7 +36,7 @@ ShaderResourceView Sampler2D::getSRV(size_t mipSlice) const {
 	return SRV;
 }
 
-Sampler2D::Sampler2D(std::weak_ptr<Device> pDevice, WRL::ComPtr<ID3D12Resource> pResource,
+SamplerTexture2D::SamplerTexture2D(std::weak_ptr<Device> pDevice, WRL::ComPtr<ID3D12Resource> pResource,
                      WRL::ComPtr<ID3D12Resource> pUploader, D3D12_RESOURCE_STATES state)
 : _pDevice(pDevice), _pResource(pResource), _pUploader(pUploader)
 {
@@ -46,11 +46,11 @@ Sampler2D::Sampler2D(std::weak_ptr<Device> pDevice, WRL::ComPtr<ID3D12Resource> 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-WRL::ComPtr<ID3D12Resource> Sampler2DArray::getD3DResource() const {
+WRL::ComPtr<ID3D12Resource> SamplerTexture2DArray::getD3DResource() const {
 	return _pResource;
 }
 
-ShaderResourceView Sampler2DArray::getSRV(size_t mipSlice) const {
+ShaderResourceView SamplerTexture2DArray::getSRV(size_t mipSlice) const {
 	if (_srvMgr.exist(mipSlice))
 		return _srvMgr.get(mipSlice);
 
@@ -80,7 +80,7 @@ ShaderResourceView Sampler2DArray::getSRV(size_t mipSlice) const {
 	return SRV;
 }
 
-ShaderResourceView Sampler2DArray::getSRV(size_t planeSlice, size_t mipSlice) const {
+ShaderResourceView SamplerTexture2DArray::getSRV(size_t planeSlice, size_t mipSlice) const {
 	ViewManager<ShaderResourceView> &planeSrvMgr = _planeSrvMgr[planeSlice];
 	if (planeSrvMgr.exist(mipSlice))
 		return planeSrvMgr.get(mipSlice);
@@ -108,20 +108,20 @@ ShaderResourceView Sampler2DArray::getSRV(size_t planeSlice, size_t mipSlice) co
 	return SRV;
 }
 
-Sampler2DArray::Sampler2DArray(std::weak_ptr<Device> pDevice, WRL::ComPtr<ID3D12Resource> pResource,
+SamplerTexture2DArray::SamplerTexture2DArray(std::weak_ptr<Device> pDevice, WRL::ComPtr<ID3D12Resource> pResource,
                                WRL::ComPtr<ID3D12Resource> pUploader, D3D12_RESOURCE_STATES state)
-	: _pDevice(pDevice), _pResource(pResource), _pUploader(pUploader) {
+: _pDevice(pDevice), _pResource(pResource), _pUploader(pUploader) {
 	assert(pResource->GetDesc().DepthOrArraySize >= 1);
 	ResourceStateTracker::addGlobalResourceState(_pResource.Get(), state);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-WRL::ComPtr<ID3D12Resource> SamplerCube::getD3DResource() const {
+WRL::ComPtr<ID3D12Resource> SamplerTextureCube::getD3DResource() const {
 	return _pResource;
 }
 
-ShaderResourceView SamplerCube::getSRV(size_t mipSlice) const {
+ShaderResourceView SamplerTextureCube::getSRV(size_t mipSlice) const {
 	if (_srvMgr.exist(mipSlice))
 		return _srvMgr.get(mipSlice);
 
@@ -148,7 +148,7 @@ ShaderResourceView SamplerCube::getSRV(size_t mipSlice) const {
 	return SRV;
 }
 
-ShaderResourceView SamplerCube::getSRV(CubeFace face, size_t mipSlice) const {
+ShaderResourceView SamplerTextureCube::getSRV(CubeFace face, size_t mipSlice) const {
 	ViewManager<ShaderResourceView> &faceSrvMgr = _faceMapSrvMgr[face];
 	if (faceSrvMgr.exist(mipSlice))
 		return faceSrvMgr.get(mipSlice);
@@ -176,7 +176,7 @@ ShaderResourceView SamplerCube::getSRV(CubeFace face, size_t mipSlice) const {
 	return SRV;
 }
 
-SamplerCube::SamplerCube(std::weak_ptr<Device> pDevice, WRL::ComPtr<ID3D12Resource> pResource,
+SamplerTextureCube::SamplerTextureCube(std::weak_ptr<Device> pDevice, WRL::ComPtr<ID3D12Resource> pResource,
 	WRL::ComPtr<ID3D12Resource> pUploader, D3D12_RESOURCE_STATES state)
 : _pDevice(pDevice), _pResource(pResource), _pUploader(pUploader)
 {

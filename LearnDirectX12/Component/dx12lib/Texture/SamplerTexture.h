@@ -5,13 +5,13 @@
 
 namespace dx12lib {
 
-class Sampler2D : public IShaderResource2D {
+class SamplerTexture2D : public IShaderResource2D {
 public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
 	ShaderResourceView getSRV(size_t mipSlice = 0) const override;
-	~Sampler2D() override = default;
+	~SamplerTexture2D() override = default;
 protected:
-	Sampler2D(std::weak_ptr<Device> pDevice,
+	SamplerTexture2D(std::weak_ptr<Device> pDevice,
 		WRL::ComPtr<ID3D12Resource> pResource,
 		WRL::ComPtr<ID3D12Resource> pUploader,
 		D3D12_RESOURCE_STATES state
@@ -23,14 +23,14 @@ private:
 	mutable ViewManager<ShaderResourceView> _srvMgr;
 };
 
-class Sampler2DArray : public IShaderResource2DArray {
+class SamplerTexture2DArray : public IShaderResource2DArray {
 public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
 	ShaderResourceView getSRV(size_t mipSlice = 0) const override;
 	ShaderResourceView getSRV(size_t planeSlice, size_t mipSlice = 0) const override;
-	~Sampler2DArray() override = default;
+	~SamplerTexture2DArray() override = default;
 protected:
-	Sampler2DArray(std::weak_ptr<Device> pDevice,
+	SamplerTexture2DArray(std::weak_ptr<Device> pDevice,
 		WRL::ComPtr<ID3D12Resource> pResource,
 		WRL::ComPtr<ID3D12Resource> pUploader,
 		D3D12_RESOURCE_STATES state
@@ -43,14 +43,14 @@ private:
 	mutable std::map<size_t, ViewManager<ShaderResourceView>> _planeSrvMgr;
 };
 
-class SamplerCube : public IShaderResourceCube {
+class SamplerTextureCube : public IShaderResourceCube {
 public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
 	ShaderResourceView getSRV(size_t mipSlice = 0) const override;
 	ShaderResourceView getSRV(CubeFace face, size_t mipSlice = 0) const override;
-	~SamplerCube() override = default;
+	~SamplerTextureCube() override = default;
 protected:
-	SamplerCube(std::weak_ptr<Device> pDevice,
+	SamplerTextureCube(std::weak_ptr<Device> pDevice,
 		WRL::ComPtr<ID3D12Resource> pResource,
 		WRL::ComPtr<ID3D12Resource> pUploader,
 		D3D12_RESOURCE_STATES state

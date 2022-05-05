@@ -1,6 +1,6 @@
 //#define USE_CARTOON_SHADING  
-#include "../../Component/D3D/shader/ShaderCommon.hlsl"
-#include "../../Component/D3D/shader/LightingUtil.hlsl"
+#include "../../Component/D3D/HlslShader/ShaderCommon.hlsl"
+#include "../../Component/D3D/HlslShader/LightingUtil.hlsl"
 
 cbuffer CBPass : register(b0) {
 	CBPassType gPassCB;

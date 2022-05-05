@@ -1,25 +1,20 @@
 #include "Shape.h"
 #include "D3D/d3dutil.h"
-#include "D3D/Camera.h"
-#include "D3D/ShaderCommon.h"
-#include "D3D/SobelFilter.h"
-#include "D3D/IBL.h"
-#include "dx12lib/Device.h"
-#include "dx12lib/SwapChain.h"
-#include "dx12lib/CommandList.h"
-#include "dx12lib/PipelineStateObject.h"
-#include "dx12lib/RenderTarget.h"
-#include "dx12lib/RenderTargetBuffer.h"
-#include "dx12lib/TextureShaderResource.h"
-#include "dx12lib/FRConstantBuffer.hpp"
-#include "dx12lib/IndexBuffer.h"
-#include "dx12lib/RootSignature.h"
-#include "dx12lib/CommandQueue.h"
-#include "dx12lib/UnorderedAccessBuffer.h"
+#include "D3D/Tool/Camera.h"
+#include "D3D/Shader/ShaderCommon.h"
+#include "D3D/Postprocessing/SobelFilter.h"
+#include "D3D/Sky/IBL.h"
+#include "dx12lib/Texture/TextureStd.h"
+#include "dx12lib/Context/ContextStd.h"
+#include "dx12lib/Device/DeviceStd.h"
+#include "dx12lib/Buffer/BufferStd.h"
+#include "dx12lib/Pipeline/PipelineStd.h"
 #include "Geometry/GeometryGenerator.h"
 #include "InputSystem/InputSystem.h"
 #include "InputSystem/Mouse.h"
 #include <DirectXColors.h>
+
+#include "D3D/dx12libHelper/RenderTarget.h"
 
 Shape::Shape() {
 	_title = "Shape";
@@ -61,27 +56,16 @@ void Shape::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 void Shape::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pCmdQueue = _pDevice->getCommandQueue();
 	auto pDirectCtx = pCmdQueue->createDirectContextProxy();
-	auto pRenderTarget = _pSwapChain->getRenderTarget();
-
-	pDirectCtx->setViewport(pRenderTarget->getViewport());
-	pDirectCtx->setScissorRect(pRenderTarget->getScissiorRect());
 	{
-		dx12lib::RenderTargetTransitionBarrier barrierGuard = {
-			pDirectCtx,
-			pRenderTarget,
-			D3D12_RESOURCE_STATE_RENDER_TARGET,
-			D3D12_RESOURCE_STATE_PRESENT,
-		};
 
-		auto pRenderTargetBuffer = pRenderTarget->getRenderTargetBuffer(dx12lib::Color0);
-		auto pDepthStencilBuffer = pRenderTarget->getDepthStencilBuffer();
-		pDirectCtx->clearColor(pRenderTargetBuffer, float4(DirectX::Colors::LightSkyBlue));
-		pDirectCtx->clearDepthStencil(pDepthStencilBuffer, 1.f, 0);
-		pDirectCtx->setRenderTarget(pRenderTarget);
+		d3d::RenderTarget renderTarget(_pSwapChain);
+		renderTarget.bind(pDirectCtx);
+		renderTarget.clear(pDirectCtx, float4(DirectX::Colors::LightSkyBlue));
 		renderShapesPass(pDirectCtx);
 		renderSkullPass(pDirectCtx);
-		_pSobelFilter->apply(pDirectCtx, pRenderTargetBuffer);
-		pDirectCtx->copyResource(pRenderTargetBuffer, _pSobelFilter->getOutput());
+		_pSobelFilter->apply(pDirectCtx, renderTarget.getRenderTarget2D());
+		pDirectCtx->copyResource(renderTarget.getRenderTarget2D(), _pSobelFilter->getOutput());
+		renderTarget.unbind(pDirectCtx);
 	}
 	pCmdQueue->executeCommandList(pDirectCtx);
 	pCmdQueue->signal(_pSwapChain);
@@ -348,16 +332,16 @@ void Shape::renderShapesPass(dx12lib::DirectContextProxy pDirectCtx) {
 	auto pPSO = _PSOMap[passPSOName];
 	pDirectCtx->setGraphicsPSO(pPSO);
 
-	pDirectCtx->setConstantBufferView(_pPassCB->getConstantBufferView(), ShapeRootParameType::CBPass);
-	pDirectCtx->setConstantBufferView(_pGameLightsCB->getConstantBufferView(), ShapeRootParameType::CBLight);
+	pDirectCtx->setConstantBuffer(_pPassCB, ShapeRootParameType::CBPass);
+	pDirectCtx->setConstantBuffer(_pGameLightsCB, ShapeRootParameType::CBLight);
 
 	auto psoRenderItems = _renderItems[passPSOName];
 	for (auto &rItem : psoRenderItems) {
 		pDirectCtx->setVertexBuffer(rItem._pMesh->_pVertexBuffer);
 		pDirectCtx->setIndexBuffer(rItem._pMesh->_pIndexBuffer);
 		pDirectCtx->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		pDirectCtx->setConstantBufferView(rItem._pObjectCB->getConstantBufferView(), ShapeRootParameType::CBObject);
-		pDirectCtx->setShaderResourceView(rItem._pAlbedo->getShaderResourceView(), ShapeRootParameType::SRAlbedo);
+		pDirectCtx->setConstantBuffer(rItem._pObjectCB, ShapeRootParameType::CBObject);
+		pDirectCtx->setShaderResourceView(rItem._pAlbedo->getSRV(), ShapeRootParameType::SRAlbedo);
 		pDirectCtx->drawIndexedInstanced(
 			rItem._pMesh->_pIndexBuffer->getIndexCount(), 1, 0,
 			0, 0
@@ -393,9 +377,8 @@ void Shape::updatePassCB(std::shared_ptr<com::GameTimer> pGameTimer) {
 	_pCamera->update(pGameTimer);
 	auto pGPUPassCB = _pPassCB->map();
 	_pCamera->updatePassCB(*pGPUPassCB);
-	auto pRenderTarget = _pSwapChain->getRenderTarget();
-	pGPUPassCB->renderTargetSize = pRenderTarget->getRenderTargetSize();
-	pGPUPassCB->invRenderTargetSize = pRenderTarget->getInvRenderTargetSize();
+	pGPUPassCB->renderTargetSize = _pSwapChain->getRenderTargetSize();
+	pGPUPassCB->invRenderTargetSize = _pSwapChain->getInvRenderTargetSize();
 	pGPUPassCB->totalTime = pGameTimer->getTotalTime();
 	pGPUPassCB->deltaTime = pGameTimer->getDeltaTime();
 }

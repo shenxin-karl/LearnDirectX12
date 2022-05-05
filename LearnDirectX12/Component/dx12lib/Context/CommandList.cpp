@@ -84,7 +84,7 @@ std::weak_ptr<dx12lib::Device> CommandList::getDevice() const {
 }
 
 /// ******************************************** CommonContext api ********************************************
-std::shared_ptr<Sampler2D> CommandList::createDDSTexture2DFromFile(const std::wstring &fileName) {
+std::shared_ptr<SamplerTexture2D> CommandList::createDDSTexture2DFromFile(const std::wstring &fileName) {
 	WRL::ComPtr<ID3D12Resource> pTexture;
 	WRL::ComPtr<ID3D12Resource> pUploadHeap;
 	DirectX::CreateDDSTextureFromFile12(_pDevice.lock()->getD3DDevice(),
@@ -102,7 +102,7 @@ std::shared_ptr<Sampler2D> CommandList::createDDSTexture2DFromFile(const std::ws
 	);
 }
 
-std::shared_ptr<Sampler2D> CommandList::createDDSTexture2DFromMemory(const void *pData,
+std::shared_ptr<SamplerTexture2D> CommandList::createDDSTexture2DFromMemory(const void *pData,
 	std::size_t sizeInByte) {
 	WRL::ComPtr<ID3D12Resource> pTexture;
 	WRL::ComPtr<ID3D12Resource> pUploadHeap;
@@ -122,7 +122,7 @@ std::shared_ptr<Sampler2D> CommandList::createDDSTexture2DFromMemory(const void 
 	);
 }
 
-std::shared_ptr<Sampler2DArray> CommandList::createDDSTexture2DArrayFromFile(const std::wstring &fileName) {
+std::shared_ptr<SamplerTexture2DArray> CommandList::createDDSTexture2DArrayFromFile(const std::wstring &fileName) {
 	WRL::ComPtr<ID3D12Resource> pTexture;
 	WRL::ComPtr<ID3D12Resource> pUploadHeap;
 	DirectX::CreateDDSTextureFromFile12(_pDevice.lock()->getD3DDevice(),
@@ -141,7 +141,7 @@ std::shared_ptr<Sampler2DArray> CommandList::createDDSTexture2DArrayFromFile(con
 	);
 }
 
-std::shared_ptr<Sampler2DArray> CommandList::createDDSTexture2DArrayFromMemory(const void *pData, size_t sizeInByte) {
+std::shared_ptr<SamplerTexture2DArray> CommandList::createDDSTexture2DArrayFromMemory(const void *pData, size_t sizeInByte) {
 	WRL::ComPtr<ID3D12Resource> pTexture;
 	WRL::ComPtr<ID3D12Resource> pUploadHeap;
 	DirectX::CreateDDSTextureFromMemory12(_pDevice.lock()->getD3DDevice(),
@@ -162,7 +162,7 @@ std::shared_ptr<Sampler2DArray> CommandList::createDDSTexture2DArrayFromMemory(c
 	);
 }
 
-std::shared_ptr<SamplerCube> CommandList::createDDSTextureCubeFromFile(const std::wstring &fileName) {
+std::shared_ptr<SamplerTextureCube> CommandList::createDDSTextureCubeFromFile(const std::wstring &fileName) {
 	WRL::ComPtr<ID3D12Resource> pTexture;
 	WRL::ComPtr<ID3D12Resource> pUploadHeap;
 	DirectX::CreateDDSTextureFromFile12(_pDevice.lock()->getD3DDevice(),
@@ -181,7 +181,7 @@ std::shared_ptr<SamplerCube> CommandList::createDDSTextureCubeFromFile(const std
 	);
 }
 
-std::shared_ptr<SamplerCube> CommandList::createDDSTextureCubeFromMemory(const void *pData,
+std::shared_ptr<SamplerTextureCube> CommandList::createDDSTextureCubeFromMemory(const void *pData,
 	size_t sizeInByte)
 {
 	WRL::ComPtr<ID3D12Resource> pTexture;
@@ -355,11 +355,29 @@ void CommandList::setGraphics32BitConstants(size_t rootIndex, size_t numConstant
 	);
 }
 
+void CommandList::setRenderTarget(const RenderTargetView &rtv, const DepthStencilView &dsv) {
+	_pCommandList->OMSetRenderTargets(
+		1, 
+		RVPtr(rtv.getCPUDescriptorHandle()), 
+		false, 
+		RVPtr(dsv.getCPUDescriptorHandle())
+	);
+}
+
+void CommandList::setRenderTargets(const std::vector<RenderTargetView> &rtvs, const DepthStencilView &dsv) {
+	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> handles(rtvs.begin(), rtvs.end());
+	_pCommandList->OMSetRenderTargets(
+		1,
+		handles.data(),
+		false,
+		RVPtr(dsv.getCPUDescriptorHandle())
+	);
+}
 
 void CommandList::drawInstanced(size_t vertCount,
-	size_t instanceCount,
-	size_t baseVertexLocation,
-	size_t startInstanceLocation)
+                                size_t instanceCount,
+                                size_t baseVertexLocation,
+                                size_t startInstanceLocation)
 {
 	assert(_currentGPUState.debugCheckDraw());
 	flushResourceBarriers();

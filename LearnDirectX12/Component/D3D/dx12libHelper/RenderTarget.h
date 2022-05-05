@@ -27,9 +27,11 @@ public:
 	D3D12_RECT getScissorRect() const;
 	float2 getRenderTargetSize() const;
 	float2 getInvRenderTargetSize() const;
+	~RenderTarget();
 private:
 	size_t _width;
 	size_t _height;
+	bool   _isBinding = false;
 	std::shared_ptr<dx12lib::RenderTarget2D> _pRenderTarget2D;
 	std::shared_ptr<dx12lib::DepthStencil2D> _pDepthStencil2D;
 };

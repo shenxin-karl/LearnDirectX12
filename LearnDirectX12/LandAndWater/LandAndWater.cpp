@@ -1,28 +1,24 @@
 #include "LandAndWater.h"
 #include "GameTimer/GameTimer.h"
-#include "D3D/Camera.h"
-#include "D3D/D3DDescHelper.h"
-#include "D3D/BlurFilter.h"
+#include "D3D/Tool/Camera.h"
+#include "D3D/dx12libHelper/D3DDescHelper.h"
+#include "D3D/Postprocessing/BlurFilter.h"
+#include "D3D/dx12libHelper/RenderTarget.h"
+
 #include "InputSystem/window.h"
 #include "InputSystem/Keyboard.h"
 #include "InputSystem/Mouse.h"
-#include "dx12lib/Device.h"
-#include "dx12lib/SwapChain.h"
-#include "dx12lib/RenderTarget.h"
-#include "dx12lib/ContextProxy.hpp"
-#include "dx12lib/CommandList.h"
-#include "dx12lib/CommandQueue.h"
-#include "dx12lib/TextureShaderResource.h"
-#include "dx12lib/VertexBuffer.h"
-#include "dx12lib/ConstantBuffer.h"
-#include "dx12lib/IndexBuffer.h"
-#include "dx12lib/RootSignature.h"
-#include "dx12lib/PipelineStateObject.h"
-#include "dx12lib/RenderTargetBuffer.h"
-#include "dx12lib/UnorderedAccessBuffer.h"
+
+#include "dx12lib/Device/DeviceStd.h"
+#include "dx12lib/Texture/TextureStd.h"
+#include "dx12lib/Buffer/BufferStd.h"
+#include "dx12lib/Pipeline/PipelineStd.h"
+#include "dx12lib/Context/ContextStd.h"
+
 #include "Geometry/GeometryGenerator.h"
 #include <DirectXColors.h>
 #include <random>
+
 
 void WaterParame::init(const WaterParameDesc &desc) {
 	_length = desc.length;
@@ -111,30 +107,21 @@ void LandAndWater::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 void LandAndWater::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pCmdQueue = _pDevice->getCommandQueue();
 	auto pDirectCtx = pCmdQueue->createDirectContextProxy();
-	auto pRenderTarget = _pSwapChain->getRenderTarget();
-	pDirectCtx->setViewport(pRenderTarget->getViewport());
-	pDirectCtx->setScissorRect(pRenderTarget->getScissiorRect());
 	{
-		dx12lib::RenderTargetTransitionBarrier barrierGuard = {
-			pDirectCtx,
-			pRenderTarget,
-			D3D12_RESOURCE_STATE_RENDER_TARGET,
-			D3D12_RESOURCE_STATE_PRESENT,
-		};
-
 		auto pGPUPassCB = _pPassCB->cmap();
 		const auto &color = pGPUPassCB->fogColor;
-		auto pRenderTargetBuffer = pRenderTarget->getRenderTargetBuffer(dx12lib::Color0);
-		auto pDepthStencilBuffer = pRenderTarget->getDepthStencilBuffer();
-		pDirectCtx->clearColor(pRenderTargetBuffer, color);
-		pDirectCtx->clearDepthStencil(pDepthStencilBuffer, 1.f, 0);
-		pDirectCtx->setRenderTarget(pRenderTarget);
+		d3d::RenderTarget renderTarget(_pSwapChain);
+		renderTarget.bind(pDirectCtx);
+		renderTarget.clear(pDirectCtx, color);
+
 		drawOpaqueRenderItems(pDirectCtx, "TexturePSO", D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		drawOpaqueRenderItems(pDirectCtx, "ClipPSO", D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		drawOpaqueRenderItems(pDirectCtx, "TreeBillboardPSO", D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 		renderWaterPass(pDirectCtx);
-		_pBlurFilter->produce(pDirectCtx, pRenderTargetBuffer, 1, 2.5f);
-		pDirectCtx->copyResource(pRenderTargetBuffer, _pBlurFilter->getOuput());
+		_pBlurFilter->produce(pDirectCtx, renderTarget.getRenderTarget2D(), 1, 2.5f);
+		pDirectCtx->copyResource(renderTarget.getRenderTarget2D(), _pBlurFilter->getOutput());
+
+		renderTarget.unbind(pDirectCtx);
 	}
 	pCmdQueue->executeCommandList(pDirectCtx);
 	pCmdQueue->signal(_pSwapChain);
@@ -155,9 +142,8 @@ void LandAndWater::pollEvent() {
 void LandAndWater::updateConstantBuffer(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pGPUPassCB = _pPassCB->map();
 	_pCamera->updatePassCB(*pGPUPassCB);
-	auto pRenderTarget = _pSwapChain->getRenderTarget();
-	pGPUPassCB->renderTargetSize = pRenderTarget->getInvRenderTargetSize();
-	pGPUPassCB->invRenderTargetSize = pRenderTarget->getInvRenderTargetSize();
+	pGPUPassCB->renderTargetSize = _pSwapChain->getInvRenderTargetSize();
+	pGPUPassCB->invRenderTargetSize = _pSwapChain->getInvRenderTargetSize();
 	pGPUPassCB->deltaTime = pGameTimer->getDeltaTime();
 	pGPUPassCB->totalTime = pGameTimer->getTotalTime();
 }
@@ -167,16 +153,16 @@ void LandAndWater::renderWaterPass(dx12lib::DirectContextProxy pDirectCtx) {
 	std::string_view passName = "WaterPSO";
 	auto pPSO = _psoMap[passName.data()];
 	pDirectCtx->setGraphicsPSO(pPSO);
-	pDirectCtx->setConstantBufferView(_pPassCB->getConstantBufferView(), CBPass);
-	pDirectCtx->setConstantBufferView(_pLightCB->getConstantBufferView(), CBLight);
-	pDirectCtx->setConstantBufferView(_pWaterCB->getConstantBufferView(), CBWater);
+	pDirectCtx->setConstantBuffer(_pPassCB, CBPass);
+	pDirectCtx->setConstantBuffer(_pLightCB, CBLight);
+	pDirectCtx->setConstantBuffer(_pWaterCB, CBWater);
 	pDirectCtx->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	auto &renderItems = _renderItemMap[passName.data()];
 	for (auto &rItem : renderItems) {
 		pDirectCtx->setVertexBuffer(rItem._pMesh->getVertexBuffer());
 		pDirectCtx->setIndexBuffer(rItem._pMesh->getIndexBuffer());
-		pDirectCtx->setConstantBufferView(rItem._pConstantBuffer->getConstantBufferView(), CBObject);
+		pDirectCtx->setConstantBuffer(rItem._pConstantBuffer, CBObject);
 		rItem._pMesh->drawIndexdInstanced(pDirectCtx);
 	}
 }
@@ -187,15 +173,15 @@ void LandAndWater::drawOpaqueRenderItems(dx12lib::DirectContextProxy pDirectCtx,
 {
 	auto pPSO = _psoMap[passName.data()];
 	pDirectCtx->setGraphicsPSO(pPSO);
-	pDirectCtx->setConstantBufferView(_pPassCB->getConstantBufferView(), CBPass);
-	pDirectCtx->setConstantBufferView(_pLightCB->getConstantBufferView(), CBLight);
+	pDirectCtx->setConstantBuffer(_pPassCB, CBPass);
+	pDirectCtx->setConstantBuffer(_pLightCB, CBLight);
 	auto &renderItems = _renderItemMap[passName.data()];
 	pDirectCtx->setPrimitiveTopology(primitiveType);
 	for (auto &rItem : renderItems) {
 		pDirectCtx->setVertexBuffer(rItem._pMesh->getVertexBuffer());
 		pDirectCtx->setIndexBuffer(rItem._pMesh->getIndexBuffer());
 		pDirectCtx->setConstantBuffer(rItem._pConstantBuffer, CBObject);
-		pDirectCtx->setShaderResourceView(rItem._pAlbedoMap->getShaderResourceView(), SRAlbedo);
+		pDirectCtx->setShaderResourceView(rItem._pAlbedoMap->getSRV(), SRAlbedo);
 		rItem._pMesh->drawIndexdInstanced(pDirectCtx);
 	}
 }

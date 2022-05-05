@@ -15,11 +15,12 @@ public:
 	void resize(DirectContextProxy pDirectContext, uint32 width, uint32 height);
 	DXGI_FORMAT getRenderTargetFormat() const;
 	DXGI_FORMAT getDepthStencilFormat() const;
-	std::shared_ptr<RenderTarget2D> getRenderTarget() const;
-	std::shared_ptr<DepthStencil2D> getDepthStencil() const;
+	std::shared_ptr<RenderTarget2D> getRenderTarget2D() const;
+	std::shared_ptr<DepthStencil2D> getDepthStencil2D() const;
+	float2 getRenderTargetSize() const;
+	float2 getInvRenderTargetSize() const;
 	void present();
 private:
-	std::shared_ptr<RenderTarget2D> getCurrentBackBuffer() const;
 	void updateBuffer(DirectContextProxy pDirectContext);
 private:
 	HWND	_hwnd;

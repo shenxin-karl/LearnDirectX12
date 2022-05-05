@@ -44,6 +44,10 @@ BufferType IVertexBuffer::getBufferType() const {
 	return BufferType::IndexBuffer;
 }
 
+BufferType IIndexBuffer::getBufferType() const {
+	return BufferType::IndexBuffer;
+}
+
 BufferType IStructuredBuffer::getBufferType() const {
 	return BufferType::StructuredBuffer;
 }

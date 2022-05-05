@@ -75,7 +75,7 @@ void BlurFilter::buildUnorderedAccessResource(dx12lib::ComputeContextProxy pComp
 
 void BlurFilter::buildBlurPSO(std::weak_ptr<dx12lib::Device> pDevice) {
 	if (_pHorzBlurPSO == nullptr) {
-		auto pBlurFilterCSFile = getD3DResource("shader/BlurFilterCS.hlsl");
+		auto pBlurFilterCSFile = getD3DResource("HlslShader/BlurFilterCS.hlsl");
 		assert(pBlurFilterCSFile.size() != 0);
 
 		dx12lib::RootSignatureDescHelper desc;

@@ -86,16 +86,20 @@ void SwapChain::present() {
 	_currentBackBufferIndex = (_currentBackBufferIndex + 1) % kSwapChainBufferCount;
 }
 
-std::shared_ptr<RenderTarget2D> SwapChain::getRenderTarget() const {
-	return getCurrentBackBuffer();
+std::shared_ptr<RenderTarget2D> SwapChain::getRenderTarget2D() const {
+	return _pSwapChainBuffer[_currentBackBufferIndex];
 }
 
-std::shared_ptr<DepthStencil2D> SwapChain::getDepthStencil() const {
+std::shared_ptr<DepthStencil2D> SwapChain::getDepthStencil2D() const {
 	return _pDepthStencil2D;
 }
 
-std::shared_ptr<RenderTarget2D> SwapChain::getCurrentBackBuffer() const {
-	return _pSwapChainBuffer[_currentBackBufferIndex];
+float2 SwapChain::getRenderTargetSize() const {
+	return float2 { static_cast<float>(_width), static_cast<float>(_height)};
+}
+
+float2 SwapChain::getInvRenderTargetSize() const {
+	return float2 { 1.f / static_cast<float>(_width), 1.f / static_cast<float>(_height) };
 }
 
 void SwapChain::updateBuffer(DirectContextProxy pDirectContext) {
@@ -141,9 +145,8 @@ void SwapChain::updateBuffer(DirectContextProxy pDirectContext) {
 		IID_PPV_ARGS(&pDepthStencil)
 	));
 
-	// todo build DepthStencil2D
-	// _pDepthStencil2D = std::make_shared<dx12libTool::MakeDepthStencilBuffer>(_pDevice, pDepthStencil, D3D12_RESOURCE_STATE_DEPTH_WRITE);
-	// _pDepthStencil2D->getD3DResource()->SetName(L"DepthStencil2D");
+	_pDepthStencil2D = pDirectContext->createDepthStencil2D(pDepthStencil, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+	_pDepthStencil2D->getD3DResource()->SetName(L"DepthStencil2D");
 }
 
 }

@@ -26,6 +26,10 @@
 #include <array>
 #include "ComponentStd.h"
 
+#ifndef interface
+	#define interface struct
+#endif
+
 namespace DX = DirectX;
 namespace WRL = Microsoft::WRL;
 
@@ -129,14 +133,10 @@ interface IComputeContext;
 class StructuredBuffer;
 class ReadBackBuffer;
 
-class Sampler2D;
-class Sampler2DArray;
-class SamplerCube;
-
 class DepthStencil2D;
-class Sampler2D;
-class Sampler2DArray;
-class SamplerCube;
+class SamplerTexture2D;
+class SamplerTexture2DArray;
+class SamplerTextureCube;
 
 class RenderTarget2D;
 class RenderTarget2DArray;
@@ -146,9 +146,7 @@ class UnorderedAccess2D;
 class UnorderedAccess2DArray;
 class UnorderedAccessCube;
 
-#ifndef interface
-	#define interface struct
-#endif
+
 
 
 interface IResource;

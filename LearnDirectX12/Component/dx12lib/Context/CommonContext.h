@@ -22,12 +22,12 @@ interface IContext {
 };
 
 interface ICommonContext : IContext {
-	virtual std::shared_ptr<Sampler2D> createDDSTexture2DFromFile(const std::wstring &fileName) = 0;
-	virtual std::shared_ptr<Sampler2D> createDDSTexture2DFromMemory(const void *pData, size_t sizeInByte) = 0;
-	virtual std::shared_ptr<Sampler2DArray> createDDSTexture2DArrayFromFile(const std::wstring &fileName) = 0;
-	virtual std::shared_ptr<Sampler2DArray> createDDSTexture2DArrayFromMemory(const void *pData, size_t sizeInByte) = 0;
-	virtual std::shared_ptr<SamplerCube> createDDSTextureCubeFromFile(const std::wstring &fileName) = 0;
-	virtual std::shared_ptr<SamplerCube> createDDSTextureCubeFromMemory(const void *pData, size_t sizeInByte) = 0;
+	virtual std::shared_ptr<SamplerTexture2D> createDDSTexture2DFromFile(const std::wstring &fileName) = 0;
+	virtual std::shared_ptr<SamplerTexture2D> createDDSTexture2DFromMemory(const void *pData, size_t sizeInByte) = 0;
+	virtual std::shared_ptr<SamplerTexture2DArray> createDDSTexture2DArrayFromFile(const std::wstring &fileName) = 0;
+	virtual std::shared_ptr<SamplerTexture2DArray> createDDSTexture2DArrayFromMemory(const void *pData, size_t sizeInByte) = 0;
+	virtual std::shared_ptr<SamplerTextureCube> createDDSTextureCubeFromFile(const std::wstring &fileName) = 0;
+	virtual std::shared_ptr<SamplerTextureCube> createDDSTextureCubeFromMemory(const void *pData, size_t sizeInByte) = 0;
 	virtual	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) = 0;
 	virtual void setConstantBufferView(const ConstantBufferView &crv, size_t rootIndex, size_t offset = 0) = 0;
 	virtual void setShaderResourceView(const ShaderResourceView &srv, size_t rootIndex, size_t offset = 0) = 0;
@@ -178,9 +178,8 @@ interface IGraphicsContext : virtual ICommonContext {
 	virtual void setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology) = 0;
 	virtual void setStencilRef(UINT stencilRef) = 0;
 	virtual void setGraphics32BitConstants(size_t rootIndex, size_t numConstants, const void *pData, size_t destOffset = 0) = 0;
-	virtual void setRenderTargetView(const RenderTargetView &rtv);
-	virtual void setRenderTargetViews(const std::vector<RenderTargetView> &rtvs);
-	virtual void setDepthStencilView(const DepthStencilView &dsv);
+	virtual void setRenderTarget(const RenderTargetView &rtv, const DepthStencilView &dsv) = 0;
+	virtual void setRenderTargets(const std::vector<RenderTargetView> &rtvs, const DepthStencilView &dsv) = 0;
 
 	virtual void drawInstanced(size_t vertCount, size_t instanceCount, size_t baseVertexLocation, size_t startInstanceLocation = 0) = 0;
 	virtual void drawIndexedInstanced(size_t indexCountPerInstance, size_t instanceCount, size_t startIndexLocation, size_t baseVertexLocation, size_t startInstanceLocation) = 0;

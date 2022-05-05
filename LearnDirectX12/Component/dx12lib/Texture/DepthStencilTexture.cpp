@@ -35,7 +35,7 @@ DepthStencil2D::DepthStencil2D(std::weak_ptr<Device> pDevice,
 	depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	depthStencilDesc.Alignment = 0;
 	depthStencilDesc.Width = width;
-	depthStencilDesc.Height = height;
+	depthStencilDesc.Height = static_cast<UINT>(height);
 	depthStencilDesc.DepthOrArraySize = 1;
 	depthStencilDesc.MipLevels = 1;
 	depthStencilDesc.Format = depthStencilFormat;

@@ -17,12 +17,12 @@ public:
 	std::shared_ptr<CommandList> getCommandList() noexcept override;
 
 /// CommonContext api
-	std::shared_ptr<Sampler2D> createDDSTexture2DFromFile(const std::wstring &fileName) override;
-	std::shared_ptr<Sampler2D> createDDSTexture2DFromMemory(const void *pData, size_t sizeInByte) override;
-	std::shared_ptr<Sampler2DArray> createDDSTexture2DArrayFromFile(const std::wstring &fileName) override;
-	std::shared_ptr<Sampler2DArray> createDDSTexture2DArrayFromMemory(const void *pData, size_t sizeInByte) override;
-	std::shared_ptr<SamplerCube> createDDSTextureCubeFromFile(const std::wstring &fileName) override;
-	std::shared_ptr<SamplerCube> createDDSTextureCubeFromMemory(const void *pData, size_t sizeInByte) override;
+	std::shared_ptr<SamplerTexture2D> createDDSTexture2DFromFile(const std::wstring &fileName) override;
+	std::shared_ptr<SamplerTexture2D> createDDSTexture2DFromMemory(const void *pData, size_t sizeInByte) override;
+	std::shared_ptr<SamplerTexture2DArray> createDDSTexture2DArrayFromFile(const std::wstring &fileName) override;
+	std::shared_ptr<SamplerTexture2DArray> createDDSTexture2DArrayFromMemory(const void *pData, size_t sizeInByte) override;
+	std::shared_ptr<SamplerTextureCube> createDDSTextureCubeFromFile(const std::wstring &fileName) override;
+	std::shared_ptr<SamplerTextureCube> createDDSTextureCubeFromMemory(const void *pData, size_t sizeInByte) override;
 
 	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) override;
 	void setConstantBufferView(const ConstantBufferView &cbv, size_t rootIndex, size_t offset) override;
@@ -45,6 +45,8 @@ public:
 	void setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology) override;
 	void setStencilRef(UINT stencilRef) override;
 	void setGraphics32BitConstants(size_t rootIndex, size_t numConstants, const void *pData, size_t destOffset) override;
+	void setRenderTarget(const RenderTargetView &rtv, const DepthStencilView &dsv) override;
+	void setRenderTargets(const std::vector<RenderTargetView> &rtvs, const DepthStencilView &dsv) override;
 
 	void drawInstanced(size_t vertCount, size_t instanceCount, size_t baseVertexLocation, size_t startInstanceLocation) override;
 	void drawIndexedInstanced(size_t indexCountPerInstance, size_t instanceCount, size_t startIndexLocation, size_t baseVertexLocation, size_t startInstanceLocation) override;

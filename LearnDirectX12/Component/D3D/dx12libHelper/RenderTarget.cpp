@@ -1,4 +1,4 @@
-#include "D3D/RenderTarget.h"
+#include "D3D/dx12libHelper/RenderTarget.h"
 #include "dx12lib/Texture/RenderTargetTexture.h"
 #include "dx12lib/Device/SwapChain.h"
 #include "dx12lib/Texture/DepthStencilTexture.h"
@@ -15,7 +15,7 @@ RenderTarget::RenderTarget(std::shared_ptr<dx12lib::RenderTarget2D> pRenderTarge
 }
 
 RenderTarget::RenderTarget(std::shared_ptr<dx12lib::SwapChain> pSwapChain)
-	: RenderTarget(pSwapChain->getRenderTarget(), pSwapChain->getDepthStencil()) {
+	: RenderTarget(pSwapChain->getRenderTarget2D(), pSwapChain->getDepthStencil2D()) {
 }
 
 RenderTarget::RenderTarget(dx12lib::GraphicsContextProxy pGraphicsCtx,
@@ -37,17 +37,21 @@ std::shared_ptr<dx12lib::DepthStencil2D> RenderTarget::getDepthTarget2D() const 
 }
 
 void RenderTarget::clear(dx12lib::GraphicsContextProxy pCommonCtx, const Math::float4 &color, float depth, UINT stencil) {
+	assert(_isBinding);
 	pCommonCtx->clearColor(_pRenderTarget2D, color);
 	pCommonCtx->clearDepthStencil(_pDepthStencil2D, depth, stencil);
 }
 
 void RenderTarget::bind(dx12lib::GraphicsContextProxy pCommonCtx) {
+	_isBinding = true;
 	pCommonCtx->setViewport(getViewport());
 	pCommonCtx->setScissorRect(getScissorRect());
 	pCommonCtx->transitionBarrier(_pRenderTarget2D, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	pCommonCtx->setRenderTarget(_pRenderTarget2D->getRTV(), _pDepthStencil2D->getDSV());
 }
 
 void RenderTarget::unbind(dx12lib::CommonContextProxy pCommonCtx) {
+	_isBinding = false;
 	pCommonCtx->transitionBarrier(_pRenderTarget2D, D3D12_RESOURCE_STATE_PRESENT);
 }
 
@@ -77,6 +81,10 @@ float2 RenderTarget::getRenderTargetSize() const {
 
 float2 RenderTarget::getInvRenderTargetSize() const {
 	return float2{ 1.f / static_cast<float>(_width), 1.f / static_cast<float>(_height) };
+}
+
+RenderTarget::~RenderTarget() {
+	assert(!_isBinding);
 }
 
 }

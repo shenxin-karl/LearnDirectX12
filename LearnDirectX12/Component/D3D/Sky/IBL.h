@@ -11,8 +11,8 @@ public:
 private:
 private:
 	SH3 _irradianceMapSH3;
-	std::shared_ptr<dx12lib::Sampler2D> _pBRDFLut;
-	std::shared_ptr<dx12lib::Sampler2D> _pPerFilteredEnvMap;
+	std::shared_ptr<dx12lib::SamplerTexture2D> _pBRDFLut;
+	std::shared_ptr<dx12lib::SamplerTexture2D> _pPerFilteredEnvMap;
 };
 
 }

@@ -71,7 +71,7 @@ void SobelFilter::tryBuildApplyPSO(dx12lib::ComputeContextProxy pComputeList) {
 	tryBuildRootSignature(pComputeList);
 	auto pSharedDevice = pComputeList->getDevice().lock();
 	_pApplyPSO = pSharedDevice->createComputePSO("SobelProducePSO");
-	auto sobelFilterCSHlsl = getD3DResource("shader/SobelFilterCS.hlsl");
+	auto sobelFilterCSHlsl = getD3DResource("HlslShader/SobelFilterCS.hlsl");
 
 	D3D_SHADER_MACRO macros[] = { { "APPLY_MODE", "" }, { nullptr, nullptr } };
 	_pApplyPSO->setRootSignature(_pRootSignature);

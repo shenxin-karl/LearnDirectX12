@@ -3,9 +3,9 @@
 #include "BaseApp/BaseApp.h"
 #include "dx12lib/dx12libStd.h"
 #include "Math/MathHelper.h"
-#include "D3D/ShaderCommon.h"
+#include "D3D/Shader/ShaderCommon.h"
 #include "D3D/d3dutil.h"
-#include "D3D/Mesh.h"
+#include "D3D/Tool/Mesh.h"
 
 using namespace Math;
 
@@ -75,7 +75,7 @@ struct CBObjectType {
 struct RenderItem {
 	std::shared_ptr<d3d::Mesh> _pMesh;
 	dx12lib::FRConstantBufferPtr<CBObjectType> _pConstantBuffer;
-	std::shared_ptr<dx12lib::IShaderResourceBuffer> _pAlbedoMap;
+	std::shared_ptr<dx12lib::IShaderResource> _pAlbedoMap;
 };
 
 class LandAndWater : public com::BaseApp {
@@ -117,5 +117,5 @@ private:
 	std::map<std::string, std::shared_ptr<d3d::Mesh>> _geometryMap;
 	std::map<std::string, std::vector<RenderItem>> _renderItemMap;
 	std::map<std::string, std::shared_ptr<dx12lib::GraphicsPSO>> _psoMap;
-	std::map<std::string, std::shared_ptr<dx12lib::IShaderResourceBuffer>> _textureMap;
+	std::map<std::string, std::shared_ptr<dx12lib::IShaderResource>> _textureMap;
 };
