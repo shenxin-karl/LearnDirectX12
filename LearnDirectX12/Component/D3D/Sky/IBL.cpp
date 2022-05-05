@@ -56,21 +56,11 @@ SH3 calcIrradianceMapSH3(const T *pData, size_t width, size_t height, size_t num
 
 float3 getSHRadian(SH3 lightProbe, float3 N) {
 	Vector4 result(0.f);
-	result += Vector4(lightProbe.y00) * SHBasisFunction<0, 0>::eval(N);
+	result += Vector4(lightProbe.y0p0) * SHBasisFunction<0, 0>::eval(N);
 	result += Vector4(lightProbe.y1n1)* SHBasisFunction<1, -1>::eval(N);
-	result += Vector4(lightProbe.y10) * SHBasisFunction<1, 0>::eval(N);
+	result += Vector4(lightProbe.y1p0) * SHBasisFunction<1, 0>::eval(N);
 	result += Vector4(lightProbe.y1p1) * SHBasisFunction<1, 1>::eval(N);
 	return result.xyz;
-}
-
-void test(SH3 lightProbe) {
-	float3 N0 = float3(1, 0, 0);
-	float3 N1 = float3(0, 1, 0);
-	float3 N2 = float3(0, 1, 1);
-
-	float3 c0 = getSHRadian(lightProbe, N0);
-	float3 c1 = getSHRadian(lightProbe, N1);
-	float3 c2 = getSHRadian(lightProbe, N2);
 }
 
 IBL::IBL(dx12lib::GraphicsContextProxy pGraphicsCtx, const std::string &fileName) {
@@ -96,8 +86,6 @@ IBL::IBL(dx12lib::GraphicsContextProxy pGraphicsCtx, const std::string &fileName
 		assert(false);
 		return;
 	}
-
-	test(_irradianceMapSH3);
 
 	cmrc::file brdfLutFile = getD3DResource("resources/BRDF_LUT.dds");
 	_pBRDFLut = pGraphicsCtx->createDDSTexture2DFromMemory(brdfLutFile.begin(), brdfLutFile.size());

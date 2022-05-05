@@ -1614,3 +1614,8 @@ FORCEINLINE Matrix4 inverse(const Matrix4 &mat4) noexcept {
 }
 #endif
 }
+
+
+static_assert(sizeof(Math::float2) == sizeof(float)*2);
+static_assert(sizeof(Math::float3) == sizeof(float)*3);
+static_assert(sizeof(Math::float4) == sizeof(float)*4);
