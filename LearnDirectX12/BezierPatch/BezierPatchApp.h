@@ -1,7 +1,7 @@
 #pragma once
 #include "BaseApp/BaseApp.h"
 #include "D3D/d3dutil.h"
-#include "D3D/ShaderCommon.h"
+#include "D3D/Shader/ShaderCommon.h"
 #include "dx12lib/dx12libStd.h"
 #include "Math/MathHelper.h"
 

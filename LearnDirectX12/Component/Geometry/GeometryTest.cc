@@ -117,6 +117,7 @@ void createCylinderTest() {
 	mesh.save("CreateBoxTest4.obj");
 }
 
+#if 0
 void loopSubdivisionTest() {
 	std::vector<Vertex> vertices = {
 		Vertex{ float3(0.125, 0.125, 0), float2(0.f) },
@@ -160,6 +161,7 @@ void loopBetaTest() {
 		std::cout << "n: " << n << "\tv0: " << 1.f - n * beta << std::endl;
 	}
 }
+#endif
 
 void createShapeTest() {
 	com::GometryGenerator gen;

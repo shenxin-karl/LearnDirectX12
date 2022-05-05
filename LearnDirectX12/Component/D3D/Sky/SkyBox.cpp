@@ -55,7 +55,7 @@ SkyBox::SkyBox(const SkyBoxDesc &desc) : _pCubeMap(desc.pCubeMap) {
 	rasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
 	_pSkyBoxPSO->setRasterizerState(rasterizerDesc);
 
-	auto skyBoxContent = getD3DResource("shader/SkyBox.hlsl");
+	auto skyBoxContent = getD3DResource("HlslShader/SkyBox.hlsl");
 	_pSkyBoxPSO->setVertexShader(compileShader(
 		skyBoxContent.begin(),
 		skyBoxContent.size(),

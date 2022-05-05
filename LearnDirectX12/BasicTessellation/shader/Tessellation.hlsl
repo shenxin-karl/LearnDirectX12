@@ -1,4 +1,4 @@
-#include "../../Component/D3D/shader/ShaderCommon.hlsl"
+#include "../../Component/D3D/HlslShader/ShaderCommon.hlsl"
 
 cbuffer CBObject : register(b0) {
 	float4x4 gWorld;

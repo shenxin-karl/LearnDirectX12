@@ -11,7 +11,7 @@ int main() {
 	};
 	Vector3 boxMax = Vector3(box.max);
 	auto implicitFunction = [=, radiusSqr = (radius * radius)](int x, int y, int z) {
-		Vector3 point = Vector3(x, y, z) + boxMax;
+		Vector3 point = Vector3(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)) + boxMax;
 		return static_cast<float>(dot(point, point) - radiusSqr);
 	};
 

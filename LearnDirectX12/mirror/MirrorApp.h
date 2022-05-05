@@ -1,13 +1,13 @@
 #pragma once
 #include "dx12lib/dx12libStd.h"
-#include "dx12lib/ContextProxy.hpp"
+#include "dx12lib/Context/ContextProxy.hpp"
 #include "BaseApp/BaseApp.h"
 #include "GameTimer/GameTimer.h"
+
 #include "D3D/d3dutil.h"
-#include "D3D/Mesh.h"
-#include "D3D/Camera.h"
-#include "D3D/ShaderCommon.h"
-#include "Math/MathHelper.h"
+#include "D3D/Tool/Mesh.h"
+#include "D3D/Tool/Camera.h"
+#include "D3D/Shader/ShaderCommon.h"
 
 using namespace Math;
 
@@ -36,7 +36,7 @@ struct ObjectCBType {
 struct RenderItem {
 	std::shared_ptr<d3d::Mesh> _pMesh;
 	dx12lib::FRConstantBufferPtr<ObjectCBType> _pObjectCB;
-	std::shared_ptr<dx12lib::ShaderResourceBuffer> _pAlbedoMap;
+	std::shared_ptr<dx12lib::IShaderResource> _pAlbedoMap;
 	d3d::SubMesh _submesh;
 };
 
@@ -76,7 +76,7 @@ private:
 	std::map<std::string, d3d::Material> _materialMap;
 	std::map<std::string, std::shared_ptr<d3d::Mesh>> _meshMap;
 	std::map<RenderLayer, std::shared_ptr<dx12lib::GraphicsPSO>> _psoMap;
-	std::map<std::string, std::shared_ptr<dx12lib::Texture2D>> _textureMap;
+	std::map<std::string, std::shared_ptr<dx12lib::IShaderResource>> _textureMap;
 	std::vector<RenderItem> _renderItems[RenderLayer::Count];
 
 	float3 _skullTranslation = { 0.0f, 1.0f, -5.0f };

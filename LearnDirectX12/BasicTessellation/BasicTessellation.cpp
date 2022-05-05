@@ -1,21 +1,23 @@
 #include "BasicTessellation.h"
-#include "dx12lib/CommandQueue.h"
-#include "dx12lib/RenderTarget.h"
-#include "dx12lib/SwapChain.h"
-#include "dx12lib/RootSignature.h"
-#include "dx12lib/Device.h"
-#include "dx12lib/PipelineStateObject.h"
-#include "D3D/Camera.h"
-#include "D3D/Mesh.h"
-#include "D3D/ShaderCommon.h"
+#include "dx12lib/Context/ContextStd.h"
+#include "dx12lib/Pipeline/PipelineStd.h"
+#include "dx12lib/Device/DeviceStd.h"
+#include "dx12lib/Texture/TextureStd.h"
+#include "dx12lib/Buffer/BufferStd.h"
+#include "D3D/Tool/Camera.h"
+#include "D3D/Tool/Mesh.h"
+#include "D3D/Shader/ShaderCommon.h"
 #include "GameTimer/GameTimer.h"
 #include "InputSystem/Mouse.h"
 #include <DirectXColors.h>
+
+#include "D3D/dx12libHelper/RenderTarget.h"
 
 
 namespace DX = DirectX;
 
 BasicTessellationApp::BasicTessellationApp() : BaseApp() {
+	_title = "BasicTessellationApp";
 }
 
 BasicTessellationApp::~BasicTessellationApp() {
@@ -116,37 +118,27 @@ void BasicTessellationApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTime
 	_pCamera->updatePassCB(*pPassCBuffer);
 	pPassCBuffer->totalTime = pGameTimer->getTotalTime();
 	pPassCBuffer->deltaTime = pGameTimer->getDeltaTime();
-	auto pRenderTarget = _pSwapChain->getRenderTarget();;
-	pPassCBuffer->renderTargetSize = pRenderTarget->getRenderTargetSize();
-	pPassCBuffer->invRenderTargetSize = pRenderTarget->getInvRenderTargetSize();
+	pPassCBuffer->renderTargetSize = _pSwapChain->getRenderTargetSize();
+	pPassCBuffer->invRenderTargetSize = _pSwapChain->getInvRenderTargetSize();
 }
 
 void BasicTessellationApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pCmdQueue = _pDevice->getCommandQueue();
 	auto pDirectCtx = pCmdQueue->createDirectContextProxy();
-	auto pRenderTarget = _pSwapChain->getRenderTarget();
-	pDirectCtx->setViewport(pRenderTarget->getViewport());
-	pDirectCtx->setScissorRect(pRenderTarget->getScissiorRect());
 	{
-		dx12lib::RenderTargetTransitionBarrier barrier = {
-			pDirectCtx,
-			pRenderTarget,
-			D3D12_RESOURCE_STATE_RENDER_TARGET,
-			D3D12_RESOURCE_STATE_RENDER_TARGET,
-		};
+		d3d::RenderTarget renderTarget(_pSwapChain);
+		renderTarget.bind(pDirectCtx);
+		renderTarget.clear(pDirectCtx, float4(DirectX::Colors::Black));
 
-		auto pRenderTargetBuffer = pRenderTarget->getRenderTargetBuffer(dx12lib::Color0);
-		auto pDepthStencilBuffer = pRenderTarget->getDepthStencilBuffer();
-		pDirectCtx->setRenderTarget(pRenderTarget);
-		pDirectCtx->clearColor(pRenderTargetBuffer, float4(DirectX::Colors::Black));
-		pDirectCtx->clearDepthStencil(pDepthStencilBuffer, 1.f, 0);
 		pDirectCtx->setGraphicsPSO(_pTessellationPSO);
-		pDirectCtx->setConstantBufferView(_pObjectCB->getConstantBufferView(), CB_Object);
-		pDirectCtx->setConstantBufferView(_pPassCB->getConstantBufferView(), CB_Pass);
+		pDirectCtx->setConstantBuffer(_pObjectCB, CB_Object);
+		pDirectCtx->setConstantBuffer(_pPassCB, CB_Pass);
 		pDirectCtx->setVertexBuffer(_pQuadMesh->getVertexBuffer());
 		pDirectCtx->setIndexBuffer(_pQuadMesh->getIndexBuffer());
 		pDirectCtx->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST);
 		_pQuadMesh->drawIndexdInstanced(pDirectCtx);
+
+		renderTarget.unbind(pDirectCtx);
 	}
 	pCmdQueue->executeCommandList(pDirectCtx);
 	pCmdQueue->signal(_pSwapChain);

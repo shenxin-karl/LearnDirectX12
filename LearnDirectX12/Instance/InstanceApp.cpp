@@ -1,21 +1,18 @@
 #include <random>
 #include <DirectXColors.h>
 #include "InstanceApp.h"
-#include "dx12lib/CommandQueue.h"
-#include "dx12lib/ConstantBuffer.h"
-#include "dx12lib/FRStructuredBuffer.hpp"
-#include "dx12lib/PipelineStateObject.h"
-#include "dx12lib/RenderTarget.h"
-#include "dx12lib/RenderTargetBuffer.h"
-#include "dx12lib/TextureShaderResource.h"
-#include "dx12lib/FRStructuredBuffer.hpp"
-#include "dx12lib/StructuredBuffer.h"
-#include "dx12lib/RootSignature.h"
-#include "dx12lib/SwapChain.h"
+
+#include "D3D/dx12libHelper/RenderTarget.h"
+#include "dx12lib/Context/ContextStd.h"
+#include "dx12lib/Pipeline/PipelineStd.h"
+#include "dx12lib/Device/DeviceStd.h"
+#include "dx12lib/Texture/TextureStd.h"
+#include "dx12lib/Buffer/BufferStd.h"
+
 #include "InputSystem/Keyboard.h"
 #include "InputSystem/Mouse.h"
 #include "GameTimer/GameTimer.h"
-#include "D3D/SkyBox.h"
+#include "D3D/Sky/SkyBox.h"
 
 InstanceApp::InstanceApp() {
 	_title = "InstanceApp";
@@ -45,11 +42,10 @@ void InstanceApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 void InstanceApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	pollEvent();
 	auto pPass = _pPassCB->visit();
-	auto pRenderTarget = _pSwapChain->getRenderTarget();
 	_pCamera->update(pGameTimer);
 	_pCamera->updatePassCB(*pPass);
-	pPass->renderTargetSize = pRenderTarget->getRenderTargetSize();
-	pPass->invRenderTargetSize = pRenderTarget->getInvRenderTargetSize();
+	pPass->renderTargetSize = _pSwapChain->getRenderTargetSize();
+	pPass->invRenderTargetSize = _pSwapChain->getInvRenderTargetSize();
 	pPass->totalTime = pGameTimer->getTotalTime();
 	pPass->deltaTime = pGameTimer->getDeltaTime();
 }
@@ -58,32 +54,25 @@ void InstanceApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pCmdQueue = _pDevice->getCommandQueue();
 	auto pDirectCtx = pCmdQueue->createDirectContextProxy();
 	{
-		auto pRenderTarget = _pSwapChain->getRenderTarget();
-		auto pRenderTargetBuffer = pRenderTarget->getRenderTargetBuffer(dx12lib::Color0);
-		auto pDepthStencilBuffer = pRenderTarget->getDepthStencilBuffer();
-		pDirectCtx->setViewport(pRenderTarget->getViewport());
-		pDirectCtx->setScissorRect(pRenderTarget->getScissiorRect());
-		pDirectCtx->setRenderTarget(pRenderTarget);
-		pDirectCtx->transitionBarrier(pRenderTargetBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET);
-
-		pDirectCtx->clearColor(pRenderTargetBuffer, float4(DirectX::Colors::LightSkyBlue));
-		pDirectCtx->clearDepthStencil(pDepthStencilBuffer, 1.f, 0);
+		d3d::RenderTarget renderTarget(_pSwapChain);
+		renderTarget.bind(pDirectCtx);
+		renderTarget.clear(pDirectCtx, float4(DirectX::Colors::LightSkyBlue));
 
 		pDirectCtx->setGraphicsPSO(_pInstancePSO);
-		pDirectCtx->setConstantBufferView(_pPassCB->getConstantBufferView(), CB_Pass);
-		pDirectCtx->setConstantBufferView(_pLightCB->getConstantBufferView(), CB_Light);
+		pDirectCtx->setConstantBuffer(_pPassCB, CB_Pass);
+		pDirectCtx->setConstantBuffer(_pLightCB, CB_Light);
 		pDirectCtx->setStructuredBuffer(_pMaterialData, SR_MaterialData);
 
 		size_t srvCount = std::min(_textures.size(), kMaxTextureArraySize);
 		for (size_t idx = 0; idx < srvCount; ++idx)
-			pDirectCtx->setShaderResourceView(_textures[idx]->getShaderResourceView(), SR_DiffuseMapArray, idx);
+			pDirectCtx->setShaderResourceView(_textures[idx]->getSRV(), SR_DiffuseMapArray, idx);
 
 		std::vector<RenderItem> renderItems = cullingByFrustum();
 		doDrawInstance(pDirectCtx, _geometryMap["skull"], renderItems);
 
 		_pSkyBox->render(pDirectCtx, _pCamera);
 
-		pDirectCtx->transitionBarrier(pRenderTargetBuffer, D3D12_RESOURCE_STATE_PRESENT);
+		renderTarget.unbind(pDirectCtx);
 	}
 	pCmdQueue->executeCommandList(pDirectCtx);
 	pCmdQueue->signal(_pSwapChain);

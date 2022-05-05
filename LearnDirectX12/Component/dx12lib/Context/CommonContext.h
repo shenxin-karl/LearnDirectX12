@@ -66,6 +66,15 @@ interface ICommonContext : IContext {
 
 	/////////////////////////////////// ConstantBuffer //////////////////////////////////
 #if 1
+	template<typename T>
+	std::shared_ptr<ConstantBuffer> createConstantBuffer() {
+		return std::make_shared<dx12libTool::MakeConstantBuffer>(
+			getDevice(),
+			nullptr,
+			sizeof(T)
+		);
+	}
+
 	template<typename...Args>
 	std::shared_ptr<ConstantBuffer> createConstantBuffer(Args&&...args) {
 		return std::make_shared<dx12libTool::MakeConstantBuffer>(

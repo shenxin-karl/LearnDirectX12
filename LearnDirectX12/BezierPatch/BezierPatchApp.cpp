@@ -1,19 +1,19 @@
 #include "BezierPatchApp.h"
 #include <DirectXColors.h>
-#include "dx12lib/CommandQueue.h"
-#include "dx12lib/RenderTarget.h"
-#include "dx12lib/RootSignature.h"
-#include "dx12lib/SwapChain.h"
-#include "dx12lib/Device.h"
-#include "dx12lib/PipelineStateObject.h"
-#include "dx12lib/RenderTargetBuffer.h"
-#include "D3D/Mesh.h"
-#include "D3D/Camera.h"
+#include "D3D/dx12libHelper/RenderTarget.h"
+#include "dx12lib/Context/ContextStd.h"
+#include "dx12lib/Pipeline/PipelineStd.h"
+#include "dx12lib/Device/DeviceStd.h"
+#include "dx12lib/Texture/TextureStd.h"
+#include "dx12lib/Buffer/BufferStd.h"
+#include "D3D/Tool/Mesh.h"
+#include "D3D/Tool/Camera.h"
 #include "GameTimer/GameTimer.h"
 #include "InputSystem/Mouse.h"
 
 
 BezierPatchApp::BezierPatchApp() {
+	_title = "BezierPatchApp";
 }
 
 BezierPatchApp::~BezierPatchApp() {
@@ -30,13 +30,11 @@ void BezierPatchApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	while (auto event = _pInputSystem->pMouse->getEvent())
 		_pCamera->pollEvent(event);
 
-	auto pRenderTarget = _pSwapChain->getRenderTarget();
 	auto pGPUPassCB = _pPassCB->map();
-
 	_pCamera->update(pGameTimer);
 	_pCamera->updatePassCB(*pGPUPassCB);
-	pGPUPassCB->renderTargetSize = pRenderTarget->getRenderTargetSize();
-	pGPUPassCB->invRenderTargetSize = pRenderTarget->getInvRenderTargetSize();
+	pGPUPassCB->renderTargetSize = _pSwapChain->getRenderTargetSize();
+	pGPUPassCB->invRenderTargetSize = _pSwapChain->getInvRenderTargetSize();
 	pGPUPassCB->deltaTime = pGameTimer->getDeltaTime();
 	pGPUPassCB->totalTime = pGameTimer->getTotalTime();
 }
@@ -44,31 +42,23 @@ void BezierPatchApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 void BezierPatchApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pCmdQueue = _pDevice->getCommandQueue();
 	auto pDirectCtx = pCmdQueue->createDirectContextProxy();
-	auto pRenderTarget = _pSwapChain->getRenderTarget();
+	{
+		d3d::RenderTarget renderTarget(_pSwapChain);
+		renderTarget.bind(pDirectCtx);
+		renderTarget.clear(pDirectCtx, float4(DirectX::Colors::Black));
 
-	auto pRenderTargetBuffer = pRenderTarget->getRenderTargetBuffer(dx12lib::Color0);
-	auto pDepthStencilBuffer = pRenderTarget->getDepthStencilBuffer();
+		// draw bezier patch triangle
+		pDirectCtx->setGraphicsPSO(_pBezierPatchPSO);
+		pDirectCtx->setConstantBuffer(_pObjectCB, CB_Object);
+		pDirectCtx->setConstantBuffer(_pPassCB, CB_Pass);
+		pDirectCtx->setConstantBuffer(_pLightCB, CB_Light);
+		pDirectCtx->setVertexBuffer(_pQuadMesh->getVertexBuffer());
+		pDirectCtx->setIndexBuffer(_pQuadMesh->getIndexBuffer());
+		pDirectCtx->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_16_CONTROL_POINT_PATCHLIST);
+		_pQuadMesh->drawIndexdInstanced(pDirectCtx);
 
-	// begin draw
-	pDirectCtx->setRenderTarget(pRenderTarget);
-	pDirectCtx->setViewport(pRenderTarget->getViewport());
-	pDirectCtx->setScissorRect(pRenderTarget->getScissiorRect());
-	pDirectCtx->transitionBarrier(pRenderTargetBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET);
-	pDirectCtx->clearColor(pRenderTargetBuffer, float4(DirectX::Colors::Black));
-	pDirectCtx->clearDepthStencil(pDepthStencilBuffer, 1.f, 0);
-
-	// draw bezier patch triangle
-	pDirectCtx->setGraphicsPSO(_pBezierPatchPSO);
-	pDirectCtx->setConstantBufferView(_pObjectCB->getConstantBufferView(), CB_Object);
-	pDirectCtx->setConstantBufferView(_pPassCB->getConstantBufferView(), CB_Pass);
-	pDirectCtx->setConstantBufferView(_pLightCB->getConstantBufferView(), CB_Light);
-	pDirectCtx->setVertexBuffer(_pQuadMesh->getVertexBuffer());
-	pDirectCtx->setIndexBuffer(_pQuadMesh->getIndexBuffer());
-	pDirectCtx->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_16_CONTROL_POINT_PATCHLIST);
-	_pQuadMesh->drawIndexdInstanced(pDirectCtx);
-
-	pDirectCtx->transitionBarrier(pRenderTargetBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET);
-
+		renderTarget.unbind(pDirectCtx);
+	}
 	pCmdQueue->executeCommandList(pDirectCtx);
 	pCmdQueue->signal(_pSwapChain);
 }

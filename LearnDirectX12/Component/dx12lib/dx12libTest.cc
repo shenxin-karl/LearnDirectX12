@@ -1,12 +1,8 @@
-#include "Adapter.h"
-#include "Device.h"
-#include "DescriptorAllocator.h"
-#include "DescriptorAllocation.h"
-#include "DescriptorAllocatorPage.h"
-#include "CommandQueue.h"
-#include "StructuredBuffer.h"
-#include "ContextProxy.hpp"
-#include "CommandList.h"
+#include "dx12lib/Context/ContextStd.h"
+#include "dx12lib/Pipeline/PipelineStd.h"
+#include "dx12lib/Device/DeviceStd.h"
+#include "dx12lib/Texture/TextureStd.h"
+#include "dx12lib/Buffer/BufferStd.h"
 #include <iostream>
 
 using namespace dx12lib;
@@ -29,7 +25,7 @@ struct Test {
 void testStructConstantBuffer(std::shared_ptr<Device> pDevice) {
 	auto pCmdQueue = pDevice->getCommandQueue();
 	auto pDirectCtx = pCmdQueue->createDirectContextProxy();
-	auto pGPUTest = pDirectCtx->createFRConstantBuffer<Test>({ 10, 'a', 1.f, 10.0 });
+	auto pGPUTest = pDirectCtx->createFRConstantBuffer<Test>(Test{ 10, 'a', 1.f, 10.0 });
 	auto pMappedTest = pGPUTest->map();
 	std::cout << pMappedTest->a << " " 
 		      << pMappedTest->b << " "

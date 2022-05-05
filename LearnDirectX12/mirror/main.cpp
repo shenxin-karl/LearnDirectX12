@@ -7,7 +7,7 @@ int main() {
 	MirrorApp app;
 	try {
 		app.initialize();
-		while (app.isRuning()) {
+		while (app.isRunning()) {
 			pGameTimer->newFrame();
 			app.beginTick(pGameTimer);
 			app.tick(pGameTimer);

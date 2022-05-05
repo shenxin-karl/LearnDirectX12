@@ -1,9 +1,9 @@
 #pragma once
 #include "dx12lib/dx12libStd.h"
 #include "BaseApp/BaseApp.h"
-#include "D3D/Camera.h"
-#include "D3D/Mesh.h"
-#include "D3D/ShaderCommon.h"
+#include "D3D/Shader/ShaderCommon.h"
+#include "D3D/Tool/Mesh.h"
+#include "D3D/Tool/Camera.h"
 #include <DirectXCollision.h>
 
 using namespace Math;
@@ -68,7 +68,7 @@ private:
 	std::shared_ptr<d3d::FirstPersonCamera> _pCamera;
 	std::shared_ptr<dx12lib::GraphicsPSO>   _pInstancePSO;
 
-	std::vector<std::shared_ptr<dx12lib::Texture2D>> _textures;
+	std::vector<std::shared_ptr<dx12lib::SamplerTexture2D>> _textures;
 	std::vector<d3d::Material> _materials;
 
 	std::unordered_map<std::string, std::shared_ptr<d3d::Mesh>> _geometryMap;

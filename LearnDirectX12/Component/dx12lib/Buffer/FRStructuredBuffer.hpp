@@ -55,6 +55,7 @@ template<typename T>
 class FRStructuredBuffer : public IStructuredBuffer {
 protected:
 	FRStructuredBuffer(std::weak_ptr<Device> pDevice, const T *pData, size_t numElements);
+	FRStructuredBuffer(std::weak_ptr<Device> pDevice, size_t numElements);
 public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
 	size_t getBufferSize() const override;
@@ -104,6 +105,12 @@ FRStructuredBuffer<T>::FRStructuredBuffer(std::weak_ptr<Device> pDevice, const T
 			_descriptor.getCPUHandle(i)
 		);
 	}
+}
+
+template <typename T>
+FRStructuredBuffer<T>::FRStructuredBuffer(std::weak_ptr<Device> pDevice, size_t numElements) 
+: FRStructuredBuffer(pDevice, nullptr, numElements)
+{
 }
 
 template <typename T>

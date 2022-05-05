@@ -1,27 +1,23 @@
 #include <iostream>
 #include "MirrorApp.h"
-#include "dx12lib/Device.h"
-#include "dx12lib/SwapChain.h"
-#include "dx12lib/RenderTarget.h"
-#include "dx12lib/TextureShaderResource.h"
-#include "dx12lib/CommandList.h"
-#include "dx12lib/ContextProxy.hpp"
-#include "dx12lib/ConstantBuffer.h"
-#include "dx12lib/VertexBuffer.h"
-#include "dx12lib/IndexBuffer.h"
-#include "dx12lib/RenderTargetBuffer.h"
-#include "dx12lib/PipelineStateObject.h"
-#include "dx12lib/RootSignature.h"
-#include "dx12lib/CommandQueue.h"
-#include "dx12lib/UnorderedAccessBuffer.h"
+
+#include "dx12lib/Device/DeviceStd.h"
+#include "dx12lib/Context/ContextStd.h"
+#include "dx12lib/Buffer/BufferStd.h"
+#include "dx12lib/Pipeline/PipelineStd.h"
+#include "dx12lib/Texture/TextureStd.h"
+
 #include "InputSystem/InputSystem.h"
 #include "InputSystem/Keyboard.h"
 #include "InputSystem/window.h"
 #include "InputSystem/Mouse.h"
 #include "GameTimer/GameTimer.h"
-#include "D3D/D3DDescHelper.h"
-#include "D3D/FXAA.h"
+
 #include <DirectXColors.h>
+
+#include "D3D/dx12libHelper/D3DDescHelper.h"
+#include "D3D/dx12libHelper/RenderTarget.h"
+#include "D3D/Postprocessing/FXAA.h"
 
 Vertex::Vertex(const com::Vertex &vertex)
 	: position(vertex.position), normal(vertex.normal), texcoord(vertex.texcoord) {
@@ -63,9 +59,8 @@ void MirrorApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	_pCamera->update(pGameTimer);
 	auto pGPUPassCB = _pPassCB->map();
 	_pCamera->updatePassCB(*pGPUPassCB);
-	auto pRenderTarget = _pSwapChain->getRenderTarget();
-	pGPUPassCB->renderTargetSize = pRenderTarget->getRenderTargetSize();
-	pGPUPassCB->invRenderTargetSize = pRenderTarget->getInvRenderTargetSize();
+	pGPUPassCB->renderTargetSize = _pSwapChain->getRenderTargetSize();
+	pGPUPassCB->invRenderTargetSize = _pSwapChain->getInvRenderTargetSize();
 	pGPUPassCB->deltaTime = pGameTimer->getDeltaTime();
 	pGPUPassCB->totalTime = pGameTimer->getTotalTime();
 	pGPUPassCB->fogColor = float4(0.f);
@@ -78,62 +73,53 @@ void MirrorApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 void MirrorApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pCmdQueue = _pDevice->getCommandQueue();
 	auto pDirectCtx = pCmdQueue->createDirectContextProxy();
-	auto pRenderTarget = _pSwapChain->getRenderTarget();
-	pDirectCtx->setViewport(pRenderTarget->getViewport());
-	pDirectCtx->setScissorRect(pRenderTarget->getScissiorRect());
 	{
-		dx12lib::RenderTargetTransitionBarrier barrierGuard = {
-			pDirectCtx,
-			pRenderTarget,
-			D3D12_RESOURCE_STATE_RENDER_TARGET,
-			D3D12_RESOURCE_STATE_PRESENT,
-		};
-		auto pRenderTargetBuffer = pRenderTarget->getRenderTargetBuffer(dx12lib::Color0);
-		auto pDepthStencilBuffer = pRenderTarget->getDepthStencilBuffer();
-		pDirectCtx->clearColor(pRenderTargetBuffer, float4(DirectX::Colors::LightSkyBlue));
-		pDirectCtx->clearDepthStencil(pDepthStencilBuffer, 1.f, 0);
-		pDirectCtx->setRenderTarget(pRenderTarget);
+		d3d::RenderTarget renderTarget(_pSwapChain);
+		renderTarget.bind(pDirectCtx);
+		renderTarget.clear(pDirectCtx, float4(DirectX::Colors::LightSkyBlue));
 
 		// draw opaque
 		auto pPSO = _psoMap[RenderLayer::Opaque];
 		pDirectCtx->setGraphicsPSO(pPSO);
-		pDirectCtx->setConstantBufferView(_pPassCB->getConstantBufferView(), CBPass);
-		pDirectCtx->setConstantBufferView(_pLightCB->getConstantBufferView(), CBLight);
+		pDirectCtx->setConstantBuffer(_pPassCB, CBPass);
+		pDirectCtx->setConstantBuffer(_pLightCB, CBLight);
 		drawRenderItems(pDirectCtx, RenderLayer::Opaque);
 
 		// mark stencil 
 		pPSO = _psoMap[RenderLayer::Mirrors];
 		pDirectCtx->setGraphicsPSO(pPSO);
-		pDirectCtx->setConstantBufferView(_pPassCB->getConstantBufferView(), CBPass);
-		pDirectCtx->setConstantBufferView(_pLightCB->getConstantBufferView(), CBLight);
+		pDirectCtx->setConstantBuffer(_pPassCB, CBPass);
+		pDirectCtx->setConstantBuffer(_pLightCB, CBLight);
 		pDirectCtx->setStencilRef(1);
 		drawRenderItems(pDirectCtx, RenderLayer::Mirrors);
 
 		// draw 
 		pPSO = _psoMap[RenderLayer::Reflected];
 		pDirectCtx->setGraphicsPSO(pPSO);
-		pDirectCtx->setConstantBufferView(_pPassCB->getConstantBufferView(), CBPass);
-		pDirectCtx->setConstantBufferView(_pReflectedLightCB->getConstantBufferView(), CBLight);
+		pDirectCtx->setConstantBuffer(_pPassCB, CBPass);
+		pDirectCtx->setConstantBuffer(_pReflectedLightCB, CBLight);
 		pDirectCtx->setStencilRef(1);
 		drawRenderItems(pDirectCtx, RenderLayer::Reflected);
 
 		// draw 
 		pPSO = _psoMap[RenderLayer::Transparent];
 		pDirectCtx->setGraphicsPSO(pPSO);
-		pDirectCtx->setConstantBufferView(_pPassCB->getConstantBufferView(), CBPass);
-		pDirectCtx->setConstantBufferView(_pLightCB->getConstantBufferView(), CBLight);
+		pDirectCtx->setConstantBuffer(_pPassCB, CBPass);
+		pDirectCtx->setConstantBuffer(_pLightCB, CBLight);
 		pDirectCtx->setStencilRef(0);
 		drawRenderItems(pDirectCtx, RenderLayer::Transparent);
 
 		pPSO = _psoMap[RenderLayer::Shadow];
 		pDirectCtx->setGraphicsPSO(pPSO);
-		pDirectCtx->setConstantBufferView(_pPassCB->getConstantBufferView(), CBPass);
-		pDirectCtx->setConstantBufferView(_pLightCB->getConstantBufferView(), CBLight);
+		pDirectCtx->setConstantBuffer(_pPassCB, CBPass);
+		pDirectCtx->setConstantBuffer(_pLightCB, CBLight);
 		pDirectCtx->setStencilRef(0);
 		drawRenderItems(pDirectCtx, RenderLayer::Shadow);
 
-		_pFXAAFilter->produce(pDirectCtx, pRenderTargetBuffer);
-		pDirectCtx->copyResource(pRenderTargetBuffer, _pFXAAFilter->getOutput());
+		_pFXAAFilter->produce(pDirectCtx, renderTarget.getRenderTarget2D());
+		pDirectCtx->copyResource(renderTarget.getRenderTarget2D(), _pFXAAFilter->getOutput());
+
+		renderTarget.unbind(pDirectCtx);
 	}
 	pCmdQueue->executeCommandList(pDirectCtx);
 	pCmdQueue->signal(_pSwapChain);
@@ -149,8 +135,8 @@ void MirrorApp::drawRenderItems(dx12lib::DirectContextProxy pDirectCtx, RenderLa
 	for (auto &rItem : _renderItems[layer]) {
 		pDirectCtx->setVertexBuffer(rItem._pMesh->getVertexBuffer());
 		pDirectCtx->setIndexBuffer(rItem._pMesh->getIndexBuffer());
-		pDirectCtx->setConstantBufferView(rItem._pObjectCB->getConstantBufferView(), CBObject);
-		pDirectCtx->setShaderResourceView(rItem._pAlbedoMap->getShaderResourceView(), SRAlbedo);
+		pDirectCtx->setConstantBuffer(rItem._pObjectCB, CBObject);
+		pDirectCtx->setShaderResourceView(rItem._pAlbedoMap->getSRV(), SRAlbedo);
 		rItem._submesh.drawIndexdInstanced(pDirectCtx);
 	}
 }
@@ -312,7 +298,6 @@ void MirrorApp::buildPSOs(dx12lib::DirectContextProxy pDirectCtx) {
 	desc[2].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
 	desc[3].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2);
 	auto pRootSignature = _pDevice->createRootSignature(desc);
-	auto pRenderTarget = _pSwapChain->getRenderTarget();
 	auto pOpaquePSO = _pDevice->createGraphicsPSO("OpaquePSO");
 	pOpaquePSO->setRootSignature(pRootSignature);
 	pOpaquePSO->setRenderTargetFormat(

@@ -110,7 +110,7 @@ void vector2Test() {
 	v0 = Vector2(0.f, 0.f);
 	v1 = Vector2(10.f);
 	std::cout << "lerp(v0, v1, 0.5)" << lerp(v0, v1, 0.5f) << std::endl;
-	std::cout << "lerp(v0, v1, Vector2(0.1, 0.5))" << lerp(v0, v1, Vector2(0.1, 0.5)) << std::endl;
+	std::cout << "lerp(v0, v1, Vector2(0.1, 0.5))" << lerp(v0, v1, Vector2(0.1f, 0.5f)) << std::endl;
 
 	v0 = Vector2(-1.f, 10.f);
 	std::cout << "clamp(v0, Vector2(0.f), Vector2(9.f))" << clamp(v0, Vector2(0.f), Vector2(9.f)) << std::endl;
