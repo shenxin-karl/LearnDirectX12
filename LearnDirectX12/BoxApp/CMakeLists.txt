@@ -36,4 +36,5 @@ target_include_directories(BoxApp PUBLIC
 target_link_libraries(BoxApp PUBLIC 
 	BaseApp
 	Math
+	Geometry
 )

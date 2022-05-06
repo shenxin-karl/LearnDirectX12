@@ -1,5 +1,6 @@
 #include "BoxApp.h"
 #include "D3D/d3dutil.h"
+#include "D3D/Tool/Mesh.h"
 #include "InputSystem/mouse.h"
 #include <DirectXColors.h>
 #include <dx12lib/Device/DeviceStd.h>
@@ -24,7 +25,8 @@ void BoxApp::onInitialize(dx12lib::DirectContextProxy pDirectContext) {
 	cameraDesc.aspect = float(_width) / float(_height);
 
 	_pCamera = std::make_unique<d3d::CoronaCamera>(cameraDesc);
-	_pMVPConstantBuffer = pDirectContext->createFRConstantBuffer<WVMConstantBuffer>();
+	_pCBObject = pDirectContext->createFRConstantBuffer<CBObject>();
+	_pCBObject->visit()->gMaterial = {float4(1.f), 0.5, 0.5f};
 
 	// initialize root signature
 	dx12lib::RootParameter rootParame0;
@@ -46,7 +48,7 @@ void BoxApp::onInitialize(dx12lib::DirectContextProxy pDirectContext) {
 	// input layout
 	std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout = {
 		dx12lib::VInputLayoutDescHelper(&Vertex::position, "POSITION", DXGI_FORMAT_R32G32B32_FLOAT, 0, 0),
-		dx12lib::VInputLayoutDescHelper(&Vertex::color, "COLOR", DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0),
+		dx12lib::VInputLayoutDescHelper(&Vertex::normal, "NORMAL", DXGI_FORMAT_R32G32B32_FLOAT, 0, 0),
 	};
 	_pGraphicsPSO->setInputLayout(inputLayout);
 	_pGraphicsPSO->finalize();
@@ -56,13 +58,15 @@ void BoxApp::onInitialize(dx12lib::DirectContextProxy pDirectContext) {
 
 void BoxApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	pollEvent();
-	auto pGPUWVM = _pMVPConstantBuffer->map();
+	auto pObject = _pCBObject->map();
 	_pCamera->update(pGameTimer);
 
 	Matrix4 rotate = Matrix4::makeZRotationByRadian(pGameTimer->getTotalTime());
 	Matrix4 viewProj = _pCamera->getMatViewProj();
 	Matrix4 translation = Matrix4::makeTranslation(0.f, std::cos(pGameTimer->getTotalTime()), std::sin(pGameTimer->getTotalTime()));
-	pGPUWVM->gWorldViewProj = float4x4(viewProj * translation * rotate);
+	Matrix4 matWorld = translation * rotate;
+	pObject->gMatWorldViewProj = float4x4(viewProj * matWorld);
+	pObject->gMatNormal = float4x4(rotate);
 }
 
 void BoxApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
@@ -97,48 +101,19 @@ void BoxApp::pollEvent() {
 }
 
 void BoxApp::buildBoxGeometry(dx12lib::DirectContextProxy pDirectContext) {
-	namespace DX = DirectX;
-	std::array<Vertex, 8> vertices = {
-		Vertex { float3(-1.f, -1.f, -1.f), float4(DX::Colors::White)   },
-		Vertex { float3(-1.f, +1.f, -1.f), float4(DX::Colors::Black)   },
-		Vertex { float3(+1.f, +1.f, -1.f), float4(DX::Colors::Red)     },
-		Vertex { float3(+1.f, -1.f, -1.f), float4(DX::Colors::Green)   },
-		Vertex { float3(-1.f, -1.f, +1.f), float4(DX::Colors::Blue)    },
-		Vertex { float3(-1.f, +1.f, +1.f), float4(DX::Colors::Yellow)  },
-		Vertex { float3(+1.f, +1.f, +1.f), float4(DX::Colors::Cyan)    },
-		Vertex { float3(+1.f, -1.f, +1.f), float4(DX::Colors::Magenta) },
-	};
-	std::array<std::uint16_t, 36> indices = {
-		0, 1, 2,	// front
-		0, 2, 3,
-		4, 6, 5,	// back
-		4, 7, 6,
-		4, 5, 1,	// left
-		4, 1, 0,
-		3, 2, 6,	// right
-		3, 6, 7,
-		1, 5, 6,	// top
-		1, 6, 2,
-		4, 0, 3,	// bottom
-		4, 3, 7,
-	};
-
+	com::GometryGenerator gen;
+	com::MeshData cubeSphere = gen.createCubeSphere(1.f, 3);
 	_pBoxMesh = std::make_unique<BoxMesh>();
-	_pBoxMesh->_pVertexBuffer = pDirectContext->createVertexBuffer(vertices.data(),
-		vertices.size(), 
-		sizeof(Vertex)
-	);
-	_pBoxMesh->_pIndexBuffer = pDirectContext->createIndexBuffer(indices.data(),
-		indices.size(),
-		DXGI_FORMAT_R16_UINT
-	);
+	auto makeMeshHelper = d3d::MakeMeshHelper<Vertex>();
+	_pBoxMesh->_pVertexBuffer = makeMeshHelper.buildVertexBuffer(pDirectContext, cubeSphere);
+	_pBoxMesh->_pIndexBuffer = makeMeshHelper.buildIndexBuffer(pDirectContext, cubeSphere);
 	_pBoxMesh->_baseVertexLocation = 0;
 	_pBoxMesh->_startIndexLocation = 0;
 }
 
 void BoxApp::renderBoxPass(dx12lib::DirectContextProxy pDirectContext) const {
 	pDirectContext->setGraphicsPSO(_pGraphicsPSO);
-	pDirectContext->setConstantBuffer(_pMVPConstantBuffer, WorldViewProjCBuffer, 0);
+	pDirectContext->setConstantBuffer(_pCBObject, WorldViewProjCBuffer, 0);
 	pDirectContext->setVertexBuffer(_pBoxMesh->_pVertexBuffer);
 	pDirectContext->setIndexBuffer(_pBoxMesh->_pIndexBuffer);
 	pDirectContext->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

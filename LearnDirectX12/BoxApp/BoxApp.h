@@ -1,14 +1,17 @@
 #pragma once
 #include "BaseApp/BaseApp.h"
+#include "D3D/Shader/ShaderCommon.h"
 #include "D3D/Tool/Camera.h"
 #include "GameTimer/GameTimer.h"
-#include "Math/MathHelper.h"
+#include "Geometry/GeometryGenerator.h"
 
 using namespace Math;
 
 struct Vertex {
 	float3 position;
-	float4 color;
+	float3 normal;
+public:
+	Vertex(const com::Vertex &vertex) : position(vertex.position), normal(vertex.normal) {}
 };
 
 struct BoxMesh {
@@ -22,8 +25,10 @@ enum BoxRootParame : UINT {
 	WorldViewProjCBuffer = 0,
 };
 
-struct WVMConstantBuffer {
-	float4x4 gWorldViewProj;
+struct CBObject {
+	float4x4      gMatWorldViewProj;
+	float4x4	  gMatNormal;
+	d3d::Material gMaterial;
 };
 
 class BoxApp : public com::BaseApp {
@@ -41,7 +46,7 @@ private:
 private:
 	std::shared_ptr<dx12lib::GraphicsPSO>  _pGraphicsPSO;
 	std::unique_ptr<d3d::CoronaCamera>     _pCamera;
-	FRConstantBufferPtr<WVMConstantBuffer> _pMVPConstantBuffer;
+	FRConstantBufferPtr<CBObject>		   _pCBObject;
 	std::unique_ptr<BoxMesh>               _pBoxMesh;
 	float    _theta = 0.f;
 	float    _phi = 0.f;

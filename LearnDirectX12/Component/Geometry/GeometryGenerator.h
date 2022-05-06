@@ -42,6 +42,7 @@ public:
 	MeshData createBox(float width, float height, float depth, uint32 numSubdivisions) const;
 	MeshData createSphere(float radius, uint32 numSubdivisions) const;
 	MeshData createSphere(float radius, std::size_t sliceCount, std::size_t stackCount) const;
+	MeshData createCubeSphere(float radius, size_t numSubdivisions) const;
 	MeshData createGrid(float width, float depth, uint32 m, uint32 n) const;
 	MeshData createQuad(float x, float y, float w, float h, float depth) const;
 	MeshData loadObjFile(const std::string &path);

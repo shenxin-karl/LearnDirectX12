@@ -471,6 +471,17 @@ com::MeshData GometryGenerator::createSphere(float radius, std::size_t sliceCoun
 	return mesh;
 }
 
+MeshData GometryGenerator::createCubeSphere(float radius, size_t numSubdivisions) const {
+	MeshData cubeSphere = createBox(1.f, 1.f, 1.f, static_cast<uint32>(numSubdivisions));
+	for (Vertex &vert : cubeSphere.vertices) {
+		Vector3 N = normalize(Vector3(vert.position));
+		vert.position = float3(N * radius);
+		vert.normal = float3(N);
+	}
+	generateTangent(cubeSphere);
+	return cubeSphere;
+}
+
 MeshData GometryGenerator::createGrid(float width, float depth, uint32 m, uint32 n) const {
 	std::vector<Vertex> vertices;
 	float left = -0.5f * width;
