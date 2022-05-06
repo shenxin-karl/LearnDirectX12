@@ -63,7 +63,6 @@ private:
 	void pollEvent();
 	void updatePassCB(std::shared_ptr<com::GameTimer> pGameTimer);
 private:
-	std::unique_ptr<d3d::IBL> _pIBL;		  
 	std::unique_ptr<d3d::SobelFilter> _pSobelFilter;
 	std::unique_ptr<d3d::CoronaCamera>  _pCamera;
 	FRConstantBufferPtr<d3d::CBLightType> _pGameLightsCB;

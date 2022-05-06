@@ -3,7 +3,6 @@
 #include "D3D/Tool/Camera.h"
 #include "D3D/Shader/ShaderCommon.h"
 #include "D3D/Postprocessing/SobelFilter.h"
-#include "D3D/Sky/IBL.h"
 #include "dx12lib/Texture/TextureStd.h"
 #include "dx12lib/Context/ContextStd.h"
 #include "dx12lib/Device/DeviceStd.h"
@@ -35,7 +34,6 @@ void Shape::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 		static_cast<float>(_width) / static_cast<float>(_height),
 	};
 	_pCamera = std::make_unique<d3d::CoronaCamera>(cameraDesc);
-	_pIBL = std::make_unique<d3d::IBL>(pDirectCtx, "resource/Barce_Rooftop_C_3k.hdr");
 	_pCamera->_mouseWheelSensitivity = 1.f;
 	_pPassCB = pDirectCtx->createFRConstantBuffer<d3d::CBPassType>();
 	buildTexturePSO(pDirectCtx);

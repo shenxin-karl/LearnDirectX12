@@ -32,8 +32,8 @@ class UnorderedAccess2DArray : public IUnorderedAccess2DArray {
 public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
 	ShaderResourceView getSRV(size_t mipSlice = 0) const override;
-	ShaderResourceView getSRV(size_t planeSlice, size_t mipSlice = 0) const override;
-	UnorderedAccessView getUAV(size_t planeSlice, size_t mipSlice = 0) const override;
+	ShaderResourceView getPlaneSRV(size_t planeSlice, size_t mipSlice = 0) const override;
+	UnorderedAccessView getPlaneUAV(size_t planeSlice, size_t mipSlice = 0) const override;
 protected:
 	UnorderedAccess2DArray(std::weak_ptr<Device> pDevice,
 		WRL::ComPtr<ID3D12Resource> pResource,
@@ -58,8 +58,8 @@ class UnorderedAccessCube : public IUnorderedAccessCube {
 public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
 	ShaderResourceView getSRV(size_t mipSlice = 0) const override;
-	ShaderResourceView getSRV(CubeFace face, size_t mipSlice = 0) const override;
-	UnorderedAccessView getUAV(CubeFace face, size_t mipSlice = 0) const override;
+	ShaderResourceView getFaceSRV(CubeFace face, size_t mipSlice = 0) const override;
+	UnorderedAccessView getFaceUAV(CubeFace face, size_t mipSlice = 0) const override;
 protected:
 	UnorderedAccessCube(std::weak_ptr<Device> pDevice,
 		WRL::ComPtr<ID3D12Resource> pResource,

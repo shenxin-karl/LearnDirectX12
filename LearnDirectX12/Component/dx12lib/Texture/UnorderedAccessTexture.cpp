@@ -125,7 +125,7 @@ ShaderResourceView UnorderedAccess2DArray::getSRV(size_t mipSlice) const {
 	return SRV;
 }
 
-ShaderResourceView UnorderedAccess2DArray::getSRV(size_t planeSlice, size_t mipSlice) const {
+ShaderResourceView UnorderedAccess2DArray::getPlaneSRV(size_t planeSlice, size_t mipSlice) const {
 	assert(planeSlice < getPlaneSlice());
 	ViewManager<ShaderResourceView> &planeSrvMgr = _planeSrvMgr[planeSlice];
 	if (planeSrvMgr.exist(mipSlice))
@@ -152,7 +152,7 @@ ShaderResourceView UnorderedAccess2DArray::getSRV(size_t planeSlice, size_t mipS
 	return SRV;
 }
 
-UnorderedAccessView UnorderedAccess2DArray::getUAV(size_t planeSlice, size_t mipSlice) const {
+UnorderedAccessView UnorderedAccess2DArray::getPlaneUAV(size_t planeSlice, size_t mipSlice) const {
 	assert(planeSlice < getPlaneSlice());
 	ViewManager<UnorderedAccessView> &planeUavMgr = _planeUavMgr[planeSlice];
 	if (planeUavMgr.exist(mipSlice))
@@ -245,7 +245,7 @@ ShaderResourceView UnorderedAccessCube::getSRV(size_t mipSlice) const {
 	return SRV;
 }
 
-ShaderResourceView UnorderedAccessCube::getSRV(CubeFace face, size_t mipSlice) const {
+ShaderResourceView UnorderedAccessCube::getFaceSRV(CubeFace face, size_t mipSlice) const {
 	ViewManager<ShaderResourceView> &cubeSrvMgr = _cubeSrvMgr[face];
 	if (cubeSrvMgr.exist(mipSlice))
 		return cubeSrvMgr.get(mipSlice);
@@ -271,7 +271,7 @@ ShaderResourceView UnorderedAccessCube::getSRV(CubeFace face, size_t mipSlice) c
 	return SRV;
 }
 
-UnorderedAccessView UnorderedAccessCube::getUAV(CubeFace face, size_t mipSlice) const {
+UnorderedAccessView UnorderedAccessCube::getFaceUAV(CubeFace face, size_t mipSlice) const {
 	ViewManager<UnorderedAccessView> &cubeUavMgr = _cubeUavMgr[face];
 	if (cubeUavMgr.exist(mipSlice))
 		return cubeUavMgr.get(mipSlice);

@@ -80,7 +80,7 @@ ShaderResourceView SamplerTexture2DArray::getSRV(size_t mipSlice) const {
 	return SRV;
 }
 
-ShaderResourceView SamplerTexture2DArray::getSRV(size_t planeSlice, size_t mipSlice) const {
+ShaderResourceView SamplerTexture2DArray::getPlaneSRV(size_t planeSlice, size_t mipSlice) const {
 	ViewManager<ShaderResourceView> &planeSrvMgr = _planeSrvMgr[planeSlice];
 	if (planeSrvMgr.exist(mipSlice))
 		return planeSrvMgr.get(mipSlice);
@@ -148,7 +148,7 @@ ShaderResourceView SamplerTextureCube::getSRV(size_t mipSlice) const {
 	return SRV;
 }
 
-ShaderResourceView SamplerTextureCube::getSRV(CubeFace face, size_t mipSlice) const {
+ShaderResourceView SamplerTextureCube::getFaceSRV(CubeFace face, size_t mipSlice) const {
 	ViewManager<ShaderResourceView> &faceSrvMgr = _faceMapSrvMgr[face];
 	if (faceSrvMgr.exist(mipSlice))
 		return faceSrvMgr.get(mipSlice);

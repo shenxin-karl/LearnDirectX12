@@ -27,7 +27,7 @@ class SamplerTexture2DArray : public IShaderResource2DArray {
 public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
 	ShaderResourceView getSRV(size_t mipSlice = 0) const override;
-	ShaderResourceView getSRV(size_t planeSlice, size_t mipSlice = 0) const override;
+	ShaderResourceView getPlaneSRV(size_t planeSlice, size_t mipSlice = 0) const override;
 	~SamplerTexture2DArray() override = default;
 protected:
 	SamplerTexture2DArray(std::weak_ptr<Device> pDevice,
@@ -47,7 +47,7 @@ class SamplerTextureCube : public IShaderResourceCube {
 public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
 	ShaderResourceView getSRV(size_t mipSlice = 0) const override;
-	ShaderResourceView getSRV(CubeFace face, size_t mipSlice = 0) const override;
+	ShaderResourceView getFaceSRV(CubeFace face, size_t mipSlice = 0) const override;
 	~SamplerTextureCube() override = default;
 protected:
 	SamplerTextureCube(std::weak_ptr<Device> pDevice,

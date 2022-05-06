@@ -1,5 +1,8 @@
+#ifndef N
+    #define N 32
+#endif
 
-cbuffer CBSettings {
+cbuffer CBSettings : register(b0) {
 	float gWidth;
     float gHeight;
 };
@@ -11,7 +14,7 @@ SamplerState        gSamLinearClamp     : register(s0);
 struct CSIn {
 	uint3 	GroupID 		  : SV_GroupID;				// 线程组 ID
     uint3   GroupThreadID	  : SV_GroupThreadID;		// 组内线程 ID
-    uint3   DispatchThreadID  : SV_ThreadDispatchID;	// 线程 ID
+    uint3   DispatchThreadID  : SV_DispatchThreadID;	// 线程 ID
     uint  	GroupIndex        : SV_GroupIndex;			// 线程组内索引
 };
 
@@ -38,6 +41,8 @@ void CSMain(CSIn csin) {
     float offsetX = (csin.DispatchThreadID.x / gWidth);
     float offsetY = (csin.DispatchThreadID.y / gHeight);
     float3 direction = normalize(cubeLeftTopCorner + float3(offsetX, offsetY, 0.0));
+
+    [unroll(6)]
     for (int i = 0; i < 6; ++i) {
 	    float3 v = mul(direction, TBNArray[i]);
         float2 texcoord = SampleSphericalMap(v);

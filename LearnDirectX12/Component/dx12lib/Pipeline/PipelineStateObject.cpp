@@ -80,8 +80,7 @@ void GraphicsPSO::setRenderTargetFormats(UINT numRTVFormat, const DXGI_FORMAT *p
 	assert((numRTVFormat != 0 && pRTVFormat != nullptr) || (numRTVFormat == 0));
 	for (UINT i = 0; i < numRTVFormat; ++i) {
 		assert(pRTVFormat[i] != DXGI_FORMAT_UNKNOWN);
-		_psoDesc.RTVFormats[i] 
-			= pRTVFormat[i];
+		_psoDesc.RTVFormats[i] = pRTVFormat[i];
 	}
 	for (UINT i = numRTVFormat; i < _psoDesc.NumRenderTargets; ++i)
 		_psoDesc.RTVFormats[i] = DXGI_FORMAT_UNKNOWN;

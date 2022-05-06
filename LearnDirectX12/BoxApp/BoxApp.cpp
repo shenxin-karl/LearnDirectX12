@@ -1,6 +1,10 @@
 #include "BoxApp.h"
+
 #include "D3D/d3dutil.h"
 #include "D3D/Tool/Mesh.h"
+#include "D3D/dx12libHelper/RenderTarget.h"
+#include "D3D/Sky/IBL.h"
+
 #include "InputSystem/mouse.h"
 #include <DirectXColors.h>
 #include <dx12lib/Device/DeviceStd.h>
@@ -8,7 +12,6 @@
 #include <dx12lib/Texture/TextureStd.h>
 #include <dx12lib/Buffer/BufferStd.h>
 #include <dx12lib/Pipeline/PipelineStd.h>
-#include "D3D/dx12libHelper/RenderTarget.h"
 
 BoxApp::BoxApp() {
 	_title = "BoxApp";
@@ -23,6 +26,8 @@ void BoxApp::onInitialize(dx12lib::DirectContextProxy pDirectContext) {
 	cameraDesc.farClip = 100.f;
 	cameraDesc.fov = 45.f;
 	cameraDesc.aspect = float(_width) / float(_height);
+
+	_pIBL = std::make_unique<d3d::IBL>(pDirectContext, "resources/Barce_Rooftop_C_3k.hdr");
 
 	_pCamera = std::make_unique<d3d::CoronaCamera>(cameraDesc);
 	_pCBObject = pDirectContext->createFRConstantBuffer<CBObject>();

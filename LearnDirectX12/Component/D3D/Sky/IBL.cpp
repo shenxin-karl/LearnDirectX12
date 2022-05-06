@@ -5,6 +5,11 @@
 #include <stb/stb_image.h>
 #include <random>
 #include <dx12lib/Device/Device.h>
+#include <dx12lib/Pipeline/PipelineStd.h>
+#include <dx12lib/Texture/TextureStd.h>
+
+#include "D3D/d3dutil.h"
+#include "D3D/Shader/ShaderCommon.h"
 
 namespace d3d {
 
@@ -54,16 +59,27 @@ SH3 calcIrradianceMapSH3(const T *pData, size_t width, size_t height, size_t num
 	return coeff;
 }
 
-float3 getSHRadian(SH3 lightProbe, float3 N) {
-	Vector4 result(0.f);
-	result += Vector4(lightProbe.y0p0) * SHBasisFunction<0, 0>::eval(N);
-	result += Vector4(lightProbe.y1n1)* SHBasisFunction<1, -1>::eval(N);
-	result += Vector4(lightProbe.y1p0) * SHBasisFunction<1, 0>::eval(N);
-	result += Vector4(lightProbe.y1p1) * SHBasisFunction<1, 1>::eval(N);
-	return result.xyz;
+IBL::IBL(dx12lib::ComputeContextProxy pComputeCtx, const std::string &fileName) {
+	buildSphericalHarmonics3(fileName);
+	buildConvertToCubeMapPso(pComputeCtx->getDevice());
+
+	// todo ×ª»»Îª wstring
+	//std::wstring wcharFileName = fileName;
+	//std::wstring_view suffix = L".hdr";
+	//if (auto iter = wcharFileName.find_last_of(suffix); iter != std::wstring::npos)
+	//	wcharFileName.replace(iter, iter + suffix.length(), L".dds");
+	//else {
+	//	assert(false);
+	//}
+	
+	//auto pEquirecatangular = pComputeCtx->createDDSTexture2DFromFile(wcharFileName);
+	//buildEnvMap(pComputeCtx, pEquirecatangular);
+
+	cmrc::file brdfLutFile = getD3DResource("resources/BRDF_LUT.dds");
+	_pBRDFLut = pComputeCtx->createDDSTexture2DFromMemory(brdfLutFile.begin(), brdfLutFile.size());
 }
 
-IBL::IBL(dx12lib::GraphicsContextProxy pGraphicsCtx, const std::string &fileName) {
+void IBL::buildSphericalHarmonics3(const std::string &fileName) {
 	std::memset(&_irradianceMapSH3, 0, sizeof(SH3));
 	int width = 0; int height = 0; int channel = 0;
 	float *pHdrMap = stbi_loadf(fileName.c_str(), &width, &height, &channel, 0);
@@ -84,11 +100,61 @@ IBL::IBL(dx12lib::GraphicsContextProxy pGraphicsCtx, const std::string &fileName
 	case 2:
 	default:
 		assert(false);
-		return;
 	}
 
-	cmrc::file brdfLutFile = getD3DResource("resources/BRDF_LUT.dds");
-	_pBRDFLut = pGraphicsCtx->createDDSTexture2DFromMemory(brdfLutFile.begin(), brdfLutFile.size());
+	stbi_image_free(pHdrMap);
+	pHdrMap = nullptr;
+}
+
+void IBL::buildConvertToCubeMapPso(std::weak_ptr<dx12lib::Device> pDevice) {
+	auto pSharedDevice = pDevice.lock();
+
+	std::vector<D3D12_STATIC_SAMPLER_DESC> staticSamplerDesc;
+	staticSamplerDesc.push_back(d3d::getPointClampStaticSampler(0));
+
+	dx12lib::RootSignatureDescHelper rootDesc(staticSamplerDesc);
+	rootDesc.resize(3);
+	rootDesc[CB_Settings].InitAsConstants(2, 0);
+	rootDesc[SR_EnvMap].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+	rootDesc[UA_Output].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 6, 0);
+	auto pRootSignature = pSharedDevice->createRootSignature(rootDesc);
+
+	_pConvertToCubeMapPSO = pSharedDevice->createComputePSO("ConvertToCubeMapPSO");
+	_pConvertToCubeMapPSO->setRootSignature(pRootSignature);
+
+	D3D_SHADER_MACRO macros[] = {
+		{ "N", "5" },
+		{ nullptr, nullptr },
+	};
+
+	cmrc::file shaderContent = d3d::getD3DResource("HlslShader/EquirectangularToCubeMap.hlsl");
+	_pConvertToCubeMapPSO->setComputeShader(d3d::compileShader(
+		shaderContent.begin(), 
+		shaderContent.size(), 
+		macros,
+		"CSMain", 
+		"cs_5_0")
+	);
+	_pConvertToCubeMapPSO->finalize();
+}
+
+void IBL::buildEnvMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<dx12lib::IShaderResource2D> pEquirecatangular) {
+	size_t width = pEquirecatangular->getWidth();
+	size_t height = pEquirecatangular->getHeight();
+	size_t size = std::max(width, height) / 6;
+	_pEnvMap = pComputeCtx->createUnorderedAccessCube(size, size, nullptr, DXGI_FORMAT_R16G16B16A16_FLOAT);
+
+	pComputeCtx->setComputePSO(_pConvertToCubeMapPSO);
+	pComputeCtx->setCompute32BitConstants(CB_Settings, 1, &width, 0);
+	pComputeCtx->setCompute32BitConstants(CB_Settings, 1, &height, 1);
+	pComputeCtx->setShaderResourceView(pEquirecatangular->getSRV(), SR_EnvMap);
+	for (size_t i = 0; i < 6; ++i) {
+		dx12lib::CubeFace face = static_cast<dx12lib::CubeFace>(i);
+		pComputeCtx->setUnorderedAccessView(_pEnvMap->getFaceUAV(face), SR_EnvMap);
+	}
+	size_t groupX = static_cast<size_t>(std::ceil(static_cast<float>(size) / kThreadCount));
+	size_t groupY = static_cast<size_t>(std::ceil(static_cast<float>(size) / kThreadCount));
+	pComputeCtx->dispatch(groupX, groupY, 1);
 }
 
 }

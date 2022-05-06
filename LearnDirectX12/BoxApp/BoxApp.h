@@ -44,6 +44,7 @@ private:
 	void buildBoxGeometry(dx12lib::DirectContextProxy pDirectContext);
 	void renderBoxPass(dx12lib::DirectContextProxy pDirectContext) const;
 private:
+	std::shared_ptr<d3d::IBL>			   _pIBL;
 	std::shared_ptr<dx12lib::GraphicsPSO>  _pGraphicsPSO;
 	std::unique_ptr<d3d::CoronaCamera>     _pCamera;
 	FRConstantBufferPtr<CBObject>		   _pCBObject;

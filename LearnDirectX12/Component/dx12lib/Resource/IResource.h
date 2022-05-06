@@ -28,12 +28,12 @@ interface IShaderResource2D : IShaderResource {
 interface IShaderResource2DArray : IShaderResource {
 	ShaderResourceDimension getDimension() const override;
 	virtual size_t getPlaneSlice() const;
-	virtual ShaderResourceView getSRV(size_t planeSlice, size_t mipSlice = 0) const = 0;
+	virtual ShaderResourceView getPlaneSRV(size_t planeSlice, size_t mipSlice = 0) const = 0;
 };
 
 interface IShaderResourceCube : IShaderResource {
 	ShaderResourceDimension getDimension() const override;
-	virtual ShaderResourceView getSRV(CubeFace face, size_t mipSlice = 0) const = 0;
+	virtual ShaderResourceView getFaceSRV(CubeFace face, size_t mipSlice = 0) const = 0;
 };
 /////////////////////////////////////////////RenderTarget/////////////////////////////////////////////
 interface IRenderTarget2D : IShaderResource2D {
@@ -41,11 +41,11 @@ interface IRenderTarget2D : IShaderResource2D {
 };
 
 interface IRenderTarget2DArray : IShaderResource2DArray {
-	virtual RenderTargetView getRTV(size_t planeSlice, size_t mipSlice = 0) const = 0;
+	virtual RenderTargetView getPlaneRTV(size_t planeSlice, size_t mipSlice = 0) const = 0;
 };
 
 interface IRenderTargetCube : IShaderResourceCube {
-	virtual RenderTargetView getRTV(CubeFace face, size_t mipSlice = 0) const = 0;
+	virtual RenderTargetView getFaceRTV(CubeFace face, size_t mipSlice = 0) const = 0;
 };
 /////////////////////////////////////////////UnorderedAccess/////////////////////////////////////////////
 interface IUnorderedAccess2D : IShaderResource2D {
@@ -53,11 +53,11 @@ interface IUnorderedAccess2D : IShaderResource2D {
 };
 
 interface IUnorderedAccess2DArray : IShaderResource2DArray {
-	virtual UnorderedAccessView getUAV(size_t planeSlice, size_t mipSlice = 0) const = 0;
+	virtual UnorderedAccessView getPlaneUAV(size_t planeSlice, size_t mipSlice = 0) const = 0;
 };
 
 interface IUnorderedAccessCube : IShaderResourceCube {
-	virtual UnorderedAccessView getUAV(CubeFace face, size_t mipSlice = 0) const = 0;
+	virtual UnorderedAccessView getFaceUAV(CubeFace face, size_t mipSlice = 0) const = 0;
 };
 /////////////////////////////////////////////IDepthStencil2D/////////////////////////////////////////////
 interface IDepthStencil2D : IShaderResource2D {
