@@ -4,6 +4,16 @@
 
 namespace dx12lib {
 
+void IResource::setResourceName(const std::string &name) {
+	setResourceName(std::to_wstring(name));
+}
+
+void IResource::setResourceName(const std::wstring &name) {
+	WRL::ComPtr<ID3D12Resource> pResource = getD3DResource();
+	assert(pResource != nullptr);
+	pResource->SetName(name.c_str());
+}
+
 size_t IShaderResource::getWidth() const {
 	return static_cast<size_t>(getD3DResource()->GetDesc().Width);
 }

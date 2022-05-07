@@ -43,6 +43,11 @@ private:
 	void pollEvent();
 	void buildBoxGeometry(dx12lib::DirectContextProxy pDirectContext);
 	void renderBoxPass(dx12lib::DirectContextProxy pDirectContext) const;
+
+	enum RootParameter : size_t {
+		CB_Object,
+		SR_Env,
+	};
 private:
 	std::shared_ptr<d3d::IBL>			   _pIBL;
 	std::shared_ptr<dx12lib::GraphicsPSO>  _pGraphicsPSO;

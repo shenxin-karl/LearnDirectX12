@@ -14,6 +14,10 @@ LIST(APPEND ComponentAllSubDir "Geometry")
 LIST(APPEND ComponentAllSubDir "dx12lib")
 LIST(APPEND ComponentAllSubDir "VoxelTerrain")
 
+if (MSVC)
+	add_definitions(-D_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING)	## enable wstring_convert
+endif(MSVC)
+
 set(AllTestDir "")
 foreach(dirname ${ComponentAllSubDir}) 
 	if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${dirname}/CMakeLists.txt")

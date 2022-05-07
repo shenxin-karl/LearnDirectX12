@@ -231,6 +231,7 @@ ShaderResourceView UnorderedAccessCube::getSRV(size_t mipSlice) const {
 	auto descriptor = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Format = _pResource->GetDesc().Format;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
 	srvDesc.TextureCube.MostDetailedMip = 0;
 	srvDesc.TextureCube.MipLevels = -1;
@@ -281,7 +282,7 @@ UnorderedAccessView UnorderedAccessCube::getFaceUAV(CubeFace face, size_t mipSli
 	auto descriptor = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 	uavDesc.Format = _pResource->GetDesc().Format;
-	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
 	uavDesc.Texture2DArray.MipSlice = static_cast<UINT>(mipSlice);
 	uavDesc.Texture2DArray.FirstArraySlice = static_cast<UINT>(face);
 	uavDesc.Texture2DArray.ArraySize = 1;
@@ -327,7 +328,7 @@ UnorderedAccessCube::UnorderedAccessCube(std::weak_ptr<Device> pDevice, size_t w
 	ThrowIfFailed(pSharedDevice->getD3DDevice()->CreateCommittedResource(
 		RVPtr(CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT)),
 		D3D12_HEAP_FLAG_NONE,
-		RVPtr(unorderedAccessDesc),
+		&unorderedAccessDesc,
 		D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
 		pClearValue,
 		IID_PPV_ARGS(&_pResource)

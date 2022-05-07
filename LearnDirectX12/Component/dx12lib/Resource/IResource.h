@@ -8,6 +8,8 @@ namespace dx12lib {
 
 interface IResource : NonCopyable {
 	~IResource() override = default;
+	void setResourceName(const std::string &name);
+	void setResourceName(const std::wstring &name);
 	virtual WRL::ComPtr<ID3D12Resource> getD3DResource() const = 0;
 };
 

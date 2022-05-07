@@ -63,20 +63,23 @@ IBL::IBL(dx12lib::ComputeContextProxy pComputeCtx, const std::string &fileName) 
 	buildSphericalHarmonics3(fileName);
 	buildConvertToCubeMapPso(pComputeCtx->getDevice());
 
-	// todo ×ª»»Îª wstring
-	//std::wstring wcharFileName = fileName;
-	//std::wstring_view suffix = L".hdr";
-	//if (auto iter = wcharFileName.find_last_of(suffix); iter != std::wstring::npos)
-	//	wcharFileName.replace(iter, iter + suffix.length(), L".dds");
-	//else {
-	//	assert(false);
-	//}
+	std::wstring wcharFileName = std::to_wstring(fileName);
+	std::wstring_view suffix = L".hdr";
+	if (auto iter = wcharFileName.find(suffix); iter != std::wstring::npos)
+		wcharFileName.replace(iter, iter + suffix.length(), L".dds");
+	else {
+		assert(false);
+	}
 	
-	//auto pEquirecatangular = pComputeCtx->createDDSTexture2DFromFile(wcharFileName);
-	//buildEnvMap(pComputeCtx, pEquirecatangular);
+	_pEquirecatangular = pComputeCtx->createDDSTexture2DFromFile(wcharFileName);
+	buildEnvMap(pComputeCtx, _pEquirecatangular);
 
 	cmrc::file brdfLutFile = getD3DResource("resources/BRDF_LUT.dds");
 	_pBRDFLut = pComputeCtx->createDDSTexture2DFromMemory(brdfLutFile.begin(), brdfLutFile.size());
+}
+
+std::shared_ptr<dx12lib::UnorderedAccessCube> IBL::getEnvMap() const {
+	return _pEnvMap;
 }
 
 void IBL::buildSphericalHarmonics3(const std::string &fileName) {
@@ -139,18 +142,18 @@ void IBL::buildConvertToCubeMapPso(std::weak_ptr<dx12lib::Device> pDevice) {
 }
 
 void IBL::buildEnvMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<dx12lib::IShaderResource2D> pEquirecatangular) {
-	size_t width = pEquirecatangular->getWidth();
-	size_t height = pEquirecatangular->getHeight();
-	size_t size = std::max(width, height) / 6;
+	size_t width = static_cast<float>(pEquirecatangular->getWidth());
+	size_t height = static_cast<float>(pEquirecatangular->getHeight());
+	float size = static_cast<float>(std::max(width, height) / 6) ;
 	_pEnvMap = pComputeCtx->createUnorderedAccessCube(size, size, nullptr, DXGI_FORMAT_R16G16B16A16_FLOAT);
 
 	pComputeCtx->setComputePSO(_pConvertToCubeMapPSO);
-	pComputeCtx->setCompute32BitConstants(CB_Settings, 1, &width, 0);
-	pComputeCtx->setCompute32BitConstants(CB_Settings, 1, &height, 1);
+	pComputeCtx->setCompute32BitConstants(CB_Settings, 1, &size, 0);
+	pComputeCtx->setCompute32BitConstants(CB_Settings, 1, &size, 1);
 	pComputeCtx->setShaderResourceView(pEquirecatangular->getSRV(), SR_EnvMap);
 	for (size_t i = 0; i < 6; ++i) {
 		dx12lib::CubeFace face = static_cast<dx12lib::CubeFace>(i);
-		pComputeCtx->setUnorderedAccessView(_pEnvMap->getFaceUAV(face), SR_EnvMap);
+		pComputeCtx->setUnorderedAccessView(_pEnvMap->getFaceUAV(face), UA_Output, i);
 	}
 	size_t groupX = static_cast<size_t>(std::ceil(static_cast<float>(size) / kThreadCount));
 	size_t groupY = static_cast<size_t>(std::ceil(static_cast<float>(size) / kThreadCount));

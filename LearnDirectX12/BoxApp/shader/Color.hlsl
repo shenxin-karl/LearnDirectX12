@@ -13,7 +13,7 @@ struct VertexOut {
 cbuffer CBObject : register(b0) {
     float4x4 gMatWorldViewProj;
     float4x4 gMatNormal;
-    Material gMaterail;
+    Material gMaterial;
 };
 
 VertexOut VS(VertexIn vin) {
@@ -23,6 +23,8 @@ VertexOut VS(VertexIn vin) {
     return vout;
 }
 
+TextureCube gEnvMap : register(t0);
 float4 PS(VertexOut pin) : SV_Target {
-    return float4(pin.normal * 0.5 + 0.5, 1.0);
+	float3 envColor = gEnvMap.Sample(gSamLinearClamp, pin.normal).rgb;
+    return float4(envColor, 1.0);
 }

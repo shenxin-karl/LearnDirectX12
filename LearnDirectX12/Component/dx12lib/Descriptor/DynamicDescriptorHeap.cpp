@@ -129,6 +129,8 @@ void DynamicDescriptorHeap::commitDescriptorTables(std::shared_ptr<CommandList> 
 		auto *pSrcHandle = _descriptorTableCache[rootIndex]._pBaseHandle;
 		D3D12_CPU_DESCRIPTOR_HANDLE pDstDescriptorRangeStarts[] = { _currentCPUDescriptorHandle };
 		UINT pDstDescriptorRangeSizes[] = { numDescriptors };
+
+		// todo-note: 如果 CopyDescriptors 出现错误, 检查 _pBaseHandle 的值是否有效. 确认是不是 stageDescriptors 时没有设置 offset
 		pD3DDevice->CopyDescriptors(
 			1, pDstDescriptorRangeStarts, pDstDescriptorRangeSizes, 
 			numDescriptors, pSrcHandle, nullptr,

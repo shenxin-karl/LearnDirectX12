@@ -115,6 +115,7 @@ void SwapChain::updateBuffer(DirectContextProxy pDirectContext) {
 			pBuffer, 
 			D3D12_RESOURCE_STATE_COMMON
 		);
+		_pSwapChainBuffer[i]->setResourceName(L"currentBackBuffer");
 	}
 
 	D3D12_RESOURCE_DESC depthStencilDesc;
@@ -146,7 +147,7 @@ void SwapChain::updateBuffer(DirectContextProxy pDirectContext) {
 	));
 
 	_pDepthStencil2D = pDirectContext->createDepthStencil2D(pDepthStencil, D3D12_RESOURCE_STATE_DEPTH_WRITE);
-	_pDepthStencil2D->getD3DResource()->SetName(L"DepthStencil2D");
+	_pDepthStencil2D->setResourceName(L"DepthStencil2D");
 }
 
 }

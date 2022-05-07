@@ -8,6 +8,7 @@ namespace d3d {
 class IBL {
 public:
 	IBL(dx12lib::ComputeContextProxy pComputeCtx, const std::string &fileName);
+	std::shared_ptr<dx12lib::UnorderedAccessCube> getEnvMap() const;
 private:
 	void buildSphericalHarmonics3(const std::string &fileName);
 	void buildConvertToCubeMapPso(std::weak_ptr<dx12lib::Device> pDevice);
@@ -24,6 +25,7 @@ private:
 	std::shared_ptr<dx12lib::ComputePSO> _pConvertToCubeMapPSO;
 	std::shared_ptr<dx12lib::SamplerTexture2D> _pBRDFLut;
 	std::shared_ptr<dx12lib::SamplerTexture2D> _pPerFilteredEnvMap;
+	std::shared_ptr<dx12lib::IShaderResource2D> _pEquirecatangular;
 	std::shared_ptr<dx12lib::UnorderedAccessCube> _pEnvMap;
 };
 

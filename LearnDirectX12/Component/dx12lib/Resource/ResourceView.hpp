@@ -71,7 +71,9 @@ using IndexBufferView = _BufferView<D3D12_INDEX_BUFFER_VIEW>;
 template<typename T>
 class ViewManager {
 public:
-	ViewManager() : _viewIndices({ kMaxMipLevel }) {
+	ViewManager() {
+		for (auto &idx : _viewIndices)
+			idx = kMaxMipLevel;
 	}
 	ViewManager(const ViewManager &) = delete;
 	ViewManager(ViewManager &&) = default;
