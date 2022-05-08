@@ -50,7 +50,7 @@ void Device::initialize(const DeviceInitDesc &desc) {
 }
 
 void Device::destroy() {
-	_pCommandQueue->flushCommandQueue();
+	_pCommandQueue->destroy();
 }
 
 std::shared_ptr<SwapChain> Device::createSwapChain(HWND hwnd) const {
@@ -58,7 +58,8 @@ std::shared_ptr<SwapChain> Device::createSwapChain(HWND hwnd) const {
 		const_cast<Device *>(this)->weak_from_this(),
 		hwnd,
 		_initDesc.backBufferFormat,
-		_initDesc.depthStencilFormat
+		_initDesc.depthStencilFormat,
+		_initDesc.fps
 	);
 }
 

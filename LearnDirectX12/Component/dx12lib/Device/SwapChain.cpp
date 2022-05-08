@@ -13,7 +13,8 @@ namespace dx12lib {
 SwapChain::SwapChain(std::weak_ptr<Device> pDevice,
 		HWND hwnd,
 		DXGI_FORMAT backBufferFormat,
-		DXGI_FORMAT depthStencilFormat)
+		DXGI_FORMAT depthStencilFormat,
+		size_t fps)
 : _hwnd(hwnd), _width(0), _height(0), _renderTargetFormat(backBufferFormat)
 , _depthStencilFormat(depthStencilFormat), _currentBackBufferIndex(0), _pDevice(pDevice)
 {
@@ -29,7 +30,7 @@ SwapChain::SwapChain(std::weak_ptr<Device> pDevice,
 	DXGI_SWAP_CHAIN_DESC sd;
 	sd.BufferDesc.Width = width;
 	sd.BufferDesc.Height = height;
-	sd.BufferDesc.RefreshRate.Denominator = 60;
+	sd.BufferDesc.RefreshRate.Denominator = static_cast<UINT>(fps);
 	sd.BufferDesc.RefreshRate.Numerator = 1;
 	sd.BufferDesc.Format = backBufferFormat;
 	sd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
@@ -82,8 +83,16 @@ DXGI_FORMAT SwapChain::getDepthStencilFormat() const {
 }
 
 void SwapChain::present() {
-	ThrowIfFailed(_pSwapChain->Present(0, 0));
+	ThrowIfFailed(_pSwapChain->Present(_verticalSync ? 1 : 0, 0));
 	_currentBackBufferIndex = (_currentBackBufferIndex + 1) % kSwapChainBufferCount;
+}
+
+void SwapChain::setVerticalSync(bool bSync) {
+	_verticalSync = bSync;
+}
+
+bool SwapChain::getVerticalSync() const {
+	return _verticalSync;
 }
 
 std::shared_ptr<RenderTarget2D> SwapChain::getRenderTarget2D() const {

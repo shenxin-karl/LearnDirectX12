@@ -19,13 +19,18 @@ void FrameResourceItem::setFence(uint64 fence) noexcept {
 
 std::shared_ptr<CommandList> FrameResourceItem::createCommandList() {
 	std::shared_ptr<CommandList> pCmdList;
-	if (!_availableCmdList.tryPop(pCmdList)) {
+	if (_availableCmdList.empty()) {
 		pCmdList = std::make_shared<dx12libTool::MakeCommandList>(weak_from_this());
-		_cmdListPool.push(pCmdList);
+		_cmdListPool.push_back(pCmdList);
 		pCmdList->close();
+		pCmdList->reset();
+		return pCmdList;
+	} else {
+		pCmdList = _availableCmdList.back();
+		_availableCmdList.pop_back();
+		assert(!pCmdList->shouldReset());
+		return pCmdList;
 	}
-	pCmdList->reset();
-	return pCmdList;
 }
 
 std::weak_ptr<Device> FrameResourceItem::getDevice() const noexcept {
@@ -38,11 +43,22 @@ D3D12_COMMAND_LIST_TYPE FrameResourceItem::getCommandListType() const noexcept {
 
 void FrameResourceItem::newFrame(uint64 fence) {
 	_availableCmdList = _cmdListPool;
+	for (auto &pCmdList : _cmdListPool) {
+		if (pCmdList->shouldReset())
+			pCmdList->reset();
+	}
 	setFence(fence);
 }
 
 uint32 FrameResourceItem::getFrameIndex() const {
 	return _frameIndex;
+}
+
+void FrameResourceItem::destroy() {
+	for (auto &pCmdList : _cmdListPool) {
+		if (pCmdList->shouldReset())
+			pCmdList->reset();
+	}
 }
 
 FrameResourceQueue::FrameResourceQueue(std::weak_ptr<Device> pDevice, D3D12_COMMAND_LIST_TYPE cmdListType) {
@@ -59,7 +75,6 @@ uint32 FrameResourceQueue::getMaxFrameResourceCount() const noexcept {
 	return _frameResourceItemCount;
 }
 
-
 void FrameResourceQueue::newFrame(uint64 fence) {
 	FrameIndexProxy::startNewFrame();
 	_frameResourceQueue[FrameIndexProxy::getConstantFrameIndexRef()]->newFrame(fence);
@@ -67,6 +82,11 @@ void FrameResourceQueue::newFrame(uint64 fence) {
 
 std::shared_ptr<FrameResourceItem> FrameResourceQueue::getCurrentFrameResourceItem() const {
 	return _frameResourceQueue[FrameIndexProxy::getConstantFrameIndexRef()];
+}
+
+void FrameResourceQueue::destroy() {
+	for (auto &pFrameResourceItem : _frameResourceQueue)
+		pFrameResourceItem->destroy();
 }
 
 }

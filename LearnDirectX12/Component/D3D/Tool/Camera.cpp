@@ -289,6 +289,7 @@ void FirstPersonCamera::update(std::shared_ptr<com::GameTimer> pGameTimer) {
 	_lookAt = lookAt.xyz;
 	_lookUp = lookUp.xyz;
 
+
 	Matrix4 view = DirectX::XMMatrixLookAtLH(lookFrom, lookAt, lookUp);
 	Matrix4 proj = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(_fov), _aspect, _nearClip, _farClip);
 	Matrix4 viewProj = proj * view;

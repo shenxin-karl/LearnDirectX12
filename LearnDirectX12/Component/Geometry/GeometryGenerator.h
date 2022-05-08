@@ -39,6 +39,7 @@ public:
 		uint32 sliceCount
 	) const;
 
+	const std::array<float3, 36> &createSkyBoxCube() const;
 	MeshData createBox(float width, float height, float depth, uint32 numSubdivisions) const;
 	MeshData createSphere(float radius, uint32 numSubdivisions) const;
 	MeshData createSphere(float radius, std::size_t sliceCount, std::size_t stackCount) const;

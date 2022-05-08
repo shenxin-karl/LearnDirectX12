@@ -36,8 +36,9 @@ protected:
 	virtual void onEndTick(std::shared_ptr<com::GameTimer> pGameTimer) {}
 	virtual void onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int height) {}
 protected:
-	int  _width = 800;
+	int  _width  = 800;
 	int  _height = 600;
+	size_t _fps  = 120;
 	std::string _title = "BaseApp";
 	std::shared_ptr<dx12lib::Adapter>   _pAdapter;
 	std::shared_ptr<dx12lib::Device>    _pDevice;

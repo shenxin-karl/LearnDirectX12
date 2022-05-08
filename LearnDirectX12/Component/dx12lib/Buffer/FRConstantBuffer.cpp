@@ -64,7 +64,7 @@ ConstantBufferView FRConstantBuffer<RawData>::getCBV() const {
 		_pUploadBuffer->copyData(frameIndex, _pObject.get(), getElementStride(), 0);
 		_bufferDirty.set(frameIndex, false);
 	}
-	return ConstantBufferView(_descriptor, frameIndex);
+	return ConstantBufferView(_descriptor, this, frameIndex);
 }
 
 }

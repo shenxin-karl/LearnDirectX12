@@ -29,7 +29,7 @@ ShaderResourceView UnorderedAccess2D::getSRV(size_t mipSlice) const {
 		&srvDesc,
 		descriptor.getCPUHandle()
 	);
-	ShaderResourceView SRV(descriptor);
+	ShaderResourceView SRV(descriptor, this);
 	_srvMgr.set(mipSlice, SRV);
 	return SRV;
 }
@@ -52,7 +52,7 @@ UnorderedAccessView UnorderedAccess2D::getUAV(size_t mipSlice) const {
 		&uavDesc,
 		descriptor.getCPUHandle()
 	);
-	UnorderedAccessView UAV(descriptor);
+	UnorderedAccessView UAV(descriptor, this);
 	_uavMgr.set(mipSlice, UAV);
 	return UAV;
 }
@@ -120,7 +120,7 @@ ShaderResourceView UnorderedAccess2DArray::getSRV(size_t mipSlice) const {
 		&srvDesc,
 		descriptor.getCPUHandle()
 	);
-	ShaderResourceView SRV(descriptor);
+	ShaderResourceView SRV(descriptor, this);
 	_srvMgr.set(mipSlice, SRV);
 	return SRV;
 }
@@ -147,7 +147,7 @@ ShaderResourceView UnorderedAccess2DArray::getPlaneSRV(size_t planeSlice, size_t
 		&srvDesc,
 		descriptor.getCPUHandle()
 	);
-	ShaderResourceView SRV(descriptor);
+	ShaderResourceView SRV(descriptor, this);
 	planeSrvMgr.set(mipSlice, SRV);
 	return SRV;
 }
@@ -174,7 +174,7 @@ UnorderedAccessView UnorderedAccess2DArray::getPlaneUAV(size_t planeSlice, size_
 		&uavDesc,
 		descriptor.getCPUHandle()
 	);
-	UnorderedAccessView UAV(descriptor);
+	UnorderedAccessView UAV(descriptor, this);
 	planeUavMgr.set(mipSlice, UAV);
 	return UAV;
 }
@@ -241,7 +241,7 @@ ShaderResourceView UnorderedAccessCube::getSRV(size_t mipSlice) const {
 		&srvDesc,
 		descriptor.getCPUHandle()
 	);
-	ShaderResourceView SRV(descriptor);
+	ShaderResourceView SRV(descriptor, this);
 	_srvMgr.set(mipSlice, SRV);
 	return SRV;
 }
@@ -267,7 +267,7 @@ ShaderResourceView UnorderedAccessCube::getFaceSRV(CubeFace face, size_t mipSlic
 		&srvDesc,
 		descriptor.getCPUHandle()
 	);
-	ShaderResourceView SRV(descriptor);
+	ShaderResourceView SRV(descriptor, this);
 	cubeSrvMgr.set(mipSlice, SRV);
 	return SRV;
 }
@@ -293,7 +293,7 @@ UnorderedAccessView UnorderedAccessCube::getFaceUAV(CubeFace face, size_t mipSli
 		&uavDesc,
 		descriptor.getCPUHandle()
 	);
-	UnorderedAccessView UAV(descriptor);
+	UnorderedAccessView UAV(descriptor, this);
 	cubeUavMgr.set(mipSlice, UAV);
 	return UAV;
 }

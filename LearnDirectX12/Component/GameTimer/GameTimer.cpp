@@ -38,7 +38,7 @@ void GameTimer::stop() {
 	stoppedTime_ = chrono::steady_clock::now();
 }
 
-void GameTimer::newFrame() {
+void GameTimer::startNewFrame() {
 	if (stopped_)
 		return;
 

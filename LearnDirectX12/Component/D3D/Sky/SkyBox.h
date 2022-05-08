@@ -9,7 +9,7 @@ using namespace Math;
 
 struct SkyBoxDesc {
 	dx12lib::GraphicsContextProxy pGraphicsCtx;
-	const std::wstring &filename;
+	std::wstring filename;
 	std::shared_ptr<dx12lib::IShaderResourceCube> pCubeMap;
 	DXGI_FORMAT renderTargetFormat;
 	DXGI_FORMAT depthStencilFormat;

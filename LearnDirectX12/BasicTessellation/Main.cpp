@@ -8,7 +8,7 @@ int main() {
 	try {
 		app.initialize();
 		while (app.isRunning()) {
-			pGameTimer->newFrame();
+			pGameTimer->startNewFrame();
 			app.beginTick(pGameTimer);
 			app.tick(pGameTimer);
 			app.endTick(pGameTimer);

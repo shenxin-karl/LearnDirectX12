@@ -9,7 +9,8 @@ protected:
 public:
 	~ResourceStateTracker() = default;
 	void resourceBarrier(const D3D12_RESOURCE_BARRIER &barrier);
-	void transitionResource(ID3D12Resource *pResource, 
+	D3D12_RESOURCE_STATES getResourceState(ID3D12Resource *pResource, UINT subResource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
+	void transitionResource(ID3D12Resource *pResource,
 		D3D12_RESOURCE_STATES stateAfter, 
 		UINT subResource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES
 	);
@@ -17,7 +18,7 @@ public:
 	void aliasBarrier(const IResource *pBeforce, const IResource *pAfter);
 	uint32 flushResourceBarriers(std::shared_ptr<CommandList> commandList);
 	void commitFinalResourceStates();
-	UINT flusePendingResourceBarriers(std::shared_ptr<CommandList> pCmdList);
+	UINT flushPendingResourceBarriers(std::shared_ptr<CommandList> pCmdList);
 	void reset();
 	static void lock();
 	static void unlock();

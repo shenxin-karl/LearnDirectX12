@@ -50,8 +50,9 @@ private:
 	};
 private:
 	std::shared_ptr<d3d::IBL>			   _pIBL;
+	std::shared_ptr<d3d::SkyBox>		   _pSkyBox;
 	std::shared_ptr<dx12lib::GraphicsPSO>  _pGraphicsPSO;
-	std::unique_ptr<d3d::CoronaCamera>     _pCamera;
+	std::shared_ptr<d3d::CoronaCamera>     _pCamera;
 	FRConstantBufferPtr<CBObject>		   _pCBObject;
 	std::unique_ptr<BoxMesh>               _pBoxMesh;
 	float    _theta = 0.f;

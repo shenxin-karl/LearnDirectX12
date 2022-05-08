@@ -21,10 +21,12 @@
 #include <iostream>
 
 #if defined(_DEBUG) || defined(DEBUG)
-#define DBG_CALL(f) f;
+	#define DBG_CALL(f) f;
+	#define DEBUG_MODE
 #else
-#define DBG_CALL(f) nullptr;
+	#define DBG_CALL(f) nullptr;
 #endif
+
 
 template<typename T0, typename T1>
 bool StateCMove(T0 &&dest, T1 &&src) {
@@ -77,6 +79,12 @@ ID3D12GraphicsCommandList *CommandList::getD3DCommandList() const noexcept {
 
 std::shared_ptr<CommandList> CommandList::getCommandList() noexcept {
 	return shared_from_this();
+}
+
+void CommandList::trackResource(std::shared_ptr<IResource> &&pResource) {
+	assert(pResource != nullptr);
+	assert(pResource.use_count() == 1);
+	_staleResourceBuffers.push_back(std::move(pResource));
 }
 
 std::weak_ptr<dx12lib::Device> CommandList::getDevice() const {
@@ -214,6 +222,11 @@ void CommandList::setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType,
 
 void CommandList::setConstantBufferView(const ConstantBufferView &cbv, size_t rootIndex, size_t offset) {
 	assert(_currentGPUState.pRootSignature != nullptr);
+#ifdef DEBUG_MODE
+	WRL::ComPtr<ID3D12Resource> pD3DResource = cbv.getResource()->getD3DResource();
+	D3D12_RESOURCE_STATES state = _pResourceStateTracker->getResourceState(pD3DResource.Get());
+	assert(cbv.getResource()->checkCBVState(state));
+#endif
 	_pDynamicDescriptorHeaps[0]->stageDescriptors(
 		rootIndex,
 		offset,
@@ -222,8 +235,28 @@ void CommandList::setConstantBufferView(const ConstantBufferView &cbv, size_t ro
 	);
 }
 
+void CommandList::setStructuredBufferView(const StructuredBufferView &srv, size_t rootIndex, size_t offset) {
+	assert(_currentGPUState.pRootSignature != nullptr);
+#ifdef DEBUG_MODE
+	WRL::ComPtr<ID3D12Resource> pD3DResource = srv.getResource()->getD3DResource();
+	D3D12_RESOURCE_STATES state = _pResourceStateTracker->getResourceState(pD3DResource.Get());
+	assert(srv.getResource()->checkSRVState(state));
+#endif
+	_pDynamicDescriptorHeaps[0]->stageDescriptors(
+		rootIndex,
+		offset,
+		1,
+		srv
+	);
+}
+
 void CommandList::setShaderResourceView(const ShaderResourceView &srv, size_t rootIndex, size_t offset) {
 	assert(_currentGPUState.pRootSignature != nullptr);
+#ifdef DEBUG_MODE
+	WRL::ComPtr<ID3D12Resource> pD3DResource = srv.getResource()->getD3DResource();
+	D3D12_RESOURCE_STATES state = _pResourceStateTracker->getResourceState(pD3DResource.Get());
+	assert(srv.getResource()->checkSRVState(state));
+#endif
 	_pDynamicDescriptorHeaps[0]->stageDescriptors(
 		rootIndex,
 		offset,
@@ -483,6 +516,11 @@ void CommandList::setComputePSO(std::shared_ptr<ComputePSO> pPipelineStateObject
 
 void CommandList::setUnorderedAccessView(const UnorderedAccessView &uav, size_t rootIndex, size_t offset) {
 	assert(_currentGPUState.pRootSignature != nullptr);
+#ifdef DEBUG_MODE
+	WRL::ComPtr<ID3D12Resource> pD3DResource = uav.getResource()->getD3DResource();
+	D3D12_RESOURCE_STATES state = _pResourceStateTracker->getResourceState(pD3DResource.Get());
+	assert(uav.getResource()->checkUAVState(state));
+#endif
 	_pDynamicDescriptorHeaps[0]->stageDescriptors(
 		rootIndex,
 		offset,
@@ -515,7 +553,7 @@ void CommandList::dispatch(size_t GroupCountX, size_t GroupCountY, size_t GroupC
 }
 
 void CommandList::readBack(std::shared_ptr<ReadBackBuffer> pReadBackBuffer) {
-	_pReadBackBuffers.push_back(pReadBackBuffer);
+	_readBackBuffers.push_back(pReadBackBuffer);
 }
 
 void CommandList::setGraphicsRootSignature(std::shared_ptr<RootSignature> pRootSignature) {
@@ -528,27 +566,32 @@ void CommandList::setComputeRootSignature(std::shared_ptr<RootSignature> pRootSi
 
 void CommandList::close() {
 	flushResourceBarriers();
+	setShouldReset(true);
 	ThrowIfFailed(_pCommandList->Close());
 }
 
 void CommandList::close(std::shared_ptr<CommandList> pPendingCmdList) {
-	_pResourceStateTracker->flusePendingResourceBarriers(pPendingCmdList);
+	_pResourceStateTracker->flushPendingResourceBarriers(pPendingCmdList);
 	flushResourceBarriers();
 	_pResourceStateTracker->commitFinalResourceStates();
+	setShouldReset(true);
 	ThrowIfFailed(_pCommandList->Close());
 }
 
 void CommandList::reset() {
+	setShouldReset(false);
 	_pCmdListAlloc->Reset();
 	ThrowIfFailed(_pCommandList->Reset(_pCmdListAlloc.Get(), nullptr));
 	_pResourceStateTracker->reset();
+
 	std::memset(&_currentGPUState, 0, sizeof(_currentGPUState));
 	for (auto &pDynamicDescriptorHeap : _pDynamicDescriptorHeaps)
 		pDynamicDescriptorHeap->reset();
 
-	for (auto &pReadBackBuffer : _pReadBackBuffers)
+	for (auto &pReadBackBuffer : _readBackBuffers)
 		pReadBackBuffer->setCompleted(true);
-	_pReadBackBuffers.clear();
+	_readBackBuffers.clear();
+	_staleResourceBuffers.clear();
 }
 
 void CommandList::setRootSignature(std::shared_ptr<RootSignature> pRootSignature, 
@@ -573,6 +616,14 @@ void CommandList::bindDescriptorHeaps() {
 	}
 	if (numDescriptors > 0)
 		_pCommandList->SetDescriptorHeaps(numDescriptors, pHeaps);
+}
+
+void CommandList::setShouldReset(bool bReset) {
+	_shouldReset = bReset;
+}
+
+bool CommandList::shouldReset() const {
+	return _shouldReset;
 }
 
 #define CheckState(ret, message)			\

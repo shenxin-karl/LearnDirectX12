@@ -23,7 +23,7 @@ ConstantBuffer::ConstantBuffer(std::weak_ptr<Device> pDevice, const void *pData,
 	auto address = _pUploadBuffer->getGPUAddressByIndex(0);
 	auto pSharedDevice = pDevice.lock();
 	auto descriptor = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	_constantBufferView = ConstantBufferView(descriptor);
+	_constantBufferView = ConstantBufferView(descriptor, this);
 
 	D3D12_CONSTANT_BUFFER_VIEW_DESC cbv;
 	cbv.BufferLocation = address;

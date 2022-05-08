@@ -42,9 +42,20 @@ void ResourceStateTracker::resourceBarrier(const D3D12_RESOURCE_BARRIER &expectB
 	}
 }
 
+D3D12_RESOURCE_STATES ResourceStateTracker::getResourceState(ID3D12Resource *pResource, UINT subResource) {
+	if (auto iter = _finalResourceState.find(pResource); iter != _finalResourceState.end())
+		return iter->second.getSubresourceState(subResource);
+
+	if (auto iter = _globalResourceState.find(pResource); iter != _globalResourceState.end())
+		return iter->second.getSubresourceState(subResource);
+
+	assert(false);
+	return D3D12_RESOURCE_STATE_COMMON;
+}
+
 void ResourceStateTracker::transitionResource(ID3D12Resource *pResource, 
-	D3D12_RESOURCE_STATES stateAfter, 
-	UINT subResource /*= D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES */) 
+                                              D3D12_RESOURCE_STATES stateAfter, 
+                                              UINT subResource /*= D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES */) 
 {
 	resourceBarrier(CD3DX12_RESOURCE_BARRIER::Transition(
 		pResource,
@@ -87,7 +98,7 @@ void ResourceStateTracker::commitFinalResourceStates() {
 	_finalResourceState.clear();
 }
 
-UINT ResourceStateTracker::flusePendingResourceBarriers(std::shared_ptr<CommandList> pCmdList) {
+UINT ResourceStateTracker::flushPendingResourceBarriers(std::shared_ptr<CommandList> pCmdList) {
 	assert(_isLocked);
 
 	std::vector<D3D12_RESOURCE_BARRIER> resourceBarriers;

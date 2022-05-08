@@ -154,12 +154,18 @@ interface IShaderResource;
 interface IShaderResource2D;
 interface IShaderResource2DArray;
 interface IShaderResourceCube;
+
+interface IRenderTarget;
 interface IRenderTarget2D;
 interface IRenderTarget2DArray;
 interface IRenderTargetCube;
+
+interface IUnorderedAccess;
 interface IUnorderedAccess2D;
 interface IUnorderedAccess2DArray;
 interface IUnorderedAccessCube;
+
+interface IDepthStencil;
 interface IDepthStencil2D;
 
 interface IBufferResource;

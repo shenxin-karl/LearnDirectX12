@@ -44,21 +44,21 @@ void BlurFilter::produceImpl(dx12lib::ComputeContextProxy pComputeList,
 	for (int i = 0; i < blurCount; ++i) {
 		// horizonal blur
 		pComputeList->setComputePSO(_pHorzBlurPSO);
+		pComputeList->transitionBarrier(_pBlurMap1, D3D12_RESOURCE_STATE_GENERIC_READ);
+		pComputeList->transitionBarrier(_pBlurMap0, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 		pComputeList->setShaderResourceView(_pBlurMap1->getSRV(), SR_Input);
 		pComputeList->setUnorderedAccessView(_pBlurMap0->getUAV(), UA_Output);
 		updateConstantBuffer();
-		pComputeList->transitionBarrier(_pBlurMap1, D3D12_RESOURCE_STATE_GENERIC_READ);
-		pComputeList->transitionBarrier(_pBlurMap0, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 		int numXGroup = static_cast<int>(std::ceil(_width / static_cast<float>(kMaxThreads)));
 		pComputeList->dispatch(numXGroup, _height, 1);
 		
 		// vertical blur
 		pComputeList->setComputePSO(_pVertBlurPSO);
-		pComputeList->setShaderResourceView(_pBlurMap1->getSRV(), SR_Input);
-		pComputeList->setUnorderedAccessView(_pBlurMap1->getUAV(), UA_Output);
-		updateConstantBuffer();
 		pComputeList->transitionBarrier(_pBlurMap0, D3D12_RESOURCE_STATE_GENERIC_READ);
 		pComputeList->transitionBarrier(_pBlurMap1, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+		pComputeList->setShaderResourceView(_pBlurMap0->getSRV(), SR_Input);
+		pComputeList->setUnorderedAccessView(_pBlurMap1->getUAV(), UA_Output);
+		updateConstantBuffer();
 		int numYGroup = static_cast<int>(std::ceil(_height / static_cast<float>(kMaxThreads)));
 		pComputeList->dispatch(_width, numYGroup, 1);
 	}

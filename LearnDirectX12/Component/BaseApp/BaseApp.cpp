@@ -18,9 +18,13 @@ void BaseApp::initialize() {
 	dx12lib::DeviceInitDesc desc = {
 		DXGI_FORMAT_R8G8B8A8_UNORM,
 		DXGI_FORMAT_D24_UNORM_S8_UINT,
+		_fps,
 	};
 	_pDevice->initialize(desc);
+
 	_pSwapChain = _pDevice->createSwapChain(_pInputSystem->pWindow->getHWND());
+	_pSwapChain->setVerticalSync(true);
+
 	// first resize
 	auto pCmdQueue = _pDevice->getCommandQueue();
 	auto pDirectContext = pCmdQueue->createDirectContextProxy();
@@ -45,7 +49,7 @@ void BaseApp::beginTick(std::shared_ptr<GameTimer> pGameTimer) {
 	}
 
 	auto pCmdQueue = _pDevice->getCommandQueue();
-	pCmdQueue->newFrame();		// start new frames
+	pCmdQueue->startNewFrame();		// start new frames
 	onBeginTick(pGameTimer);
 }
 
@@ -74,7 +78,7 @@ void BaseApp::resize(int width, int height) {
 	_height = height;
 	auto pCmdQueue = _pDevice->getCommandQueue();
 	pCmdQueue->flushCommandQueue();
-	pCmdQueue->newFrame();
+	pCmdQueue->startNewFrame();
 	auto pCmdList = pCmdQueue->createDirectContextProxy();
 	_pSwapChain->resize(pCmdList, width, height);
 	onResize(pCmdList, width, height);

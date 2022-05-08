@@ -22,13 +22,14 @@ public:
 	D3D12_COMMAND_LIST_TYPE getCommandListType() const noexcept;
 	void newFrame(uint64 fence);
 	uint32 getFrameIndex() const;
+	void destroy();
 private:
 	uint64                  _fence = 0;
 	uint32					_frameIndex = 0;
 	D3D12_COMMAND_LIST_TYPE _cmdListType;
 	std::weak_ptr<Device>   _pDevice;
-	mutable ThreadSafeQueue<std::shared_ptr<CommandList>>  _cmdListPool;
-	mutable ThreadSafeQueue<std::shared_ptr<CommandList>>  _availableCmdList;
+	mutable std::vector<std::shared_ptr<CommandList>>  _cmdListPool;
+	mutable std::vector<std::shared_ptr<CommandList>>  _availableCmdList;
 };
 
 class FrameResourceQueue {
@@ -40,6 +41,7 @@ public:
 	std::atomic_uint32_t &getCurrentFrameResourceIndexRef();
 	void newFrame(uint64 fence);
 	std::shared_ptr<FrameResourceItem> getCurrentFrameResourceItem() const;
+	void destroy();
 private:
 	uint32                _frameResourceItemCount;
 	std::array<std::shared_ptr<FrameResourceItem>, kFrameResourceCount>  _frameResourceQueue;

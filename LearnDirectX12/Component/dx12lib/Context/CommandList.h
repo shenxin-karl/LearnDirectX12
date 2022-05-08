@@ -17,6 +17,7 @@ public:
 	std::shared_ptr<CommandList> getCommandList() noexcept override;
 
 /// CommonContext api
+	void trackResource(std::shared_ptr<IResource> &&pResource) override;
 	std::shared_ptr<SamplerTexture2D> createDDSTexture2DFromFile(const std::wstring &fileName) override;
 	std::shared_ptr<SamplerTexture2D> createDDSTexture2DFromMemory(const void *pData, size_t sizeInByte) override;
 	std::shared_ptr<SamplerTexture2DArray> createDDSTexture2DArrayFromFile(const std::wstring &fileName) override;
@@ -26,6 +27,7 @@ public:
 
 	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) override;
 	void setConstantBufferView(const ConstantBufferView &cbv, size_t rootIndex, size_t offset) override;
+	void setStructuredBufferView(const StructuredBufferView &srv, size_t rootIndex, size_t offset) override;
 	void setShaderResourceView(const ShaderResourceView &srv, size_t rootIndex, size_t offset) override;
 
 	void copyResourceImpl(std::shared_ptr<IResource> pDest, std::shared_ptr<IResource> pSrc) override;
@@ -69,6 +71,7 @@ private:
 	friend class CommandQueue;
 	friend class FrameResourceItem;
 	using ReadBackBufferPool = std::vector<std::shared_ptr<ReadBackBuffer>>;
+	using StaleResourcePool = std::vector<std::shared_ptr<IResource>>;
 	void setGraphicsRootSignature(std::shared_ptr<RootSignature> pRootSignature);
 	void setComputeRootSignature(std::shared_ptr<RootSignature> pRootSignature);
 	void close();
@@ -77,14 +80,18 @@ private:
 	using SetRootSignatureFunc = std::function<void(ID3D12GraphicsCommandList *, ID3D12RootSignature *)>;
 	void setRootSignature(std::shared_ptr<RootSignature> pRootSignature, const SetRootSignatureFunc &setFunc);
 	void bindDescriptorHeaps();
+	void setShouldReset(bool bReset);
+	bool shouldReset() const;
 private:
+	bool								   _shouldReset = false;
 	D3D12_COMMAND_LIST_TYPE                _cmdListType;
 	std::weak_ptr<Device>                  _pDevice;
 	WRL::ComPtr<ID3D12GraphicsCommandList> _pCommandList;
 	WRL::ComPtr<ID3D12CommandAllocator>    _pCmdListAlloc;
 	std::unique_ptr<ResourceStateTracker>  _pResourceStateTracker;
 	std::unique_ptr<DynamicDescriptorHeap> _pDynamicDescriptorHeaps[kDynamicDescriptorHeapCount];
-	ReadBackBufferPool                     _pReadBackBuffers;
+	ReadBackBufferPool                     _readBackBuffers;
+	StaleResourcePool					   _staleResourceBuffers;
 private:
 	struct CommandListState {
 		PSO           *pPSO;

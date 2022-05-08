@@ -39,7 +39,7 @@ cmrc_add_resource_library(D3D-resources ALIAS D3D::rc
 	"HlslShader/SobelFilterCS.hlsl"
 	"HlslShader/FXAACS.hlsl"
 	"HlslShader/SkyBox.hlsl"
-	"HlslShader/EquirectangularToCubeMap.hlsl"
+	"HlslShader/PanoToCubeMap.hlsl"
 	"resources/BRDF_LUT.dds"
 )
 

@@ -269,6 +269,24 @@ MeshData GometryGenerator::createCylinder(
 	return mesh;
 }
 
+const std::array<float3, 36> &GometryGenerator::createSkyBoxCube() const {
+	static std::array<float3, 36> vertices = {
+		float3{ -1.0f, +1.0f, -1.0f }, float3{ -1.0f, -1.0f, -1.0f }, float3{ +1.0f, -1.0f, -1.0f },
+		float3{ +1.0f, -1.0f, -1.0f }, float3{ +1.0f, +1.0f, -1.0f }, float3{ -1.0f, +1.0f, -1.0f },
+		float3{ -1.0f, -1.0f, +1.0f }, float3{ -1.0f, -1.0f, -1.0f }, float3{ -1.0f, +1.0f, -1.0f },
+		float3{ -1.0f, +1.0f, -1.0f }, float3{ -1.0f, +1.0f, +1.0f }, float3{ -1.0f, -1.0f, +1.0f },
+		float3{ +1.0f, -1.0f, -1.0f }, float3{ +1.0f, -1.0f, +1.0f }, float3{ +1.0f, +1.0f, +1.0f },
+		float3{ +1.0f, +1.0f, +1.0f }, float3{ +1.0f, +1.0f, -1.0f }, float3{ +1.0f, -1.0f, -1.0f },
+		float3{ -1.0f, -1.0f, +1.0f }, float3{ -1.0f, +1.0f, +1.0f }, float3{ +1.0f, +1.0f, +1.0f },
+		float3{ +1.0f, +1.0f, +1.0f }, float3{ +1.0f, -1.0f, +1.0f }, float3{ -1.0f, -1.0f, +1.0f },
+		float3{ -1.0f, +1.0f, -1.0f }, float3{ +1.0f, +1.0f, -1.0f }, float3{ +1.0f, +1.0f, +1.0f },
+		float3{ +1.0f, +1.0f, +1.0f }, float3{ -1.0f, +1.0f, +1.0f }, float3{ -1.0f, +1.0f, -1.0f },
+		float3{ -1.0f, -1.0f, -1.0f }, float3{ -1.0f, -1.0f, +1.0f }, float3{ +1.0f, -1.0f, -1.0f },
+		float3{ +1.0f, -1.0f, -1.0f }, float3{ -1.0f, -1.0f, +1.0f }, float3{ +1.0f, -1.0f, +1.0f },
+	};
+	return vertices;
+}
+
 MeshData GometryGenerator::createBox(float width, float height, float depth, uint32 numSubdivisions) const {
 	float x = 0.5f * width;
 	float y = 0.5f * height;

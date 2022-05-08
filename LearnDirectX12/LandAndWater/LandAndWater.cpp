@@ -133,10 +133,21 @@ void LandAndWater::onResize(dx12lib::DirectContextProxy pDirectCtx, int width, i
 }
 
 void LandAndWater::pollEvent() {
-	while (auto event = _pInputSystem->pMouse->getEvent())
+	static bool shadowCursor = false;
+	while (auto event = _pInputSystem->pKeyboard->getKeyEvent()) {
+		if (event.getKey() == VK_CONTROL && event.isPressed()) {
+			shadowCursor = !shadowCursor;
+			_pInputSystem->pMouse->setShowCursor(shadowCursor);
+			_pCamera->setLastMousePosition(_pInputSystem->pMouse->getCursorPosition());
+		}
 		_pCamera->pollEvent(event);
-	while (auto event = _pInputSystem->pKeyboard->getKeyEvent())
+	}
+
+	while (auto event = _pInputSystem->pMouse->getEvent()) {
+		if (shadowCursor) 
+			continue;
 		_pCamera->pollEvent(event);
+	}
 }
 
 void LandAndWater::updateConstantBuffer(std::shared_ptr<com::GameTimer> pGameTimer) {

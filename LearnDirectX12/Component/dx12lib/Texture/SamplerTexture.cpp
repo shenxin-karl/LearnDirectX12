@@ -31,7 +31,7 @@ ShaderResourceView SamplerTexture2D::getSRV(size_t mipSlice) const {
 		descriptor.getCPUHandle()
 	);
 
-	ShaderResourceView SRV(descriptor);
+	ShaderResourceView SRV(descriptor, this);
 	_srvMgr.set(mipSlice, SRV);
 	return SRV;
 }
@@ -75,7 +75,7 @@ ShaderResourceView SamplerTexture2DArray::getSRV(size_t mipSlice) const {
 		descriptor.getCPUHandle()
 	);
 
-	ShaderResourceView SRV(descriptor);
+	ShaderResourceView SRV(descriptor, this);
 	_srvMgr.set(mipSlice, SRV);
 	return SRV;
 }
@@ -103,7 +103,7 @@ ShaderResourceView SamplerTexture2DArray::getPlaneSRV(size_t planeSlice, size_t 
 		&srvDesc,
 		descriptor.getCPUHandle()
 	);
-	ShaderResourceView SRV(descriptor);
+	ShaderResourceView SRV(descriptor, this);
 	planeSrvMgr.set(mipSlice, SRV);
 	return SRV;
 }
@@ -143,7 +143,7 @@ ShaderResourceView SamplerTextureCube::getSRV(size_t mipSlice) const {
 		descriptor.getCPUHandle()
 	);
 
-	ShaderResourceView SRV(descriptor);
+	ShaderResourceView SRV(descriptor, this);
 	_srvMgr.set(mipSlice, SRV);
 	return SRV;
 }
@@ -171,7 +171,7 @@ ShaderResourceView SamplerTextureCube::getFaceSRV(CubeFace face, size_t mipSlice
 		descriptor.getCPUHandle()
 	);
 
-	ShaderResourceView SRV(descriptor);
+	ShaderResourceView SRV(descriptor, this);
 	faceSrvMgr.set(mipSlice, SRV);
 	return SRV;
 }

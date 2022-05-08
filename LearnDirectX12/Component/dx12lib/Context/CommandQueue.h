@@ -20,8 +20,9 @@ public:
 	uint64 getFenceValue() const;
 	uint64 getCompletedValue() const;
 	DirectContextProxy createDirectContextProxy();
-	void newFrame();
+	void startNewFrame();
 	void flushCommandQueue();
+	void destroy();
 	~CommandQueue();
 protected:
 	friend class CommandList;

@@ -88,6 +88,8 @@ void Mouse::setShowCursor(bool bShow) {
 	if (!bShow) {
 		adjustCursorPosition();
 		_virtualCursorPos = _lastCursorPos;
+	} else {
+		ClipCursor(nullptr);
 	}
 }
 
@@ -103,6 +105,10 @@ void Mouse::adjustCursorPosition() {
 
 	GetWindowRect(_pInputSystem->pWindow->getHWND(), &rect);
 	ClipCursor(&rect);
+}
+
+POINT Mouse::getCursorPosition() const {
+	return _showCursor ? _virtualCursorPos : _lastCursorPos;
 }
 
 MouseEvent::operator bool() const {

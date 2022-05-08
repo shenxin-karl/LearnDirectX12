@@ -1,4 +1,14 @@
-// #define USE_GAMMA	开启 gamma 矫正
+/*
+开启 gamma 矫正
+#define USE_GAMMA
+// 开启色彩映调
+#define TONE_MAPPING	
+*/
+
+
+#ifndef GAMMA
+	#define GAMMA 2.2
+#endif
 
 cbuffer CBSkyBoxSetting {
 	float4x4 gViewProj;
@@ -25,6 +35,7 @@ SamplerState gSamLinearWrap : register(s0);
 
 float4 PS(VertexOut pin) : SV_Target {
 	float3 texColor = gCubeMap.Sample(gSamLinearWrap, pin.texcoord).rgb;
+
 #ifndef USE_GAMMA
 	return float4(texColor, 1.0);
 #else

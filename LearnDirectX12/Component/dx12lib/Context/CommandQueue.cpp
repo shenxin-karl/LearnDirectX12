@@ -100,7 +100,7 @@ DirectContextProxy CommandQueue::createDirectContextProxy() {
 	return _pFrameResourceQueue->createCommandList();
 }
 
-void CommandQueue::newFrame() {
+void CommandQueue::startNewFrame() {
 	auto pCurrentFrameResourceItem = _pFrameResourceQueue->getCurrentFrameResourceItem();
 	waitForFenceValue(pCurrentFrameResourceItem->getFence());
 	++_fenceValue;
@@ -113,8 +113,12 @@ void CommandQueue::flushCommandQueue() {
 	waitForFenceValue(_fenceValue);
 }
 
+void CommandQueue::destroy() {
+	flushCommandQueue();
+	_pFrameResourceQueue->destroy();
+}
+
 CommandQueue::~CommandQueue() {
-	waitForFenceValue(_fenceValue);
 }
 
 FrameResourceQueue *CommandQueue::getFrameResourceQueue() {

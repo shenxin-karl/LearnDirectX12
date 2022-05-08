@@ -56,6 +56,7 @@ class RenderTargetCube : public IRenderTargetCube {
 public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
 	ShaderResourceView getSRV(size_t mipSlice = 0) const override;
+	ShaderResourceView getFaceSRV(CubeFace face, size_t mipSlice) const override;
 	RenderTargetView getFaceRTV(CubeFace face, size_t mipSlice = 0) const override;
 protected:
 	RenderTargetCube(std::weak_ptr<Device> pDevice,

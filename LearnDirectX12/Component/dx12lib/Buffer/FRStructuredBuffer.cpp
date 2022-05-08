@@ -69,9 +69,9 @@ void FRStructuredBuffer<RawData>::updateBuffer(const void *pData, size_t sizeInB
 	_pUploadBuffer->copyData(frameIndex, pData, sizeInByte, offset);
 }
 
-ShaderResourceView FRStructuredBuffer<RawData>::getSRV() const {
+StructuredBufferView FRStructuredBuffer<RawData>::getSRV() const {
 	size_t frameIndex = FrameIndexProxy::getConstantFrameIndexRef();
-	return ShaderResourceView(_descriptor, frameIndex);
+	return StructuredBufferView(_descriptor, this, frameIndex);
 }
 
 }

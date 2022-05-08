@@ -47,11 +47,12 @@ DepthStencil2D::DepthStencil2D(std::weak_ptr<Device> pDevice,
 		RVPtr(CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT)),
 		D3D12_HEAP_FLAG_NONE,
 		RVPtr(depthStencilDesc),
-		D3D12_RESOURCE_STATE_COMMON,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
 		pClearValue,
 		IID_PPV_ARGS(&_pResource)
 	));
 	createViews(pDevice);
+	ResourceStateTracker::addGlobalResourceState(_pResource.Get(), D3D12_RESOURCE_STATE_DEPTH_WRITE);
 }
 
 DepthStencil2D::DepthStencil2D(std::weak_ptr<Device> pDevice, 
@@ -65,7 +66,8 @@ DepthStencil2D::DepthStencil2D(std::weak_ptr<Device> pDevice,
 
 void DepthStencil2D::createViews(std::weak_ptr<Device> pDevice) {
 	auto pSharedDevice = pDevice.lock();
-	_depthStencilView = DepthStencilView(pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_DSV));
+	auto descriptor = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+	_depthStencilView = DepthStencilView(descriptor, this);
 	pSharedDevice->getD3DDevice()->CreateDepthStencilView(
 		_pResource.Get(),
 		nullptr,
@@ -82,7 +84,8 @@ void DepthStencil2D::createViews(std::weak_ptr<Device> pDevice) {
 	));
 
 	if (formatSupport.Support1 & D3D12_FORMAT_SUPPORT1_SHADER_SAMPLE) {
-		_shaderResourceView = ShaderResourceView(pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+		auto SRVDescriptor = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		_shaderResourceView = ShaderResourceView(SRVDescriptor, this);
 		pSharedDevice->getD3DDevice()->CreateShaderResourceView(
 			_pResource.Get(),
 			nullptr,

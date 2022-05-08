@@ -13,6 +13,8 @@
 #include <dx12lib/Buffer/BufferStd.h>
 #include <dx12lib/Pipeline/PipelineStd.h>
 
+#include "D3D/Sky/SkyBox.h"
+
 BoxApp::BoxApp() {
 	_title = "BoxApp";
 }
@@ -30,6 +32,16 @@ void BoxApp::onInitialize(dx12lib::DirectContextProxy pDirectContext) {
 	_pCamera = std::make_unique<d3d::CoronaCamera>(cameraDesc);
 	_pCBObject = pDirectContext->createFRConstantBuffer<CBObject>();
 	_pCBObject->visit()->gMaterial = {float4(1.f), 0.5, 0.5f};
+
+	_pIBL = std::make_unique<d3d::IBL>(pDirectContext, "resources/Barce_Rooftop_C_3k.hdr");
+
+	d3d::SkyBoxDesc skyBoxDesc = {
+		.pGraphicsCtx = pDirectContext,
+		.pCubeMap = _pIBL->getEnvMap(),
+		.renderTargetFormat = _pSwapChain->getRenderTargetFormat(),
+		.depthStencilFormat = _pSwapChain->getDepthStencilFormat(),
+	};
+	_pSkyBox = std::make_unique<d3d::SkyBox>(skyBoxDesc);
 
 	// initialize root signature
 	dx12lib::RootSignatureDescHelper desc(d3d::getStaticSamplers());
@@ -75,7 +87,6 @@ void BoxApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 void BoxApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pCmdQueue = _pDevice->getCommandQueue();
 	auto pDirectProxy = pCmdQueue->createDirectContextProxy();
-	_pIBL = std::make_unique<d3d::IBL>(pDirectProxy, "resources/Barce_Rooftop_C_3k.hdr");
 
 	{
 		d3d::RenderTarget renderTarget(_pSwapChain);
@@ -90,6 +101,7 @@ void BoxApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		};
 		renderTarget.clear(pDirectProxy, color);
 		renderBoxPass(pDirectProxy);
+		_pSkyBox->render(pDirectProxy, _pCamera);
 		renderTarget.unbind(pDirectProxy);
 	}
 	pCmdQueue->executeCommandList(pDirectProxy);

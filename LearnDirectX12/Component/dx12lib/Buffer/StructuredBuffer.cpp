@@ -33,8 +33,8 @@ void StructuredBuffer::updateBuffer(const void *pData, size_t sizeInByte, size_t
 	_pUploadBuffer->copyData(0, pData, sizeInByte, offset);
 }
 
-ShaderResourceView StructuredBuffer::getSRV() const {
-	return ShaderResourceView(_descriptor);
+StructuredBufferView StructuredBuffer::getSRV() const {
+	return StructuredBufferView(_descriptor, this);
 }
 
 StructuredBuffer::~StructuredBuffer() {

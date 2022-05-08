@@ -22,7 +22,7 @@ public:
 	BYTE *getMappedPtr() override;
 	const BYTE *getMappedPtr() const override;
 	void updateBuffer(const void *pData, size_t sizeInByte, size_t offset = 0) override;
-	ShaderResourceView getSRV() const override;
+	StructuredBufferView getSRV() const override;
 
 	template<typename T>
 	std::span<T> visit() {
@@ -64,7 +64,7 @@ public:
 	BYTE *getMappedPtr() override;
 	const BYTE *getMappedPtr() const override;
 	void updateBuffer(const void *pData, size_t sizeInByte, size_t offset = 0) override;
-	ShaderResourceView getSRV() const override;
+	StructuredBufferView getSRV() const override;
 	std::span<T> visit();
 	std::span<const T> visit() const;
 private:
@@ -153,9 +153,9 @@ void FRStructuredBuffer<T>::updateBuffer(const void *pData, size_t sizeInByte, s
 }
 
 template <typename T>
-ShaderResourceView FRStructuredBuffer<T>::getSRV() const {
+StructuredBufferView FRStructuredBuffer<T>::getSRV() const {
 	size_t frameIndex = FrameIndexProxy::getConstantFrameIndexRef();
-	return ShaderResourceView(_descriptor, frameIndex);
+	return StructuredBufferView(_descriptor, this, frameIndex);
 }
 
 template <typename T>

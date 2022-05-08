@@ -14,7 +14,7 @@ public:
 	BYTE *getMappedPtr() override;
 	const BYTE *getMappedPtr() const override;
 	void updateBuffer(const void *pData, size_t sizeInByte, size_t offset = 0) override;
-	ShaderResourceView getSRV() const override;
+	StructuredBufferView getSRV() const override;
 	~StructuredBuffer() override;
 protected:
 	StructuredBuffer(std::weak_ptr<Device> pDevice, const void *pData, size_t numElements, size_t stride);

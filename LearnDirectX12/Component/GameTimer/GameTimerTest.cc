@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
 
 	int second = 0;
 	while (second < 10) {
-		gt.newFrame();
+		gt.startNewFrame();
 		if (gt.oneSecondTrigger()) {
 			std::cout << "fps: " << gt.FPS() << std::endl;
 			std::cout << "mspf: " << gt.mspf() << std::endl;

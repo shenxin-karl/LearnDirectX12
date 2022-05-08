@@ -13,9 +13,10 @@ interface IResource : NonCopyable {
 	virtual WRL::ComPtr<ID3D12Resource> getD3DResource() const = 0;
 };
 
-interface IShaderResource : IResource {
+interface IShaderResource : virtual IResource {
 	virtual ShaderResourceDimension getDimension() const = 0;
 	virtual ShaderResourceView getSRV(size_t mipSlice = 0) const = 0;
+	virtual bool checkSRVState(D3D12_RESOURCE_STATES currentState) const;
 	virtual size_t getWidth() const;
 	virtual size_t getHeight() const;
 	virtual size_t getMipmapLevels() const;
@@ -38,31 +39,44 @@ interface IShaderResourceCube : IShaderResource {
 	virtual ShaderResourceView getFaceSRV(CubeFace face, size_t mipSlice = 0) const = 0;
 };
 /////////////////////////////////////////////RenderTarget/////////////////////////////////////////////
-interface IRenderTarget2D : IShaderResource2D {
+interface IRenderTarget : virtual IResource {
+	virtual bool checkRTVState(D3D12_RESOURCE_STATES currentState) const;
+};
+
+interface IRenderTarget2D : IRenderTarget, IShaderResource2D {
 	virtual RenderTargetView getRTV(size_t mipSlice = 0) const = 0;
 };
 
-interface IRenderTarget2DArray : IShaderResource2DArray {
+interface IRenderTarget2DArray : IRenderTarget, IShaderResource2DArray {
 	virtual RenderTargetView getPlaneRTV(size_t planeSlice, size_t mipSlice = 0) const = 0;
 };
 
-interface IRenderTargetCube : IShaderResourceCube {
+interface IRenderTargetCube : IRenderTarget, IShaderResourceCube {
 	virtual RenderTargetView getFaceRTV(CubeFace face, size_t mipSlice = 0) const = 0;
 };
 /////////////////////////////////////////////UnorderedAccess/////////////////////////////////////////////
-interface IUnorderedAccess2D : IShaderResource2D {
+interface IUnorderedAccess : virtual IResource {
+	virtual bool checkUAVState(D3D12_RESOURCE_STATES currentState) const;
+};
+
+interface IUnorderedAccess2D : IUnorderedAccess, IShaderResource2D {
 	virtual UnorderedAccessView getUAV(size_t mipSlice = 0) const = 0;
 };
 
-interface IUnorderedAccess2DArray : IShaderResource2DArray {
+interface IUnorderedAccess2DArray : IUnorderedAccess, IShaderResource2DArray {
 	virtual UnorderedAccessView getPlaneUAV(size_t planeSlice, size_t mipSlice = 0) const = 0;
 };
 
-interface IUnorderedAccessCube : IShaderResourceCube {
+interface IUnorderedAccessCube : IUnorderedAccess, IShaderResourceCube {
 	virtual UnorderedAccessView getFaceUAV(CubeFace face, size_t mipSlice = 0) const = 0;
 };
 /////////////////////////////////////////////IDepthStencil2D/////////////////////////////////////////////
-interface IDepthStencil2D : IShaderResource2D {
+interface IDepthStencil : virtual IResource {
+	virtual bool checkDSVState(D3D12_RESOURCE_STATES currentState) const;
+};
+
+interface IDepthStencil2D : IDepthStencil, IShaderResource2D {
+	bool checkSRVState(D3D12_RESOURCE_STATES currentState) const override;
 	virtual DepthStencilView getDSV() const = 0;
 };
 
@@ -80,6 +94,7 @@ interface IConstantBuffer : IBufferResource {
 	virtual const BYTE *getMappedPtr() const = 0;
 	virtual void updateBuffer(const void *pData, size_t sizeInByte, size_t offset = 0) = 0;
 	virtual ConstantBufferView getCBV() const = 0;
+	virtual bool checkCBVState(D3D12_RESOURCE_STATES currentState) const;
 };
 /////////////////////////////////////////////IVertexBuffer/////////////////////////////////////////////
 interface IVertexBuffer : IBufferResource {
@@ -99,12 +114,13 @@ interface IIndexBuffer : IBufferResource {
 //////////////////////////////////////////IStructuredBuffer//////////////////////////////////////////
 interface IStructuredBuffer : IBufferResource {
 	BufferType getBufferType() const override;
+	bool checkSRVState(D3D12_RESOURCE_STATES state) const;
 	virtual size_t getElementCount() const = 0;
 	virtual size_t getElementStride() const = 0;
 	virtual BYTE *getMappedPtr() = 0;
 	virtual const BYTE *getMappedPtr() const = 0;
 	virtual void updateBuffer(const void *pData, size_t sizeInByte, size_t offset = 0) = 0;
-	virtual ShaderResourceView getSRV() const = 0;
+	virtual StructuredBufferView getSRV() const = 0;
 };
 //////////////////////////////////////////IReadBackBuffer//////////////////////////////////////////
 interface IReadBackBuffer : IBufferResource {

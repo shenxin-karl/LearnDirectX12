@@ -7,9 +7,11 @@
 #include <dx12lib/Device/Device.h>
 #include <dx12lib/Pipeline/PipelineStd.h>
 #include <dx12lib/Texture/TextureStd.h>
+#include <dx12lib/Buffer/BufferStd.h>
 
 #include "D3D/d3dutil.h"
 #include "D3D/Shader/ShaderCommon.h"
+#include "Geometry/GeometryGenerator.h"
 
 namespace d3d {
 
@@ -59,8 +61,8 @@ SH3 calcIrradianceMapSH3(const T *pData, size_t width, size_t height, size_t num
 	return coeff;
 }
 
-IBL::IBL(dx12lib::ComputeContextProxy pComputeCtx, const std::string &fileName) {
-	buildSphericalHarmonics3(fileName);
+IBL::IBL(dx12lib::DirectContextProxy pComputeCtx, const std::string &fileName) {
+	//buildSphericalHarmonics3(fileName);
 	buildConvertToCubeMapPso(pComputeCtx->getDevice());
 
 	std::wstring wcharFileName = std::to_wstring(fileName);
@@ -78,7 +80,7 @@ IBL::IBL(dx12lib::ComputeContextProxy pComputeCtx, const std::string &fileName) 
 	_pBRDFLut = pComputeCtx->createDDSTexture2DFromMemory(brdfLutFile.begin(), brdfLutFile.size());
 }
 
-std::shared_ptr<dx12lib::UnorderedAccessCube> IBL::getEnvMap() const {
+std::shared_ptr<dx12lib::RenderTargetCube> IBL::getEnvMap() const {
 	return _pEnvMap;
 }
 
@@ -113,51 +115,117 @@ void IBL::buildConvertToCubeMapPso(std::weak_ptr<dx12lib::Device> pDevice) {
 	auto pSharedDevice = pDevice.lock();
 
 	std::vector<D3D12_STATIC_SAMPLER_DESC> staticSamplerDesc;
-	staticSamplerDesc.push_back(d3d::getPointClampStaticSampler(0));
+	staticSamplerDesc.push_back(d3d::getLinearClampStaticSampler(0));
 
 	dx12lib::RootSignatureDescHelper rootDesc(staticSamplerDesc);
-	rootDesc.resize(3);
-	rootDesc[CB_Settings].InitAsConstants(2, 0);
+	rootDesc.resize(2);
+	rootDesc[CB_Settings].InitAsConstants(16, 0);
 	rootDesc[SR_EnvMap].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
-	rootDesc[UA_Output].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 6, 0);
 	auto pRootSignature = pSharedDevice->createRootSignature(rootDesc);
 
-	_pConvertToCubeMapPSO = pSharedDevice->createComputePSO("ConvertToCubeMapPSO");
-	_pConvertToCubeMapPSO->setRootSignature(pRootSignature);
-
-	D3D_SHADER_MACRO macros[] = {
-		{ "N", "5" },
-		{ nullptr, nullptr },
+	std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout = {
+		{
+			"POSITION",
+			0,
+			DXGI_FORMAT_R32G32B32_FLOAT,
+			0,
+			0,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+			0,
+		}
 	};
 
-	cmrc::file shaderContent = d3d::getD3DResource("HlslShader/EquirectangularToCubeMap.hlsl");
-	_pConvertToCubeMapPSO->setComputeShader(d3d::compileShader(
+	cmrc::file shaderContent = d3d::getD3DResource("HlslShader/PanoToCubeMap.hlsl");
+	_pConvertToCubeMapPSO = pSharedDevice->createGraphicsPSO("ConvertToCubeMapPSO");
+	_pConvertToCubeMapPSO->setRootSignature(pRootSignature);
+	_pConvertToCubeMapPSO->setRenderTargetFormat(DXGI_FORMAT_R16G16B16A16_FLOAT, DXGI_FORMAT_D16_UNORM);
+	_pConvertToCubeMapPSO->setInputLayout(inputLayout);
+	CD3DX12_DEPTH_STENCIL_DESC depthStencilDesc(D3D12_DEFAULT);
+	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	_pConvertToCubeMapPSO->setDepthStencilState(depthStencilDesc);
+	_pConvertToCubeMapPSO->setVertexShader(d3d::compileShader(
 		shaderContent.begin(), 
 		shaderContent.size(), 
-		macros,
-		"CSMain", 
-		"cs_5_0")
+		nullptr, 
+		"VS", 
+		"vs_5_0")
 	);
+	_pConvertToCubeMapPSO->setPixelShader(d3d::compileShader(
+		shaderContent.begin(),
+		shaderContent.size(),
+		nullptr,
+		"PS",
+		"ps_5_0"
+	));
 	_pConvertToCubeMapPSO->finalize();
 }
 
-void IBL::buildEnvMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<dx12lib::IShaderResource2D> pEquirecatangular) {
-	size_t width = static_cast<float>(pEquirecatangular->getWidth());
-	size_t height = static_cast<float>(pEquirecatangular->getHeight());
-	float size = static_cast<float>(std::max(width, height) / 6) ;
-	_pEnvMap = pComputeCtx->createUnorderedAccessCube(size, size, nullptr, DXGI_FORMAT_R16G16B16A16_FLOAT);
+void IBL::buildEnvMap(dx12lib::DirectContextProxy pGraphicsCtx, std::shared_ptr<dx12lib::IShaderResource2D> pEquirecatangular) {
+	size_t width = pEquirecatangular->getWidth();
+	size_t height = pEquirecatangular->getHeight();
+	size_t size = std::max(width, height) / 6;
+	_pEnvMap = pGraphicsCtx->createRenderTargetCube(size, size, nullptr, DXGI_FORMAT_R16G16B16A16_FLOAT);
 
-	pComputeCtx->setComputePSO(_pConvertToCubeMapPSO);
-	pComputeCtx->setCompute32BitConstants(CB_Settings, 1, &size, 0);
-	pComputeCtx->setCompute32BitConstants(CB_Settings, 1, &size, 1);
-	pComputeCtx->setShaderResourceView(pEquirecatangular->getSRV(), SR_EnvMap);
+	constexpr float radian45 = DX::XMConvertToRadians(90.f);
+	Matrix4 matProj = DX::XMMatrixPerspectiveFovLH(radian45, 1.f, 0.1f, 1.f);
+	Vector3 lookFrom = Vector3(0, 0, 0);
+	Matrix4 viewProjArray[6] = {
+		matProj * DX::XMMatrixLookAtLH(lookFrom, Vector3(+1, 0, 0), Vector3(0, 1, 0)),
+		matProj * DX::XMMatrixLookAtLH(lookFrom, Vector3(-1, 0, 0), Vector3(0, 1, 0)),
+		matProj * DX::XMMatrixLookAtLH(lookFrom, Vector3(0, +1, 0), Vector3(0, 0, -1)),
+		matProj * DX::XMMatrixLookAtLH(lookFrom, Vector3(0, -1, 0), Vector3(0, 0, 1)),
+		matProj * DX::XMMatrixLookAtLH(lookFrom, Vector3(0, 0, +1), Vector3(0, 1, 0)),
+		matProj * DX::XMMatrixLookAtLH(lookFrom, Vector3(0, 0, -1), Vector3(0, 1, 0)),
+	};
+
+	D3D12_VIEWPORT viewport = {
+		0.f,
+		0.f,
+		static_cast<float>(size),
+		static_cast<float>(size),
+		0.f,
+		1.f
+	};
+
+	D3D12_RECT scissorRect = {
+		0,
+		0,
+		static_cast<LONG>(size),
+		static_cast<LONG>(size),
+	};
+
+	com::GometryGenerator gen;
+	auto skyBoxCube = gen.createSkyBoxCube();
+
+	D3D12_CLEAR_VALUE clearValue = {};
+	clearValue.Format = DXGI_FORMAT_D16_UNORM;
+	clearValue.DepthStencil.Depth = 1.f;
+	clearValue.DepthStencil.Stencil = 0;
+	auto pDepthBuffer = pGraphicsCtx->createDepthStencil2D(size, size, &clearValue, DXGI_FORMAT_D16_UNORM);
+	auto pVertexBuffer = pGraphicsCtx->createVertexBuffer(skyBoxCube.data(), skyBoxCube.size(), sizeof(float3));
+
+	pGraphicsCtx->transitionBarrier(_pEnvMap, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	pGraphicsCtx->transitionBarrier(pDepthBuffer, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+
+	pGraphicsCtx->setViewport(viewport);
+	pGraphicsCtx->setScissorRect(scissorRect);
+	pGraphicsCtx->setGraphicsPSO(_pConvertToCubeMapPSO);
+	pGraphicsCtx->setShaderResourceView(pEquirecatangular->getSRV(), SR_EnvMap);
+	pGraphicsCtx->setVertexBuffer(pVertexBuffer);
+	pGraphicsCtx->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	for (size_t i = 0; i < 6; ++i) {
 		dx12lib::CubeFace face = static_cast<dx12lib::CubeFace>(i);
-		pComputeCtx->setUnorderedAccessView(_pEnvMap->getFaceUAV(face), UA_Output, i);
+		pGraphicsCtx->setRenderTarget(_pEnvMap->getFaceRTV(face), pDepthBuffer->getDSV());
+		pGraphicsCtx->clearDepth(pDepthBuffer, 1.f);
+		float4x4 viewProj = float4x4(viewProjArray[i]);
+		pGraphicsCtx->setGraphics32BitConstants(0, 16, &viewProj);
+		pGraphicsCtx->drawInstanced(skyBoxCube.size(), 1, 0);
 	}
-	size_t groupX = static_cast<size_t>(std::ceil(static_cast<float>(size) / kThreadCount));
-	size_t groupY = static_cast<size_t>(std::ceil(static_cast<float>(size) / kThreadCount));
-	pComputeCtx->dispatch(groupX, groupY, 1);
+
+	D3D12_RESOURCE_STATES gpuRead = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+	pGraphicsCtx->transitionBarrier(_pEnvMap, gpuRead);
+	pGraphicsCtx->trackResource(std::move(pDepthBuffer));
+	pGraphicsCtx->trackResource(std::move(pVertexBuffer));
 }
 
 }

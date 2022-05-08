@@ -147,7 +147,7 @@ ConstantBufferView FRConstantBuffer<T>::getCBV() const {
 		_pUploadBuffer->copyData(frameIndex, &_object, sizeof(T), 0);
 		_bufferDirty.set(frameIndex, true);
 	}
-	return ConstantBufferView(_descriptor, frameIndex);
+	return ConstantBufferView(_descriptor, this, frameIndex);
 }
 
 template <typename T>

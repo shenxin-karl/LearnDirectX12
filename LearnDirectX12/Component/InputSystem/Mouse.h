@@ -53,6 +53,7 @@ public:
 	bool getShowCursor() const;
 	void setShowCursor(bool bShow);
 	void adjustCursorPosition();
+	POINT getCursorPosition() const;
 private:
 	static constexpr size_t kEventMaxSize = 0xff;
 	POINT _windowCenter;

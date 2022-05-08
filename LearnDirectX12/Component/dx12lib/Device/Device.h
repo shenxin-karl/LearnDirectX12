@@ -8,6 +8,7 @@ namespace dx12lib {
 struct DeviceInitDesc {
 	DXGI_FORMAT backBufferFormat   = DXGI_FORMAT_UNKNOWN;
 	DXGI_FORMAT depthStencilFormat = DXGI_FORMAT_UNKNOWN;
+	size_t		fps				   = 120;
 };
 
 class Device : public NonCopyable, public std::enable_shared_from_this<Device> {
