@@ -86,8 +86,6 @@ void BoxApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 void BoxApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pCmdQueue = _pDevice->getCommandQueue();
 	auto pDirectProxy = pCmdQueue->createDirectContextProxy();
-
-
 	{
 		d3d::RenderTarget renderTarget(_pSwapChain);
 		renderTarget.bind(pDirectProxy);
@@ -134,7 +132,7 @@ void BoxApp::renderBoxPass(dx12lib::DirectContextProxy pDirectContext) const {
 	pDirectContext->setVertexBuffer(_pBoxMesh->_pVertexBuffer);
 	pDirectContext->setIndexBuffer(_pBoxMesh->_pIndexBuffer);
 	pDirectContext->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	pDirectContext->setShaderResourceView(_pIBL->getEnvMap()->getSRV(), SR_Env, 0);
+	pDirectContext->setShaderResourceView(_pIBL->getIrradianceMap()->getSRV(), SR_Env, 0);
 	pDirectContext->drawIndexedInstanced(
 		_pBoxMesh->_pIndexBuffer->getIndexCount(),
 		1,

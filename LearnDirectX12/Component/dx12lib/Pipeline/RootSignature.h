@@ -35,6 +35,9 @@ public:
 	RootSignatureDescHelper(const std::array<CD3DX12_STATIC_SAMPLER_DESC, 6> &staticSamplers,
 		D3D12_ROOT_SIGNATURE_FLAGS flag = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
 	);
+	RootSignatureDescHelper(const D3D12_STATIC_SAMPLER_DESC &sampler, 
+		D3D12_ROOT_SIGNATURE_FLAGS flag = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
+	);
 	RootSignatureDescHelper(const RootSignatureDescHelper &) = delete;
 	RootSignatureDescHelper &operator=(const RootSignatureDescHelper &) = delete;
 	void addRootParameter(const RootParameter &parame);

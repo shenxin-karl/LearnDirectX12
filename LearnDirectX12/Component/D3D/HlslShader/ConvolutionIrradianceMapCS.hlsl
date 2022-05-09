@@ -52,9 +52,11 @@ void CS(CSIn csin) {
     float y = (csin.DispatchThreadID.y / gHeight) - 0.5;
     float3 direction = normalize(mul(gRotateCubeFace[index], float3(x, y, 0.5)));       // w
 
-    float3 v = direction.y > 0.95 ? float3(1, 0, 0) : float3(0, 1, 0);
-    float3 u = cross(v, direction);
-    float3 w = cross(u, v);
+    float3 up = float3(0, 1, 0);
+    float3 N = direction;
+    float3 T = cross(N, up);
+    float3 B = cross(T, N);
+	       T = cross(N, B);
 
     float3 irradianceSum = float3(0, 0, 0);
     uint sampleCount = 0;
@@ -66,11 +68,11 @@ void CS(CSIn csin) {
             float cosPh = cos(phi);
             float sinPh = sin(phi);
 		    float3 V = float3(
-				sinPh * cosTh,
-                cosPh,
-                sinPh * sinTh
+				sinTh * cosPh,
+                sinTh * sinPh,
+                cosTh
             );
-            float3 dir = (V.x * u) + (V.y * v) + (V.z * w);
+            float3 dir = (V.x * T) + (V.y * B) + (V.z * N);
             float3 irradiance = gEnvMap.SampleLevel(gSamLinearClamp, dir, 0);
             irradianceSum += irradiance * cosTh * sinTh;
             ++sampleCount;
