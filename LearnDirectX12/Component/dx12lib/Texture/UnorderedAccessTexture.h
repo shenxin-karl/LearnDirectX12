@@ -60,6 +60,7 @@ public:
 	ShaderResourceView getSRV(size_t mipSlice = 0) const override;
 	ShaderResourceView getFaceSRV(CubeFace face, size_t mipSlice = 0) const override;
 	UnorderedAccessView getFaceUAV(CubeFace face, size_t mipSlice = 0) const override;
+	UnorderedAccessView get2DArrayUAV(size_t mipSlice = 0) const override;
 protected:
 	UnorderedAccessCube(std::weak_ptr<Device> pDevice,
 		WRL::ComPtr<ID3D12Resource> pResource,
@@ -75,6 +76,7 @@ private:
 	std::weak_ptr<Device> _pDevice;
 	WRL::ComPtr<ID3D12Resource> _pResource;
 	mutable ViewManager<ShaderResourceView> _srvMgr;
+	mutable ViewManager<UnorderedAccessView> _2DArrayUavMgr;
 	mutable std::map<CubeFace, ViewManager<ShaderResourceView>> _cubeSrvMgr;
 	mutable std::map<CubeFace, ViewManager<UnorderedAccessView>> _cubeUavMgr;
 };

@@ -329,7 +329,7 @@ RenderTargetCube::RenderTargetCube(std::weak_ptr<Device> pDevice,
 	ResourceStateTracker::addGlobalResourceState(pResource.Get(), state);
 }
 
-RenderTargetCube::RenderTargetCube(std::weak_ptr<Device> pDevice, uint32 width, uint32 height,
+RenderTargetCube::RenderTargetCube(std::weak_ptr<Device> pDevice, size_t width, size_t height,
 	D3D12_CLEAR_VALUE *pClearValue, DXGI_FORMAT format)
 : _pDevice(pDevice)
 {
@@ -341,7 +341,7 @@ RenderTargetCube::RenderTargetCube(std::weak_ptr<Device> pDevice, uint32 width, 
 	renderTargetDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	renderTargetDesc.Alignment = 0;
 	renderTargetDesc.Width = width;
-	renderTargetDesc.Height = height;
+	renderTargetDesc.Height = static_cast<UINT>(height);
 	renderTargetDesc.DepthOrArraySize = 6;
 	renderTargetDesc.MipLevels = 1;
 	renderTargetDesc.Format = format;

@@ -34,7 +34,6 @@ void BoxApp::onInitialize(dx12lib::DirectContextProxy pDirectContext) {
 	_pCBObject->visit()->gMaterial = {float4(1.f), 0.5, 0.5f};
 
 	_pIBL = std::make_unique<d3d::IBL>(pDirectContext, "resources/Barce_Rooftop_C_3k.hdr");
-
 	d3d::SkyBoxDesc skyBoxDesc = {
 		.pGraphicsCtx = pDirectContext,
 		.pCubeMap = _pIBL->getEnvMap(),
@@ -87,6 +86,7 @@ void BoxApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 void BoxApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pCmdQueue = _pDevice->getCommandQueue();
 	auto pDirectProxy = pCmdQueue->createDirectContextProxy();
+
 
 	{
 		d3d::RenderTarget renderTarget(_pSwapChain);

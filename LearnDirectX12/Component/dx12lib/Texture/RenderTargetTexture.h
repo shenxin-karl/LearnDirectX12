@@ -64,8 +64,8 @@ protected:
 		D3D12_RESOURCE_STATES state
 	);
 	RenderTargetCube(std::weak_ptr<Device> pDevice,
-		uint32 width,
-		uint32 height,
+		size_t width,
+		size_t height,
 		D3D12_CLEAR_VALUE *pClearValue = nullptr,
 		DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN
 	);

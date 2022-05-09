@@ -25,6 +25,10 @@ add_library(D3D STATIC ${AllFile})
 set_target_properties(D3D PROPERTIES FOLDER "Component")
 set_property(SOURCE ${SHADER_FILES} PROPERTY VS_TOOL_OVERRIDE "shader")	# 设置 hlsl 为 shader 资源文件
 
+if (MSVC)
+	add_definitions(-D_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING)	## enable wstring_convert
+endif(MSVC)
+
 target_include_directories(D3D PUBLIC 
 	${PROJECT_COMPONENT_DIR}
 	${PROJECT_LIBRAIES_DIR}
@@ -40,6 +44,7 @@ cmrc_add_resource_library(D3D-resources ALIAS D3D::rc
 	"HlslShader/FXAACS.hlsl"
 	"HlslShader/SkyBox.hlsl"
 	"HlslShader/PanoToCubeMap.hlsl"
+	"HlslShader/PanoToCubeMapCS.hlsl"
 	"resources/BRDF_LUT.dds"
 )
 
@@ -49,6 +54,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 	GameTimer
 	Exception
 	stb
+	dx12lib
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE

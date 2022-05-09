@@ -69,6 +69,7 @@ interface IUnorderedAccess2DArray : IUnorderedAccess, IShaderResource2DArray {
 
 interface IUnorderedAccessCube : IUnorderedAccess, IShaderResourceCube {
 	virtual UnorderedAccessView getFaceUAV(CubeFace face, size_t mipSlice = 0) const = 0;
+	virtual UnorderedAccessView get2DArrayUAV(size_t mipSlice = 0) const = 0;
 };
 /////////////////////////////////////////////IDepthStencil2D/////////////////////////////////////////////
 interface IDepthStencil : virtual IResource {

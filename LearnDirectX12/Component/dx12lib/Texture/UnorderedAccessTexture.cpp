@@ -298,8 +298,33 @@ UnorderedAccessView UnorderedAccessCube::getFaceUAV(CubeFace face, size_t mipSli
 	return UAV;
 }
 
+UnorderedAccessView UnorderedAccessCube::get2DArrayUAV(size_t mipSlice) const {
+	if (_2DArrayUavMgr.exist(mipSlice))
+		return _2DArrayUavMgr.get(mipSlice);
+
+	assert(mipSlice < getMipmapLevels());
+	auto pSharedDevice = _pDevice.lock();
+	auto descriptor = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+	uavDesc.Format = _pResource->GetDesc().Format;
+	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+	uavDesc.Texture2DArray.MipSlice = static_cast<UINT>(mipSlice);
+	uavDesc.Texture2DArray.FirstArraySlice = 0;
+	uavDesc.Texture2DArray.ArraySize = 6;
+	uavDesc.Texture2DArray.PlaneSlice = 0;
+	pSharedDevice->getD3DDevice()->CreateUnorderedAccessView(
+		_pResource.Get(),
+		nullptr,
+		&uavDesc,
+		descriptor.getCPUHandle()
+	);
+	UnorderedAccessView UAV(descriptor, this);
+	_2DArrayUavMgr.set(mipSlice, UAV);
+	return UAV;
+}
+
 UnorderedAccessCube::UnorderedAccessCube(std::weak_ptr<Device> pDevice, WRL::ComPtr<ID3D12Resource> pResource,
-	D3D12_RESOURCE_STATES state)
+                                         D3D12_RESOURCE_STATES state)
 : _pDevice(pDevice), _pResource(pResource)
 {
 	ResourceStateTracker::addGlobalResourceState(pResource.Get(), state);
