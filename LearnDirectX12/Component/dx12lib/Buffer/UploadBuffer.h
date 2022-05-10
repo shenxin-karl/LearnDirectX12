@@ -6,7 +6,12 @@ namespace dx12lib {
 
 class UploadBuffer : public IBufferResource {
 public:
-	UploadBuffer(ID3D12Device *pDevice, size_t elementCount, size_t elementByteSize, bool isConstantBuffer);
+	UploadBuffer(ID3D12Device *pDevice, 
+		size_t elementCount, 
+		size_t elementByteSize, 
+		bool isConstantBuffer, 
+		D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE
+	);
 	void copyData(size_t elementIndex, const void *pData);
 	void copyData(size_t elementIndex, const void *pData, size_t sizeInByte, size_t offset);
 	D3D12_GPU_VIRTUAL_ADDRESS getGPUAddressByIndex(size_t elementIndex = 0) const;

@@ -53,25 +53,15 @@ size_t FRStructuredBuffer<RawData>::getElementStride() const {
 	return _elementStride;
 }
 
-BYTE *FRStructuredBuffer<RawData>::getMappedPtr() {
-	size_t frameIndex = FrameIndexProxy::getConstantFrameIndexRef();
-	return _pUploadBuffer->getMappedDataByIndex(frameIndex);
-}
-
-const BYTE *FRStructuredBuffer<RawData>::getMappedPtr() const {
-	size_t frameIndex = FrameIndexProxy::getConstantFrameIndexRef();
-	return _pUploadBuffer->getMappedDataByIndex(frameIndex);
-}
-
 void FRStructuredBuffer<RawData>::updateBuffer(const void *pData, size_t sizeInByte, size_t offset) {
 	assert((sizeInByte + offset) <= getElementStride());
 	size_t frameIndex = FrameIndexProxy::getConstantFrameIndexRef();
 	_pUploadBuffer->copyData(frameIndex, pData, sizeInByte, offset);
 }
 
-StructuredBufferView FRStructuredBuffer<RawData>::getSRV() const {
+ShaderResourceView FRStructuredBuffer<RawData>::getSRV() const {
 	size_t frameIndex = FrameIndexProxy::getConstantFrameIndexRef();
-	return StructuredBufferView(_descriptor, this, frameIndex);
+	return ShaderResourceView(_descriptor, this, frameIndex);
 }
 
 }

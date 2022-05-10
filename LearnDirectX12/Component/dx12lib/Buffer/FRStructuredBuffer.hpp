@@ -19,10 +19,8 @@ public:
 	size_t getBufferSize() const override;
 	size_t getElementCount() const override;
 	size_t getElementStride() const override;
-	BYTE *getMappedPtr() override;
-	const BYTE *getMappedPtr() const override;
 	void updateBuffer(const void *pData, size_t sizeInByte, size_t offset = 0) override;
-	StructuredBufferView getSRV() const override;
+	ShaderResourceView getSRV() const override;
 
 	template<typename T>
 	std::span<T> visit() {
@@ -31,15 +29,6 @@ public:
 		size_t numElements = getElementCount();
 		T *ptr = reinterpret_cast<T *>(_pUploadBuffer->getMappedDataByIndex(frameIndex));
 		return std::span<T>(ptr, numElements);
-	}
-
-	template<typename T>
-	std::span<const T> visit() const {
-		assert(sizeof(T) == getElementStride());
-		size_t frameIndex = FrameIndexProxy::getConstantFrameIndexRef();
-		size_t numElements = getElementCount();
-		const T *ptr = reinterpret_cast<const T *>(_pUploadBuffer->getMappedDataByIndex(frameIndex));
-		return std::span<const T>(ptr, numElements);
 	}
 private:
 	size_t _elementStride;
@@ -61,12 +50,9 @@ public:
 	size_t getBufferSize() const override;
 	size_t getElementCount() const override;
 	size_t getElementStride() const override;
-	BYTE *getMappedPtr() override;
-	const BYTE *getMappedPtr() const override;
 	void updateBuffer(const void *pData, size_t sizeInByte, size_t offset = 0) override;
-	StructuredBufferView getSRV() const override;
+	ShaderResourceView getSRV() const override;
 	std::span<T> visit();
-	std::span<const T> visit() const;
 private:
 	DescriptorAllocation _descriptor;
 	std::unique_ptr<UploadBuffer> _pUploadBuffer;
@@ -134,18 +120,6 @@ size_t FRStructuredBuffer<T>::getElementStride() const {
 }
 
 template <typename T>
-BYTE *FRStructuredBuffer<T>::getMappedPtr() {
-	size_t frameIndex = FrameIndexProxy::getConstantFrameIndexRef();
-	return _pUploadBuffer->getMappedDataByIndex(frameIndex);
-}
-
-template <typename T>
-const BYTE *FRStructuredBuffer<T>::getMappedPtr() const {
-	size_t frameIndex = FrameIndexProxy::getConstantFrameIndexRef();
-	return _pUploadBuffer->getMappedDataByIndex(frameIndex);
-}
-
-template <typename T>
 void FRStructuredBuffer<T>::updateBuffer(const void *pData, size_t sizeInByte, size_t offset) {
 	assert((sizeInByte + offset) <= getElementStride());
 	size_t frameIndex = FrameIndexProxy::getConstantFrameIndexRef();
@@ -153,9 +127,9 @@ void FRStructuredBuffer<T>::updateBuffer(const void *pData, size_t sizeInByte, s
 }
 
 template <typename T>
-StructuredBufferView FRStructuredBuffer<T>::getSRV() const {
+ShaderResourceView FRStructuredBuffer<T>::getSRV() const {
 	size_t frameIndex = FrameIndexProxy::getConstantFrameIndexRef();
-	return StructuredBufferView(_descriptor, this, frameIndex);
+	return ShaderResourceView(_descriptor, this, frameIndex);
 }
 
 template <typename T>
@@ -165,14 +139,5 @@ std::span<T> FRStructuredBuffer<T>::visit() {
 	T *ptr = reinterpret_cast<T *>(_pUploadBuffer->getMappedDataByIndex(frameIndex));
 	return std::span<T>(ptr, numElements);
 }
-
-template <typename T>
-std::span<const T> FRStructuredBuffer<T>::visit() const {
-	size_t frameIndex = FrameIndexProxy::getConstantFrameIndexRef();
-	size_t numElements = getElementCount();
-	const T *ptr = reinterpret_cast<const T *>(_pUploadBuffer->getMappedDataByIndex(frameIndex));
-	return std::span<const T>(ptr, numElements);
-}
-
 
 }

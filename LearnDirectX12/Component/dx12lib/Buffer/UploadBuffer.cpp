@@ -3,7 +3,13 @@
 
 namespace dx12lib {
 
-UploadBuffer::UploadBuffer(ID3D12Device *pDevice, size_t elementCount, size_t elementByteSize, bool isConstantBuffer)
+UploadBuffer::UploadBuffer(ID3D12Device *pDevice, 
+	size_t elementCount, 
+	size_t elementByteSize, 
+	bool isConstantBuffer, 
+	D3D12_RESOURCE_FLAGS flags
+
+)
 : _isConstantBuffer(isConstantBuffer), _elementByteSize(elementByteSize), _elementCount(elementCount), _pMappedData(nullptr)
 {
 	if (isConstantBuffer)
@@ -12,7 +18,7 @@ UploadBuffer::UploadBuffer(ID3D12Device *pDevice, size_t elementCount, size_t el
 	ThrowIfFailed(pDevice->CreateCommittedResource(
 		RVPtr(CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD)),
 		D3D12_HEAP_FLAG_NONE,
-		RVPtr(CD3DX12_RESOURCE_DESC::Buffer(static_cast<UINT64>(elementByteSize) * _elementByteSize)),
+		RVPtr(CD3DX12_RESOURCE_DESC::Buffer(static_cast<UINT64>(elementByteSize) * _elementByteSize, flags)),
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
 		IID_PPV_ARGS(&_pUploadResource)

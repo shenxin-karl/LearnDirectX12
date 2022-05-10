@@ -77,6 +77,8 @@ enum class BufferType {
 	VertexBuffer,
 	IndexBuffer,
 	StructuredBuffer,
+	ConsumeStructuredBuffer,
+	AppendStructuredBuffer,
 	ReadBackBuffer,
 };
 
@@ -131,6 +133,8 @@ interface IGraphicsContext;
 interface IComputeContext;
 
 class StructuredBuffer;
+class ConsumeStructuredBuffer;
+class AppendStructuredBuffer;
 class ReadBackBuffer;
 
 class DepthStencil2D;
@@ -145,8 +149,6 @@ class RenderTargetCube;
 class UnorderedAccess2D;
 class UnorderedAccess2DArray;
 class UnorderedAccessCube;
-
-
 
 
 interface IResource;
@@ -172,8 +174,11 @@ interface IBufferResource;
 interface IConstantBuffer;
 interface IVertexBuffer;
 interface IIndexBuffer;
-interface IStructuredBuffer;
 interface IReadBackBuffer;
+
+interface IStructuredBuffer;
+interface IConsumeStructuredBuffer;
+interface IAppendStructuredBuffer;
 
 struct NonCopyable {
 	NonCopyable() = default;

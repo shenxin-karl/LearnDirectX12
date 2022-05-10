@@ -31,7 +31,6 @@ interface ICommonContext : IContext {
 	virtual std::shared_ptr<SamplerTextureCube> createDDSTextureCubeFromMemory(const void *pData, size_t sizeInByte) = 0;
 	virtual	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) = 0;
 	virtual void setConstantBufferView(const ConstantBufferView &crv, size_t rootIndex, size_t offset = 0) = 0;
-	virtual void setStructuredBufferView(const StructuredBufferView &srv, size_t rootIndex, size_t offset = 0) = 0;
 	virtual void setShaderResourceView(const ShaderResourceView &srv, size_t rootIndex, size_t offset = 0) = 0;
 
 	virtual void copyResourceImpl(std::shared_ptr<IResource> pDest, std::shared_ptr<IResource> pSrc) = 0;
@@ -136,7 +135,7 @@ interface ICommonContext : IContext {
 	template<typename T> requires(std::is_base_of_v<IStructuredBuffer, T>)
 	void setStructuredBuffer(std::shared_ptr<T> pBuffer, size_t rootIndex, size_t offset = 0) {
 		auto pStructuredBuffer = std::static_pointer_cast<IStructuredBuffer>(pBuffer);
-		this->setStructuredBufferView(pStructuredBuffer->getSRV(), rootIndex, offset);
+		this->setShaderResourceView(pStructuredBuffer->getSRV(), rootIndex, offset);
 	}
 #endif
 	/////////////////////////////////// RenderTarget //////////////////////////////////
@@ -233,6 +232,26 @@ interface IComputeContext : virtual ICommonContext {
 	template<typename...Args>
 	std::shared_ptr<UnorderedAccessCube> createUnorderedAccessCube(Args&&...args) {
 		return std::make_shared<dx12libTool::MakeUnorderedAccessCube>(
+			getDevice(),
+			std::forward<Args>(args)...
+		);
+	}
+#endif
+	/////////////////////////////////// ConsumeStructured //////////////////////////////////
+#if 1
+	template<typename...Args>
+	std::shared_ptr<ConsumeStructuredBuffer> createConsumeStructuredBuffer(Args&&...args) {
+		return std::make_shared<dx12libTool::MakeConsumeStructuredBuffer>(
+			getDevice(),
+			std::forward<Args>(args)...
+		);
+	}
+#endif
+	/////////////////////////////////// AppendStructured //////////////////////////////////
+#if 1
+	template<typename...Args>
+	std::shared_ptr<AppendStructuredBuffer> createAppendStructuredBuffer(Args&&...args) {
+		return std::make_shared<dx12libTool::MakeAppendStructuredBuffer>(
 			getDevice(),
 			std::forward<Args>(args)...
 		);

@@ -57,3 +57,10 @@ namespace DX = DirectX;
 namespace WRL = Microsoft::WRL;
 
 }
+
+namespace std {
+
+std::string to_string(const std::wstring &wstr);
+std::wstring to_wstring(const std::string &str);
+
+}

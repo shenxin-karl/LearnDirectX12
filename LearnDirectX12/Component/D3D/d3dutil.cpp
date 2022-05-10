@@ -5,6 +5,8 @@
 #include "d3dutil.h"
 #include "D3D/Tool/D3Dx12.h"
 #include "D3D/Exception/D3DException.h"
+#define SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
+#include <locale>
 
 namespace d3d {
 
@@ -76,4 +78,13 @@ WRL::ComPtr<ID3DBlob> compileShader(const char *fileContext,
 	return byteCode;
 }
 
+}
+
+static std::wstring_convert<std::codecvt<wchar_t, char, std::mbstate_t>> converter;
+std::string std::to_string(const std::wstring &wstr) {
+	return converter.to_bytes(wstr);
+}
+
+std::wstring std::to_wstring(const std::string &str) {
+	return converter.from_bytes(str);
 }

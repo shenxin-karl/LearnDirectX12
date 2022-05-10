@@ -1,11 +1,14 @@
 #include <dx12lib/Device/Device.h>
 #include <dx12lib/Resource/IResource.h>
 #include <dx12lib/Resource/ResourceStateTracker.h>
+#define SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
+#include <locale>
 
 namespace dx12lib {
 
 void IResource::setResourceName(const std::string &name) {
-	setResourceName(std::to_wstring(name));
+	static std::wstring_convert<std::codecvt<wchar_t, char, std::mbstate_t>> converter;
+	setResourceName(converter.from_bytes(name));
 }
 
 void IResource::setResourceName(const std::wstring &name) {
@@ -51,15 +54,31 @@ ShaderResourceDimension IShaderResourceCube::getDimension() const {
 	return ShaderResourceDimension::TextureCube;
 }
 
-bool IRenderTarget::checkRTVState(D3D12_RESOURCE_STATES currentState) const {
+bool IRenderTarget2D::checkRTVState(D3D12_RESOURCE_STATES currentState) const {
 	return currentState & D3D12_RESOURCE_STATE_RENDER_TARGET;
 }
 
-bool IUnorderedAccess::checkUAVState(D3D12_RESOURCE_STATES currentState) const {
+bool IRenderTarget2DArray::checkRTVState(D3D12_RESOURCE_STATES currentState) const {
+	return currentState & D3D12_RESOURCE_STATE_RENDER_TARGET;
+}
+
+bool IRenderTargetCube::checkRTVState(D3D12_RESOURCE_STATES currentState) const {
+	return currentState & D3D12_RESOURCE_STATE_RENDER_TARGET;
+}
+
+bool IUnorderedAccess2D::checkUAVState(D3D12_RESOURCE_STATES currentState) const {
 	return currentState & D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 }
 
-bool IDepthStencil::checkDSVState(D3D12_RESOURCE_STATES currentState) const {
+bool IUnorderedAccess2DArray::checkUAVState(D3D12_RESOURCE_STATES currentState) const {
+	return currentState & D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+}
+
+bool IUnorderedAccessCube::checkUAVState(D3D12_RESOURCE_STATES currentState) const {
+	return currentState & D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+}
+
+bool IDepthStencil2D::checkDSVState(D3D12_RESOURCE_STATES currentState) const {
 	return currentState & D3D12_RESOURCE_STATE_DEPTH_WRITE;
 }
 
@@ -88,9 +107,12 @@ BufferType IStructuredBuffer::getBufferType() const {
 	return BufferType::StructuredBuffer;
 }
 
-bool IStructuredBuffer::checkSRVState(D3D12_RESOURCE_STATES state) const {
-	return state & D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE ||
-		   state & D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+BufferType IConsumeStructuredBuffer::getBufferType() const {
+	return BufferType::ConsumeStructuredBuffer;
+}
+
+BufferType IAppendStructuredBuffer::getBufferType() const {
+	return BufferType::AppendStructuredBuffer;
 }
 
 BufferType IReadBackBuffer::getBufferType() const {

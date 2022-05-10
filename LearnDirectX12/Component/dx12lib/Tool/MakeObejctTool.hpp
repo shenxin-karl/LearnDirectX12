@@ -71,6 +71,7 @@ using MakeUnorderedAccess2D = _MakeObjectTool<UnorderedAccess2D>;
 using MakeUnorderedAccess2DArray = _MakeObjectTool<UnorderedAccess2DArray>;
 using MakeUnorderedAccessCube = _MakeObjectTool<UnorderedAccessCube>;
 
-
+using MakeConsumeStructuredBuffer = _MakeObjectTool<ConsumeStructuredBuffer>;
+using MakeAppendStructuredBuffer = _MakeObjectTool<AppendStructuredBuffer>;
 
 }

@@ -20,21 +20,13 @@ size_t StructuredBuffer::getElementStride() const {
 	return _elementStride;
 }
 
-BYTE *StructuredBuffer::getMappedPtr() {
-	return _pUploadBuffer->getMappedDataByIndex(0);
-}
-
-const BYTE *StructuredBuffer::getMappedPtr() const {
-	return _pUploadBuffer->getMappedDataByIndex(0);
-}
-
 void StructuredBuffer::updateBuffer(const void *pData, size_t sizeInByte, size_t offset) {
 	assert((sizeInByte + offset) <= getBufferSize());
 	_pUploadBuffer->copyData(0, pData, sizeInByte, offset);
 }
 
-StructuredBufferView StructuredBuffer::getSRV() const {
-	return StructuredBufferView(_descriptor, this);
+ShaderResourceView StructuredBuffer::getSRV() const {
+	return ShaderResourceView(_descriptor, this);
 }
 
 StructuredBuffer::~StructuredBuffer() {

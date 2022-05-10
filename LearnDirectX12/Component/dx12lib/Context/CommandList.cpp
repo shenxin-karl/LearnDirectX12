@@ -235,21 +235,6 @@ void CommandList::setConstantBufferView(const ConstantBufferView &cbv, size_t ro
 	);
 }
 
-void CommandList::setStructuredBufferView(const StructuredBufferView &srv, size_t rootIndex, size_t offset) {
-	assert(_currentGPUState.pRootSignature != nullptr);
-#ifdef DEBUG_MODE
-	WRL::ComPtr<ID3D12Resource> pD3DResource = srv.getResource()->getD3DResource();
-	D3D12_RESOURCE_STATES state = _pResourceStateTracker->getResourceState(pD3DResource.Get());
-	assert(srv.getResource()->checkSRVState(state));
-#endif
-	_pDynamicDescriptorHeaps[0]->stageDescriptors(
-		rootIndex,
-		offset,
-		1,
-		srv
-	);
-}
-
 void CommandList::setShaderResourceView(const ShaderResourceView &srv, size_t rootIndex, size_t offset) {
 	assert(_currentGPUState.pRootSignature != nullptr);
 #ifdef DEBUG_MODE

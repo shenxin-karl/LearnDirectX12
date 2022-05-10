@@ -13,7 +13,7 @@ enum class ViewType {
 	UnorderedAccess = 4,
 };
 
-template<typename T, ViewType Type>
+template<ViewType Type>
 class _ResourceView {
 public:
 	_ResourceView() = default;
@@ -21,7 +21,7 @@ public:
 	_ResourceView(_ResourceView &&) noexcept = default;
 	_ResourceView &operator=(const _ResourceView &) = default;
 	_ResourceView &operator=(_ResourceView &&) noexcept = default;
-	_ResourceView(const DescriptorAllocation &descriptor, const T *pResource, size_t offset = 0)
+	_ResourceView(const DescriptorAllocation &descriptor, const IResource *pResource, size_t offset = 0)
 	: _offset(offset), _descriptor(descriptor), _pResource(pResource)
 	{
 		assert(offset < descriptor.getNumHandle());
@@ -32,13 +32,13 @@ public:
 	operator D3D12_CPU_DESCRIPTOR_HANDLE() const {
 		return getCPUDescriptorHandle();
 	}
-	const T *getResource() const {
+	const IResource *getResource() const {
 		return _pResource;
 	}
 private:
 	size_t _offset = 0;
 	DescriptorAllocation _descriptor;
-	const T *_pResource = nullptr;
+	const IResource *_pResource = nullptr;
 };
 
 template<typename T>
@@ -65,12 +65,12 @@ private:
 	T _view;
 };
 
-using RenderTargetView = _ResourceView<IRenderTarget, ViewType::RenderTarget>;
-using DepthStencilView = _ResourceView<IDepthStencil, ViewType::DepthStencil>;
-using ConstantBufferView = _ResourceView<IConstantBuffer, ViewType::ConstantBuffer>;
-using ShaderResourceView = _ResourceView<IShaderResource, ViewType::ShaderResource>;
-using StructuredBufferView = _ResourceView<IStructuredBuffer, ViewType::ShaderResource>;
-using UnorderedAccessView = _ResourceView<IUnorderedAccess, ViewType::UnorderedAccess>;
+using RenderTargetView = _ResourceView<ViewType::RenderTarget>;
+using DepthStencilView = _ResourceView<ViewType::DepthStencil>;
+using ConstantBufferView = _ResourceView<ViewType::ConstantBuffer>;
+using ShaderResourceView = _ResourceView<ViewType::ShaderResource>;
+using StructuredBufferView = _ResourceView<ViewType::ShaderResource>;
+using UnorderedAccessView = _ResourceView<ViewType::UnorderedAccess>;
 using VertexBufferView = _BufferView<D3D12_VERTEX_BUFFER_VIEW>;
 using IndexBufferView = _BufferView<D3D12_INDEX_BUFFER_VIEW>;
 

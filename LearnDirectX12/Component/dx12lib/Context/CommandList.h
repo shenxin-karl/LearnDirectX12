@@ -27,7 +27,6 @@ public:
 
 	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) override;
 	void setConstantBufferView(const ConstantBufferView &cbv, size_t rootIndex, size_t offset) override;
-	void setStructuredBufferView(const StructuredBufferView &srv, size_t rootIndex, size_t offset) override;
 	void setShaderResourceView(const ShaderResourceView &srv, size_t rootIndex, size_t offset) override;
 
 	void copyResourceImpl(std::shared_ptr<IResource> pDest, std::shared_ptr<IResource> pSrc) override;

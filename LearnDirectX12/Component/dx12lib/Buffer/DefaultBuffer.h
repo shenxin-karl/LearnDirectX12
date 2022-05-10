@@ -6,8 +6,12 @@ namespace dx12lib {
 
 class DefaultBuffer : public IBufferResource {
 public:
-	DefaultBuffer() = default;
-	DefaultBuffer(ID3D12Device *pDevice, ID3D12GraphicsCommandList *pCmdList, const void *pData, size_t sizeInByte);
+	DefaultBuffer(ID3D12Device *pDevice, 
+		ID3D12GraphicsCommandList *pCmdList, 
+		const void *pData, 
+		size_t sizeInByte,
+		D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE
+	);
 	~DefaultBuffer() override;
 	D3D12_GPU_VIRTUAL_ADDRESS getAddress() const;
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
