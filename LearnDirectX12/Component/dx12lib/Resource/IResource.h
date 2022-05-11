@@ -143,6 +143,7 @@ interface IReadBackBuffer : IBufferResource {
 	BufferType getBufferType() const override;
 	virtual bool isCompleted() const = 0;
 	virtual const void *getMappedPtr() const = 0;
+	virtual void setCompletedCallback(const std::function<void(IReadBackBuffer *)> &callback) = 0;
 };
 
 

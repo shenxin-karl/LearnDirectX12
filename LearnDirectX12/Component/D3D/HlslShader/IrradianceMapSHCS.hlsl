@@ -1,7 +1,7 @@
 
-struct Direction {
-	float phi;
-	float theta;
+struct RandomNumberPair {
+	float u;
+	float v;
 };
 
 struct SH3Coeff {
@@ -12,14 +12,17 @@ struct SH3BasisFunction {
 	float c[9];
 };
 
-TextureCube<float4>					gEnvCubeMap : register(t0);
-ConsumeStructuredBuffer<Direction>	gInput		: register(t1);
-AppendStructuredBuffer<SH3Coeff>	gOutput		: register(t2);
-SamplerState gSamLinearClamp					: register(s0);
+TextureCube<float4>							gEnvCubeMap : register(t0);
+ConsumeStructuredBuffer<RandomNumberPair>	gInput		: register(u0);
+AppendStructuredBuffer<SH3Coeff>			gOutput		: register(u1);
+SamplerState gSamLinearClamp							: register(s0);
 
-float3 DirectionToVector3(Direction dir) {
-	float cosTh = cos(dir.theta); float cosPh = cos(dir.phi);
-	float sinTh = sin(dir.theta); float sinPh = sin(dir.phi);
+const static float PI = 3.141592654;
+float3 RandomNumberPairToVector3(RandomNumberPair pair) {
+	float theta = 2.0 * acos(sqrt(1.0 - pair.u));
+	float phi = 2.0 * PI * pair.v;
+	float cosTh = cos(theta); float cosPh = cos(phi);
+	float sinTh = sin(theta); float sinPh = sin(phi);
 	return float3(
 		sinTh * cosPh,
 		cosTh,
@@ -46,7 +49,7 @@ SH3BasisFunction CalcSHBasisFunction(float3 v) {
 
 [numthreads(16, 1, 1)]
 void CS() {
-	float3 dir = DirectionToVector3(gInput.Consume());
+	float3 dir = RandomNumberPairToVector3(gInput.Consume());
 	float3 L = gEnvCubeMap.SampleLevel(gSamLinearClamp, dir, 0);
 	SH3BasisFunction basis = CalcSHBasisFunction(dir);
 	SH3Coeff coeff;

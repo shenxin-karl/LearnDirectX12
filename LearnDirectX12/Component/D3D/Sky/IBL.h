@@ -13,9 +13,11 @@ public:
 private:
 	void buildSphericalHarmonics3(const std::string &fileName);
 	void buildPanoToCubeMapPSO(std::weak_ptr<dx12lib::Device> pDevice);
+	void buildIrradianceMapToSHPSO(std::weak_ptr<dx12lib::Device> pDevice);
 	void buildConvolutionIrradiancePSO(std::weak_ptr<dx12lib::Device> pDevice);
 	void buildEnvMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<dx12lib::IShaderResource2D> pPannoEnvMap);
 	void buildConvolutionIrradianceMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<dx12lib::IShaderResource2D> pPannoEnvMap);
+	void buildIrradianceMapSH(dx12lib::ComputePSO pComputeCtx);
 private:
 	enum RootParameter : size_t {
 		CB_Settings,
@@ -27,6 +29,7 @@ private:
 	SH3 _irradianceMapSH3;
 	std::shared_ptr<dx12lib::ComputePSO>  _pPanoToCubeMapPSO;
 	std::shared_ptr<dx12lib::ComputePSO>  _pConvolutionIrradiancePSO;
+	std::shared_ptr<dx12lib::ComputePSO>  _pIrradianceMapToSHPSO;
 	std::shared_ptr<dx12lib::SamplerTexture2D> _pBRDFLut;
 	std::shared_ptr<dx12lib::SamplerTexture2D> _pPerFilteredEnvMap;
 	std::shared_ptr<dx12lib::UnorderedAccessCube>  _pEnvMap;

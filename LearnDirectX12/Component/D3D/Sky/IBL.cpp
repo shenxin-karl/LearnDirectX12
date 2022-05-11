@@ -62,8 +62,6 @@ SH3 calcIrradianceMapSH3(const T *pData, size_t width, size_t height, size_t num
 }
 
 IBL::IBL(dx12lib::DirectContextProxy pComputeCtx, const std::string &fileName) {
-	buildSphericalHarmonics3(fileName);
-
 	std::wstring wcharFileName = std::to_wstring(fileName);
 	std::wstring_view suffix = L".hdr";
 	if (auto iter = wcharFileName.find(suffix); iter != std::wstring::npos)
@@ -78,6 +76,8 @@ IBL::IBL(dx12lib::DirectContextProxy pComputeCtx, const std::string &fileName) {
 
 	buildConvolutionIrradiancePSO(pComputeCtx->getDevice());
 	buildConvolutionIrradianceMap(pComputeCtx, pPannoEnvMap);
+
+	buildIrradianceMapToSHPSO(pComputeCtx->getDevice());
 
 	cmrc::file brdfLutFile = getD3DResource("resources/BRDF_LUT.dds");
 	_pBRDFLut = pComputeCtx->createDDSTexture2DFromMemory(brdfLutFile.begin(), brdfLutFile.size());
@@ -145,6 +145,27 @@ void IBL::buildPanoToCubeMapPSO(std::weak_ptr<dx12lib::Device> pDevice) {
 	_pPanoToCubeMapPSO->finalize();
 }
 
+void IBL::buildIrradianceMapToSHPSO(std::weak_ptr<dx12lib::Device> pDevice) {
+	auto pSharedDevice = pDevice.lock();
+	dx12lib::RootSignatureDescHelper rootDesc(d3d::getLinearClampStaticSampler(0));
+	rootDesc.resize(3);
+	rootDesc[0].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+	rootDesc[1].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
+	rootDesc[2].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 1);
+	auto pRootSignature = pSharedDevice->createRootSignature(rootDesc);
+
+	cmrc::file shaderContent = d3d::getD3DResource("HlslShader/IrradianceMapSHCS.hlsl");
+	_pIrradianceMapToSHPSO = pSharedDevice->createComputePSO("IrradianceMapToSHPSO");
+	_pIrradianceMapToSHPSO->setRootSignature(pRootSignature);
+	_pIrradianceMapToSHPSO->setComputeShader(d3d::compileShader(
+		shaderContent.begin(),
+		shaderContent.size(),
+		nullptr,
+		"CS",
+		"cs_5_0"
+	));
+}
+
 void IBL::buildConvolutionIrradiancePSO(std::weak_ptr<dx12lib::Device> pDevice) {
 	auto pSharedDevice = pDevice.lock();
 	dx12lib::RootSignatureDescHelper desc(d3d::getLinearClampStaticSampler(0));
@@ -193,7 +214,7 @@ void IBL::buildConvolutionIrradianceMap(dx12lib::ComputeContextProxy pComputeCtx
 	size_t height = pPannoEnvMap->getHeight();
 	size_t size = std::max(width, height) / 6;
 	float fSize = static_cast<float>(size);
-	float fStep = 0.025f;
+	float fStep = 0.075f;
 	_pIrradianceMap = pComputeCtx->createUnorderedAccessCube(size, size, nullptr, DXGI_FORMAT_R16G16B16A16_FLOAT);
 
 	pComputeCtx->setComputePSO(_pConvolutionIrradiancePSO);
@@ -209,6 +230,26 @@ void IBL::buildConvolutionIrradianceMap(dx12lib::ComputeContextProxy pComputeCtx
 
 	auto state = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
 	pComputeCtx->transitionBarrier(_pIrradianceMap, state);
+}
+
+void IBL::buildIrradianceMapSH(dx12lib::ComputeContextProxy pComputeCtx) {
+	constexpr size_t kLightProbeSampleCount = 20000;
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<float> dis(0.f, 1.f);
+	std::vector<float2> randomNumberPair;
+	randomNumberPair.reserve(kLightProbeSampleCount);
+	for (std::size_t i = 0; i < kLightProbeSampleCount; ++i)
+		randomNumberPair.emplace_back(dis(gen), dis(gen));
+
+	struct SH3Coeff {
+		float3 m[9];
+	};
+
+	auto pConsumeStructuredBuffer = pComputeCtx->createConsumeStructuredBuffer(kLightProbeSampleCount, sizeof(float2));
+	auto pAppendStructuredBuffer = pComputeCtx->createAppendStructuredBuffer(kLightProbeSampleCount, sizeof(SH3Coeff));
+
+
 }
 
 

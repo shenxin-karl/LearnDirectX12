@@ -24,6 +24,10 @@ const void *ReadBackBuffer::getMappedPtr() const {
 	return _pMapped;
 }
 
+void ReadBackBuffer::setCompletedCallback(const std::function<void(IReadBackBuffer *)> &callback) {
+	_completedCallBack = callback;
+}
+
 ReadBackBuffer::~ReadBackBuffer() {
 	if (_pMapped != nullptr) {
 		_pResource->Unmap(0, nullptr);
@@ -46,6 +50,8 @@ ReadBackBuffer::ReadBackBuffer(std::weak_ptr<Device> pDevice, std::size_t sizeIn
 
 void ReadBackBuffer::setCompleted(bool flag) {
 	_isCompleted = flag;
+	if (flag && _completedCallBack != nullptr)
+		_completedCallBack(this);
 }
 
 }

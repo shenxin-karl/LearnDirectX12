@@ -538,6 +538,8 @@ void CommandList::dispatch(size_t GroupCountX, size_t GroupCountY, size_t GroupC
 }
 
 void CommandList::readBack(std::shared_ptr<ReadBackBuffer> pReadBackBuffer) {
+	assert(pReadBackBuffer != nullptr);
+	pReadBackBuffer->setCompleted(false);
 	_readBackBuffers.push_back(pReadBackBuffer);
 }
 
