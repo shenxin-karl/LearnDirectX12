@@ -22,17 +22,17 @@ DefaultBuffer::DefaultBuffer(ID3D12Device *pDevice,
 		IID_PPV_ARGS(&_pDefaultResource)
 	));
 
-	// create upload heap
-	ThrowIfFailed(pDevice->CreateCommittedResource(
-		RVPtr(CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD)),
-		D3D12_HEAP_FLAG_NONE,
-		RVPtr(CD3DX12_RESOURCE_DESC::Buffer(sizeInByte)),
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-		nullptr,
-		IID_PPV_ARGS(&_pUploaderResource)
-	));
-
 	if (pData != nullptr) {
+		// create upload heap
+		ThrowIfFailed(pDevice->CreateCommittedResource(
+			RVPtr(CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD)),
+			D3D12_HEAP_FLAG_NONE,
+			RVPtr(CD3DX12_RESOURCE_DESC::Buffer(sizeInByte)),
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS(&_pUploaderResource)
+		));
+
 		// describes the data we want to copy to the default buffer
 		D3D12_SUBRESOURCE_DATA subResourceData = {};
 		subResourceData.pData = pData;

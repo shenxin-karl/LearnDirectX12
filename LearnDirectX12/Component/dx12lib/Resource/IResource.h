@@ -128,7 +128,6 @@ interface IConsumeStructuredBuffer : IBufferResource {
 	virtual size_t getElementCount() const = 0;
 	virtual size_t getElementStride() const = 0;
 	virtual UnorderedAccessView getUAV() const = 0;
-	virtual void updateBuffer(const void *pData, size_t sizeInByte, size_t offset = 0) = 0;
 };
 
 interface IAppendStructuredBuffer : IBufferResource {
@@ -143,6 +142,8 @@ interface IReadBackBuffer : IBufferResource {
 	BufferType getBufferType() const override;
 	virtual bool isCompleted() const = 0;
 	virtual const void *getMappedPtr() const = 0;
+	virtual size_t getElementCount() const = 0;
+	virtual size_t getElementStride() const = 0;
 	virtual void setCompletedCallback(const std::function<void(IReadBackBuffer *)> &callback) = 0;
 };
 

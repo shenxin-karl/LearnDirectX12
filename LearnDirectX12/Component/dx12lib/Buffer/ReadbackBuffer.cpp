@@ -9,7 +9,7 @@ WRL::ComPtr<ID3D12Resource> ReadBackBuffer::getD3DResource() const {
 }
 
 size_t ReadBackBuffer::getBufferSize() const {
-	return _bufferSize;
+	return _pResource->GetDesc().Width;
 }
 
 bool ReadBackBuffer::isCompleted() const {
@@ -24,6 +24,14 @@ const void *ReadBackBuffer::getMappedPtr() const {
 	return _pMapped;
 }
 
+size_t ReadBackBuffer::getElementCount() const {
+	return getBufferSize() / _elementStride;
+}
+
+size_t ReadBackBuffer::getElementStride() const {
+	return _elementStride;
+}
+
 void ReadBackBuffer::setCompletedCallback(const std::function<void(IReadBackBuffer *)> &callback) {
 	_completedCallBack = callback;
 }
@@ -36,7 +44,8 @@ ReadBackBuffer::~ReadBackBuffer() {
 	ResourceStateTracker::removeGlobalResourceState(_pResource.Get());
 }
 
-ReadBackBuffer::ReadBackBuffer(std::weak_ptr<Device> pDevice, std::size_t sizeInByte) : _bufferSize(sizeInByte) {
+ReadBackBuffer::ReadBackBuffer(std::weak_ptr<Device> pDevice, size_t numElements, size_t stride) : _elementStride(stride) {
+	size_t sizeInByte = numElements * stride;
 	ThrowIfFailed(pDevice.lock()->getD3DDevice()->CreateCommittedResource(
 		RVPtr(CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK)),
 		D3D12_HEAP_FLAG_NONE,

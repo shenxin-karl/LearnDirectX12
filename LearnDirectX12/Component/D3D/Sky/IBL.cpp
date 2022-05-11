@@ -11,57 +11,14 @@
 
 #include "D3D/d3dutil.h"
 #include "D3D/Shader/ShaderCommon.h"
+#include "dx12lib/Buffer/ConsumeStructuredBuffer.h"
 #include "Geometry/GeometryGenerator.h"
 
 namespace d3d {
 
-template<typename T>
-SH3 calcIrradianceMapSH3(const T *pData, size_t width, size_t height, size_t numSamples) {
-	Vector3 shCoefficient[9] = { Vector3(0.f) };
-
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	std::uniform_real_distribution<float> dis(0.f, 1.f);
-	auto shBasisFuncArray = SH3::getSHBasisFunc();
-	constexpr float invPdf = 4.f * DirectX::XM_PI;
-
-	size_t maxX = width - 1;
-	size_t maxY = height - 1;
-	size_t sampleCount = 0;
-	for (size_t i = 0; i < numSamples; ++i) {
-		float u = dis(gen);
-		float v = dis(gen);
-		float theta = 2.f * std::acos(std::sqrt(1.f - u));
-		float phi = 2.f * DirectX::XM_PI * v;
-		float cosTh = std::cos(theta);
-		float sinTh = std::sin(theta);
-		float cosPhi = std::cos(phi);
-		float sinPhi = std::sin(phi);
-
-		float3 L = float3(sinPhi * cosTh, cosPhi, sinPhi * sinTh);
-		size_t x = static_cast<size_t>(u * maxX);
-		size_t y = static_cast<size_t>(v * maxY);
-		size_t index = y * width + x;
-		Vector3 texColor = Vector3(pData[index].x, pData[index].y, pData[index].z) * invPdf;
-		for (size_t j = 0; j < shBasisFuncArray.size(); ++j) {
-			float c = shBasisFuncArray[j](L);
-			Vector3 basisColor = c * texColor;
-			shCoefficient[j] += basisColor;
-		}
-		++sampleCount;
-	}
-
-	SH3 coeff;
-	float invSample = 1.f / static_cast<float>(sampleCount);
-	for (size_t i = 0; i < 9; ++i) {
-		shCoefficient[i] *= invSample;
-		coeff._m[i] = float4(shCoefficient[i].xyz, 0.f);
-	}
-
-	return coeff;
-}
-
 IBL::IBL(dx12lib::DirectContextProxy pComputeCtx, const std::string &fileName) {
+	std::memset(&_irradianceMapSH3, 0, sizeof(_irradianceMapSH3));
+
 	std::wstring wcharFileName = std::to_wstring(fileName);
 	std::wstring_view suffix = L".hdr";
 	if (auto iter = wcharFileName.find(suffix); iter != std::wstring::npos)
@@ -78,6 +35,7 @@ IBL::IBL(dx12lib::DirectContextProxy pComputeCtx, const std::string &fileName) {
 	buildConvolutionIrradianceMap(pComputeCtx, pPannoEnvMap);
 
 	buildIrradianceMapToSHPSO(pComputeCtx->getDevice());
+	buildIrradianceMapSH(pComputeCtx);
 
 	cmrc::file brdfLutFile = getD3DResource("resources/BRDF_LUT.dds");
 	_pBRDFLut = pComputeCtx->createDDSTexture2DFromMemory(brdfLutFile.begin(), brdfLutFile.size());
@@ -91,33 +49,6 @@ std::shared_ptr<dx12lib::UnorderedAccessCube> IBL::getEnvMap() const {
 
 std::shared_ptr<dx12lib::UnorderedAccessCube> IBL::getIrradianceMap() const {
 	return _pIrradianceMap;
-}
-
-void IBL::buildSphericalHarmonics3(const std::string &fileName) {
-	std::memset(&_irradianceMapSH3, 0, sizeof(SH3));
-	int width = 0; int height = 0; int channel = 0;
-	float *pHdrMap = stbi_loadf(fileName.c_str(), &width, &height, &channel, 0);
-	if (pHdrMap == nullptr) {
-		assert(false);
-		return;
-	}
-
-	switch (channel) {
-	case 3:
-		_irradianceMapSH3 = calcIrradianceMapSH3(reinterpret_cast<float3 *>(pHdrMap), width, height, 10000);
-		break;
-	case 4:
-		_irradianceMapSH3 = calcIrradianceMapSH3(reinterpret_cast<float4 *>(pHdrMap), width, height, 10000);
-		break;
-	case 0:
-	case 1:
-	case 2:
-	default:
-		assert(false);
-	}
-
-	stbi_image_free(pHdrMap);
-	pHdrMap = nullptr;
 }
 
 void IBL::buildPanoToCubeMapPSO(std::weak_ptr<dx12lib::Device> pDevice) {
@@ -164,6 +95,7 @@ void IBL::buildIrradianceMapToSHPSO(std::weak_ptr<dx12lib::Device> pDevice) {
 		"CS",
 		"cs_5_0"
 	));
+	_pIrradianceMapToSHPSO->finalize();
 }
 
 void IBL::buildConvolutionIrradiancePSO(std::weak_ptr<dx12lib::Device> pDevice) {
@@ -232,24 +164,63 @@ void IBL::buildConvolutionIrradianceMap(dx12lib::ComputeContextProxy pComputeCtx
 	pComputeCtx->transitionBarrier(_pIrradianceMap, state);
 }
 
+struct SH3Coeff {
+	float3 m[9];
+};
+
 void IBL::buildIrradianceMapSH(dx12lib::ComputeContextProxy pComputeCtx) {
 	constexpr size_t kLightProbeSampleCount = 20000;
 	std::random_device rd;
 	std::mt19937 gen(rd());
 	std::uniform_real_distribution<float> dis(0.f, 1.f);
-	std::vector<float2> randomNumberPair;
-	randomNumberPair.reserve(kLightProbeSampleCount);
-	for (std::size_t i = 0; i < kLightProbeSampleCount; ++i)
-		randomNumberPair.emplace_back(dis(gen), dis(gen));
+	std::vector<float2> consumeStructuredBuffer;
+	consumeStructuredBuffer.reserve(kLightProbeSampleCount);
+	for (size_t i = 0; i < kLightProbeSampleCount; ++i) {
+		float u = dis(gen);
+		float v = dis(gen);
+		consumeStructuredBuffer.emplace_back(u, v);
+	}
 
-	struct SH3Coeff {
-		float3 m[9];
-	};
-
-	auto pConsumeStructuredBuffer = pComputeCtx->createConsumeStructuredBuffer(kLightProbeSampleCount, sizeof(float2));
+	auto pConsumeStructuredBuffer = pComputeCtx->createConsumeStructuredBuffer(consumeStructuredBuffer.data(), kLightProbeSampleCount, sizeof(float2));
 	auto pAppendStructuredBuffer = pComputeCtx->createAppendStructuredBuffer(kLightProbeSampleCount, sizeof(SH3Coeff));
+	auto pLightProbeReadBack = pComputeCtx->createReadBackBuffer(kLightProbeSampleCount, sizeof(SH3Coeff));
 
+	pComputeCtx->setComputePSO(_pIrradianceMapToSHPSO);
+	pComputeCtx->setShaderResourceView(_pIrradianceMap->getSRV(), 0);
+	pComputeCtx->setUnorderedAccessView(pConsumeStructuredBuffer->getUAV(), 1);
+	pComputeCtx->setUnorderedAccessView(pAppendStructuredBuffer->getUAV(), 2);
+	size_t groupX = static_cast<size_t>(std::ceil(static_cast<float>(kLightProbeSampleCount) / kThreadCount));
+	pComputeCtx->dispatch(groupX, 1, 1);
 
+	pComputeCtx->copyResource(pLightProbeReadBack, pAppendStructuredBuffer);
+	pLightProbeReadBack->setCompletedCallback([&](dx12lib::IReadBackBuffer *pResource) {
+		std::memset(&_irradianceMapSH3, 0, sizeof(_irradianceMapSH3));
+		Vector3 coeffs[9];
+		for (size_t i = 0; i < 9; ++i)
+			coeffs[i] = Vector3(0.f);
+
+		const auto *pReadBack = static_cast<dx12lib::ReadBackBuffer *>(pResource);
+		std::span<const SH3Coeff> probeCoeffs = pReadBack->visit<SH3Coeff>();
+		for (size_t i = 0; i < kLightProbeSampleCount; ++i) {
+			coeffs[0] += Vector3(probeCoeffs[i].m[0]);
+			coeffs[1] += Vector3(probeCoeffs[i].m[1]);
+			coeffs[2] += Vector3(probeCoeffs[i].m[2]);
+			coeffs[3] += Vector3(probeCoeffs[i].m[3]);
+			coeffs[4] += Vector3(probeCoeffs[i].m[4]);
+			coeffs[5] += Vector3(probeCoeffs[i].m[5]);
+			coeffs[6] += Vector3(probeCoeffs[i].m[6]);
+			coeffs[7] += Vector3(probeCoeffs[i].m[7]);
+			coeffs[8] += Vector3(probeCoeffs[i].m[8]);
+		}
+
+		constexpr float kNormalizeCoeff = (4.f * DX::XM_PI) / kLightProbeSampleCount;
+		for (size_t i = 0; i < 9; ++i)
+			_irradianceMapSH3._m[i] = float4(coeffs[i] * kNormalizeCoeff);
+	});
+
+	pComputeCtx->trackResource(std::move(pConsumeStructuredBuffer));
+	pComputeCtx->trackResource(std::move(pAppendStructuredBuffer));
+	pComputeCtx->trackResource(std::move(pLightProbeReadBack));
 }
 
 

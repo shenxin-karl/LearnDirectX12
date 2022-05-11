@@ -6,3 +6,5 @@
 #include <dx12lib/Buffer/ReadbackBuffer.h>
 #include <dx12lib/Buffer/FRConstantBuffer.hpp>
 #include <dx12lib/Buffer/FRStructuredBuffer.hpp>
+#include <dx12lib/Buffer/ConsumeStructuredBuffer.h>
+#include <dx12lib/Buffer/AppendStructuredBuffer.h>

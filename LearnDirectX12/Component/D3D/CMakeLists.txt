@@ -46,6 +46,7 @@ cmrc_add_resource_library(D3D-resources ALIAS D3D::rc
 	"HlslShader/PanoToCubeMap.hlsl"
 	"HlslShader/PanoToCubeMapCS.hlsl"
 	"HlslShader/ConvolutionIrradianceMapCS.hlsl"
+	"HlslShader/IrradianceMapSHCS.hlsl"
 	"resources/BRDF_LUT.dds"
 )
 

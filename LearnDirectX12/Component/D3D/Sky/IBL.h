@@ -17,7 +17,7 @@ private:
 	void buildConvolutionIrradiancePSO(std::weak_ptr<dx12lib::Device> pDevice);
 	void buildEnvMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<dx12lib::IShaderResource2D> pPannoEnvMap);
 	void buildConvolutionIrradianceMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<dx12lib::IShaderResource2D> pPannoEnvMap);
-	void buildIrradianceMapSH(dx12lib::ComputePSO pComputeCtx);
+	void buildIrradianceMapSH(dx12lib::ComputeContextProxy pComputeCtx);
 private:
 	enum RootParameter : size_t {
 		CB_Settings,

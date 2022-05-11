@@ -250,6 +250,12 @@ void CommandList::setShaderResourceView(const ShaderResourceView &srv, size_t ro
 	);
 }
 
+void CommandList::readBack(std::shared_ptr<ReadBackBuffer> pReadBackBuffer) {
+	assert(pReadBackBuffer != nullptr);
+	pReadBackBuffer->setCompleted(false);
+	_readBackBuffers.push_back(pReadBackBuffer);
+}
+
 void CommandList::copyResourceImpl(std::shared_ptr<IResource> pDest, std::shared_ptr<IResource> pSrc) {
 	auto destDesc = pDest->getD3DResource()->GetDesc();
 	auto srcDesc = pSrc->getD3DResource()->GetDesc();;
@@ -482,14 +488,6 @@ void CommandList::clearDepthStencil(std::shared_ptr<DepthStencil2D> pResource, f
 
 /// ******************************************** ComputeContext api ********************************************
 
-std::shared_ptr<ReadBackBuffer> CommandList::createReadBackBuffer(std::size_t sizeInByte) {
-	assert(sizeInByte > 0);
-	return std::make_shared<dx12libTool::MakeReadBackBuffer>(
-		_pDevice,
-		sizeInByte
-	);
-}
-
 void CommandList::setComputePSO(std::shared_ptr<ComputePSO> pPipelineStateObject) {
 	assert(pPipelineStateObject != nullptr);
 	assert(!pPipelineStateObject->isDirty());
@@ -535,12 +533,6 @@ void CommandList::dispatch(size_t GroupCountX, size_t GroupCountY, size_t GroupC
 		static_cast<UINT>(GroupCountY), 
 		static_cast<UINT>(GroupCountZ)
 	);
-}
-
-void CommandList::readBack(std::shared_ptr<ReadBackBuffer> pReadBackBuffer) {
-	assert(pReadBackBuffer != nullptr);
-	pReadBackBuffer->setCompleted(false);
-	_readBackBuffers.push_back(pReadBackBuffer);
 }
 
 void CommandList::setGraphicsRootSignature(std::shared_ptr<RootSignature> pRootSignature) {

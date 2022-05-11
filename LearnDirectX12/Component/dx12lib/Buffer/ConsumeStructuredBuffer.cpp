@@ -1,17 +1,20 @@
 #include <dx12lib/Buffer/ConsumeStructuredBuffer.h>
 
+#include "DefaultBuffer.h"
+#include "dx12lib/Context/CommandList.h"
+
 namespace dx12lib {
 
 WRL::ComPtr<ID3D12Resource> ConsumeStructuredBuffer::getD3DResource() const {
-	return _pUploadBuffer->getD3DResource();
+	return _pDefaultBuffer->getD3DResource();
 }
 
 size_t ConsumeStructuredBuffer::getBufferSize() const {
-	return _pUploadBuffer->getBufferSize();
+	return _pDefaultBuffer->getBufferSize();
 }
 
 size_t ConsumeStructuredBuffer::getElementCount() const {
-	return _pUploadBuffer->getBufferSize() / _elementStride;
+	return _pDefaultBuffer->getBufferSize() / _elementStride;
 }
 
 size_t ConsumeStructuredBuffer::getElementStride() const {
@@ -22,11 +25,8 @@ UnorderedAccessView ConsumeStructuredBuffer::getUAV() const {
 	return _uav;
 }
 
-void ConsumeStructuredBuffer::updateBuffer(const void *pData, size_t sizeInByte, size_t offset) {
-	_pUploadBuffer->copyData(0, pData, sizeInByte, offset);
-}
-
-ConsumeStructuredBuffer::ConsumeStructuredBuffer(std::weak_ptr<Device> pDevice, 
+ConsumeStructuredBuffer::ConsumeStructuredBuffer(std::weak_ptr<Device> pDevice,
+	std::shared_ptr<CommandList> pCmdList,
 	const void *pData,
 	size_t numElements,
 	size_t stride)
@@ -34,15 +34,12 @@ ConsumeStructuredBuffer::ConsumeStructuredBuffer(std::weak_ptr<Device> pDevice,
 {
 	auto pSharedDevice = pDevice.lock();
 	size_t sizeInByte = numElements * stride;
-	_pUploadBuffer = std::make_unique<UploadBuffer>(pSharedDevice->getD3DDevice(),
-		1,
+	_pDefaultBuffer = std::make_unique<DefaultBuffer>(pSharedDevice->getD3DDevice(),
+		pCmdList->getD3DCommandList(),
+		pData,
 		sizeInByte,
-		false,
 		D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
 	);
-
-	if (pData != nullptr)
-		_pUploadBuffer->copyData(0, pData);
 
 	auto descriptor = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
@@ -54,17 +51,13 @@ ConsumeStructuredBuffer::ConsumeStructuredBuffer(std::weak_ptr<Device> pDevice,
 	uavDesc.Buffer.CounterOffsetInBytes = 0;
 	uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 	pSharedDevice->getD3DDevice()->CreateUnorderedAccessView(
-		_pUploadBuffer->getD3DResource().Get(),
+		_pDefaultBuffer->getD3DResource().Get(),
 		nullptr,
 		&uavDesc,
 		descriptor.getCPUHandle()
 	);
 
 	_uav = UnorderedAccessView(descriptor, this);
-}
-
-ConsumeStructuredBuffer::ConsumeStructuredBuffer(std::weak_ptr<Device> pDevice, size_t numElements, size_t stride)
-: ConsumeStructuredBuffer(pDevice, nullptr, numElements, stride) {
 }
 
 }

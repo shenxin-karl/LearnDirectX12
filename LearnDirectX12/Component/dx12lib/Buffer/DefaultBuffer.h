@@ -10,7 +10,8 @@ public:
 		ID3D12GraphicsCommandList *pCmdList, 
 		const void *pData, 
 		size_t sizeInByte,
-		D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE
+		D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE,
+		D3D12_RESOURCE_STATES finalState = D3D12_RESOURCE_STATE_GENERIC_READ
 	);
 	~DefaultBuffer() override;
 	D3D12_GPU_VIRTUAL_ADDRESS getAddress() const;

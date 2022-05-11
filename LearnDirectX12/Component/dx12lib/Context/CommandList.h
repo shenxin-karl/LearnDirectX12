@@ -28,6 +28,7 @@ public:
 	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) override;
 	void setConstantBufferView(const ConstantBufferView &cbv, size_t rootIndex, size_t offset) override;
 	void setShaderResourceView(const ShaderResourceView &srv, size_t rootIndex, size_t offset) override;
+	void readBack(std::shared_ptr<ReadBackBuffer> pReadBackBuffer) override;
 
 	void copyResourceImpl(std::shared_ptr<IResource> pDest, std::shared_ptr<IResource> pSrc) override;
 	void transitionBarrierImpl(std::shared_ptr<IResource> pBuffer, D3D12_RESOURCE_STATES state, UINT subResource, bool flushBarrier) override;
@@ -58,14 +59,11 @@ public:
 	void clearStencil(std::shared_ptr<DepthStencil2D> pResource, UINT stencil) override;
 	void clearDepthStencil(std::shared_ptr<DepthStencil2D> pResource, float depth, UINT stencil) override;
 /// ComputeContext api 
-	std::shared_ptr<ReadBackBuffer> createReadBackBuffer(size_t sizeInByte) override;
-
 	void setComputePSO(std::shared_ptr<ComputePSO> pPipelineStateObject) override;
 	void setUnorderedAccessView(const UnorderedAccessView &uav, size_t rootIndex, size_t offset) override;
 	void setCompute32BitConstants(size_t rootIndex, size_t numConstants, const void *pData, size_t destOffset) override;
 
 	void dispatch(size_t GroupCountX, size_t GroupCountY, size_t GroupCountZ) override;
-	void readBack(std::shared_ptr<ReadBackBuffer> pReadBackBuffer) override;
 private:
 	friend class CommandQueue;
 	friend class FrameResourceItem;

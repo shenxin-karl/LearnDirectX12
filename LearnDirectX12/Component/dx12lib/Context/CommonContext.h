@@ -32,6 +32,7 @@ interface ICommonContext : IContext {
 	virtual	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) = 0;
 	virtual void setConstantBufferView(const ConstantBufferView &crv, size_t rootIndex, size_t offset = 0) = 0;
 	virtual void setShaderResourceView(const ShaderResourceView &srv, size_t rootIndex, size_t offset = 0) = 0;
+	virtual void readBack(std::shared_ptr<ReadBackBuffer> pReadBackBuffer) = 0;
 
 	virtual void copyResourceImpl(std::shared_ptr<IResource> pDest, std::shared_ptr<IResource> pSrc) = 0;
 	virtual void transitionBarrierImpl(std::shared_ptr<IResource> pBuffer, D3D12_RESOURCE_STATES state, UINT subResource, bool flushBarrier) = 0;
@@ -174,6 +175,16 @@ interface ICommonContext : IContext {
 		);
 	}
 #endif
+	/////////////////////////////////// ReadBackBuffer //////////////////////////////////
+#if 1
+	template<typename... Args>
+	std::shared_ptr<ReadBackBuffer> createReadBackBuffer(Args&&... args) {
+		return std::make_shared<dx12libTool::MakeReadBackBuffer>(
+			getDevice(),
+			std::forward<Args>(args)...
+		);
+	}
+#endif
 };
 
 interface IGraphicsContext : virtual ICommonContext {
@@ -202,14 +213,10 @@ interface IGraphicsContext : virtual ICommonContext {
 };
 
 interface IComputeContext : virtual ICommonContext {
-	virtual std::shared_ptr<ReadBackBuffer> createReadBackBuffer(size_t sizeInByte) = 0;
-
 	virtual void setComputePSO(std::shared_ptr<ComputePSO> pPipelineStateObject) = 0;
 	virtual void setUnorderedAccessView(const UnorderedAccessView &uav, size_t rootIndex, size_t offset = 0) = 0;
 	virtual void setCompute32BitConstants(size_t rootIndex, size_t numConstants, const void *pData, size_t destOffset = 0) = 0;
-
 	virtual void dispatch(size_t GroupCountX = 1, size_t GroupCountY = 1, size_t GroupCountZ = 1) = 0;
-	virtual void readBack(std::shared_ptr<ReadBackBuffer> pReadBackBuffer) = 0;
 
 	/////////////////////////////////// UnorderedAccess //////////////////////////////////
 #if 1
@@ -243,6 +250,7 @@ interface IComputeContext : virtual ICommonContext {
 	std::shared_ptr<ConsumeStructuredBuffer> createConsumeStructuredBuffer(Args&&...args) {
 		return std::make_shared<dx12libTool::MakeConsumeStructuredBuffer>(
 			getDevice(),
+			getCommandList(),
 			std::forward<Args>(args)...
 		);
 	}
