@@ -111,8 +111,16 @@ BufferType IConsumeStructuredBuffer::getBufferType() const {
 	return BufferType::ConsumeStructuredBuffer;
 }
 
+bool IConsumeStructuredBuffer::checkUAVState(D3D12_RESOURCE_STATES state) const {
+	return state & D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+}
+
 BufferType IAppendStructuredBuffer::getBufferType() const {
 	return BufferType::AppendStructuredBuffer;
+}
+
+bool IAppendStructuredBuffer::checkUAVState(D3D12_RESOURCE_STATES state) const {
+	return state & D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 }
 
 BufferType IReadBackBuffer::getBufferType() const {

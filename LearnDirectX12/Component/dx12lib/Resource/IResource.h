@@ -125,6 +125,7 @@ interface IStructuredBuffer : IBufferResource {
 //////////////////////////////////////////IConsumeStructuredBuffer//////////////////////////////////////////
 interface IConsumeStructuredBuffer : IBufferResource {
 	BufferType getBufferType() const override;
+	bool checkUAVState(D3D12_RESOURCE_STATES state) const override;
 	virtual size_t getElementCount() const = 0;
 	virtual size_t getElementStride() const = 0;
 	virtual UnorderedAccessView getUAV() const = 0;
@@ -132,6 +133,7 @@ interface IConsumeStructuredBuffer : IBufferResource {
 
 interface IAppendStructuredBuffer : IBufferResource {
 	BufferType getBufferType() const override;
+	bool checkUAVState(D3D12_RESOURCE_STATES state) const override;
 	virtual size_t getElementCount() const = 0;
 	virtual size_t getElementStride() const = 0;
 	virtual UnorderedAccessView getUAV() const = 0;

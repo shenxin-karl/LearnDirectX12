@@ -83,7 +83,6 @@ std::shared_ptr<CommandList> CommandList::getCommandList() noexcept {
 
 void CommandList::trackResource(std::shared_ptr<IResource> &&pResource) {
 	assert(pResource != nullptr);
-	assert(pResource.use_count() == 1);
 	_staleResourceBuffers.push_back(std::move(pResource));
 }
 

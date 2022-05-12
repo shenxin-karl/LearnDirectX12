@@ -21,6 +21,7 @@ const void *ReadBackBuffer::getMappedPtr() const {
 		assert(false);
 		return nullptr;
 	}
+	assert(_pMapped != nullptr);
 	return _pMapped;
 }
 
@@ -59,8 +60,11 @@ ReadBackBuffer::ReadBackBuffer(std::weak_ptr<Device> pDevice, size_t numElements
 
 void ReadBackBuffer::setCompleted(bool flag) {
 	_isCompleted = flag;
-	if (flag && _completedCallBack != nullptr)
-		_completedCallBack(this);
+	if (flag) {
+		_pResource->Map(0, nullptr, &_pMapped);
+		if (_completedCallBack != nullptr)
+			_completedCallBack(this);
+	}
 }
 
 }

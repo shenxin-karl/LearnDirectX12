@@ -1,6 +1,7 @@
 #pragma once
 #include "BaseApp/BaseApp.h"
 #include "D3D/Shader/ShaderCommon.h"
+#include "D3D/Sky/SphericalHarmonics.hpp"
 #include "D3D/Tool/Camera.h"
 #include "GameTimer/GameTimer.h"
 #include "Geometry/GeometryGenerator.h"
@@ -29,6 +30,7 @@ struct CBObject {
 	float4x4      gMatWorldViewProj;
 	float4x4	  gMatNormal;
 	d3d::Material gMaterial;
+	d3d::SH3	  gSH3;
 };
 
 class BoxApp : public com::BaseApp {

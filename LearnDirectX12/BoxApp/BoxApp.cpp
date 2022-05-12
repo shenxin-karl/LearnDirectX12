@@ -33,14 +33,7 @@ void BoxApp::onInitialize(dx12lib::DirectContextProxy pDirectContext) {
 	_pCBObject = pDirectContext->createFRConstantBuffer<CBObject>();
 	_pCBObject->visit()->gMaterial = {float4(1.f), 0.5, 0.5f};
 
-	_pIBL = std::make_unique<d3d::IBL>(pDirectContext, "resources/Barce_Rooftop_C_3k.hdr");
-	d3d::SkyBoxDesc skyBoxDesc = {
-		.pGraphicsCtx = pDirectContext,
-		.pCubeMap = _pIBL->getEnvMap(),
-		.renderTargetFormat = _pSwapChain->getRenderTargetFormat(),
-		.depthStencilFormat = _pSwapChain->getDepthStencilFormat(),
-	};
-	_pSkyBox = std::make_unique<d3d::SkyBox>(skyBoxDesc);
+
 
 	// initialize root signature
 	dx12lib::RootSignatureDescHelper desc(d3d::getStaticSamplers());
@@ -81,12 +74,22 @@ void BoxApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	Matrix4 matWorld = translation * rotate;
 	pObject->gMatWorldViewProj = float4x4(viewProj);
 	pObject->gMatNormal = float4x4(Matrix4::identity()); //float4x4(rotate);
+	//pObject->gSH3 = _pIBL->getIrradianceMapSH3();
 }
 
 void BoxApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pCmdQueue = _pDevice->getCommandQueue();
 	auto pDirectProxy = pCmdQueue->createDirectContextProxy();
 	{
+		_pIBL = std::make_unique<d3d::IBL>(pDirectProxy, "resources/Barce_Rooftop_C_3k.hdr");
+		d3d::SkyBoxDesc skyBoxDesc = {
+			.pGraphicsCtx = pDirectProxy,
+			.pCubeMap = _pIBL->getEnvMap(),
+			.renderTargetFormat = _pSwapChain->getRenderTargetFormat(),
+			.depthStencilFormat = _pSwapChain->getDepthStencilFormat(),
+		};
+		_pSkyBox = std::make_unique<d3d::SkyBox>(skyBoxDesc);
+
 		d3d::RenderTarget renderTarget(_pSwapChain);
 		renderTarget.bind(pDirectProxy);
 		float cosine = std::cos(pGameTimer->getTotalTime());

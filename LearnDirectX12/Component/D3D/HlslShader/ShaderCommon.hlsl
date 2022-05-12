@@ -24,6 +24,15 @@ struct Material {
 };
 #endif
 
+#ifndef _DECLARE_SH3_
+#define _DECLARE_SH3_
+struct SH3 {
+	float4 y0p0;
+	float4 y1n1; float4 y1p0; float4 y1p1;
+	float4 y2n2; float4 y2n1; float4 y2p0; float4 y2p1; float4 y2p2;
+};
+#endif
+
 struct CBPassType {
 	float4x4 view;
 	float4x4 invView;
@@ -43,10 +52,6 @@ struct CBPassType {
 	float    fogStart;
     float    fogEnd;
 	float2   cbPerPassPad1;
-};
-
-struct SH3 {
-	float3 y00;
 };
 
 #define kMaxLightCount 16

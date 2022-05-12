@@ -10,6 +10,7 @@ public:
 	IBL(dx12lib::DirectContextProxy pDirectCtx, const std::string &fileName);
 	std::shared_ptr<dx12lib::UnorderedAccessCube> getEnvMap() const;
 	std::shared_ptr<dx12lib::UnorderedAccessCube> getIrradianceMap() const;
+	const SH3 &getIrradianceMapSH3() const;
 private:
 	void buildSphericalHarmonics3(const std::string &fileName);
 	void buildPanoToCubeMapPSO(std::weak_ptr<dx12lib::Device> pDevice);

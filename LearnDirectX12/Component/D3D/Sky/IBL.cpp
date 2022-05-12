@@ -2,6 +2,7 @@
 #include "D3D/Shader/D3DShaderResource.h"
 
 #define STB_IMAGE_IMPLEMENTATION
+#include <iostream>
 #include <stb/stb_image.h>
 #include <random>
 #include <dx12lib/Device/Device.h>
@@ -49,6 +50,10 @@ std::shared_ptr<dx12lib::UnorderedAccessCube> IBL::getEnvMap() const {
 
 std::shared_ptr<dx12lib::UnorderedAccessCube> IBL::getIrradianceMap() const {
 	return _pIrradianceMap;
+}
+
+const SH3 &IBL::getIrradianceMapSH3() const {
+	return _irradianceMapSH3;
 }
 
 void IBL::buildPanoToCubeMapPSO(std::weak_ptr<dx12lib::Device> pDevice) {
@@ -193,6 +198,7 @@ void IBL::buildIrradianceMapSH(dx12lib::ComputeContextProxy pComputeCtx) {
 	pComputeCtx->dispatch(groupX, 1, 1);
 
 	pComputeCtx->copyResource(pLightProbeReadBack, pAppendStructuredBuffer);
+	pComputeCtx->readBack(pLightProbeReadBack);
 	pLightProbeReadBack->setCompletedCallback([&](dx12lib::IReadBackBuffer *pResource) {
 		std::memset(&_irradianceMapSH3, 0, sizeof(_irradianceMapSH3));
 		Vector3 coeffs[9];
@@ -203,6 +209,7 @@ void IBL::buildIrradianceMapSH(dx12lib::ComputeContextProxy pComputeCtx) {
 		std::span<const SH3Coeff> probeCoeffs = pReadBack->visit<SH3Coeff>();
 		for (size_t i = 0; i < kLightProbeSampleCount; ++i) {
 			coeffs[0] += Vector3(probeCoeffs[i].m[0]);
+			//std::cout << probeCoeffs[i].m[0] << std::endl;
 			coeffs[1] += Vector3(probeCoeffs[i].m[1]);
 			coeffs[2] += Vector3(probeCoeffs[i].m[2]);
 			coeffs[3] += Vector3(probeCoeffs[i].m[3]);
@@ -213,7 +220,7 @@ void IBL::buildIrradianceMapSH(dx12lib::ComputeContextProxy pComputeCtx) {
 			coeffs[8] += Vector3(probeCoeffs[i].m[8]);
 		}
 
-		constexpr float kNormalizeCoeff = (4.f * DX::XM_PI) / kLightProbeSampleCount;
+		constexpr float kNormalizeCoeff = 1.f;//(4.f * DX::XM_PI) / kLightProbeSampleCount;
 		for (size_t i = 0; i < 9; ++i)
 			_irradianceMapSH3._m[i] = float4(coeffs[i] * kNormalizeCoeff);
 	});

@@ -38,7 +38,8 @@ ConsumeStructuredBuffer::ConsumeStructuredBuffer(std::weak_ptr<Device> pDevice,
 		pCmdList->getD3DCommandList(),
 		pData,
 		sizeInByte,
-		D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
+		D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
+		D3D12_RESOURCE_STATE_UNORDERED_ACCESS
 	);
 
 	auto descriptor = pSharedDevice->allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);

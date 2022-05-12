@@ -56,6 +56,15 @@ struct Material {
 };
 #endif
 
+#ifndef _DECLARE_SH3_
+#define _DECLARE_SH3_
+struct SH3 {
+	float4 y0p0;
+	float4 y1n1; float4 y1p0; float4 y1p1;
+	float4 y2n2; float4 y2n1; float4 y2p0; float4 y2p1; float4 y2p2;
+};
+#endif
+
 float CalcAttenuation(float d, float falloffStart, float falloffEnd) {
     return 1.0 - saturate((d - falloffStart) / (falloffEnd - falloffStart));
 }
@@ -132,6 +141,33 @@ float3 ComputeSpotLight(Light light, Material mat, float3 normal, float3 viewDir
     lightStrength *= spotFactor;
 
     return BlinnPhong(lightStrength, L, N, V, mat);
+}
+
+/**
+ * \brief       计算IBL漫反射       
+ * \param sh    IrradianceMap 的球谐拟合系数            
+ * \param N     表面法线(归一化)
+ * \return      漫反射环境光强度
+ */
+float3 ComputeIBLDiffuse(SH3 sh, float3 N) {
+	float3 result = 0.0;
+    float x = N.x;      float y = N.y;      float z = N.z;
+    float xy = x * y;   float xz = x * z;   float yz = y * z;
+	float x2 = x * x;   float y2 = y * y;   float z2 = z * z;
+
+    // l = 0
+    result += sh.y0p0 * 0.2820948;
+    // l = 1
+    result += sh.y1n1 * 0.4886025 * y;
+    result += sh.y1p0 * 0.4886025 * z;
+    result += sh.y1p1 * 0.4886025 * x;
+    // l = 2
+    result += sh.y2n2 * 1.0925480 * xy;
+    result += sh.y2n1 * 1.0925480 * yz;
+    result += sh.y2p0 * 0.3153916 * (3.0 * z2 - 1.0);
+    result += sh.y2p1 * 1.0925480 * xz;
+    result += sh.y2p2 * 0.5462742 * (x2 - y2);
+    return result;
 }
 
 #endif

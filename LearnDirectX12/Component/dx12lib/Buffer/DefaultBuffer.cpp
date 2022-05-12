@@ -7,7 +7,8 @@ DefaultBuffer::DefaultBuffer(ID3D12Device *pDevice,
 	ID3D12GraphicsCommandList *pCmdList, 
 	const void *pData, 
 	size_t sizeInByte, 
-	D3D12_RESOURCE_FLAGS flags)
+	D3D12_RESOURCE_FLAGS flags,
+	D3D12_RESOURCE_STATES finalState)
 {
 	assert(pDevice != nullptr && "createDefaultBuffer pDevice is nullptr");
 	bool parameterCorrect = (pCmdList == nullptr && pData == nullptr) || pCmdList != nullptr;
@@ -17,7 +18,7 @@ DefaultBuffer::DefaultBuffer(ID3D12Device *pDevice,
 		RVPtr(CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT)),
 		D3D12_HEAP_FLAG_NONE,
 		RVPtr(CD3DX12_RESOURCE_DESC::Buffer(sizeInByte, flags)),
-		D3D12_RESOURCE_STATE_COMMON,
+		finalState,
 		nullptr,
 		IID_PPV_ARGS(&_pDefaultResource)
 	));
@@ -42,7 +43,7 @@ DefaultBuffer::DefaultBuffer(ID3D12Device *pDevice,
 		// copy the data to upload heap using the UpdateResources function
 		pCmdList->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
 			_pDefaultResource.Get(),
-			D3D12_RESOURCE_STATE_COMMON,
+			finalState,
 			D3D12_RESOURCE_STATE_COPY_DEST
 		)));
 
@@ -58,10 +59,10 @@ DefaultBuffer::DefaultBuffer(ID3D12Device *pDevice,
 		pCmdList->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
 			_pDefaultResource.Get(),
 			D3D12_RESOURCE_STATE_COPY_DEST,
-			D3D12_RESOURCE_STATE_GENERIC_READ
+			finalState
 		)));
 	}
-	ResourceStateTracker::addGlobalResourceState(_pDefaultResource.Get(), D3D12_RESOURCE_STATE_GENERIC_READ);
+	ResourceStateTracker::addGlobalResourceState(_pDefaultResource.Get(), finalState);
 }
 
 

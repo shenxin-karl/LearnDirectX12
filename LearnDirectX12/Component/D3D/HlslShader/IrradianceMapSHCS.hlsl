@@ -25,7 +25,7 @@ float3 RandomNumberPairToVector3(RandomNumberPair pair) {
 	float sinTh = sin(theta); float sinPh = sin(phi);
 	return float3(
 		sinTh * cosPh,
-		cosTh,
+		cosTh, 
 		sinTh * sinPh
 	);
 }
@@ -47,10 +47,11 @@ SH3BasisFunction CalcSHBasisFunction(float3 v) {
 	return basis;
 }
 
-[numthreads(16, 1, 1)]
+[numthreads(32, 1, 1)]
 void CS() {
 	float3 dir = RandomNumberPairToVector3(gInput.Consume());
-	float3 L = gEnvCubeMap.SampleLevel(gSamLinearClamp, dir, 0);
+	//float3 L = gEnvCubeMap.SampleLevel(gSamLinearClamp, dir, 0);
+	float3 L = 1.0;
 	SH3BasisFunction basis = CalcSHBasisFunction(dir);
 	SH3Coeff coeff;
 
