@@ -123,6 +123,19 @@ bool IAppendStructuredBuffer::checkUAVState(D3D12_RESOURCE_STATES state) const {
 	return state & D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 }
 
+BufferType IUAStructuredBuffer::getBufferType() const {
+	return BufferType::StructuredBuffer;
+}
+
+bool IUAStructuredBuffer::checkUAVState(D3D12_RESOURCE_STATES state) const {
+	return state & D3D12_RESOURCE_STATE_UNORDERED_ACCESS;	
+}
+
+bool IUAStructuredBuffer::checkSRVState(D3D12_RESOURCE_STATES state) const {
+	return state & D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE ||
+		   state & D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+}
+
 BufferType IReadBackBuffer::getBufferType() const {
 	return BufferType::ReadBackBuffer;
 }

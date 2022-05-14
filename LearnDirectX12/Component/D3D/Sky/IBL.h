@@ -9,7 +9,6 @@ class IBL {
 public:
 	IBL(dx12lib::DirectContextProxy pDirectCtx, const std::string &fileName);
 	std::shared_ptr<dx12lib::UnorderedAccessCube> getEnvMap() const;
-	std::shared_ptr<dx12lib::UnorderedAccessCube> getIrradianceMap() const;
 	const SH3 &getIrradianceMapSH3() const;
 private:
 	void buildSphericalHarmonics3(const std::string &fileName);
@@ -30,11 +29,9 @@ private:
 	SH3 _irradianceMapSH3;
 	std::shared_ptr<dx12lib::ComputePSO>  _pPanoToCubeMapPSO;
 	std::shared_ptr<dx12lib::ComputePSO>  _pConvolutionIrradiancePSO;
-	std::shared_ptr<dx12lib::ComputePSO>  _pIrradianceMapToSHPSO;
 	std::shared_ptr<dx12lib::SamplerTexture2D> _pBRDFLut;
 	std::shared_ptr<dx12lib::SamplerTexture2D> _pPerFilteredEnvMap;
 	std::shared_ptr<dx12lib::UnorderedAccessCube>  _pEnvMap;
-	std::shared_ptr<dx12lib::UnorderedAccessCube>  _pIrradianceMap;
 };
 
 }

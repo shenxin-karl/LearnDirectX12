@@ -139,6 +139,15 @@ interface IAppendStructuredBuffer : IBufferResource {
 	virtual UnorderedAccessView getUAV() const = 0;
 	virtual ShaderResourceView getSRV() const = 0;
 };
+interface IUAStructuredBuffer : IBufferResource {
+	BufferType getBufferType() const override;
+	bool checkUAVState(D3D12_RESOURCE_STATES state) const override;
+	bool checkSRVState(D3D12_RESOURCE_STATES state) const override;
+	virtual size_t getElementCount() const = 0;
+	virtual size_t getElementStride() const = 0;
+	virtual UnorderedAccessView getUAV() const = 0;
+	virtual ShaderResourceView getSRV() const = 0;
+};
 //////////////////////////////////////////IReadBackBuffer//////////////////////////////////////////
 interface IReadBackBuffer : IBufferResource {
 	BufferType getBufferType() const override;

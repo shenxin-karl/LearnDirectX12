@@ -1,8 +1,7 @@
 #ifndef _COLOR_GRADING_HLSL_
 #define _COLOR_GRADING_HLSL_
 
-float3 ACESToneMapping(float3 color, float adaptedLum)
-{
+float3 ACESToneMapping(float3 color, float adaptedLum) {
 	const float A = 2.51f;
 	const float B = 0.03f;
 	const float C = 2.43f;

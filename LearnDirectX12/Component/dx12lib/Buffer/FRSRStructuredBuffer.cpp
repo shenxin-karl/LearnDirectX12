@@ -1,8 +1,8 @@
-#include "FRStructuredBuffer.hpp"
+#include "FRSRStructuredBuffer.hpp"
 
 namespace dx12lib {
 
-FRStructuredBuffer<RawData>::FRStructuredBuffer(std::weak_ptr<Device> pDevice, const void *pData, size_t numElements, size_t stride)
+FRSRStructuredBuffer<RawData>::FRSRStructuredBuffer(std::weak_ptr<Device> pDevice, const void *pData, size_t numElements, size_t stride)
 : _elementStride(stride)
 {
 	size_t sizeInByte = numElements * stride;
@@ -37,29 +37,29 @@ FRStructuredBuffer<RawData>::FRStructuredBuffer(std::weak_ptr<Device> pDevice, c
 	}
 }
 
-WRL::ComPtr<ID3D12Resource> FRStructuredBuffer<RawData>::getD3DResource() const {
+WRL::ComPtr<ID3D12Resource> FRSRStructuredBuffer<RawData>::getD3DResource() const {
 	return _pUploadBuffer->getD3DResource();
 }
 
-size_t FRStructuredBuffer<RawData>::getBufferSize() const {
+size_t FRSRStructuredBuffer<RawData>::getBufferSize() const {
 	return _pUploadBuffer->getElementByteSize();
 }
 
-size_t FRStructuredBuffer<RawData>::getElementCount() const {
+size_t FRSRStructuredBuffer<RawData>::getElementCount() const {
 	return getBufferSize() / _elementStride;
 }
 
-size_t FRStructuredBuffer<RawData>::getElementStride() const {
+size_t FRSRStructuredBuffer<RawData>::getElementStride() const {
 	return _elementStride;
 }
 
-void FRStructuredBuffer<RawData>::updateBuffer(const void *pData, size_t sizeInByte, size_t offset) {
+void FRSRStructuredBuffer<RawData>::updateBuffer(const void *pData, size_t sizeInByte, size_t offset) {
 	assert((sizeInByte + offset) <= getElementStride());
 	size_t frameIndex = FrameIndexProxy::getConstantFrameIndexRef();
 	_pUploadBuffer->copyData(frameIndex, pData, sizeInByte, offset);
 }
 
-ShaderResourceView FRStructuredBuffer<RawData>::getSRV() const {
+ShaderResourceView FRSRStructuredBuffer<RawData>::getSRV() const {
 	size_t frameIndex = FrameIndexProxy::getConstantFrameIndexRef();
 	return ShaderResourceView(_descriptor, this, frameIndex);
 }

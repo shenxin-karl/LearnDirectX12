@@ -132,7 +132,8 @@ interface ICommonContext;
 interface IGraphicsContext;
 interface IComputeContext;
 
-class StructuredBuffer;
+class SRStructuredBuffer;
+class UAStructuredBuffer;
 class ConsumeStructuredBuffer;
 class AppendStructuredBuffer;
 class ReadBackBuffer;
@@ -203,12 +204,12 @@ using FRConstantBufferPtr = std::shared_ptr<FRConstantBuffer<T>>;
 
 // frame resource structured buffer template
 template<typename T = RawData>
-class FRStructuredBuffer;
+class FRSRStructuredBuffer;
 
-using FRRawStructuredBufferPtr = std::shared_ptr<FRStructuredBuffer<RawData>>;
+using FRRawStructuredBufferPtr = std::shared_ptr<FRSRStructuredBuffer<RawData>>;
 
 template<typename T>
-using FRStructuredBufferPtr = std::shared_ptr<FRStructuredBuffer<T>>;
+using FRStructuredBufferPtr = std::shared_ptr<FRSRStructuredBuffer<T>>;
 
 }
 

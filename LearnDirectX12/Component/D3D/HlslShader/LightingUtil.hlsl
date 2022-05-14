@@ -144,12 +144,12 @@ float3 ComputeSpotLight(Light light, Material mat, float3 normal, float3 viewDir
 }
 
 /**
- * \brief       计算IBL漫反射       
+ * \brief       获取辐照度    
  * \param sh    IrradianceMap 的球谐拟合系数            
  * \param N     表面法线(归一化)
- * \return      漫反射环境光强度
+ * \return      辐照度
  */
-float3 ComputeIBLDiffuse(SH3 sh, float3 N) {
+float3 SampleSH(SH3 sh, float3 N) {
 	float3 result = 0.0;
     float x = N.x;      float y = N.y;      float z = N.z;
     float xy = x * y;   float xz = x * z;   float yz = y * z;

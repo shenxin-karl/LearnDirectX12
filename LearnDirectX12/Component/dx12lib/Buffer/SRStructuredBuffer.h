@@ -5,7 +5,7 @@
 
 namespace dx12lib {
 
-class StructuredBuffer : public IStructuredBuffer {
+class SRStructuredBuffer : public IStructuredBuffer {
 public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
 	size_t getBufferSize() const override;
@@ -13,9 +13,9 @@ public:
 	size_t getElementStride() const override;
 	void updateBuffer(const void *pData, size_t sizeInByte, size_t offset = 0) override;
 	ShaderResourceView getSRV() const override;
-	~StructuredBuffer() override;
+	~SRStructuredBuffer() override;
 protected:
-	StructuredBuffer(std::weak_ptr<Device> pDevice, const void *pData, size_t numElements, size_t stride);
+	SRStructuredBuffer(std::weak_ptr<Device> pDevice, const void *pData, size_t numElements, size_t stride);
 private:
 	size_t _elementStride;
 	DescriptorAllocation _descriptor;

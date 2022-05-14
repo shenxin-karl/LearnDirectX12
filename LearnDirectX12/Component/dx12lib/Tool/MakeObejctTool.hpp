@@ -42,7 +42,7 @@ using MakeConstantBuffer = _MakeObjectTool<ConstantBuffer>;
 using MakeIndexBuffer = _MakeObjectTool<IndexBuffer>;
 using MakeVertexBuffer = _MakeObjectTool<VertexBuffer>;
 using MakeRenderTargetBuffer = _MakeObjectTool<RenderTarget2D>;
-using MakeStructuredBuffer = _MakeObjectTool<StructuredBuffer>;
+using MakeSRStructuredBuffer = _MakeObjectTool<SRStructuredBuffer>;
 using MakeReadBackBuffer = _MakeObjectTool<ReadBackBuffer>;
 
 template<typename T>
@@ -50,10 +50,10 @@ using MakeFRConstantBuffer = _MakeObjectTool<FRConstantBuffer<T>>;
 
 using MakeFRRawConstantBuffer = _MakeObjectTool<FRConstantBuffer<RawData>>;
 
-using MakeFRRawStructuredBuffer = _MakeObjectTool<FRStructuredBuffer<RawData>>;
+using MakeFRRawSRStructuredBuffer = _MakeObjectTool<FRSRStructuredBuffer<RawData>>;
 
 template<typename T>
-using MakeFRStructuredBuffer = _MakeObjectTool<FRStructuredBuffer<T>>;
+using MakeFRSRStructuredBuffer = _MakeObjectTool<FRSRStructuredBuffer<T>>;
 
 
 // Texture
@@ -73,5 +73,6 @@ using MakeUnorderedAccessCube = _MakeObjectTool<UnorderedAccessCube>;
 
 using MakeConsumeStructuredBuffer = _MakeObjectTool<ConsumeStructuredBuffer>;
 using MakeAppendStructuredBuffer = _MakeObjectTool<AppendStructuredBuffer>;
+using MakeUAStructuredBuffer = _MakeObjectTool<UAStructuredBuffer>;
 
 }

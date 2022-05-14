@@ -27,8 +27,6 @@ VertexOut VS(VertexIn vin) {
 
 TextureCube gEnvMap : register(t0);
 float4 PS(VertexOut pin) : SV_Target {
-	//float3 envColor = gEnvMap.Sample(gSamLinearClamp, pin.normal).rgb;
-    float3 envColor = ComputeIBLDiffuse(gSH3, normalize(pin.normal));
+    float3 envColor = SampleSH(gSH3, normalize(pin.normal));
     return float4(envColor, 1.0);
-    //return float4(pin.normal * 0.5 + 0.5, 1.0);
 }

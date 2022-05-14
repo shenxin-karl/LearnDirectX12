@@ -107,27 +107,27 @@ interface ICommonContext : IContext {
 		this->setConstantBufferView(pConstantBuffer->getCBV(), rootIndex, offset);
 	}
 #endif
-	/////////////////////////////////// StructuredBuffer //////////////////////////////////
+	/////////////////////////////////// SRStructuredBuffer //////////////////////////////////
 #if 1
 	template<typename... Args>
-	std::shared_ptr<StructuredBuffer> createStructuredBuffer(Args&&...args) {
-		return std::make_shared<dx12libTool::MakeStructuredBuffer>(
+	std::shared_ptr<SRStructuredBuffer> createStructuredBuffer(Args&&...args) {
+		return std::make_shared<dx12libTool::MakeSRStructuredBuffer>(
 			getDevice(),
 			std::forward<Args>(args)...
 		);
 	}
 
 	template<typename T, typename...Args>
-	std::shared_ptr<FRStructuredBuffer<T>> createFRStructuredBuffer(Args&&...args) {
-		return std::make_shared<dx12libTool::MakeFRStructuredBuffer<T>>(
+	std::shared_ptr<FRSRStructuredBuffer<T>> createFRStructuredBuffer(Args&&...args) {
+		return std::make_shared<dx12libTool::MakeFRSRStructuredBuffer<T>>(
 			getDevice(),
 			std::forward<Args>(args)...
 		);
 	}
 
 	template<typename...Args>
-	std::shared_ptr<FRStructuredBuffer<RawData>> createFRRawStructuredBuffer(Args&&...args) {
-		return std::make_shared<dx12libTool::MakeFRRawStructuredBuffer>(
+	std::shared_ptr<FRSRStructuredBuffer<RawData>> createFRRawStructuredBuffer(Args&&...args) {
+		return std::make_shared<dx12libTool::MakeFRRawSRStructuredBuffer>(
 			getDevice(),
 			std::forward<Args>(args)...
 		);
@@ -261,6 +261,17 @@ interface IComputeContext : virtual ICommonContext {
 	std::shared_ptr<AppendStructuredBuffer> createAppendStructuredBuffer(Args&&...args) {
 		return std::make_shared<dx12libTool::MakeAppendStructuredBuffer>(
 			getDevice(),
+			std::forward<Args>(args)...
+		);
+	}
+#endif
+	/////////////////////////////////// UAStructuredBuffer //////////////////////////////////
+#if 1
+	template<typename...Args>
+	std::shared_ptr<UAStructuredBuffer> createUAStructuredBuffer(Args&&...args) {
+		return std::make_shared<dx12libTool::MakeUAStructuredBuffer>(
+			getDevice(),
+			getCommandList(),
 			std::forward<Args>(args)...
 		);
 	}

@@ -1,38 +1,38 @@
 #include "dx12lib/Device/Device.h"
-#include "dx12lib/Buffer/StructuredBuffer.h"
+#include "dx12lib/Buffer/SRStructuredBuffer.h"
 #include "dx12lib/Buffer/UploadBuffer.h"
 
 namespace dx12lib {
 
-WRL::ComPtr<ID3D12Resource> StructuredBuffer::getD3DResource() const {
+WRL::ComPtr<ID3D12Resource> SRStructuredBuffer::getD3DResource() const {
 	return _pUploadBuffer->getD3DResource();
 }
 
-size_t StructuredBuffer::getBufferSize() const {
+size_t SRStructuredBuffer::getBufferSize() const {
 	return _pUploadBuffer->getBufferSize();
 }
 
-size_t StructuredBuffer::getElementCount() const {
+size_t SRStructuredBuffer::getElementCount() const {
 	return getBufferSize() / _elementStride;
 }
 
-size_t StructuredBuffer::getElementStride() const {
+size_t SRStructuredBuffer::getElementStride() const {
 	return _elementStride;
 }
 
-void StructuredBuffer::updateBuffer(const void *pData, size_t sizeInByte, size_t offset) {
+void SRStructuredBuffer::updateBuffer(const void *pData, size_t sizeInByte, size_t offset) {
 	assert((sizeInByte + offset) <= getBufferSize());
 	_pUploadBuffer->copyData(0, pData, sizeInByte, offset);
 }
 
-ShaderResourceView StructuredBuffer::getSRV() const {
+ShaderResourceView SRStructuredBuffer::getSRV() const {
 	return ShaderResourceView(_descriptor, this);
 }
 
-StructuredBuffer::~StructuredBuffer() {
+SRStructuredBuffer::~SRStructuredBuffer() {
 }
 
-StructuredBuffer::StructuredBuffer(std::weak_ptr<Device> pDevice, const void *pData, size_t numElements, size_t stride)
+SRStructuredBuffer::SRStructuredBuffer(std::weak_ptr<Device> pDevice, const void *pData, size_t numElements, size_t stride)
 : _elementStride(stride)
 {
 	auto pSharedDevice = pDevice.lock();

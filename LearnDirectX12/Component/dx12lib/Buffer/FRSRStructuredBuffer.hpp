@@ -11,9 +11,9 @@ namespace dx12lib {
 
 // frame resource structured buffer template
 template<>
-class FRStructuredBuffer<RawData> : public IStructuredBuffer {
+class FRSRStructuredBuffer<RawData> : public IStructuredBuffer {
 protected:
-	FRStructuredBuffer(std::weak_ptr<Device> pDevice, const void *pData, size_t numElements, size_t stride);
+	FRSRStructuredBuffer(std::weak_ptr<Device> pDevice, const void *pData, size_t numElements, size_t stride);
 public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
 	size_t getBufferSize() const override;
@@ -41,10 +41,10 @@ private:
 
 // frame resource structured buffer template
 template<typename T>
-class FRStructuredBuffer : public IStructuredBuffer {
+class FRSRStructuredBuffer : public IStructuredBuffer {
 protected:
-	FRStructuredBuffer(std::weak_ptr<Device> pDevice, const T *pData, size_t numElements);
-	FRStructuredBuffer(std::weak_ptr<Device> pDevice, size_t numElements);
+	FRSRStructuredBuffer(std::weak_ptr<Device> pDevice, const T *pData, size_t numElements);
+	FRSRStructuredBuffer(std::weak_ptr<Device> pDevice, size_t numElements);
 public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
 	size_t getBufferSize() const override;
@@ -59,7 +59,7 @@ private:
 };
 
 template <typename T>
-FRStructuredBuffer<T>::FRStructuredBuffer(std::weak_ptr<Device> pDevice, const T *pData, size_t numElements) {
+FRSRStructuredBuffer<T>::FRSRStructuredBuffer(std::weak_ptr<Device> pDevice, const T *pData, size_t numElements) {
 	size_t stride = sizeof(T);
 	size_t sizeInByte = numElements * stride;
 	auto pSharedDevice = pDevice.lock();
@@ -94,46 +94,46 @@ FRStructuredBuffer<T>::FRStructuredBuffer(std::weak_ptr<Device> pDevice, const T
 }
 
 template <typename T>
-FRStructuredBuffer<T>::FRStructuredBuffer(std::weak_ptr<Device> pDevice, size_t numElements) 
-: FRStructuredBuffer(pDevice, nullptr, numElements)
+FRSRStructuredBuffer<T>::FRSRStructuredBuffer(std::weak_ptr<Device> pDevice, size_t numElements) 
+: FRSRStructuredBuffer(pDevice, nullptr, numElements)
 {
 }
 
 template <typename T>
-WRL::ComPtr<ID3D12Resource> FRStructuredBuffer<T>::getD3DResource() const {
+WRL::ComPtr<ID3D12Resource> FRSRStructuredBuffer<T>::getD3DResource() const {
 	return _pUploadBuffer->getD3DResource();
 }
 
 template <typename T>
-size_t FRStructuredBuffer<T>::getBufferSize() const {
+size_t FRSRStructuredBuffer<T>::getBufferSize() const {
 	return _pUploadBuffer->getElementByteSize();
 }
 
 template <typename T>
-size_t FRStructuredBuffer<T>::getElementCount() const {
+size_t FRSRStructuredBuffer<T>::getElementCount() const {
 	return getBufferSize() / sizeof(T);
 }
 
 template <typename T>
-size_t FRStructuredBuffer<T>::getElementStride() const {
+size_t FRSRStructuredBuffer<T>::getElementStride() const {
 	return sizeof(T);
 }
 
 template <typename T>
-void FRStructuredBuffer<T>::updateBuffer(const void *pData, size_t sizeInByte, size_t offset) {
+void FRSRStructuredBuffer<T>::updateBuffer(const void *pData, size_t sizeInByte, size_t offset) {
 	assert((sizeInByte + offset) <= getElementStride());
 	size_t frameIndex = FrameIndexProxy::getConstantFrameIndexRef();
 	_pUploadBuffer->copyData(frameIndex, pData, sizeInByte, offset);
 }
 
 template <typename T>
-ShaderResourceView FRStructuredBuffer<T>::getSRV() const {
+ShaderResourceView FRSRStructuredBuffer<T>::getSRV() const {
 	size_t frameIndex = FrameIndexProxy::getConstantFrameIndexRef();
 	return ShaderResourceView(_descriptor, this, frameIndex);
 }
 
 template <typename T>
-std::span<T> FRStructuredBuffer<T>::visit() {
+std::span<T> FRSRStructuredBuffer<T>::visit() {
 	size_t frameIndex = FrameIndexProxy::getConstantFrameIndexRef();
 	size_t numElements = getElementCount();
 	T *ptr = reinterpret_cast<T *>(_pUploadBuffer->getMappedDataByIndex(frameIndex));

@@ -74,7 +74,7 @@ private:
 	std::unordered_map<std::string, std::shared_ptr<d3d::Mesh>> _geometryMap;
 
 	std::shared_ptr<dx12lib::ConstantBuffer>   _pLightCB;
-	std::shared_ptr<dx12lib::StructuredBuffer> _pMaterialData;
+	std::shared_ptr<dx12lib::SRStructuredBuffer> _pMaterialData;
 	FRConstantBufferPtr<d3d::CBPassType>       _pPassCB;
 	FRStructuredBufferPtr<InstanceData>        _pInstanceBuffer;
 	std::vector<RenderItem> _opaqueRenderItems;

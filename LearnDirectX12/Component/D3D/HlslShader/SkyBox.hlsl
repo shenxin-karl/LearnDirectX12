@@ -5,7 +5,6 @@
 #define TONE_MAPPING	
 */
 
-
 #ifndef GAMMA
 	#define GAMMA 2.2
 #endif
@@ -30,15 +29,27 @@ VertexOut VS(VertexIn vin) {
 	return vout;
 }
 
+float3 ACESToneMapping(float3 color, float adaptedLum) {
+	const float A = 2.51f;
+	const float B = 0.03f;
+	const float C = 2.43f;
+	const float D = 0.59f;
+	const float E = 0.14f;
+	color *= adaptedLum;
+	return (color * (A * color + B)) / (color * (C * color + D) + E);
+}
+
 TextureCube  gCubeMap       : register(t0);
 SamplerState gSamLinearWrap : register(s0);
 
 float4 PS(VertexOut pin) : SV_Target {
 	float3 texColor = gCubeMap.Sample(gSamLinearWrap, pin.texcoord).rgb;
 
-#ifndef USE_GAMMA
+#ifdef USE_GAMMA
 	return float4(texColor, 1.0);
 #else
-	return pow(float4(texColor, 1.0), 1.0 / 2.2);
+	texColor = ACESToneMapping(texColor, 1.0);
+	texColor = pow(texColor.rgb, 1.0 / 2.2);
+	return float4(texColor, 1.0);
 #endif
 }
