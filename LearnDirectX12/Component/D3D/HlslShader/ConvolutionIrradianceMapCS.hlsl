@@ -5,7 +5,7 @@ cbuffer CBSettings : register(b0) {
     float gStep;
 };
 
-struct CSIn {
+struct ComputeIn {
     uint3 	GroupID 		  : SV_GroupID;				// 线程组 ID
     uint3   GroupThreadID	  : SV_GroupThreadID;		// 组内线程 ID
     uint3   DispatchThreadID  : SV_DispatchThreadID;	// 线程 ID
@@ -20,48 +20,31 @@ TextureCube<float4> gEnvMap           : register(t0);
 RWStructuredBuffer<SHCoeffs> gOutput  : register(u0);
 SamplerState gSamLinearClamp          : register(s0);
 
-static float3x3 gRotateCubeFace[6] = {
-    // +X
-    float3x3(  0,  0,  1,
-               0, -1,  0,
-              -1,  0,  0 ),
-    // -X
-    float3x3(  0,  0, -1,
-               0, -1,  0,
-               1,  0,  0 ),
-    // +Y
-    float3x3(  1,  0,  0,
-               0,  0,  1,
-               0,  1,  0 ),
-    // -Y
-    float3x3(  1,  0,  0,
-               0,  0, -1,
-               0, -1,  0 ),
-    // +Z
-    float3x3(  1,  0,  0,
-               0, -1,  0,
-               0,  0,  1 ),
-    // -Z
-    float3x3( -1,  0,  0,
-               0, -1,  0,
-               0,  0, -1 )
+const static float3x3 gRotateCubeFace[6] = {
+    float3x3(float3(+0,  +0, +1), float3(+0, -1, +0), float3(-1, +0, +0) ),   // +X
+    float3x3(float3(+0,  +0, -1), float3(+0, -1, +0), float3(+1, +0, +0) ),   // -X
+    float3x3(float3(+1,  +0, +0), float3(+0, +0, +1), float3(+0, +1, +0) ),   // +Y
+    float3x3(float3(+1,  +0, +0), float3(+0, +0, -1), float3(+0, -1, +0) ),   // -Y
+    float3x3(float3(+1,  +0, +0), float3(+0, -1, +0), float3(+0, +0, +1) ),   // +Z
+    float3x3(float3(-1,  +0, +0), float3(+0, -1, +0), float3(+0, +0, -1) )    // -Z
 };
-float3 CalcDirection(CSIn csin) {
-	uint index = csin.DispatchThreadID.z;
-    float x = (csin.DispatchThreadID.x / gWidth)  - 0.5;
-    float y = (csin.DispatchThreadID.y / gHeight) - 0.5;
+float3 CalcDirection(ComputeIn cin) {
+	uint index = cin.DispatchThreadID.z;
+    float x = (cin.DispatchThreadID.x / gWidth)  - 0.5;
+    float y = (cin.DispatchThreadID.y / gHeight) - 0.5;
     float3 direction = normalize(mul(gRotateCubeFace[index], float3(x, y, 0.5)));       // w
     return direction;
 }
 
 static const float PI = 3.141592654;
 float3 CalcIrradiance(float3 direction) {
-    float3 up = float3(0, 1, 0);
     float3 N = direction;
-    float3 T = cross(N, up);
-    float3 B = cross(T, N);
-	       T = cross(N, B);
+    float3 up 		 = abs(N.z) < 0.999 ? float3(0, 0, 1) : float3(1, 0, 0);
+    float3 tangent 	 = cross(up, N);
+    float3 bitangent = cross(N, tangent);
+    return bitangent * 0.5 + 0.5;
 
+    float3x3 TBN = float3x3(tangent, bitangent, N);
     float3 irradianceSum = float3(0, 0, 0);
     uint sampleCount = 0;
 	const float delta = gStep;
@@ -69,14 +52,14 @@ float3 CalcIrradiance(float3 direction) {
 	    for (float theta = 0.0; theta < 0.5 * PI; theta += delta) {
             float cosTh = cos(theta);
             float cosPh = cos(phi);
-            float sinTh = 1.0 - cosTh * cosTh;
-            float sinPh = 1.0 - cosPh * cosPh;
+            float sinTh = sqrt(1.0 - cosTh * cosTh);
+            float sinPh = sqrt(1.0 - cosPh * cosPh);
 		    float3 V = float3(
 				sinTh * cosPh,
                 sinTh * sinPh,
                 cosTh
             );
-            float3 dir = (V.x * T) + (V.y * B) + (V.z * N);
+            float3 dir = mul(V, TBN);
             float3 irradiance = gEnvMap.SampleLevel(gSamLinearClamp, dir, 0).rgb;
             irradianceSum += irradiance * cosTh * sinTh;
             ++sampleCount;
@@ -109,9 +92,9 @@ void SHCoeffsAccumulate(inout SHCoeffs lhs, SHCoeffs rhs) {
 
 #define N 8
 groupshared SHCoeffs gShCoeffs[N][N];
-void StroeSHCoeffs(CSIn csin, SHCoeffs sh3) {
-    int x = csin.GroupThreadID.x;
-    int y = csin.GroupThreadID.y;
+void StroeSHCoeffs(ComputeIn cin, SHCoeffs sh3) {
+    int x = cin.GroupThreadID.x;
+    int y = cin.GroupThreadID.y;
 	// 每个线程执行
     gShCoeffs[x][y] = sh3;
 	GroupMemoryBarrierWithGroupSync();
@@ -135,22 +118,22 @@ void StroeSHCoeffs(CSIn csin, SHCoeffs sh3) {
     GroupMemoryBarrierWithGroupSync();
 
     // 第一个线程执行
-    if (csin.GroupIndex == 0) {
+    if (cin.GroupIndex == 0) {
 	    SHCoeffsAccumulate(sh3, gShCoeffs[x+4][y+0]);
 		SHCoeffsAccumulate(sh3, gShCoeffs[x+0][y+4]);
 		SHCoeffsAccumulate(sh3, gShCoeffs[x+4][y+4]);
         uint groupX = (uint)ceil((gWidth + 1) / N);
         uint groupY = (uint)ceil((gHeight + 1) / N);
-        uint index = csin.GroupID.y * groupX + csin.GroupID.x;
-        uint offset = csin.GroupID.z * (groupY * groupX);
+        uint index = cin.GroupID.y * groupX + cin.GroupID.x;
+        uint offset = cin.GroupID.z * (groupY * groupX);
         gOutput[offset + index] = sh3;
     }                  
 }
 
 [numthreads(N, N, 1)]
-void CS(CSIn csin) {
-	float3 direction = CalcDirection(csin);
+void CS(ComputeIn cin) {
+	float3 direction = CalcDirection(cin);
     float3 irradiance = CalcIrradiance(direction);
     SHCoeffs sh3 = CalcSphericalHarmonicsCoeff(direction, irradiance);
-    StroeSHCoeffs(csin, sh3);
+    StroeSHCoeffs(cin, sh3);
 }

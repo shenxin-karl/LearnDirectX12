@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS
 #define  NOMINMAX
 #include <windows.h>
 #include <cassert>
@@ -7,6 +8,10 @@
 #include "D3D/Exception/D3DException.h"
 #define SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
 #include <locale>
+
+#define STB_INCLUDE_IMPLEMENTATION
+#include <iostream>
+#include <stb/stb_include.h>
 
 namespace d3d {
 
@@ -76,6 +81,29 @@ WRL::ComPtr<ID3DBlob> compileShader(const char *fileContext,
 		ThrowIfFailed(hr);
 	}
 	return byteCode;
+}
+
+WRL::ComPtr<ID3DBlob> compileShaderParseInclude(const char *pFileName, const char *fileContext, std::size_t sizeInByte,
+	const D3D_SHADER_MACRO *defines, const std::string &entrypoint, const std::string &target)
+{
+	std::string context(fileContext, sizeInByte);
+	std::string fileName = std::string("\"") + pFileName + "\"";
+	char error[256];
+	fileContext = stb_include_string(
+		const_cast<char *>(context.c_str()), 
+		nullptr, 
+		const_cast<char *>(D3D_HLSL_SHADER_PATH), 
+		const_cast<char *>(fileName.c_str()),
+		error
+	);
+	if (fileContext == nullptr) {
+		std::cerr << error << std::endl;
+		return nullptr;
+	}
+
+	size_t stringLength = strlen(fileContext);
+	auto pByteCode = compileShader(fileContext, stringLength, defines, entrypoint, target);
+	return pByteCode;
 }
 
 }

@@ -69,6 +69,7 @@ protected:
 	UnorderedAccessCube(std::weak_ptr<Device> pDevice,
 		size_t width,
 		size_t height,
+		size_t mipLevels = 1,
 		const D3D12_CLEAR_VALUE *pClearValue = nullptr,
 		DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN
 	);

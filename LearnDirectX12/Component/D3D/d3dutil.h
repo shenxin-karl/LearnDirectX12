@@ -45,6 +45,15 @@ WRL::ComPtr<ID3DBlob> compileShader(
 	const std::string		&target
 );
 
+WRL::ComPtr<ID3DBlob> compileShaderParseInclude(
+	const char				*pFileName,
+	const char				*fileContext,
+	std::size_t				 sizeInByte,
+	const D3D_SHADER_MACRO	*defines,
+	const std::string		&entrypoint,
+	const std::string		&target
+);
+
 class NonCopyable {
 public:
 	NonCopyable() = default;

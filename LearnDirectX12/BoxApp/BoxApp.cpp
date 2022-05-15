@@ -33,12 +33,14 @@ void BoxApp::onInitialize(dx12lib::DirectContextProxy pDirectContext) {
 	_pCBObject = pDirectContext->createFRConstantBuffer<CBObject>();
 	_pCBObject->visit()->gMaterial = {float4(1.f), 0.5, 0.5f};
 
-	_pIBL = std::make_unique<d3d::IBL>(pDirectContext, "resources/Barce_Rooftop_C_3k.hdr");
+	_pIBL = std::make_unique<d3d::IBL>(pDirectContext, "resources/Stadium_Center_3k.hdr");
 	d3d::SkyBoxDesc skyBoxDesc = {
 		.pGraphicsCtx = pDirectContext,
 		.pCubeMap = _pIBL->getEnvMap(),
 		.renderTargetFormat = _pSwapChain->getRenderTargetFormat(),
 		.depthStencilFormat = _pSwapChain->getDepthStencilFormat(),
+		.enableGammaCorrection = true,
+		.enableToneMapping = true,
 	};
 	_pSkyBox = std::make_unique<d3d::SkyBox>(skyBoxDesc);
 

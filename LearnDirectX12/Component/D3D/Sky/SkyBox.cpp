@@ -55,19 +55,27 @@ SkyBox::SkyBox(const SkyBoxDesc &desc) : _pCubeMap(desc.pCubeMap) {
 	rasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
 	_pSkyBoxPSO->setRasterizerState(rasterizerDesc);
 
+	D3D_SHADER_MACRO macros[3] = {
+		desc.enableGammaCorrection	? "ENABLE_GAMMA_CORRECTION"	 : nullptr, nullptr,
+		desc.enableToneMapping		? "ENABLE_TONE_MAPPING"		 : nullptr, nullptr,
+		nullptr, nullptr,
+	};
+
 	auto skyBoxContent = getD3DResource("HlslShader/SkyBox.hlsl");
-	_pSkyBoxPSO->setVertexShader(compileShader(
+	_pSkyBoxPSO->setVertexShader(compileShaderParseInclude(
+		"HlslShader/SkyBox.hlsl",
 		skyBoxContent.begin(),
 		skyBoxContent.size(),
-		nullptr,
+		macros,
 		"VS",
 		"vs_5_0"
 	));
 
-	_pSkyBoxPSO->setPixelShader(compileShader(
+	_pSkyBoxPSO->setPixelShader(compileShaderParseInclude(
+		"HlslShader/SkyBox.hlsl",
 		skyBoxContent.begin(),
 		skyBoxContent.size(),
-		nullptr,
+		macros,
 		"PS",
 		"ps_5_0"
 	));

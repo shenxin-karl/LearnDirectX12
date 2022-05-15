@@ -13,6 +13,8 @@ struct SkyBoxDesc {
 	std::shared_ptr<dx12lib::IShaderResourceCube> pCubeMap;
 	DXGI_FORMAT renderTargetFormat;
 	DXGI_FORMAT depthStencilFormat;
+	bool enableGammaCorrection = false;
+	bool enableToneMapping = false;
 };
 
 class SkyBox {

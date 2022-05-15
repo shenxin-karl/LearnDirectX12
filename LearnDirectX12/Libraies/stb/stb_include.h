@@ -51,12 +51,12 @@ char *stb_include_file(char *filename, char *inject, char *path_to_includes, cha
 
 
 #ifdef STB_INCLUDE_IMPLEMENTATION
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-static char *stb_include_load_file(char *filename, size_t *plen)
+
+static char *stb_include_load_file(const char *filename, size_t *plen)
 {
    char *text;
    size_t len;
@@ -238,7 +238,7 @@ char *stb_include_string(char *str, char *inject, char *path_to_includes, char *
       #ifdef STB_INCLUDE_LINE_GLSL
       stb_include_itoa(temp+15, 0);
       #else
-      strcat(temp, filename != 0 ? filename : "source-file");
+      strcat(temp, filename != 0 ? filename : "\"source-file\"");
       #endif
       text = stb_include_append(text, &textlen, temp, strlen(temp));
       // no newlines, because we kept the #include newlines, which will get appended next

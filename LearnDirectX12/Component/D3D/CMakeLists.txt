@@ -26,8 +26,13 @@ set_target_properties(D3D PROPERTIES FOLDER "Component")
 set_property(SOURCE ${SHADER_FILES} PROPERTY VS_TOOL_OVERRIDE "shader")	# 设置 hlsl 为 shader 资源文件
 
 if (MSVC)
-	add_definitions(-D_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING)	## enable wstring_convert
+	## enable wstring_convert
+	add_definitions(-D_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING)	
 endif(MSVC)
+
+## 定义 库 shader 提供文件
+add_definitions(-DD3D_HLSL_SHADER_PATH="${CMAKE_CURRENT_SOURCE_DIR}/HlslShader") 
+
 
 target_include_directories(D3D PUBLIC 
 	${PROJECT_COMPONENT_DIR}
@@ -45,6 +50,7 @@ cmrc_add_resource_library(D3D-resources ALIAS D3D::rc
 	"HlslShader/SkyBox.hlsl"
 	"HlslShader/PanoToCubeMapCS.hlsl"
 	"HlslShader/ConvolutionIrradianceMapCS.hlsl"
+	"HlslShader/PerFilterEnvMapCS.hlsl"
 	"resources/BRDF_LUT.dds"
 )
 

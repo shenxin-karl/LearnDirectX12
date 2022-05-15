@@ -107,6 +107,11 @@ BufferType IStructuredBuffer::getBufferType() const {
 	return BufferType::StructuredBuffer;
 }
 
+bool IStructuredBuffer::checkSRVState(D3D12_RESOURCE_STATES state) const {
+	return state & D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE ||
+		   state & D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+}
+
 BufferType IConsumeStructuredBuffer::getBufferType() const {
 	return BufferType::ConsumeStructuredBuffer;
 }

@@ -13,24 +13,29 @@ public:
 private:
 	void buildSphericalHarmonics3(const std::string &fileName);
 	void buildPanoToCubeMapPSO(std::weak_ptr<dx12lib::Device> pDevice);
-	void buildIrradianceMapToSHPSO(std::weak_ptr<dx12lib::Device> pDevice);
 	void buildConvolutionIrradiancePSO(std::weak_ptr<dx12lib::Device> pDevice);
 	void buildEnvMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<dx12lib::IShaderResource2D> pPannoEnvMap);
 	void buildConvolutionIrradianceMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<dx12lib::IShaderResource2D> pPannoEnvMap);
-	void buildIrradianceMapSH(dx12lib::ComputeContextProxy pComputeCtx);
+	void buildPerFilterEnvPSO(std::weak_ptr<dx12lib::Device> pDevice);
+	void buildPerFilterEnvMap(dx12lib::ComputeContextProxy pComputeCtx);
 private:
 	enum RootParameter : size_t {
 		CB_Settings,
 		SR_EnvMap,
-		UA_Output,
+		UA_Output0,
+		UA_Output1,
+		UA_Output2,
+		UA_Output3,
+		UA_Output4,
 	};
 private:
 	constexpr static size_t kThreadCount = 32;
 	SH3 _irradianceMapSH3;
 	std::shared_ptr<dx12lib::ComputePSO>  _pPanoToCubeMapPSO;
 	std::shared_ptr<dx12lib::ComputePSO>  _pConvolutionIrradiancePSO;
+	std::shared_ptr<dx12lib::ComputePSO>  _pPerFilterEnvPSO;
 	std::shared_ptr<dx12lib::SamplerTexture2D> _pBRDFLut;
-	std::shared_ptr<dx12lib::SamplerTexture2D> _pPerFilteredEnvMap;
+	std::shared_ptr<dx12lib::SamplerTexture2D> _pPerFilterEnvMap;
 	std::shared_ptr<dx12lib::UnorderedAccessCube>  _pEnvMap;
 };
 

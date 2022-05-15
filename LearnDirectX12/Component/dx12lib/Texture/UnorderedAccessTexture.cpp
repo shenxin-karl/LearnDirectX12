@@ -330,7 +330,7 @@ UnorderedAccessCube::UnorderedAccessCube(std::weak_ptr<Device> pDevice, WRL::Com
 	ResourceStateTracker::addGlobalResourceState(pResource.Get(), state);
 }
 
-UnorderedAccessCube::UnorderedAccessCube(std::weak_ptr<Device> pDevice, size_t width, size_t height,
+UnorderedAccessCube::UnorderedAccessCube(std::weak_ptr<Device> pDevice, size_t width, size_t height, size_t mipLevels,
 	const D3D12_CLEAR_VALUE *pClearValue, DXGI_FORMAT format)
 : _pDevice(pDevice)
 {
@@ -344,7 +344,7 @@ UnorderedAccessCube::UnorderedAccessCube(std::weak_ptr<Device> pDevice, size_t w
 	unorderedAccessDesc.Width = width;
 	unorderedAccessDesc.Height = static_cast<UINT>(height);
 	unorderedAccessDesc.DepthOrArraySize = 6;
-	unorderedAccessDesc.MipLevels = 1;
+	unorderedAccessDesc.MipLevels = static_cast<UINT16>(mipLevels);
 	unorderedAccessDesc.Format = format;
 	unorderedAccessDesc.SampleDesc.Count = 1;
 	unorderedAccessDesc.SampleDesc.Quality = 0;
