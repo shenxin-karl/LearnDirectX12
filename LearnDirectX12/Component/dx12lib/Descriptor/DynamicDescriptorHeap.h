@@ -45,6 +45,8 @@ private:
 	std::bitset<kMaxDescriptorTables> _descriptorTableBitMask;
 	std::bitset<kMaxDescriptorTables> _staleDescriptorTableBitMask;
 	DescriptorHandleCache             _descriptorHandleCache;
+
+
 	DescriptorHeapPool                _descriptorHeapPool;
 	DescriptorHeapPool                _availableDescriptorHeaps;
 

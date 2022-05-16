@@ -3,6 +3,29 @@
 
 namespace dx12lib {
 
+struct ShaderRegister {
+	RegisterSlot  _slot;
+	RegisterSpace _space;
+public:
+	constexpr ShaderRegister(const ShaderRegister &) noexcept = default;
+	constexpr ShaderRegister(ShaderRegister &&) noexcept = default;
+	constexpr ShaderRegister &operator=(const ShaderRegister &) noexcept = default;
+	constexpr ShaderRegister &operator=(ShaderRegister &&) noexcept = default;
+	constexpr ShaderRegister(RegisterSlot slot, RegisterSpace space = RegisterSpace::Space0) noexcept
+	: _slot(slot), _space(space) {
+	}
+	constexpr friend bool operator==(const ShaderRegister &lhs, const ShaderRegister &rhs) noexcept {
+		return lhs._slot == rhs._slot && lhs._space == rhs._space;
+	}
+	constexpr friend bool operator!=(const ShaderRegister &lhs, const ShaderRegister &rhs) noexcept {
+		return !(lhs == rhs);
+	}
+	constexpr friend ShaderRegister operator+(ShaderRegister lhs, size_t rhs) noexcept {
+		RegisterSlot slot = static_cast<RegisterSlot>(static_cast<size_t>(lhs._slot) + rhs);
+		return ShaderRegister(slot, lhs._space);
+	}
+};
+
 
 class RootParameter {
 public:
