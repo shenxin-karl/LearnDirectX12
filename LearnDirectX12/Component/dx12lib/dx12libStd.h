@@ -82,6 +82,27 @@ enum class BufferType {
 	ReadBackBuffer,
 };
 
+enum class RegisterSlot {
+	NONE = -1,
+	CBVBegin = 0,	SRVBegin = 10,	UAVBegin = 20,
+	CBV0 = 0,		SRV0 = 10,		UAV0 = 20,
+	CBV1 = 1,		SRV1 = 11,		UAV1 = 21,
+	CBV2 = 2,		SRV2 = 12,		UAV2 = 22,
+	CBV3 = 3,		SRV3 = 13,		UAV3 = 23,
+	CBV4 = 4,		SRV4 = 14,		UAV4 = 24,
+	CBV5 = 5,		SRV5 = 15,		UAV5 = 25,
+	CBV6 = 6,		SRV6 = 16,		UAV6 = 26,
+	CBV7 = 7,		SRV7 = 17,		UAV7 = 27,
+	CBV8 = 8,		SRV8 = 18,		UAV8 = 28,
+	CBVEnd = 9,		SRVEnd = 19,	UAVEnd = 29,
+};
+
+enum class RegisterSpace {
+	Space0 = 0, Space1 = 1, Space2 = 2,
+	Space3 = 3, Space4 = 4, Space5 = 5,
+	Space6 = 6, Space7 = 7, Space8 = 8,
+};
+
 constexpr static std::size_t kSwapChainBufferCount	= 2;
 constexpr static std::size_t kFrameResourceCount = 3;
 constexpr static std::size_t kMaxDescriptorTables = 32;
