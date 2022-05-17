@@ -31,6 +31,7 @@ public:
 	friend bool operator==(const RegisterSlot &lhs, const RegisterSlot &rhs) noexcept;
 	friend bool operator!=(const RegisterSlot &lhs, const RegisterSlot &rhs) noexcept;
 	friend RegisterSlot operator+(const RegisterSlot &lhs, size_t rhs) noexcept;
+	explicit operator size_t() const;
 public:
 	Slot slot;
 };
@@ -49,8 +50,17 @@ public:
 	friend ShaderRegister operator+(ShaderRegister lhs, size_t rhs) noexcept;
 };
 
+struct ShaderRegisterHasher {
+	size_t operator()(const ShaderRegister &shaderRegister) const noexcept {
+		std::hash<size_t> hasher;
+		size_t hashValue0 = hasher(static_cast<size_t>(shaderRegister.slot));
+		size_t hashValue1 = hasher(static_cast<size_t>(shaderRegister.space));
+		return hashValue0 ^ (hashValue1 >> 1);
+	}
+};
+
 class RootParameter : protected D3D12_ROOT_PARAMETER {
-	constexpr static D3D12_ROOT_PARAMETER_TYPE kInvalidType = static_cast<D3D12_ROOT_PARAMETER_TYPE>(0xffffffff);
+	constexpr static D3D12_ROOT_PARAMETER_TYPE kInvalidType = static_cast<D3D12_ROOT_PARAMETER_TYPE>(-1);
 	friend class RootSignature;
 public:
 	RootParameter();
@@ -65,6 +75,12 @@ public:
 	void setTableRange(size_t index, ShaderRegister shaderRegister, UINT count);
 };
 
+struct ShaderParamLocation {
+	size_t rootParamIndex;			// 根参数
+	size_t rangeIndex;				// 第几个跟描述符表
+	size_t offset;					// 在根描述符表中的位置
+};
+
 class RootSignature {
 protected:
 	explicit RootSignature(std::weak_ptr<Device> pDevice);
@@ -77,20 +93,35 @@ public:
 	std::bitset<kMaxDescriptorTables> getDescriptorTableBitMask(D3D12_DESCRIPTOR_HEAP_TYPE heapType);
 	RootParameter &operator[](size_t index);
 	const RootParameter &operator[](size_t index) const;
+	std::optional<ShaderParamLocation> getShaderParamLocation(const ShaderRegister &sr) const;
 private:
-	static std::size_t getPerTableIndexByRangeType(D3D12_DESCRIPTOR_RANGE_TYPE type);
-	using DescriptorsPerTable = std::array<uint8_t, kDynamicDescriptorPerHeap>;
+	using DescriptorsPerTable = std::array<uint8_t, kMaxDescriptorTables>;
+	using ShaderParamLocationMap = std::unordered_map<ShaderRegister, ShaderParamLocation, ShaderRegisterHasher>;
 private:
-	std::weak_ptr<Device> _pDevice;
-	bool   _finalized = false;
+	bool _finalized = false;
 	size_t _numRootParams;
 	size_t _numStaticSamplers;
+	std::weak_ptr<Device> _pDevice;
+	DescriptorsPerTable _descriptorTableCount;
+	ShaderParamLocationMap _shaderParamLocation;
+	std::bitset<kMaxDescriptorTables> _descriptorTableBitMask;
+	std::bitset<kMaxDescriptorTables> _samplerTableBitMask;
 	WRL::ComPtr<ID3D12RootSignature> _pRootSignature;
 	std::unique_ptr<RootParameter[]> _pRootParamArray;
 	std::unique_ptr<D3D12_STATIC_SAMPLER_DESC[]> _pStaticSamplerArray;
+};
 
-	DescriptorsPerTable                 _numDescriptorTable[kDynamicDescriptorHeapCount];
-	std::bitset<kMaxDescriptorTables>   _descriptorTableBitMask[kDynamicDescriptorHeapCount];
+}
+
+namespace std {
+
+template<>
+struct hash<dx12lib::ShaderRegister> {
+	using result_type = std::size_t;
+	result_type operator()(const dx12lib::ShaderRegister &s) const noexcept {
+		dx12lib::ShaderRegisterHasher hasher;
+		return hasher(s);
+	}
 };
 
 }
