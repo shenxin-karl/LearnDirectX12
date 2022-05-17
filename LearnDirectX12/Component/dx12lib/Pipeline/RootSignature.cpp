@@ -3,170 +3,202 @@
 
 namespace dx12lib {
 
-RootParameter::RootParameter(D3D12_SHADER_VISIBILITY visibility /*= D3D12_SHADER_VISIBILITY_ALL*/)
-: _visibility(visibility) {
-	_pRanges = std::make_shared<std::vector<D3D12_DESCRIPTOR_RANGE>>();
+RegisterSlot::RegisterSlot(Slot slot) : slot(slot) {
 }
 
-void RootParameter::initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, 
-	UINT numDescriptors, 
-	UINT baseShaderRegister, 
-	UINT registerSpace /*= 0 */) 
-{
-	CD3DX12_DESCRIPTOR_RANGE range;
-	range.Init(rangeType, numDescriptors, baseShaderRegister, registerSpace);
-	_pRanges->push_back(range);
-	_rootParame.InitAsDescriptorTable(static_cast<UINT>(_pRanges->size()), _pRanges->data(), _visibility);
-}
-
-void RootParameter::InitAsConstants(UINT num32BitValues, UINT shaderRegister, UINT registerSpace /*= 0 */) {
-	_rootParame.InitAsConstants(num32BitValues, shaderRegister, registerSpace);
-}
-
-const CD3DX12_ROOT_PARAMETER &RootParameter::getRootParameDesc() const {
-	return _rootParame;
-}
-
-RootSignatureDescHelper::RootSignatureDescHelper(D3D12_ROOT_SIGNATURE_FLAGS flag)
-: _flag(flag) {
-}
-
-RootSignatureDescHelper::RootSignatureDescHelper(const std::vector<D3D12_STATIC_SAMPLER_DESC> &staticSamplers, 
-	D3D12_ROOT_SIGNATURE_FLAGS flag /*= D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT */)
-: _staticSamplers(staticSamplers), _flag(flag) {
-}
-
-RootSignatureDescHelper::RootSignatureDescHelper(const std::array<CD3DX12_STATIC_SAMPLER_DESC, 6> &staticSamplers,
-	D3D12_ROOT_SIGNATURE_FLAGS flag /*= D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT */) 
-: _staticSamplers(staticSamplers.begin(), staticSamplers.end()), _flag(flag) {
-}
-
-RootSignatureDescHelper::RootSignatureDescHelper(const D3D12_STATIC_SAMPLER_DESC &sampler,
-	D3D12_ROOT_SIGNATURE_FLAGS flag)
-: _staticSamplers({ sampler }), _flag(flag)
-{
-}
-
-void RootSignatureDescHelper::addRootParameter(const RootParameter &parame) {
-	_rootParameterInfos.push_back(parame);
-}
-
-D3D12_ROOT_SIGNATURE_DESC RootSignatureDescHelper::getRootSignatureDesc() const {
-	_rootParameters.clear();
-	for (auto &rootParameter : _rootParameterInfos)
-		_rootParameters.push_back(rootParameter.getRootParameDesc());
-
-	CD3DX12_ROOT_SIGNATURE_DESC rootDesc;
-	rootDesc.Init(static_cast<UINT>(_rootParameters.size()),
-		_rootParameters.data(),
-		static_cast<UINT>(_staticSamplers.size()),
-		_staticSamplers.data(),
-		_flag
-	);
-	return rootDesc;
-}
-
-void RootSignatureDescHelper::resize(std::size_t num, D3D12_SHADER_VISIBILITY visibility) {
-	_rootParameters.clear();
-	for (std::size_t i = 0; i < num; ++i)
-		_rootParameterInfos.push_back(RootParameter(visibility));
-}
-
-dx12lib::RootParameter &RootSignatureDescHelper::operator[](std::size_t index) {
-	assert(index < _rootParameterInfos.size());
-	return _rootParameterInfos[index];
-}
-
-RootSignature::RootSignature(std::weak_ptr<Device> pDevice, const D3D12_ROOT_SIGNATURE_DESC &desc) 
-: _pDevice(pDevice) 
-{
-	setRootSignatureDesc(desc);
-}
-
-const D3D12_ROOT_SIGNATURE_DESC &RootSignature::getRootSignatureDesc() const {
-	return _rootSignatureDesc;
-}
-
-std::bitset<kMaxDescriptorTables> RootSignature::getDescriptorTableBitMask(D3D12_DESCRIPTOR_HEAP_TYPE heapType) {
-	switch (heapType) {
-	case D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV:
-		return _descriptorTableBitMask[0];
-	case D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER:
-		return _descriptorTableBitMask[1];
-	default:
-		return { 0 };
-	}
-}
-
-uint32 RootSignature::getNumDescriptorsByType(D3D12_DESCRIPTOR_HEAP_TYPE type, std::size_t rootParameterIndex) const {
-	assert(rootParameterIndex < kDynamicDescriptorPerHeap);
+RegisterSlot::RegisterSlot(D3D12_DESCRIPTOR_RANGE_TYPE type, size_t baseRegister) {
+	assert(baseRegister < 9);
 	switch (type) {
-	case D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV:
-		return _numDescriptorPerTable[0][rootParameterIndex];
-	case D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER:
-		return _numDescriptorPerTable[1][rootParameterIndex];
+	case D3D12_DESCRIPTOR_RANGE_TYPE_CBV:
+		slot = static_cast<Slot>(CBVBegin + baseRegister);
+		break;
+	case D3D12_DESCRIPTOR_RANGE_TYPE_UAV:
+		slot = static_cast<Slot>(UAVBegin + baseRegister);
+		break;
+	case D3D12_DESCRIPTOR_RANGE_TYPE_SRV:
+		slot = static_cast<Slot>(SRVBegin + baseRegister);
+		break;
+	case D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER:
+		slot = static_cast<Slot>(SamplerBegin + baseRegister);
+		break;
 	default:
-		return 0;
+		assert(false);
+		break;
 	}
 }
 
-WRL::ComPtr<ID3D12RootSignature> RootSignature::getRootSignature() const {
-	return _pRootSignature;
+bool RegisterSlot::isCBV() const {
+	return slot >= CBVBegin && slot < CBVEnd;
 }
 
-void RootSignature::reset() {
-	_rootSignatureDesc = CD3DX12_ROOT_SIGNATURE_DESC(D3D12_DEFAULT);
-	_pRootSignature = nullptr;
-	_descriptorRangeCache.clear();
-	for (std::size_t i = 0; i < kDynamicDescriptorHeapCount; ++i) {
-		std::fill(_numDescriptorPerTable[i].begin(), _numDescriptorPerTable[i].end(), 0);
-		_descriptorTableBitMask[i].reset();
-	}
+bool RegisterSlot::isSRV() const {
+	return slot >= SRVBegin && slot < SRVEnd;
 }
 
-void RootSignature::setRootSignatureDesc(const D3D12_ROOT_SIGNATURE_DESC &desc) {
-	reset();
+bool RegisterSlot::isUAV() const {
+	return slot >= UAVBegin && slot < UAVEnd;
+}
 
-	// collect descriptor range
-	for (std::size_t i = 0; i < desc.NumParameters; ++i) {
-		const auto &rootParameter = desc.pParameters[i];
-		_rootParamterCache.push_back(rootParameter);
-		if (rootParameter.ParameterType == D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE) {
-			for (std::size_t j = 0; j < rootParameter.DescriptorTable.NumDescriptorRanges; ++j)
-				_descriptorRangeCache.push_back(rootParameter.DescriptorTable.pDescriptorRanges[j]);
-		}
+bool RegisterSlot::isSampler() const {
+	return slot >= SamplerBegin && slot < SamplerEnd;
+}
+
+size_t RegisterSlot::getRegisterId() const {
+	if (isCBV())
+		return slot - CBVBegin;
+	if (isSRV())
+		return slot - SRVBegin;
+	if (isUAV())
+		return slot - UAVBegin;
+	if (isSampler())
+		return slot - SamplerBegin;
+	assert(false);
+	return static_cast<size_t>(-1);
+}
+
+D3D12_DESCRIPTOR_RANGE_TYPE RegisterSlot::getDescriptorRangeType() const {
+	if (isCBV())
+		return D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+	if (isSRV())
+		return D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	if (isUAV())
+		return D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+	if (isSampler())
+		return D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
+	assert(false);
+	return static_cast<D3D12_DESCRIPTOR_RANGE_TYPE>(-1);
+}
+
+bool operator==(const RegisterSlot &lhs, const RegisterSlot &rhs) noexcept {
+	return lhs.slot == rhs.slot;
+}
+
+bool operator!=(const RegisterSlot &lhs, const RegisterSlot &rhs) noexcept {
+	return !(lhs == rhs);
+}
+
+RegisterSlot operator+(const RegisterSlot &lhs, size_t rhs) noexcept {
+	RegisterSlot res(static_cast<RegisterSlot::Slot>(lhs.slot + rhs));
+	assert(res.getRegisterId() != static_cast<size_t>(-1));
+	return res;
+}
+
+
+
+////////////////////////////////////////ShaderRegister/////////////////////////////////////////////////
+
+ShaderRegister::ShaderRegister(RegisterSlot slot, RegisterSpace space) : slot(slot), space(space) {
+}
+
+bool operator==(const ShaderRegister &lhs, const ShaderRegister &rhs) {
+	return lhs.slot == rhs.slot && lhs.space == rhs.space;
+}
+
+bool operator!=(const ShaderRegister &lhs, const ShaderRegister &rhs) {
+	return !(lhs == rhs);
+}
+
+ShaderRegister operator+(ShaderRegister lhs, size_t rhs) noexcept {
+	RegisterSlot slot = lhs.slot + rhs;
+	return { slot, lhs.space };
+}
+
+////////////////////////////////////////RootParameter/////////////////////////////////////////////////
+
+RootParameter::RootParameter() {
+	std::memset(this, 0, sizeof(*this));
+	ParameterType = kInvalidType;
+}
+
+RootParameter::~RootParameter() {
+	clear();
+}
+
+void RootParameter::clear() {
+	if (ParameterType == D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE) {
+		assert(DescriptorTable.pDescriptorRanges != nullptr);
+		delete[] DescriptorTable.pDescriptorRanges;
+		DescriptorTable.pDescriptorRanges = nullptr;
+	}
+	ParameterType = kInvalidType;
+}
+
+bool RootParameter::valid() const {
+	return ParameterType != kInvalidType;
+}
+
+void RootParameter::initAsConstants(ShaderRegister shaderRegister, size_t num32BitValues, D3D12_SHADER_VISIBILITY visibility) {
+	assert(shaderRegister.slot.isCBV());
+	ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+	ShaderVisibility = visibility;
+	Constants.Num32BitValues = static_cast<UINT>(num32BitValues);
+	Constants.ShaderRegister = static_cast<UINT>(shaderRegister.slot.getRegisterId());
+	Constants.RegisterSpace = static_cast<UINT>(shaderRegister.space);
+}
+
+void RootParameter::initAsDescriptorRange(ShaderRegister shaderRegister, UINT count, D3D12_SHADER_VISIBILITY visibility) {
+	clear();
+	initAsDescriptorTable(1, visibility);
+	setTableRange(0, shaderRegister, count);
+}
+
+void RootParameter::initAsDescriptorTable(size_t rangeCount, D3D12_SHADER_VISIBILITY visibility) {
+	assert(DescriptorTable.pDescriptorRanges == nullptr);
+	ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	ShaderVisibility = visibility;
+	DescriptorTable.NumDescriptorRanges = static_cast<UINT>(rangeCount);
+	DescriptorTable.pDescriptorRanges = new D3D12_DESCRIPTOR_RANGE[rangeCount];
+}
+
+void RootParameter::setTableRange(size_t index, ShaderRegister shaderRegister, UINT count) {
+	assert(DescriptorTable.pDescriptorRanges != nullptr);
+	assert(index < DescriptorTable.NumDescriptorRanges);
+	D3D12_DESCRIPTOR_RANGE &range = const_cast<D3D12_DESCRIPTOR_RANGE &>(DescriptorTable.pDescriptorRanges[index]);
+	range.RangeType = shaderRegister.slot.getDescriptorRangeType();
+	range.NumDescriptors = count;
+	range.BaseShaderRegister = shaderRegister.slot.getRegisterId();
+	range.RegisterSpace = static_cast<UINT>(shaderRegister.space);
+	range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+}
+
+////////////////////////////////////////RootSignature/////////////////////////////////////////////////
+
+RootSignature::RootSignature(std::weak_ptr<Device> pDevice) : _pDevice(pDevice) {
+}
+
+RootSignature::RootSignature(std::weak_ptr<Device> pDevice, size_t numRootParams, size_t numStaticSamplers) : _pDevice(pDevice) {
+	reset(numRootParams, numStaticSamplers);
+}
+
+void RootSignature::reset(size_t numRootParams, size_t numStaticSamplers) {
+	assert(numRootParams > 0);
+	_finalized = false;
+	_numRootParams = numRootParams;
+	_numStaticSamplers = numStaticSamplers;
+	_pRootParamArray = std::make_unique<RootParameter[]>(numRootParams);
+	if (numStaticSamplers > 0)
+		_pStaticSamplerArray = std::make_unique<D3D12_STATIC_SAMPLER_DESC[]>(numStaticSamplers);
+}
+
+void RootSignature::finalize(D3D12_ROOT_SIGNATURE_FLAGS flags) {
+	if (_finalized) {
+		assert(false);
+		return;
 	}
 
-	// build _rootSignatureDesc
-	_rootSignatureDesc = desc;
-	_rootSignatureDesc.pParameters = _rootParamterCache.data();
-	auto *pBaseDescriptor = _descriptorRangeCache.data();
-	for (std::size_t rootIndex = 0; rootIndex < desc.NumParameters; ++rootIndex) {
-		const D3D12_ROOT_PARAMETER &rootParameter = _rootSignatureDesc.pParameters[rootIndex];
-		if (rootParameter.ParameterType == D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE) {
-			// Force changes to the DescriptorTable
-			auto numDescriptor = rootParameter.DescriptorTable.NumDescriptorRanges;
-			const_cast<D3D12_ROOT_PARAMETER &>(rootParameter).DescriptorTable = {
-				numDescriptor,
-				pBaseDescriptor
-			};
-			pBaseDescriptor += numDescriptor;
-		
-			std::size_t numRanges = static_cast<std::size_t>(rootParameter.DescriptorTable.NumDescriptorRanges);
-			for (std::size_t i = 0; i < numRanges; ++i) {
-				const auto &range = rootParameter.DescriptorTable.pDescriptorRanges[i];
-				auto index = getPerTableIndexByRangeType(range.RangeType);
-				_numDescriptorPerTable[index][rootIndex] += range.NumDescriptors;
-				_descriptorTableBitMask[index].set(rootIndex);
-			}
-		}
-	}
+	D3D12_ROOT_SIGNATURE_DESC rootDesc(
+		_numRootParams, 
+		_pRootParamArray.get(), 
+		_numStaticSamplers, 
+		_pStaticSamplerArray.get(),
+		flags
+	);
 
 	// build root Signature 
 	WRL::ComPtr<ID3DBlob> serializedRootSig = nullptr;
 	WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
 	HRESULT hr = D3D12SerializeRootSignature(
-		&_rootSignatureDesc,
+		&rootDesc,
 		D3D_ROOT_SIGNATURE_VERSION_1,
 		&serializedRootSig,
 		&errorBlob
@@ -183,8 +215,38 @@ void RootSignature::setRootSignatureDesc(const D3D12_ROOT_SIGNATURE_DESC &desc) 
 		serializedRootSig->GetBufferSize(),
 		IID_PPV_ARGS(&_pRootSignature)
 	));
+	_finalized = true;
 }
 
+void RootSignature::initStaticSampler(size_t index, const D3D12_STATIC_SAMPLER_DESC &desc) {
+	assert(index < _numStaticSamplers);
+	_pStaticSamplerArray[index] = desc;
+}
+
+WRL::ComPtr<ID3D12RootSignature> RootSignature::getRootSignature() const {
+	return _pRootSignature;
+}
+
+std::bitset<kMaxDescriptorTables> RootSignature::getDescriptorTableBitMask(D3D12_DESCRIPTOR_HEAP_TYPE heapType) {
+	switch (heapType) {
+	case D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV:
+		return _descriptorTableBitMask[0];
+	case D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER:
+		return _descriptorTableBitMask[1];
+	default:
+		return { 0 };
+	}
+}
+
+RootParameter &RootSignature::operator[](size_t index) {
+	assert(index < _numRootParams);
+	return _pRootParamArray[index];
+}
+
+const RootParameter &RootSignature::operator[](size_t index) const {
+	assert(index < _numRootParams);
+	return _pRootParamArray[index];
+}
 
 std::size_t RootSignature::getPerTableIndexByRangeType(D3D12_DESCRIPTOR_RANGE_TYPE type) {
 	switch (type) {
