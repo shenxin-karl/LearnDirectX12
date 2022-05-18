@@ -13,6 +13,7 @@ public:
 	void commitStagedDescriptorForDraw(std::shared_ptr<CommandList> pCmdList);
 	void commitStagedDescriptorForDispatch(std::shared_ptr<CommandList> pCmdList);
 	void reset();
+	void stageDescriptor(const ShaderRegister &sr, const D3D12_CPU_DESCRIPTOR_HANDLE &descriptor);
 	void stageDescriptors(size_t rootParameterIndex,
 		size_t offset,
 		size_t numDescripotrs,
@@ -54,6 +55,8 @@ private:
 	CD3DX12_CPU_DESCRIPTOR_HANDLE     _currentCPUDescriptorHandle;
 	CD3DX12_GPU_DESCRIPTOR_HANDLE     _currentGPUDescriptorHandle;
 	WRL::ComPtr<ID3D12DescriptorHeap> _pCurrentDescriptorHeap;
+
+	std::shared_ptr<RootSignature>	  _pRootSignature;
 };
 
 }

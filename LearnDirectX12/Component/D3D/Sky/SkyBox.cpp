@@ -18,13 +18,12 @@ SkyBox::SkyBox(const SkyBoxDesc &desc) : _pCubeMap(desc.pCubeMap) {
 
 
 	// build Root Signature
-	std::vector<D3D12_STATIC_SAMPLER_DESC> staticSamplers;
-	staticSamplers.push_back(getLinearWrapStaticSampler(0));
-	dx12lib::RootSignatureDescHelper rootDesc(staticSamplers);
-	rootDesc.resize(2);
-	rootDesc[CB_Setting].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-	rootDesc[SR_CubeMap].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
-	auto pRootSignature = pSharedDevice->createRootSignature(rootDesc);
+	auto pRootSignature = pSharedDevice->createRootSignature(1, 1);
+	pRootSignature->at(0).initAsDescriptorTable(2);
+	pRootSignature->at(0).setTableRange(0, dx12lib::RegisterSlot::CBV0);
+	pRootSignature->at(0).setTableRange(0, dx12lib::RegisterSlot::SRV0);
+	pRootSignature->initStaticSampler(0, getLinearWrapStaticSampler(0));
+	pRootSignature->finalize();
 
 	// build pso
 	_pSkyBoxPSO = pSharedDevice->createGraphicsPSO("SkyBoxPSO");
@@ -92,8 +91,8 @@ void SkyBox::render(dx12lib::GraphicsContextProxy pGraphicsCtx, std::shared_ptr<
 	XMStoreFloat4x4(_pViewProj->map(), view * proj);
 
 	pGraphicsCtx->setGraphicsPSO(_pSkyBoxPSO);
-	pGraphicsCtx->setConstantBuffer(_pViewProj, CB_Setting);
-	pGraphicsCtx->setShaderResourceView(_pCubeMap->getSRV(), SR_CubeMap);
+	pGraphicsCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV0, _pViewProj);
+	pGraphicsCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV0, _pCubeMap->getSRV());
 	pGraphicsCtx->setPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	pGraphicsCtx->setVertexBuffer(_pCubeVertexBuffer);
 	pGraphicsCtx->drawInstanced(_pCubeVertexBuffer->getVertexCount(), 1, 0);

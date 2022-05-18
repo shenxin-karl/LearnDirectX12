@@ -26,8 +26,8 @@ public:
 	std::shared_ptr<SamplerTextureCube> createDDSTextureCubeFromMemory(const void *pData, size_t sizeInByte) override;
 
 	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) override;
-	void setConstantBufferView(const ConstantBufferView &cbv, size_t rootIndex, size_t offset) override;
-	void setShaderResourceView(const ShaderResourceView &srv, size_t rootIndex, size_t offset) override;
+	void setConstantBufferView(const ShaderRegister &sr, const ConstantBufferView &cbv) override;
+	void setShaderResourceView(const ShaderRegister &sr, const ShaderResourceView &srv) override;
 	void readBack(std::shared_ptr<ReadBackBuffer> pReadBackBuffer) override;
 
 	void copyResourceImpl(std::shared_ptr<IResource> pDest, std::shared_ptr<IResource> pSrc) override;
@@ -46,7 +46,7 @@ public:
 	void setGraphicsPSO(std::shared_ptr<GraphicsPSO> pPipelineStateObject) override;
 	void setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology) override;
 	void setStencilRef(UINT stencilRef) override;
-	void setGraphics32BitConstants(size_t rootIndex, size_t numConstants, const void *pData, size_t destOffset) override;
+	void setGraphics32BitConstants(const ShaderRegister &sr, size_t numConstants, const void *pData, size_t destOffset) override;
 	void setRenderTarget(const RenderTargetView &rtv, const DepthStencilView &dsv) override;
 	void setRenderTargets(const std::vector<RenderTargetView> &rtvs, const DepthStencilView &dsv) override;
 
@@ -60,8 +60,8 @@ public:
 	void clearDepthStencil(std::shared_ptr<DepthStencil2D> pResource, float depth, UINT stencil) override;
 /// ComputeContext api 
 	void setComputePSO(std::shared_ptr<ComputePSO> pPipelineStateObject) override;
-	void setUnorderedAccessView(const UnorderedAccessView &uav, size_t rootIndex, size_t offset) override;
-	void setCompute32BitConstants(size_t rootIndex, size_t numConstants, const void *pData, size_t destOffset) override;
+	void setUnorderedAccessView(const ShaderRegister &sr, const UnorderedAccessView &uav) override;
+	void setCompute32BitConstants(const ShaderRegister &sr, size_t numConstants, const void *pData, size_t destOffset) override;
 
 	void dispatch(size_t GroupCountX, size_t GroupCountY, size_t GroupCountZ) override;
 private:
@@ -107,7 +107,6 @@ private:
 		bool debugCheckDrawIndex() const;
 		bool checkVertexBuffer() const;
 		bool checkTextures() const;
-		bool debugCheckSet32BitConstants(size_t rootIndex, size_t numConstants) const;
 	};
 	CommandListState _currentGPUState;
 };

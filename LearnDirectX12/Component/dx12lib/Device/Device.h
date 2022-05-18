@@ -20,8 +20,7 @@ public:
 	void initialize(const DeviceInitDesc &desc);
 	void destroy();
 	std::shared_ptr<SwapChain> createSwapChain(HWND hwnd) const;
-	std::shared_ptr<RootSignature> createRootSignature(const D3D12_ROOT_SIGNATURE_DESC &desc);
-	std::shared_ptr<RootSignature> createRootSignature(const RootSignatureDescHelper &desc);
+	std::shared_ptr<RootSignature> createRootSignature(size_t numRootParams, size_t numStaticSamplers = 0);
 	std::shared_ptr<GraphicsPSO> createGraphicsPSO(const std::string &name);
 	std::shared_ptr<ComputePSO> createComputePSO(const std::string &name);
 	DescriptorAllocation allocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32 numDescriptors = 1);

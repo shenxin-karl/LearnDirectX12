@@ -4,111 +4,6 @@
 
 namespace dx12lib {
 
-RegisterSlot::RegisterSlot(Slot slot) : slot(slot) {
-}
-
-RegisterSlot::RegisterSlot(D3D12_DESCRIPTOR_RANGE_TYPE type, size_t baseRegister) {
-	assert(baseRegister < 9);
-	switch (type) {
-	case D3D12_DESCRIPTOR_RANGE_TYPE_CBV:
-		slot = static_cast<Slot>(CBVBegin + baseRegister);
-		break;
-	case D3D12_DESCRIPTOR_RANGE_TYPE_UAV:
-		slot = static_cast<Slot>(UAVBegin + baseRegister);
-		break;
-	case D3D12_DESCRIPTOR_RANGE_TYPE_SRV:
-		slot = static_cast<Slot>(SRVBegin + baseRegister);
-		break;
-	case D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER:
-		slot = static_cast<Slot>(SamplerBegin + baseRegister);
-		break;
-	default:
-		assert(false);
-		break;
-	}
-}
-
-bool RegisterSlot::isCBV() const {
-	return slot >= CBVBegin && slot < CBVEnd;
-}
-
-bool RegisterSlot::isSRV() const {
-	return slot >= SRVBegin && slot < SRVEnd;
-}
-
-bool RegisterSlot::isUAV() const {
-	return slot >= UAVBegin && slot < UAVEnd;
-}
-
-bool RegisterSlot::isSampler() const {
-	return slot >= SamplerBegin && slot < SamplerEnd;
-}
-
-size_t RegisterSlot::getRegisterId() const {
-	if (isCBV())
-		return slot - CBVBegin;
-	if (isSRV())
-		return slot - SRVBegin;
-	if (isUAV())
-		return slot - UAVBegin;
-	if (isSampler())
-		return slot - SamplerBegin;
-	assert(false);
-	return static_cast<size_t>(-1);
-}
-
-D3D12_DESCRIPTOR_RANGE_TYPE RegisterSlot::getDescriptorRangeType() const {
-	if (isCBV())
-		return D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-	if (isSRV())
-		return D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	if (isUAV())
-		return D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
-	if (isSampler())
-		return D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
-	assert(false);
-	return static_cast<D3D12_DESCRIPTOR_RANGE_TYPE>(-1);
-}
-
-RegisterSlot::operator size_t() const {
-	return static_cast<size_t>(slot);
-}
-
-bool operator==(const RegisterSlot &lhs, const RegisterSlot &rhs) noexcept {
-	return lhs.slot == rhs.slot;
-}
-
-bool operator!=(const RegisterSlot &lhs, const RegisterSlot &rhs) noexcept {
-	return !(lhs == rhs);
-}
-
-RegisterSlot operator+(const RegisterSlot &lhs, size_t rhs) noexcept {
-	RegisterSlot res(static_cast<RegisterSlot::Slot>(lhs.slot + rhs));
-	assert(res.getRegisterId() != static_cast<size_t>(-1));
-	return res;
-}
-
-
-////////////////////////////////////////ShaderRegister/////////////////////////////////////////////////
-
-ShaderRegister::ShaderRegister(RegisterSlot slot, RegisterSpace space) : slot(slot), space(space) {
-}
-
-bool operator==(const ShaderRegister &lhs, const ShaderRegister &rhs) {
-	return lhs.slot == rhs.slot && lhs.space == rhs.space;
-}
-
-bool operator!=(const ShaderRegister &lhs, const ShaderRegister &rhs) {
-	return !(lhs == rhs);
-}
-
-ShaderRegister operator+(ShaderRegister lhs, size_t rhs) noexcept {
-	RegisterSlot slot = lhs.slot + rhs;
-	return { slot, lhs.space };
-}
-
-////////////////////////////////////////RootParameter/////////////////////////////////////////////////
-
 RootParameter::RootParameter() {
 	std::memset(this, 0, sizeof(*this));
 	ParameterType = kInvalidType;
@@ -164,15 +59,12 @@ void RootParameter::setTableRange(size_t index, ShaderRegister shaderRegister, U
 	D3D12_DESCRIPTOR_RANGE &range = const_cast<D3D12_DESCRIPTOR_RANGE &>(DescriptorTable.pDescriptorRanges[index]);
 	range.RangeType = shaderRegister.slot.getDescriptorRangeType();
 	range.NumDescriptors = count;
-	range.BaseShaderRegister = shaderRegister.slot.getRegisterId();
+	range.BaseShaderRegister = static_cast<UINT>(shaderRegister.slot.getRegisterId());
 	range.RegisterSpace = static_cast<UINT>(shaderRegister.space);
 	range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 }
 
 ////////////////////////////////////////RootSignature/////////////////////////////////////////////////
-
-RootSignature::RootSignature(std::weak_ptr<Device> pDevice) : _pDevice(pDevice) {
-}
 
 RootSignature::RootSignature(std::weak_ptr<Device> pDevice, size_t numRootParams, size_t numStaticSamplers) : _pDevice(pDevice) {
 	reset(numRootParams, numStaticSamplers);
@@ -196,9 +88,9 @@ void RootSignature::finalize(D3D12_ROOT_SIGNATURE_FLAGS flags) {
 	}
 
 	D3D12_ROOT_SIGNATURE_DESC rootDesc(
-		_numRootParams, 
+		static_cast<UINT>(_numRootParams),
 		_pRootParamArray.get(), 
-		_numStaticSamplers, 
+		static_cast<UINT>(_numStaticSamplers),
 		_pStaticSamplerArray.get(),
 		flags
 	);
@@ -225,19 +117,16 @@ void RootSignature::finalize(D3D12_ROOT_SIGNATURE_FLAGS flags) {
 		IID_PPV_ARGS(&_pRootSignature)
 	));
 
-	// 把 D3D12_DESCRIPTOR_RANGE 拍平成一维度数组, 统计好每个 Range 的描述符类型和数量
-	std::memset(&_descriptorTableCount, 0, sizeof(_descriptorTableCount));
-	size_t rangeIndex = 0;
+	// 统计好每个根参数有多少个描述符
+	size_t numDescriptors = 0;
 	for (size_t rootParamIndex = 0; rootParamIndex < _numRootParams; ++rootParamIndex) {
 		const RootParameter &rootParam = _pRootParamArray[rootParamIndex];
 		if (rootParam.ParameterType == D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE) {
-			size_t rangeCount = rootParam.DescriptorTable.NumDescriptorRanges;
+			auto &descriptorTable = rootParam.DescriptorTable;
+			size_t rangeCount = descriptorTable.NumDescriptorRanges;
+			size_t tableIndex = getPerTableIndexByRangeType(descriptorTable.pDescriptorRanges[0].RangeType);
 			assert(rangeCount <= static_cast<uint8_t>(-1));
-			bool isSampler = false;
-			if (rangeCount > 0)
-				isSampler = rootParam.DescriptorTable.pDescriptorRanges[0].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
 
-			std::bitset<kMaxDescriptorTables> &bitMask = (isSampler ? _samplerTableBitMask : _descriptorTableBitMask);
 			for (size_t j = 0; j < rangeCount; ++j) {
 				const D3D12_DESCRIPTOR_RANGE &range = rootParam.DescriptorTable.pDescriptorRanges[j];
 				if (range.NumDescriptors <= 0)
@@ -249,15 +138,14 @@ void RootSignature::finalize(D3D12_ROOT_SIGNATURE_FLAGS flags) {
 					RegisterSlot slot(range.RangeType, baseRegister);
 					RegisterSpace space = static_cast<RegisterSpace>(range.RegisterSpace);
 					ShaderRegister shaderRegister(slot, space);
-					ShaderParamLocation location(rootParamIndex, rangeIndex, offset);
+					ShaderParamLocation location(rootParamIndex, offset);
 					_shaderParamLocation[shaderRegister] = location;
 				}
 
-				bitMask.set(rangeIndex);
-				_descriptorTableCount[rangeIndex] = static_cast<uint8_t>(rangeCount);
-				++rangeIndex;
-				assert(rangeIndex <= kMaxDescriptorTables);
+				_rootParamDescriptorPerTable[tableIndex][rootParamIndex] += static_cast<uint8_t>(range.NumDescriptors);
+				_rootParamBitMask[tableIndex].set(rootParamIndex);
 			}
+			numDescriptors += _rootParamDescriptorPerTable[tableIndex][rootParamIndex];
 		}
 	} 
 	_finalized = true;
@@ -275,9 +163,9 @@ WRL::ComPtr<ID3D12RootSignature> RootSignature::getRootSignature() const {
 std::bitset<kMaxDescriptorTables> RootSignature::getDescriptorTableBitMask(D3D12_DESCRIPTOR_HEAP_TYPE heapType) {
 	switch (heapType) {
 	case D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV:
-		return _descriptorTableBitMask;
+		return _rootParamBitMask[0];
 	case D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER:
-		return _samplerTableBitMask;
+		return _rootParamBitMask[1];
 	default:
 		assert(false);
 		return { 0 };
@@ -294,11 +182,45 @@ const RootParameter &RootSignature::operator[](size_t index) const {
 	return _pRootParamArray[index];
 }
 
+RootParameter &RootSignature::at(size_t index) {
+	return (*this)[index];
+}
+
+const RootParameter &RootSignature::at(size_t index) const {
+	return (*this)[index];
+}
+
 std::optional<ShaderParamLocation> RootSignature::getShaderParamLocation(const ShaderRegister &sr) const {
 	auto iter = _shaderParamLocation.find(sr);
 	if (iter != _shaderParamLocation.end())
 		return iter->second;
 	return std::nullopt;
+}
+
+const RootSignature::DescriptorsPerTable &
+RootSignature::getDescriptorPerTableByType(D3D12_DESCRIPTOR_HEAP_TYPE heapType) const {
+	switch (heapType) {
+	case D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV:
+		return _rootParamDescriptorPerTable[0];
+	case D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER:
+		return _rootParamDescriptorPerTable[1];
+	default:
+		assert(false);
+		throw std::runtime_error("invalid D3D12_DESCRIPTOR_HEAP_TYPE");
+	}
+}
+
+size_t RootSignature::getPerTableIndexByRangeType(D3D12_DESCRIPTOR_RANGE_TYPE type) {
+	switch (type) {
+	case D3D12_DESCRIPTOR_RANGE_TYPE_CBV:
+	case D3D12_DESCRIPTOR_RANGE_TYPE_UAV:
+	case D3D12_DESCRIPTOR_RANGE_TYPE_SRV:
+		return 0;
+	case D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER:
+		return 1;
+	}
+	assert(false);
+	throw std::runtime_error("invalid D3D12_DESCRIPTOR_RANGE_TYPE");
 }
 
 }

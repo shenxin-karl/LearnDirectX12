@@ -30,8 +30,8 @@ interface ICommonContext : IContext {
 	virtual std::shared_ptr<SamplerTextureCube> createDDSTextureCubeFromFile(const std::wstring &fileName) = 0;
 	virtual std::shared_ptr<SamplerTextureCube> createDDSTextureCubeFromMemory(const void *pData, size_t sizeInByte) = 0;
 	virtual	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) = 0;
-	virtual void setConstantBufferView(const ConstantBufferView &crv, size_t rootIndex, size_t offset = 0) = 0;
-	virtual void setShaderResourceView(const ShaderResourceView &srv, size_t rootIndex, size_t offset = 0) = 0;
+	virtual void setConstantBufferView(const ShaderRegister &sr, const ConstantBufferView &crv) = 0;
+	virtual void setShaderResourceView(const ShaderRegister &sr, const ShaderResourceView &srv) = 0;
 	virtual void readBack(std::shared_ptr<ReadBackBuffer> pReadBackBuffer) = 0;
 
 	virtual void copyResourceImpl(std::shared_ptr<IResource> pDest, std::shared_ptr<IResource> pSrc) = 0;
@@ -102,9 +102,9 @@ interface ICommonContext : IContext {
 	}
 
 	template<typename T> requires(std::is_base_of_v<IConstantBuffer, T>)
-	void setConstantBuffer(std::shared_ptr<T> pBuffer, size_t rootIndex, size_t offset = 0) {
+	void setConstantBuffer(const ShaderRegister &sr, std::shared_ptr<T> pBuffer) {
 		auto pConstantBuffer = std::static_pointer_cast<IConstantBuffer>(pBuffer);
-		this->setConstantBufferView(pConstantBuffer->getCBV(), rootIndex, offset);
+		this->setConstantBufferView(sr, pConstantBuffer->getCBV());
 	}
 #endif
 	/////////////////////////////////// SRStructuredBuffer //////////////////////////////////
@@ -134,9 +134,9 @@ interface ICommonContext : IContext {
 	}
 
 	template<typename T> requires(std::is_base_of_v<IStructuredBuffer, T>)
-	void setStructuredBuffer(std::shared_ptr<T> pBuffer, size_t rootIndex, size_t offset = 0) {
+	void setStructuredBuffer(const ShaderRegister &sr, std::shared_ptr<T> pBuffer) {
 		auto pStructuredBuffer = std::static_pointer_cast<IStructuredBuffer>(pBuffer);
-		this->setShaderResourceView(pStructuredBuffer->getSRV(), rootIndex, offset);
+		this->setShaderResourceView(sr, pStructuredBuffer->getSRV());
 	}
 #endif
 	/////////////////////////////////// RenderTarget //////////////////////////////////
@@ -198,7 +198,7 @@ interface IGraphicsContext : virtual ICommonContext {
 	virtual void setGraphicsPSO(std::shared_ptr<GraphicsPSO> pPipelineStateObject) = 0;
 	virtual void setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology) = 0;
 	virtual void setStencilRef(UINT stencilRef) = 0;
-	virtual void setGraphics32BitConstants(size_t rootIndex, size_t numConstants, const void *pData, size_t destOffset = 0) = 0;
+	virtual void setGraphics32BitConstants(const ShaderRegister &sr, size_t numConstants, const void *pData, size_t destOffset = 0) = 0;
 	virtual void setRenderTarget(const RenderTargetView &rtv, const DepthStencilView &dsv) = 0;
 	virtual void setRenderTargets(const std::vector<RenderTargetView> &rtvs, const DepthStencilView &dsv) = 0;
 
@@ -214,8 +214,8 @@ interface IGraphicsContext : virtual ICommonContext {
 
 interface IComputeContext : virtual ICommonContext {
 	virtual void setComputePSO(std::shared_ptr<ComputePSO> pPipelineStateObject) = 0;
-	virtual void setUnorderedAccessView(const UnorderedAccessView &uav, size_t rootIndex, size_t offset = 0) = 0;
-	virtual void setCompute32BitConstants(size_t rootIndex, size_t numConstants, const void *pData, size_t destOffset = 0) = 0;
+	virtual void setUnorderedAccessView(const ShaderRegister &sr, const UnorderedAccessView &uav) = 0;
+	virtual void setCompute32BitConstants(const ShaderRegister &sr, size_t numConstants, const void *pData, size_t destOffset = 0) = 0;
 	virtual void dispatch(size_t GroupCountX = 1, size_t GroupCountY = 1, size_t GroupCountZ = 1) = 0;
 
 	/////////////////////////////////// UnorderedAccess //////////////////////////////////

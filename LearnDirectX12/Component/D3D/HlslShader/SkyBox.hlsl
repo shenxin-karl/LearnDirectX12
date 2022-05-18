@@ -9,7 +9,7 @@
 	#include "ColorGrading.hlsl"
 #endif 
 
-cbuffer CBSkyBoxSetting {
+cbuffer CBSkyBoxSetting : register(b0) {
 	float4x4 gViewProj;
 };
 

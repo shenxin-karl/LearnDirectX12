@@ -35,12 +35,11 @@ void SobelFilter::tryBuildRootSignature(dx12lib::ComputeContextProxy pComputeLis
 	if (_pRootSignature != nullptr)
 		return;
 
-	dx12lib::RootSignatureDescHelper desc;
-	desc.resize(2);
-	desc[SR_Input].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
-	desc[UA_Output].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
 	auto pSharedDevice = pComputeList->getDevice().lock();
-	_pRootSignature = pSharedDevice->createRootSignature(desc);
+	_pRootSignature = pSharedDevice->createRootSignature(2);
+	(*_pRootSignature)[0].setTableRange(0, dx12lib::RegisterSlot::SRV0);
+	(*_pRootSignature)[0].setTableRange(1, dx12lib::RegisterSlot::UAV0);
+	_pRootSignature->finalize();
 }
 
 void SobelFilter::tryBuildProducePSO(dx12lib::ComputeContextProxy pComputeList) {
@@ -96,8 +95,8 @@ void SobelFilter::produceImpl(dx12lib::ComputeContextProxy pComputeList,
 	pComputeList->transitionBarrier(_pSobelMap, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
 	pComputeList->setComputePSO(_pProducePSO);
-	pComputeList->setShaderResourceView(pInput->getSRV(), SR_Input);
-	pComputeList->setUnorderedAccessView(_pSobelMap->getUAV(), UA_Output);
+	pComputeList->setShaderResourceView(dx12lib::RegisterSlot::SRV0, pInput->getSRV());
+	pComputeList->setUnorderedAccessView(dx12lib::RegisterSlot::UAV0, _pSobelMap->getUAV());
 	uint32 numXGroup = static_cast<uint32>(std::ceil(float(_width) / kMaxSobelThreadCount));
 	uint32 numYGroup = static_cast<uint32>(std::ceil(float(_height) / kMaxSobelThreadCount));
 	pComputeList->dispatch(numXGroup, numYGroup);
@@ -114,8 +113,8 @@ void SobelFilter::applyImpl(dx12lib::ComputeContextProxy pComputeList,
 	pComputeList->transitionBarrier(_pSobelMap, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
 	pComputeList->setComputePSO(_pApplyPSO);
-	pComputeList->setShaderResourceView(pInput->getSRV(), SR_Input);
-	pComputeList->setUnorderedAccessView(_pSobelMap->getUAV(), UA_Output);
+	pComputeList->setShaderResourceView(dx12lib::RegisterSlot::SRV0, pInput->getSRV());
+	pComputeList->setUnorderedAccessView(dx12lib::RegisterSlot::UAV0, _pSobelMap->getUAV());
 	uint32 numXGroup = static_cast<uint32>(std::ceil(float(_width) / kMaxSobelThreadCount));
 	uint32 numYGroup = static_cast<uint32>(std::ceil(float(_height) / kMaxSobelThreadCount));
 	pComputeList->dispatch(numXGroup, numYGroup);

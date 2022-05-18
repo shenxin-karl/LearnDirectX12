@@ -45,12 +45,6 @@ private:
 		int   blurCount;
 		float weights[kMaxBlurCount * 2 + 1];
 	};
-
-	enum BlurRootParame : std::size_t {
-		SR_Input,
-		UA_Output,
-		CB_BlurParame,
-	};
 private:
 	std::uint32_t _width;
 	std::uint32_t _height;

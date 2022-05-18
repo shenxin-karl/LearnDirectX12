@@ -32,12 +32,6 @@ private:
 	void applyImpl(dx12lib::ComputeContextProxy pComputeList,
 		std::shared_ptr<dx12lib::IShaderResource2D> pInput
 	);
-
-	enum SobelRootParame {
-		SR_Input  = 0,
-		UA_Output = 1,
-	};
-
 private:
 	constexpr static std::size_t kMaxSobelThreadCount = 16;
 	std::uint32_t _width;

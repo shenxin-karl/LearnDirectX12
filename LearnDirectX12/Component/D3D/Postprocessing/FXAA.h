@@ -33,11 +33,6 @@ public:
 	float _consoleTangentScale = 0.7f;
 	float _gSharpness = 8.f;
 private:
-	enum RootParame {
-		CB_Setting,
-		SR_Input,
-		UA_Output,
-	};
 	static void tryBuildRootSignature(std::weak_ptr<dx12lib::Device> pDevice);
 	static void tryBuildConsolePSO(std::weak_ptr<dx12lib::Device> pDevice);
 	void updateFXAASetting(dx12lib::ComputeContextProxy pComputeCtx) const;
@@ -48,7 +43,7 @@ private:
 	DXGI_FORMAT   _format;
 	std::shared_ptr<dx12lib::UnorderedAccess2D> _pOutputMap;
 	static inline std::shared_ptr<dx12lib::ComputePSO>	_pConsolePSO;
-	static inline std::shared_ptr<dx12lib::RootSignature> _pRootSingnature;
+	static inline std::shared_ptr<dx12lib::RootSignature> _pRootSignature;
 };
 
 }

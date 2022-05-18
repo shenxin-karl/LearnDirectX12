@@ -82,6 +82,7 @@ enum class BufferType {
 	ReadBackBuffer,
 };
 
+struct ShaderRegister;
 enum class RegisterSpace : size_t {
 	Space0 = 0, Space1 = 1, Space2 = 2,
 	Space3 = 3, Space4 = 4, Space5 = 5,

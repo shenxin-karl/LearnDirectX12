@@ -1,3 +1,4 @@
+#include <iostream>
 #include <dx12lib/Pipeline/RootSignature.h>
 #include <dx12lib/Descriptor/DynamicDescriptorHeap.h>
 #include <dx12lib/Device/Device.h>
@@ -18,18 +19,21 @@ void DynamicDescriptorHeap::parseRootSignature(std::shared_ptr<RootSignature> pR
 	assert(pRootSignature != nullptr);
 
 	size_t currentOffset = 0;
+	const auto &descriptorPerTable = pRootSignature->getDescriptorPerTableByType(_heapType);
 	const auto descriptorTableBitMask = pRootSignature->getDescriptorTableBitMask(_heapType);
+	_descriptorTableBitMask = descriptorTableBitMask;
+
 	for (std::size_t i = 0; i < kMaxDescriptorTables; ++i) {
 		if (!descriptorTableBitMask.test(i))
 			continue;
 
-		size_t numDescriptors = pRootSignature->getNumDescriptorsByType(_heapType, i);
+		size_t numDescriptors = descriptorPerTable[i];
 		DescriptorTableCache &descriptorTableCache = _descriptorTableCache[i];
 		descriptorTableCache._numDescriptors = numDescriptors;
 		descriptorTableCache._pBaseHandle = _descriptorHandleCache.data() + currentOffset;
 		currentOffset += numDescriptors;
-		_descriptorTableBitMask.set(i);
 	}
+
 	/// out of cache range
 	assert(currentOffset < kMaxDescriptorTables);
 }
@@ -47,6 +51,7 @@ void DynamicDescriptorHeap::reset() {
 	_pCurrentDescriptorHeap = nullptr;
 	_currentCPUDescriptorHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(D3D12_DEFAULT);
 	_currentGPUDescriptorHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(D3D12_DEFAULT);
+	_pRootSignature = nullptr;
 	_descriptorTableBitMask.reset();
 	_staleDescriptorTableBitMask.reset();
 	_availableDescriptorHeaps = _descriptorHeapPool;
@@ -56,10 +61,30 @@ void DynamicDescriptorHeap::reset() {
 	}
 }
 
+void DynamicDescriptorHeap::stageDescriptor(const ShaderRegister &sr, const D3D12_CPU_DESCRIPTOR_HANDLE &descriptor) {
+	assert(_pRootSignature != nullptr);
+	auto location = _pRootSignature->getShaderParamLocation(sr);
+	if (location.has_value()) {
+		stageDescriptors(
+			location->rootParamIndex, 
+			location->offset, 
+			1, 
+			descriptor
+		);
+	} else {
+		assert(false);
+		std::cerr << "The current register does not: "
+				  << "slot: "
+		          << static_cast<size_t>(sr.slot)
+				  << ", space:" << static_cast<size_t>(sr.space)
+				  << std::endl;
+	}
+}
+
 void DynamicDescriptorHeap::stageDescriptors(size_t rootParameterIndex,
-	size_t offset,
-	size_t numDescripotrs,
-	const D3D12_CPU_DESCRIPTOR_HANDLE &srcDescriptor)
+                                             size_t offset,
+                                             size_t numDescripotrs,
+                                             const D3D12_CPU_DESCRIPTOR_HANDLE &srcDescriptor)
 {
 	if (numDescripotrs > _numDescriptorsPerHeap || rootParameterIndex >= kMaxDescriptorTables)
 		throw std::bad_alloc();

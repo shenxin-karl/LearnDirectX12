@@ -219,34 +219,26 @@ void CommandList::setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType,
 	}
 }
 
-void CommandList::setConstantBufferView(const ConstantBufferView &cbv, size_t rootIndex, size_t offset) {
+void CommandList::setConstantBufferView(const ShaderRegister &sr, const ConstantBufferView &cbv) {
 	assert(_currentGPUState.pRootSignature != nullptr);
+	assert(sr.slot.isCBV());
 #ifdef DEBUG_MODE
 	WRL::ComPtr<ID3D12Resource> pD3DResource = cbv.getResource()->getD3DResource();
 	D3D12_RESOURCE_STATES state = _pResourceStateTracker->getResourceState(pD3DResource.Get());
 	assert(cbv.getResource()->checkCBVState(state));
 #endif
-	_pDynamicDescriptorHeaps[0]->stageDescriptors(
-		rootIndex,
-		offset,
-		1,
-		cbv
-	);
+	_pDynamicDescriptorHeaps[0]->stageDescriptor(sr, cbv);
 }
 
-void CommandList::setShaderResourceView(const ShaderResourceView &srv, size_t rootIndex, size_t offset) {
+void CommandList::setShaderResourceView(const ShaderRegister &sr, const ShaderResourceView &srv) {
 	assert(_currentGPUState.pRootSignature != nullptr);
+	assert(sr.slot.isSRV());
 #ifdef DEBUG_MODE
 	WRL::ComPtr<ID3D12Resource> pD3DResource = srv.getResource()->getD3DResource();
 	D3D12_RESOURCE_STATES state = _pResourceStateTracker->getResourceState(pD3DResource.Get());
 	assert(srv.getResource()->checkSRVState(state));
 #endif
-	_pDynamicDescriptorHeaps[0]->stageDescriptors(
-		rootIndex,
-		offset,
-		1,
-		srv
-	);
+	_pDynamicDescriptorHeaps[0]->stageDescriptor(sr, srv);
 }
 
 void CommandList::readBack(std::shared_ptr<ReadBackBuffer> pReadBackBuffer) {
@@ -368,10 +360,15 @@ void CommandList::setStencilRef(UINT stencilRef) {
 	}
 }
 
-void CommandList::setGraphics32BitConstants(size_t rootIndex, size_t numConstants, const void *pData, size_t destOffset) {
-	assert(_currentGPUState.debugCheckSet32BitConstants(rootIndex, numConstants + destOffset));
+void CommandList::setGraphics32BitConstants(const ShaderRegister &sr, size_t numConstants, const void *pData, size_t destOffset) {
+	auto location = _currentGPUState.pRootSignature->getShaderParamLocation(sr);
+	if (!location.has_value()) {
+		assert(location.has_value());
+		return;
+	}
+
 	_pCommandList->SetGraphicsRoot32BitConstants(
-		static_cast<UINT>(rootIndex),
+		static_cast<UINT>(location->rootParamIndex),
 		static_cast<UINT>(numConstants), 
 		pData,
 		static_cast<UINT>(destOffset)
@@ -496,25 +493,25 @@ void CommandList::setComputePSO(std::shared_ptr<ComputePSO> pPipelineStateObject
 	}
 }
 
-void CommandList::setUnorderedAccessView(const UnorderedAccessView &uav, size_t rootIndex, size_t offset) {
+void CommandList::setUnorderedAccessView(const ShaderRegister &sr, const UnorderedAccessView &uav) {
 	assert(_currentGPUState.pRootSignature != nullptr);
 #ifdef DEBUG_MODE
 	WRL::ComPtr<ID3D12Resource> pD3DResource = uav.getResource()->getD3DResource();
 	D3D12_RESOURCE_STATES state = _pResourceStateTracker->getResourceState(pD3DResource.Get());
 	assert(uav.getResource()->checkUAVState(state));
 #endif
-	_pDynamicDescriptorHeaps[0]->stageDescriptors(
-		rootIndex,
-		offset,
-		1,
-		uav
-	);
+	_pDynamicDescriptorHeaps[0]->stageDescriptor(sr, uav);
 }
 
-void CommandList::setCompute32BitConstants(size_t rootIndex, size_t numConstants, const void *pData, size_t destOffset) {
-	assert(_currentGPUState.debugCheckSet32BitConstants(rootIndex, numConstants + destOffset));
+void CommandList::setCompute32BitConstants(const ShaderRegister &sr, size_t numConstants, const void *pData, size_t destOffset) {
+	auto location = _currentGPUState.pRootSignature->getShaderParamLocation(sr);
+	if (!location.has_value()) {
+		assert(false);
+		return;	
+	}
+
 	_pCommandList->SetComputeRoot32BitConstants(
-		static_cast<UINT>(rootIndex), 
+		static_cast<UINT>(location->rootParamIndex),
 		static_cast<UINT>(numConstants),
 		pData, 
 		static_cast<UINT>(destOffset));
@@ -647,18 +644,6 @@ bool CommandList::CommandListState::checkTextures() const {
 			return true;
 	}
 	return false;
-}
-
-bool CommandList::CommandListState::debugCheckSet32BitConstants(size_t rootIndex, size_t numConstants) const {
-	if (pRootSignature == nullptr)
-		return false;
-	const auto &desc = pRootSignature->getRootSignatureDesc();
-	if (rootIndex > desc.NumParameters)
-		return false;
-	if (desc.pParameters[rootIndex].ParameterType != D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS)
-		return false;
-
-	return numConstants <= desc.pParameters[rootIndex].Constants.Num32BitValues;
 }
 
 }

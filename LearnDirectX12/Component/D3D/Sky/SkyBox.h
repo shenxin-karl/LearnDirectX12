@@ -22,10 +22,6 @@ public:
 	SkyBox(const SkyBoxDesc &desc);
 	void render(dx12lib::GraphicsContextProxy pGraphicsCtx, std::shared_ptr<CameraBase> pCamera) const;
 private:
-	enum RootParam : size_t {
-		CB_Setting = 0,
-		SR_CubeMap = 1,
-	};
 	void buildCubeVertexBuffer(dx12lib::GraphicsContextProxy pGraphicsCtx);
 private:
 	FRConstantBufferPtr<float4x4> _pViewProj;

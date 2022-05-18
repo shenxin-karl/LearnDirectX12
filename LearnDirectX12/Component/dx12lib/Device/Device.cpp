@@ -63,12 +63,8 @@ std::shared_ptr<SwapChain> Device::createSwapChain(HWND hwnd) const {
 	);
 }
 
-std::shared_ptr<RootSignature> Device::createRootSignature(const D3D12_ROOT_SIGNATURE_DESC &desc) {
-	return std::make_shared<dx12libTool::MakeRootSignature>(weak_from_this(), desc);
-}
-
-std::shared_ptr<RootSignature> Device::createRootSignature(const RootSignatureDescHelper &desc) {
-	return std::make_shared<dx12libTool::MakeRootSignature>(weak_from_this(), desc.getRootSignatureDesc());
+std::shared_ptr<RootSignature> Device::createRootSignature(size_t numRootParams, size_t numStaticSamplers) {
+	return std::make_shared<dx12libTool::MakeRootSignature>(weak_from_this(), numRootParams, numStaticSamplers);
 }
 
 std::shared_ptr<GraphicsPSO> Device::createGraphicsPSO(const std::string &name) {

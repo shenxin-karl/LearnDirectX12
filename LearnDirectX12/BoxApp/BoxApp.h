@@ -5,6 +5,7 @@
 #include "D3D/Tool/Camera.h"
 #include "GameTimer/GameTimer.h"
 #include "Geometry/GeometryGenerator.h"
+#include "Pipeline/ShaderRegister.hpp"
 
 using namespace Math;
 
@@ -45,11 +46,6 @@ private:
 	void pollEvent();
 	void buildBoxGeometry(dx12lib::DirectContextProxy pDirectContext);
 	void renderBoxPass(dx12lib::DirectContextProxy pDirectContext) const;
-
-	enum RootParameter : size_t {
-		CB_Object,
-		SR_Env,
-	};
 private:
 	std::shared_ptr<d3d::IBL>			   _pIBL;
 	std::shared_ptr<d3d::SkyBox>		   _pSkyBox;
