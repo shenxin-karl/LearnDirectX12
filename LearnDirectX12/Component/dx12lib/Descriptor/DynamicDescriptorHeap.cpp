@@ -17,6 +17,7 @@ DynamicDescriptorHeap::DynamicDescriptorHeap(std::weak_ptr<Device> pDevice,
 
 void DynamicDescriptorHeap::parseRootSignature(std::shared_ptr<RootSignature> pRootSignature) {
 	assert(pRootSignature != nullptr);
+	_pRootSignature = pRootSignature;
 
 	size_t currentOffset = 0;
 	const auto &descriptorPerTable = pRootSignature->getDescriptorPerTableByType(_heapType);

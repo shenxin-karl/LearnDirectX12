@@ -52,6 +52,28 @@ void RootParameter::initAsDescriptorTable(size_t rangeCount, D3D12_SHADER_VISIBI
 	DescriptorTable.pDescriptorRanges = new D3D12_DESCRIPTOR_RANGE[rangeCount];
 }
 
+void RootParameter::initAsDescriptorTable(const std::initializer_list<std::pair<ShaderRegister, size_t>> &initList,
+	D3D12_SHADER_VISIBILITY visibility)
+{
+	assert(!valid());
+	assert(DescriptorTable.pDescriptorRanges == nullptr);
+	assert(initList.size() > 0);
+	ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	ShaderVisibility = visibility;
+	DescriptorTable.NumDescriptorRanges = static_cast<UINT>(initList.size());
+	DescriptorTable.pDescriptorRanges = new D3D12_DESCRIPTOR_RANGE[initList.size()];
+	size_t i = 0; 
+	for (auto &item : initList) {
+		D3D12_DESCRIPTOR_RANGE &range = const_cast<D3D12_DESCRIPTOR_RANGE &>(DescriptorTable.pDescriptorRanges[i]);
+		range.RangeType = item.first.slot.getDescriptorRangeType();
+		range.NumDescriptors = static_cast<UINT>(item.second);
+		range.BaseShaderRegister = static_cast<UINT>(item.first.slot.getRegisterId());
+		range.RegisterSpace = static_cast<UINT>(item.first.space);
+		range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+		++i;
+	}
+}
+
 void RootParameter::setTableRange(size_t index, ShaderRegister shaderRegister, UINT count) {
 	assert(!valid());
 	assert(DescriptorTable.pDescriptorRanges != nullptr);
@@ -75,10 +97,17 @@ void RootSignature::reset(size_t numRootParams, size_t numStaticSamplers) {
 	_finalized = false;
 	_numRootParams = numRootParams;
 	_numStaticSamplers = numStaticSamplers;
+	_shaderParamLocation.clear();
 	_pRootParamArray = std::make_unique<RootParameter[]>(numRootParams);
 	_shaderParamLocation.clear();
 	if (numStaticSamplers > 0)
 		_pStaticSamplerArray = std::make_unique<D3D12_STATIC_SAMPLER_DESC[]>(numStaticSamplers);
+
+	for (size_t i = 0; i < kDynamicDescriptorHeapCount; ++i) {
+		std::fill(_rootParamDescriptorPerTable[i].begin(), _rootParamDescriptorPerTable[i].end(), 0);
+		_rootParamBitMask[i] = 0;
+	}
+
 }
 
 void RootSignature::finalize(D3D12_ROOT_SIGNATURE_FLAGS flags) {
@@ -121,20 +150,23 @@ void RootSignature::finalize(D3D12_ROOT_SIGNATURE_FLAGS flags) {
 	size_t numDescriptors = 0;
 	for (size_t rootParamIndex = 0; rootParamIndex < _numRootParams; ++rootParamIndex) {
 		const RootParameter &rootParam = _pRootParamArray[rootParamIndex];
-		if (rootParam.ParameterType == D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE) {
+
+		switch (rootParam.ParameterType) {
+		case D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE: {
 			auto &descriptorTable = rootParam.DescriptorTable;
 			size_t rangeCount = descriptorTable.NumDescriptorRanges;
 			size_t tableIndex = getPerTableIndexByRangeType(descriptorTable.pDescriptorRanges[0].RangeType);
 			assert(rangeCount <= static_cast<uint8_t>(-1));
 
-			for (size_t j = 0; j < rangeCount; ++j) {
-				const D3D12_DESCRIPTOR_RANGE &range = rootParam.DescriptorTable.pDescriptorRanges[j];
+			size_t offset = 0;
+			for (size_t i = 0; i < rangeCount; ++i) {
+				const D3D12_DESCRIPTOR_RANGE &range = rootParam.DescriptorTable.pDescriptorRanges[i];
 				if (range.NumDescriptors <= 0)
 					continue;
 
 				// 统计每个寄存器的使用
-				for (size_t offset = 0; offset < range.NumDescriptors; ++offset) {
-					size_t baseRegister = range.BaseShaderRegister + offset;
+				for (size_t j = 0; j < range.NumDescriptors; ++j, ++offset) {
+					size_t baseRegister = range.BaseShaderRegister + j;
 					RegisterSlot slot(range.RangeType, baseRegister);
 					RegisterSpace space = static_cast<RegisterSpace>(range.RegisterSpace);
 					ShaderRegister shaderRegister(slot, space);
@@ -146,6 +178,21 @@ void RootSignature::finalize(D3D12_ROOT_SIGNATURE_FLAGS flags) {
 				_rootParamBitMask[tableIndex].set(rootParamIndex);
 			}
 			numDescriptors += _rootParamDescriptorPerTable[tableIndex][rootParamIndex];
+			break;
+		}
+		case D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS: {
+			const auto &constants = rootParam.Constants;
+			RegisterSlot slot(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, constants.ShaderRegister);
+			RegisterSpace space = static_cast<RegisterSpace>(constants.RegisterSpace);
+			ShaderRegister shaderRegister(slot, space);
+			ShaderParamLocation location(rootParamIndex, constants.Num32BitValues);
+			_shaderParamLocation[shaderRegister] = location;
+			break;
+		}
+		default: {
+			assert(false && "Currently, no single descriptor is supported");
+			break;
+		}
 		}
 	} 
 	_finalized = true;
@@ -154,6 +201,12 @@ void RootSignature::finalize(D3D12_ROOT_SIGNATURE_FLAGS flags) {
 void RootSignature::initStaticSampler(size_t index, const D3D12_STATIC_SAMPLER_DESC &desc) {
 	assert(index < _numStaticSamplers);
 	_pStaticSamplerArray[index] = desc;
+}
+
+void RootSignature::initStaticSampler(size_t index, const std::array<CD3DX12_STATIC_SAMPLER_DESC, 6> &samplers) {
+	assert(index + 6 <= _numStaticSamplers);
+	for (size_t i = 0; i < 6; ++i)
+		_pStaticSamplerArray[index + i] = samplers[i];
 }
 
 WRL::ComPtr<ID3D12RootSignature> RootSignature::getRootSignature() const {

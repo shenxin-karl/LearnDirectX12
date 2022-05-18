@@ -46,10 +46,12 @@ void BoxApp::onInitialize(dx12lib::DirectContextProxy pDirectContext) {
 
 
 	// initialize root signature
-	auto pRootSignature = _pDevice->createRootSignature(1);
-	(*pRootSignature)[0].initAsDescriptorTable(2);
-	(*pRootSignature)[0].setTableRange(0, dx12lib::RegisterSlot::CBV0);
-	(*pRootSignature)[0].setTableRange(1, dx12lib::RegisterSlot::SRV0);
+	auto pRootSignature = _pDevice->createRootSignature(1, 6);
+	pRootSignature->initStaticSampler(0, d3d::getStaticSamplers());
+	pRootSignature->at(0).initAsDescriptorTable({
+		{ dx12lib::RegisterSlot::CBV0, 1 },
+		{ dx12lib::RegisterSlot::SRV0, 1 },
+	});
 	pRootSignature->finalize();
 
 	// initialize graphics pipeline state object
@@ -136,7 +138,7 @@ void BoxApp::renderBoxPass(dx12lib::DirectContextProxy pDirectContext) const {
 	pDirectContext->setVertexBuffer(_pBoxMesh->_pVertexBuffer);
 	pDirectContext->setIndexBuffer(_pBoxMesh->_pIndexBuffer);
 	pDirectContext->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	pDirectContext->setShaderResourceView(dx12lib::RegisterSlot::SRV0, _pIBL->getEnvMap()->getSRV());
+	pDirectContext->setShaderResourceView(dx12lib::RegisterSlot::SRV0, _pIBL->_pTest->getSRV());
 	pDirectContext->drawIndexedInstanced(
 		_pBoxMesh->_pIndexBuffer->getIndexCount(),
 		1,

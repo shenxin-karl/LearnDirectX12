@@ -18,7 +18,8 @@ struct SHCoeffs {
 
 TextureCube<float4> gEnvMap           : register(t0);
 RWStructuredBuffer<SHCoeffs> gOutput  : register(u0);
-SamplerState gSamLinearClamp          : register(s0);
+RWTexture2DArray<float4> gTestOutput  : register(u1);
+SamplerState gSamLinearWrap           : register(s0);
 
 const static float3x3 gRotateCubeFace[6] = {
     float3x3(float3(+0,  +0, +1), float3(+0, -1, +0), float3(-1, +0, +0) ),   // +X
@@ -39,10 +40,9 @@ float3 CalcDirection(ComputeIn cin) {
 static const float PI = 3.141592654;
 float3 CalcIrradiance(float3 direction) {
     float3 N = direction;
-    float3 up 		 = abs(N.z) < 0.999 ? float3(0, 0, 1) : float3(1, 0, 0);
+    float3 up 		 = abs(N.z) <= 1.0 ? float3(0, 0, 1) : float3(1, 0, 0);
     float3 tangent 	 = cross(up, N);
     float3 bitangent = cross(N, tangent);
-    return bitangent * 0.5 + 0.5;
 
     float3x3 TBN = float3x3(tangent, bitangent, N);
     float3 irradianceSum = float3(0, 0, 0);
@@ -60,7 +60,7 @@ float3 CalcIrradiance(float3 direction) {
                 cosTh
             );
             float3 dir = mul(V, TBN);
-            float3 irradiance = gEnvMap.SampleLevel(gSamLinearClamp, dir, 0).rgb;
+            float3 irradiance = gEnvMap.SampleLevel(gSamLinearWrap, dir, 0).rgb;
             irradianceSum += irradiance * cosTh * sinTh;
             ++sampleCount;
 	    }
@@ -98,7 +98,6 @@ void StroeSHCoeffs(ComputeIn cin, SHCoeffs sh3) {
 	// 每个线程执行
     gShCoeffs[x][y] = sh3;
 	GroupMemoryBarrierWithGroupSync();
-    
 	//  x y 是2的倍数执行
     if ( ((x % 2) == 0 && (y % 2) == 0) ) {
 		SHCoeffsAccumulate(sh3, gShCoeffs[x+1][y+0]);
@@ -116,14 +115,13 @@ void StroeSHCoeffs(ComputeIn cin, SHCoeffs sh3) {
 	    gShCoeffs[x][y] = sh3;
     }         
     GroupMemoryBarrierWithGroupSync();
-
     // 第一个线程执行
     if (cin.GroupIndex == 0) {
 	    SHCoeffsAccumulate(sh3, gShCoeffs[x+4][y+0]);
 		SHCoeffsAccumulate(sh3, gShCoeffs[x+0][y+4]);
 		SHCoeffsAccumulate(sh3, gShCoeffs[x+4][y+4]);
-        uint groupX = (uint)ceil((gWidth + 1) / N);
-        uint groupY = (uint)ceil((gHeight + 1) / N);
+        uint groupX = 16;
+        uint groupY = 16;
         uint index = cin.GroupID.y * groupX + cin.GroupID.x;
         uint offset = cin.GroupID.z * (groupY * groupX);
         gOutput[offset + index] = sh3;
@@ -134,6 +132,9 @@ void StroeSHCoeffs(ComputeIn cin, SHCoeffs sh3) {
 void CS(ComputeIn cin) {
 	float3 direction = CalcDirection(cin);
     float3 irradiance = CalcIrradiance(direction);
+    gTestOutput[cin.DispatchThreadID.xyz] = float4(irradiance, 1.0);
+    irradiance = gEnvMap.SampleLevel(gSamLinearWrap, direction, 0).rgb;
+    //irradiance = (direction) * 0.5 + 0.5;
     SHCoeffs sh3 = CalcSphericalHarmonicsCoeff(direction, irradiance);
     StroeSHCoeffs(cin, sh3);
 }

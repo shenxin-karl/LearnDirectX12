@@ -53,14 +53,14 @@ const SH3 &IBL::getIrradianceMapSH3() const {
 void IBL::buildPanoToCubeMapPSO(std::weak_ptr<dx12lib::Device> pDevice) {
 	auto pSharedDevice = pDevice.lock();
 
-	std::vector<D3D12_STATIC_SAMPLER_DESC> samplers;
-	samplers.push_back(d3d::getLinearClampStaticSampler(0));
-	dx12lib::RootSignatureDescHelper desc(samplers);
-	desc.resize(3);
-	desc[CB_Settings].InitAsConstants(3, 0, 0);
-	desc[SR_EnvMap].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV,  1, 0);
-	desc[UA_Output0].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
-	auto pRootSignature = pSharedDevice->createRootSignature(desc);
+	auto pRootSignature = pSharedDevice->createRootSignature(2, 1);
+	pRootSignature->initStaticSampler(0, getLinearClampStaticSampler(0));
+	pRootSignature->at(1).initAsConstants(dx12lib::RegisterSlot::CBV0, 2);
+	pRootSignature->at(0).initAsDescriptorTable({
+		{ dx12lib::RegisterSlot::SRV0, 1 },
+		{ dx12lib::RegisterSlot::UAV0, 1 },
+	});
+	pRootSignature->finalize();
 
 	cmrc::file shaderContent = d3d::getD3DResource("HlslShader/PanoToCubeMapCS.hlsl");
 	_pPanoToCubeMapPSO = pSharedDevice->createComputePSO("PanoToCubeMapPSO");
@@ -77,12 +77,15 @@ void IBL::buildPanoToCubeMapPSO(std::weak_ptr<dx12lib::Device> pDevice) {
 
 void IBL::buildConvolutionIrradiancePSO(std::weak_ptr<dx12lib::Device> pDevice) {
 	auto pSharedDevice = pDevice.lock();
-	dx12lib::RootSignatureDescHelper desc(d3d::getLinearClampStaticSampler(0));
-	desc.resize(3);
-	desc[CB_Settings].InitAsConstants(3, 0, 0);
-	desc[SR_EnvMap].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
-	desc[UA_Output0].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
-	auto pRootSignature = pSharedDevice->createRootSignature(desc);
+	auto pRootSignature = pSharedDevice->createRootSignature(2, 1);
+	pRootSignature->initStaticSampler(0, getLinearWrapStaticSampler(0));
+	pRootSignature->at(0).initAsConstants(dx12lib::RegisterSlot::CBV0, 3);
+	pRootSignature->at(1).initAsDescriptorTable({
+		{ dx12lib::RegisterSlot::SRV0, 1 },
+		{ dx12lib::RegisterSlot::UAV0, 2 },
+	});
+	pRootSignature->finalize();
+
 	cmrc::file shaderContent = d3d::getD3DResource("HlslShader/ConvolutionIrradianceMapCS.hlsl");
 	_pConvolutionIrradiancePSO = pSharedDevice->createComputePSO("ConvolutionIrradiancePSO");
 	_pConvolutionIrradiancePSO->setRootSignature(pRootSignature);
@@ -106,15 +109,15 @@ void IBL::buildEnvMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<
 	float fSize = static_cast<float>(size);
 	_pEnvMap = pComputeCtx->createUnorderedAccessCube(size, size, 1, nullptr, DXGI_FORMAT_R16G16B16A16_FLOAT);
 	pComputeCtx->setComputePSO(_pPanoToCubeMapPSO);
-	pComputeCtx->setCompute32BitConstants(CB_Settings, 1, &fSize, 0);
-	pComputeCtx->setCompute32BitConstants(CB_Settings, 1, &fSize, 1);
-	pComputeCtx->setShaderResourceView(pPannoEnvMap->getSRV(), SR_EnvMap);
-	pComputeCtx->setUnorderedAccessView(_pEnvMap->get2DArrayUAV(), UA_Output0);
+	pComputeCtx->setCompute32BitConstants(dx12lib::RegisterSlot::CBV0, 1, &fSize, 0);
+	pComputeCtx->setCompute32BitConstants(dx12lib::RegisterSlot::CBV0, 1, &fSize, 1);
+	pComputeCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV0, pPannoEnvMap->getSRV());
+	pComputeCtx->setUnorderedAccessView(dx12lib::RegisterSlot::UAV0, _pEnvMap->get2DArrayUAV());
 	size_t groupX = static_cast<size_t>(std::ceil(static_cast<float>(size) / kThreadCount));
 	size_t groupY = static_cast<size_t>(std::ceil(static_cast<float>(size) / kThreadCount));
 	pComputeCtx->dispatch(groupX, groupY, 6);
 
-	auto state = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+	auto state = D3D12_RESOURCE_STATE_GENERIC_READ;
 	pComputeCtx->transitionBarrier(_pEnvMap, state);
 }
 
@@ -129,6 +132,7 @@ void IBL::buildConvolutionIrradianceMap(dx12lib::ComputeContextProxy pComputeCtx
 	float fSize = static_cast<float>(size);
 	float fStep = 0.025f;
 
+	_pTest = pComputeCtx->createUnorderedAccessCube(size, size, 1);
 	size_t groupX = static_cast<size_t>(std::ceil(static_cast<float>(size) / 8));
 	size_t groupY = static_cast<size_t>(std::ceil(static_cast<float>(size) / 8));
 	size_t outputSize = (groupY * groupX) * 6;
@@ -136,11 +140,12 @@ void IBL::buildConvolutionIrradianceMap(dx12lib::ComputeContextProxy pComputeCtx
 	auto pReadBack = pComputeCtx->createReadBackBuffer(outputSize, sizeof(SH3Coeff));
 
 	pComputeCtx->setComputePSO(_pConvolutionIrradiancePSO);
-	pComputeCtx->setCompute32BitConstants(CB_Settings, 1, &fSize, 0);
-	pComputeCtx->setCompute32BitConstants(CB_Settings, 1, &fSize, 1);
-	pComputeCtx->setCompute32BitConstants(CB_Settings, 1, &fStep, 2);
-	pComputeCtx->setShaderResourceView(_pEnvMap->getSRV(), SR_EnvMap);
-	pComputeCtx->setUnorderedAccessView(pCSOutput->getUAV(), UA_Output0);
+	pComputeCtx->setCompute32BitConstants(dx12lib::RegisterSlot::CBV0, 1, &fSize, 0);
+	pComputeCtx->setCompute32BitConstants(dx12lib::RegisterSlot::CBV0, 1, &fSize, 1);
+	pComputeCtx->setCompute32BitConstants(dx12lib::RegisterSlot::CBV0, 1, &fStep, 2);
+	pComputeCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV0, _pEnvMap->getSRV());
+	pComputeCtx->setUnorderedAccessView(dx12lib::RegisterSlot::UAV0, pCSOutput->getUAV());
+	pComputeCtx->setUnorderedAccessView(dx12lib::RegisterSlot::UAV1, _pTest->get2DArrayUAV());
 	pComputeCtx->dispatch(groupX, groupY, 6);
 
 	pComputeCtx->copyResource(pReadBack, pCSOutput);
@@ -162,22 +167,22 @@ void IBL::buildConvolutionIrradianceMap(dx12lib::ComputeContextProxy pComputeCtx
 			_irradianceMapSH3._m[j] = float4(coeffs[j] * normalizingFactor);
 	});
 
+	pComputeCtx->transitionBarrier(_pTest, D3D12_RESOURCE_STATE_GENERIC_READ);
+
 	pComputeCtx->trackResource(std::move(pCSOutput));
 	pComputeCtx->trackResource(std::move(pReadBack));
 }
 
 void IBL::buildPerFilterEnvPSO(std::weak_ptr<dx12lib::Device> pDevice) {
 	auto pSharedDevice = pDevice.lock();
-	dx12lib::RootSignatureDescHelper rootDesc(d3d::getLinearWrapStaticSampler(0));
-	rootDesc.resize(7);
-	rootDesc[CB_Settings].InitAsConstants(2, 0);
-	rootDesc[SR_EnvMap].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-	rootDesc[UA_Output0].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
-	rootDesc[UA_Output1].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 1);
-	rootDesc[UA_Output2].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 2);
-	rootDesc[UA_Output3].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 3);
-	rootDesc[UA_Output4].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 4);
-	auto pRootSignature = pSharedDevice->createRootSignature(rootDesc);
+	auto pRootSignature = pSharedDevice->createRootSignature(1, 1);
+	pRootSignature->initStaticSampler(0, getLinearWrapStaticSampler(0));
+	pRootSignature->at(0).initAsDescriptorTable({
+		{ dx12lib::RegisterSlot::CBV0, 1 },
+		{ dx12lib::RegisterSlot::SRV0, 1 },
+		{ dx12lib::RegisterSlot::UAV0, 5 },
+	});
+	pRootSignature->finalize();
 
 	cmrc::file shaderContents = getD3DResource("HlslShader/PerFilterEnvMapCS.hlsl");
 	_pPerFilterEnvPSO = pSharedDevice->createComputePSO("PerFilterEnvPSO");

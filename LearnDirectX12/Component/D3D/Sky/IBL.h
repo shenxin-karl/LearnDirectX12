@@ -19,16 +19,6 @@ private:
 	void buildPerFilterEnvPSO(std::weak_ptr<dx12lib::Device> pDevice);
 	void buildPerFilterEnvMap(dx12lib::ComputeContextProxy pComputeCtx);
 private:
-	enum RootParameter : size_t {
-		CB_Settings,
-		SR_EnvMap,
-		UA_Output0,
-		UA_Output1,
-		UA_Output2,
-		UA_Output3,
-		UA_Output4,
-	};
-private:
 	constexpr static size_t kThreadCount = 32;
 	SH3 _irradianceMapSH3;
 	std::shared_ptr<dx12lib::ComputePSO>  _pPanoToCubeMapPSO;
@@ -37,6 +27,8 @@ private:
 	std::shared_ptr<dx12lib::SamplerTexture2D> _pBRDFLut;
 	std::shared_ptr<dx12lib::SamplerTexture2D> _pPerFilterEnvMap;
 	std::shared_ptr<dx12lib::UnorderedAccessCube>  _pEnvMap;
+public:
+	std::shared_ptr<dx12lib::UnorderedAccessCube> _pTest;
 };
 
 }

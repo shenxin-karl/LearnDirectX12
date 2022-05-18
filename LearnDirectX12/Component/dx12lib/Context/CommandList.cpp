@@ -366,7 +366,7 @@ void CommandList::setGraphics32BitConstants(const ShaderRegister &sr, size_t num
 		assert(location.has_value());
 		return;
 	}
-
+	assert(destOffset + numConstants <= location->offset);
 	_pCommandList->SetGraphicsRoot32BitConstants(
 		static_cast<UINT>(location->rootParamIndex),
 		static_cast<UINT>(numConstants), 
@@ -509,7 +509,7 @@ void CommandList::setCompute32BitConstants(const ShaderRegister &sr, size_t numC
 		assert(false);
 		return;	
 	}
-
+	assert(destOffset + numConstants <= location->offset);
 	_pCommandList->SetComputeRoot32BitConstants(
 		static_cast<UINT>(location->rootParamIndex),
 		static_cast<UINT>(numConstants),

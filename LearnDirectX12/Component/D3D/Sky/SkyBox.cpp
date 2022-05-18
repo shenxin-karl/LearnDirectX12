@@ -19,9 +19,10 @@ SkyBox::SkyBox(const SkyBoxDesc &desc) : _pCubeMap(desc.pCubeMap) {
 
 	// build Root Signature
 	auto pRootSignature = pSharedDevice->createRootSignature(1, 1);
-	pRootSignature->at(0).initAsDescriptorTable(2);
-	pRootSignature->at(0).setTableRange(0, dx12lib::RegisterSlot::CBV0);
-	pRootSignature->at(0).setTableRange(0, dx12lib::RegisterSlot::SRV0);
+	pRootSignature->at(0).initAsDescriptorTable({
+		{ dx12lib::RegisterSlot::CBV0, 1 },
+		{ dx12lib::RegisterSlot::SRV0, 1 },
+	});
 	pRootSignature->initStaticSampler(0, getLinearWrapStaticSampler(0));
 	pRootSignature->finalize();
 

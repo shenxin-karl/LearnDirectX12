@@ -17,6 +17,7 @@ public:
 	void initAsConstants(ShaderRegister shaderRegister, size_t num32BitValues, D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_ALL);
 	void initAsDescriptorRange(ShaderRegister shaderRegister, UINT count, D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_ALL);
 	void initAsDescriptorTable(size_t rangeCount, D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_ALL);
+	void initAsDescriptorTable(const std::initializer_list<std::pair<ShaderRegister, size_t>> &initList, D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_ALL);
 	void setTableRange(size_t index, ShaderRegister shaderRegister, UINT count = 1);
 };
 
@@ -33,8 +34,9 @@ protected:
 	RootSignature(std::weak_ptr<Device> pDevice, size_t numRootParams, size_t numStaticSamplers = 0);
 public:
 	void reset(size_t numRootParams, size_t numStaticSamplers = 0);
-	void finalize(D3D12_ROOT_SIGNATURE_FLAGS flags = D3D12_ROOT_SIGNATURE_FLAG_NONE);
+	void finalize(D3D12_ROOT_SIGNATURE_FLAGS flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 	void initStaticSampler(size_t index, const D3D12_STATIC_SAMPLER_DESC &desc);
+	void initStaticSampler(size_t index, const std::array<CD3DX12_STATIC_SAMPLER_DESC, 6> &samplers);
 	WRL::ComPtr<ID3D12RootSignature> getRootSignature() const;
 	std::bitset<kMaxDescriptorTables> getDescriptorTableBitMask(D3D12_DESCRIPTOR_HEAP_TYPE heapType);
 	RootParameter &operator[](size_t index);
