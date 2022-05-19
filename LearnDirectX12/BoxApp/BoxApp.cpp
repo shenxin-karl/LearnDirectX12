@@ -39,7 +39,7 @@ void BoxApp::onInitialize(dx12lib::DirectContextProxy pDirectContext) {
 		.pCubeMap = _pIBL->getEnvMap(),
 		.renderTargetFormat = _pSwapChain->getRenderTargetFormat(),
 		.depthStencilFormat = _pSwapChain->getDepthStencilFormat(),
-		.enableGammaCorrection = true,
+		.enableGammaCorrection = false,
 		.enableToneMapping = true,
 	};
 	_pSkyBox = std::make_unique<d3d::SkyBox>(skyBoxDesc);

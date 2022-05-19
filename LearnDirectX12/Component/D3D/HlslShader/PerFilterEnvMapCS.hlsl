@@ -182,7 +182,7 @@ void CalcRoughness5(ComputeIn cin, float3 N, float3x3 TBN) {
 [numthreads(16, 16, 1)]
 void CS(ComputeIn cin) {
 	float3 N         = CalcDirection(cin);
-    float3 up 		 = abs(N.z) < 0.999 ? float3(0, 0, 1) : float3(1, 0, 0);
+    float3 up 		 = abs(N.y) <= 0.999 ? float3(0, 0, 1) : float3(1, 0, 0);
     float3 tangent 	 = cross(up, N);
     float3 bitangent = cross(N, tangent);
     float3x3 TBN = float3x3(tangent, bitangent, N);

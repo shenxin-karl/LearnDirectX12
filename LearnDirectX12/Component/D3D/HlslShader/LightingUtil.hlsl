@@ -152,8 +152,6 @@ float3 ComputeSpotLight(Light light, Material mat, float3 normal, float3 viewDir
 float3 SampleSH(SH3 sh, float3 N) {
 	float3 result = 0.0;
     float x = N.x;      float y = N.y;      float z = N.z;
-    float xy = x * y;   float xz = x * z;   float yz = y * z;
-	float x2 = x * x;   float y2 = y * y;   float z2 = z * z;
 
     // l = 0
     result += sh.y0p0 * 0.2820948;
@@ -162,11 +160,11 @@ float3 SampleSH(SH3 sh, float3 N) {
     result += sh.y1p0 * 0.4886025 * z;
     result += sh.y1p1 * 0.4886025 * x;
     // l = 2
-    result += sh.y2n2 * 1.0925480 * xy;
-    result += sh.y2n1 * 1.0925480 * yz;
-    result += sh.y2p0 * 0.3153916 * (3.0 * z2 - 1.0);
-    result += sh.y2p1 * 1.0925480 * xz;
-    result += sh.y2p2 * 0.5462742 * (x2 - y2);
+    result += sh.y2n2 * 1.0925480 * x * y;
+    result += sh.y2n1 * 1.0925480 * y * z;
+    result += sh.y2p0 * 0.3153916 * ((3.0 * z * z) - 1.0);
+    result += sh.y2p1 * 1.0925480 * x * z;
+    result += sh.y2p2 * 0.5462742 * (x*x - y*y);
     return result;
 }
 

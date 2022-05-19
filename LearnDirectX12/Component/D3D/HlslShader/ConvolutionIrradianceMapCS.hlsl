@@ -31,16 +31,16 @@ const static float3x3 gRotateCubeFace[6] = {
 };
 float3 CalcDirection(ComputeIn cin) {
 	uint index = cin.DispatchThreadID.z;
-    float x = (cin.DispatchThreadID.x / gWidth)  - 0.5;
-    float y = (cin.DispatchThreadID.y / gHeight) - 0.5;
+    float x = (cin.DispatchThreadID.x / (gWidth-1))  - 0.5;
+    float y = (cin.DispatchThreadID.y / (gHeight-1)) - 0.5;
     float3 direction = normalize(mul(gRotateCubeFace[index], float3(x, y, 0.5)));       // w
     return direction;
 }
 
 static const float PI = 3.141592654;
 float3 CalcIrradiance(float3 direction) {
-    float3 N = direction;
-    float3 up 		 = abs(N.z) <= 1.0 ? float3(0, 0, 1) : float3(1, 0, 0);
+    float3 N         = direction;
+    float3 up 		 = abs(N.y) <= 1.0 ? float3(0, 1, 0) : float3(0, 0, 1);
     float3 tangent 	 = cross(up, N);
     float3 bitangent = cross(N, tangent);
 
@@ -68,10 +68,28 @@ float3 CalcIrradiance(float3 direction) {
     return ((PI / sampleCount) * irradianceSum);
 }
 
+float AreaElement(float x, float y) {
+	return atan2(x * y, sqrt(x*x + y*y + 1));
+}
 
-SHCoeffs CalcSphericalHarmonicsCoeff(float3 dir, float3 irradiance) {
-	float x = dir.x; float y = dir.y; float z = dir.z;
+float DifferentialSolidAngle(ComputeIn cin) {
+	float inv = 1.0 / float2(gWidth, gHeight);
+    float u = (2.0 * (cin.DispatchThreadID.x + 0.5) / gWidth) - 1.0;
+    float v = (2.0 * (cin.DispatchThreadID.y + 0.5) / gHeight) - 1.0;
+    float x0 = u - inv;
+    float y0 = v - inv;
+    float x1 = u + inv;
+    float y1 = v + inv;
+    return AreaElement(x0, y0) - AreaElement(x0, y1) - AreaElement(x1, y0) + AreaElement(x1, y1);
+}
+
+SHCoeffs CalcSphericalHarmonicsCoeff(ComputeIn cin, float3 dir, float3 irradiance) {
     SHCoeffs sh3;
+    float solidAngle = DifferentialSolidAngle(cin);         // 求出立体角大小
+	float x = dir.x; float y = dir.y; float z = dir.z;
+
+    irradiance *= solidAngle;
+
 	sh3.m[0] = irradiance * 0.2820948;							// y0p0
 	sh3.m[1] = irradiance * 0.4886025 * y;						// y1n1
 	sh3.m[2] = irradiance * 0.4886025 * z;						// y1p0
@@ -133,8 +151,6 @@ void CS(ComputeIn cin) {
 	float3 direction = CalcDirection(cin);
     float3 irradiance = CalcIrradiance(direction);
     gTestOutput[cin.DispatchThreadID.xyz] = float4(irradiance, 1.0);
-    irradiance = gEnvMap.SampleLevel(gSamLinearWrap, direction, 0).rgb;
-    //irradiance = (direction) * 0.5 + 0.5;
-    SHCoeffs sh3 = CalcSphericalHarmonicsCoeff(direction, irradiance);
+    SHCoeffs sh3 = CalcSphericalHarmonicsCoeff(cin, direction, irradiance);
     StroeSHCoeffs(cin, sh3);
 }

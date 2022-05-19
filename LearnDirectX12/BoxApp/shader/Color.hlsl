@@ -29,8 +29,7 @@ VertexOut VS(VertexIn vin) {
 TextureCube gEnvMap : register(t0);
 float4 PS(VertexOut pin) : SV_Target {
     float3 envColor = SampleSH(gSH3, normalize(pin.normal));
-    //float3 envColor = gEnvMap.SampleLevel(gSamLinearClamp, pin.normal, 0).rgb;
-    envColor = ACESToneMapping(envColor, 1.0);
+    envColor = CEToneMapping(envColor, 1.0);
     envColor = GammaCorrection(envColor);
     return float4(envColor, 1.0);
 }

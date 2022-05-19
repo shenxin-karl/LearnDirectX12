@@ -1,4 +1,3 @@
-#line 2 "./LearnDirectX12/Component/D3D/HlslShader/PanoToCubeMapCS.hlsl"
 cbuffer CBSettings : register(b0) {
     float gWidth;
     float gHeight;
@@ -44,5 +43,6 @@ void CS(ComputeIn csin) {
     float3 target = float3(x, y, 0.5);
     float3 direction = normalize(mul(gRotateCubeFace[index], target));
     float2 texcoord = SamplerPanoramaMap(direction);
-	gOutput[csin.DispatchThreadID.xyz] = gPannoEnvMap.SampleLevel(gSamLinearClamp, texcoord, 0);
+    float3 texColor = gPannoEnvMap.SampleLevel(gSamLinearClamp, texcoord, 0);
+	gOutput[csin.DispatchThreadID.xyz] = float4(texColor, 1.0);
 }
