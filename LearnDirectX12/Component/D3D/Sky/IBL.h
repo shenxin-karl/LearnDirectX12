@@ -9,6 +9,8 @@ class IBL {
 public:
 	IBL(dx12lib::DirectContextProxy pDirectCtx, const std::string &fileName);
 	std::shared_ptr<dx12lib::UnorderedAccessCube> getEnvMap() const;
+	std::shared_ptr<dx12lib::UnorderedAccessCube> getPerFilterEnvMap() const;
+	std::shared_ptr<dx12lib::SamplerTexture2D> getBRDFLutMap() const;
 	const SH3 &getIrradianceMapSH3() const;
 private:
 	void buildSphericalHarmonics3(const std::string &fileName);
@@ -19,15 +21,14 @@ private:
 	void buildPerFilterEnvPSO(std::weak_ptr<dx12lib::Device> pDevice);
 	void buildPerFilterEnvMap(dx12lib::ComputeContextProxy pComputeCtx);
 private:
-	constexpr static size_t kThreadCount = 32;
 	SH3 _irradianceMapSH3;
 	std::shared_ptr<dx12lib::ComputePSO>  _pPanoToCubeMapPSO;
 	std::shared_ptr<dx12lib::ComputePSO>  _pConvolutionIrradiancePSO;
 	std::shared_ptr<dx12lib::ComputePSO>  _pPerFilterEnvPSO;
-	std::shared_ptr<dx12lib::SamplerTexture2D> _pBRDFLut;
-	std::shared_ptr<dx12lib::SamplerTexture2D> _pPerFilterEnvMap;
+	std::shared_ptr<dx12lib::SamplerTexture2D> _pBRDFLutMap;
 	std::shared_ptr<dx12lib::UnorderedAccessCube>  _pEnvMap;
 public:
+	std::shared_ptr<dx12lib::UnorderedAccessCube> _pPerFilterEnvMap;
 	std::shared_ptr<dx12lib::UnorderedAccessCube> _pTest;
 };
 

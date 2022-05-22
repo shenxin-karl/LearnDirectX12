@@ -30,28 +30,36 @@ void BoxApp::onInitialize(dx12lib::DirectContextProxy pDirectContext) {
 	cameraDesc.aspect = float(_width) / float(_height);
 
 	_pCamera = std::make_unique<d3d::CoronaCamera>(cameraDesc);
+	_pCBPass = pDirectContext->createFRConstantBuffer<d3d::CBPassType>();
 	_pCBObject = pDirectContext->createFRConstantBuffer<CBObject>();
 	_pCBObject->visit()->gMaterial = {float4(1.f), 0.5, 0.5f};
 
-	_pIBL = std::make_unique<d3d::IBL>(pDirectContext, "resources/Stadium_Center_3k.hdr");
+	_pIBL = std::make_unique<d3d::IBL>(pDirectContext, "resources/Barce_Rooftop_C_3k.hdr");
 	d3d::SkyBoxDesc skyBoxDesc = {
 		.pGraphicsCtx = pDirectContext,
 		.pCubeMap = _pIBL->getEnvMap(),
 		.renderTargetFormat = _pSwapChain->getRenderTargetFormat(),
 		.depthStencilFormat = _pSwapChain->getDepthStencilFormat(),
-		.enableGammaCorrection = false,
+		.enableGammaCorrection = true,
 		.enableToneMapping = true,
 	};
 	_pSkyBox = std::make_unique<d3d::SkyBox>(skyBoxDesc);
 
 
 	// initialize root signature
-	auto pRootSignature = _pDevice->createRootSignature(1, 6);
+	auto pRootSignature = _pDevice->createRootSignature(2, 6);
 	pRootSignature->initStaticSampler(0, d3d::getStaticSamplers());
+	// object
 	pRootSignature->at(0).initAsDescriptorTable({
 		{ dx12lib::RegisterSlot::CBV0, 1 },
-		{ dx12lib::RegisterSlot::SRV0, 1 },
 	});
+
+	// pass
+	pRootSignature->at(1).initAsDescriptorTable({
+		{ dx12lib::RegisterSlot::CBV1, 1 },
+		{ dx12lib::RegisterSlot::SRV0, 3 },
+	});
+
 	pRootSignature->finalize();
 
 	// initialize graphics pipeline state object
@@ -80,13 +88,21 @@ void BoxApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pObject = _pCBObject->map();
 	_pCamera->update(pGameTimer);
 
+	_pCamera->updatePassCB(*_pCBPass->visit());
+	_pCBPass->visit()->renderTargetSize = _pSwapChain->getRenderTargetSize();
+	_pCBPass->visit()->invRenderTargetSize = _pSwapChain->getInvRenderTargetSize();
+	_pCBPass->visit()->totalTime = pGameTimer->getTotalTime();
+	_pCBPass->visit()->deltaTime = pGameTimer->getDeltaTime();
+
 	Matrix4 rotate = Matrix4::makeZRotationByRadian(pGameTimer->getTotalTime());
 	Matrix4 viewProj = _pCamera->getMatViewProj();
 	Matrix4 translation = Matrix4::makeTranslation(0.f, std::cos(pGameTimer->getTotalTime()), std::sin(pGameTimer->getTotalTime()));
 	Matrix4 matWorld = translation * rotate;
-	pObject->gMatWorldViewProj = float4x4(viewProj);
+	pObject->gMatWorld = float4x4(Matrix4::identity());
 	pObject->gMatNormal = float4x4(Matrix4::identity()); //float4x4(rotate);
 	pObject->gSH3 = _pIBL->getIrradianceMapSH3();
+	pObject->gMaterial.roughness = sin(pGameTimer->getTotalTime()) * 0.5f + 0.5f;
+	pObject->gMaterial.metallic = cos(pGameTimer->getTotalTime()) * 0.5f + 0.5f;
 }
 
 void BoxApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
@@ -123,7 +139,7 @@ void BoxApp::pollEvent() {
 
 void BoxApp::buildBoxGeometry(dx12lib::DirectContextProxy pDirectContext) {
 	com::GometryGenerator gen;
-	com::MeshData cubeSphere = gen.createCubeSphere(1.f, 3);
+	com::MeshData cubeSphere = gen.createSphere(1.f, 3);
 	_pBoxMesh = std::make_unique<BoxMesh>();
 	auto makeMeshHelper = d3d::MakeMeshHelper<Vertex>();
 	_pBoxMesh->_pVertexBuffer = makeMeshHelper.buildVertexBuffer(pDirectContext, cubeSphere);
@@ -134,11 +150,20 @@ void BoxApp::buildBoxGeometry(dx12lib::DirectContextProxy pDirectContext) {
 
 void BoxApp::renderBoxPass(dx12lib::DirectContextProxy pDirectContext) const {
 	pDirectContext->setGraphicsPSO(_pGraphicsPSO);
+
+	// set pass state
+	pDirectContext->setConstantBuffer(dx12lib::RegisterSlot::CBV1, _pCBPass);
+	pDirectContext->setShaderResourceView(dx12lib::RegisterSlot::SRV0, _pIBL->getEnvMap()->getSRV());
+	pDirectContext->setShaderResourceView(dx12lib::RegisterSlot::SRV1, _pIBL->getPerFilterEnvMap()->getSRV());
+	//pDirectContext->setShaderResourceView(dx12lib::RegisterSlot::SRV1, _pIBL->getEnvMap()->getSRV());
+	pDirectContext->setShaderResourceView(dx12lib::RegisterSlot::SRV2, _pIBL->getBRDFLutMap()->getSRV());
+
+	// set object state
 	pDirectContext->setConstantBuffer(dx12lib::RegisterSlot::CBV0, _pCBObject);
+
 	pDirectContext->setVertexBuffer(_pBoxMesh->_pVertexBuffer);
 	pDirectContext->setIndexBuffer(_pBoxMesh->_pIndexBuffer);
 	pDirectContext->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	pDirectContext->setShaderResourceView(dx12lib::RegisterSlot::SRV0, _pIBL->_pTest->getSRV());
 	pDirectContext->drawIndexedInstanced(
 		_pBoxMesh->_pIndexBuffer->getIndexCount(),
 		1,

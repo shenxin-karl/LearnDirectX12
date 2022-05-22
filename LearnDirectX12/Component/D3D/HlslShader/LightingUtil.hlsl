@@ -12,21 +12,11 @@
 #else
 
 float CarToonDiffShadingFactor(float NdotL) {
-    if (NdotL <= 0.f)
-        return 0.4f;
-    else if (NdotL <= 0.5f)
-        return 0.6f;
-    else
-        return 1.0f;
+    return NdotL <= 0.f ? 0.4 : (NdotL <= 0.5 ? 0.6 : 1.0);
 }    
     
 float CarToonSpecShadingFactor(float HdotN) {
-    if (HdotN <= 0.1f)
-        return 0.0f;
-    else if (HdotN <= 0.8f)
-        return 0.5f;
-    else
-        return 0.8f;
+    return NdotH <= 0.1 ? 0.0 : (HdotN <= 0.8 ? 0.5 : 0.8);
 }
     #define DIFF_SHADING_FACTOR(NdotL) CarToonDiffShadingFactor(NdotL)
     #define SPEC_SHADING_FACTOR(NdotH) CarToonSpecShadingFactor(NdotH)
@@ -73,7 +63,7 @@ float CalcFogAttenuation(float d, float fogStart, float fogEnd) {
     return saturate((d - fogStart) / (fogEnd - fogStart));
 }
 
-float3 SclickFresnel(float3 F0, float cosIncidenceAngle) {
+float3 SchlickFresnel(float3 F0, float cosIncidenceAngle) {
     float cosTh = 1.0 - cosIncidenceAngle;
     return F0 + (1.f - F0) * (cosTh * cosTh * cosTh * cosTh * cosTh);
 }
@@ -87,7 +77,7 @@ float3 BlinnPhong(float3 lightStrength, float3 L, float3 N, float3 V, Material m
     
     float NdotH = saturate(dot(N, H));
     float roughnessFactor = (m + 2.f) / 8.0 * pow(NdotH, m);
-    float3 freshnelFactor = SclickFresnel(F0, saturate(dot(H, L)));
+    float3 freshnelFactor = SchlickFresnel(F0, saturate(dot(H, L)));
     float3 specAlbedo = SPEC_SHADING_FACTOR(roughnessFactor) * freshnelFactor;
     
     // If the material is metal, the diffuse reflection will be reduced
@@ -150,7 +140,7 @@ float3 ComputeSpotLight(Light light, Material mat, float3 normal, float3 viewDir
  * \return      辐照度
  */
 float3 SampleSH(SH3 sh, float3 N) {
-	float3 result = 0.0;
+	float4 result = 0.0;
     float x = N.x;      float y = N.y;      float z = N.z;
 
     // l = 0
@@ -165,7 +155,44 @@ float3 SampleSH(SH3 sh, float3 N) {
     result += sh.y2p0 * 0.3153916 * ((3.0 * z * z) - 1.0);
     result += sh.y2p1 * 1.0925480 * x * z;
     result += sh.y2p2 * 0.5462742 * (x*x - y*y);
-    return result;
+    return (float3)result;
+}
+
+float3 SchlickFresnelRoughness(float cosIncidenceAngle, float3 R0, float roughness) {
+    float cosTh = 1.0 - cosIncidenceAngle;
+    float3 reflected = R0 + (max(1.0-roughness, R0) - R0) * (cosTh * cosTh * cosTh * cosTh * cosTh);
+    return reflected;
+}
+
+struct IBLParam {
+    SH3          sh3;
+	SamplerState texSampler;
+    Texture2D    brdfLutMap;
+    TextureCube  perFilterEnvMap;
+};
+
+float3 CalcIBLAmbient(float3 V, float3 N, Material material, IBLParam param) {
+    float3 albedo = (float3)material.diffuseAlbedo;
+	float3 R0 = lerp(0.04, albedo, material.metallic);
+    float NdotV = max(dot(N, V), 0);
+    float3 F = SchlickFresnelRoughness(NdotV, R0, material.roughness);
+    float3 Ks = F;
+
+    // diffuse
+    float3 Kd = max((1.0 - Ks), 0) * (1.0 - material.metallic);
+    float3 irradiance = SampleSH(param.sh3, N);
+    float3 diffuse = Kd * irradiance * albedo;
+
+    // specular
+    const float MAX_REFLECTION_LOD = 4.0;
+    float3 R = reflect(-V, N);
+    float lod = material.roughness * MAX_REFLECTION_LOD;
+    float2 texcoord = float2(NdotV, material.roughness);
+    float2 envBRDF = param.brdfLutMap.SampleLevel(param.texSampler, texcoord, 0).xy;
+    float3 perFilterColor = param.perFilterEnvMap.SampleLevel(param.texSampler, R, lod).rgb;
+    float3 specular = perFilterColor * (F * envBRDF.x + envBRDF.y);
+
+    return diffuse + specular;
 }
 
 #endif

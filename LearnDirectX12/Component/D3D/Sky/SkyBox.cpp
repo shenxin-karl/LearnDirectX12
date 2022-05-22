@@ -93,7 +93,7 @@ void SkyBox::render(dx12lib::GraphicsContextProxy pGraphicsCtx, std::shared_ptr<
 
 	pGraphicsCtx->setGraphicsPSO(_pSkyBoxPSO);
 	pGraphicsCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV0, _pViewProj);
-	pGraphicsCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV0, _pCubeMap->getSRV());
+	pGraphicsCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV0, _pCubeMap->getSRV(0));
 	pGraphicsCtx->setPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	pGraphicsCtx->setVertexBuffer(_pCubeVertexBuffer);
 	pGraphicsCtx->drawInstanced(_pCubeVertexBuffer->getVertexCount(), 1, 0);

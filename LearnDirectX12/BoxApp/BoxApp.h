@@ -28,7 +28,7 @@ enum BoxRootParame : UINT {
 };
 
 struct CBObject {
-	float4x4      gMatWorldViewProj;
+	float4x4      gMatWorld;
 	float4x4	  gMatNormal;
 	d3d::Material gMaterial;
 	d3d::SH3	  gSH3;
@@ -52,10 +52,6 @@ private:
 	std::shared_ptr<dx12lib::GraphicsPSO>  _pGraphicsPSO;
 	std::shared_ptr<d3d::CoronaCamera>     _pCamera;
 	FRConstantBufferPtr<CBObject>		   _pCBObject;
+	FRConstantBufferPtr<d3d::CBPassType>   _pCBPass;
 	std::unique_ptr<BoxMesh>               _pBoxMesh;
-	float    _theta = 0.f;
-	float    _phi = 0.f;
-	float    _radius = 5.f;
-	bool     _isMouseLeftPress = false;
-	POINT    _lastMousePosition;
 };

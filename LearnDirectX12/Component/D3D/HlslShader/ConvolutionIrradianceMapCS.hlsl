@@ -40,20 +40,20 @@ float3 CalcDirection(ComputeIn cin) {
 static const float PI = 3.141592654;
 float3 CalcIrradiance(float3 direction) {
     float3 N         = direction;
-    float3 up 		 = abs(N.y) <= 1.0 ? float3(0, 1, 0) : float3(0, 0, 1);
+    float3 up 		 = abs(N.y) < 1.0 ? float3(0, 1, 0) : float3(0, 0, 1);
     float3 tangent 	 = cross(up, N);
     float3 bitangent = cross(N, tangent);
-
     float3x3 TBN = float3x3(tangent, bitangent, N);
+
     float3 irradianceSum = float3(0, 0, 0);
     uint sampleCount = 0;
 	const float delta = gStep;
 	for (float phi = 0.0; phi < 2.0 * PI; phi += delta) {
+        float cosPh = cos(phi);
+        float sinPh = sin(phi);
 	    for (float theta = 0.0; theta < 0.5 * PI; theta += delta) {
             float cosTh = cos(theta);
-            float cosPh = cos(phi);
-            float sinTh = sqrt(1.0 - cosTh * cosTh);
-            float sinPh = sqrt(1.0 - cosPh * cosPh);
+			float sinTh = sin(theta);
 		    float3 V = float3(
 				sinTh * cosPh,
                 sinTh * sinPh,
@@ -72,6 +72,7 @@ float AreaElement(float x, float y) {
 	return atan2(x * y, sqrt(x*x + y*y + 1));
 }
 
+//https://www.rorydriscoll.com/2012/01/15/cubemap-texel-solid-angle/
 float DifferentialSolidAngle(ComputeIn cin) {
 	float inv = 1.0 / float2(gWidth, gHeight);
     float u = (2.0 * (cin.DispatchThreadID.x + 0.5) / gWidth) - 1.0;

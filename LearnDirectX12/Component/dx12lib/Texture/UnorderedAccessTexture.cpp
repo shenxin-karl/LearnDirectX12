@@ -21,7 +21,7 @@ ShaderResourceView UnorderedAccess2D::getSRV(size_t mipSlice) const {
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.Texture2D.MostDetailedMip = 0;
-	srvDesc.Texture2D.MipLevels = -1;
+	srvDesc.Texture2D.MipLevels = _pResource->GetDesc().MipLevels;
 	srvDesc.Texture2D.PlaneSlice = 0;
 	srvDesc.Texture2D.ResourceMinLODClamp = static_cast<float>(mipSlice);
 	pSharedDevice->getD3DDevice()->CreateShaderResourceView(
@@ -234,7 +234,7 @@ ShaderResourceView UnorderedAccessCube::getSRV(size_t mipSlice) const {
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
 	srvDesc.TextureCube.MostDetailedMip = 0;
-	srvDesc.TextureCube.MipLevels = -1;
+	srvDesc.TextureCube.MipLevels = _pResource->GetDesc().MipLevels;
 	srvDesc.TextureCube.ResourceMinLODClamp = static_cast<float>(mipSlice);
 	pSharedDevice->getD3DDevice()->CreateShaderResourceView(
 		_pResource.Get(),

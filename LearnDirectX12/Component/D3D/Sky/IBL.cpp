@@ -36,14 +36,25 @@ IBL::IBL(dx12lib::DirectContextProxy pComputeCtx, const std::string &fileName) {
 	buildConvolutionIrradiancePSO(pComputeCtx->getDevice());
 	buildConvolutionIrradianceMap(pComputeCtx, pPannoEnvMap);
 
+	buildPerFilterEnvPSO(pComputeCtx->getDevice());
+	buildPerFilterEnvMap(pComputeCtx);
+
 	cmrc::file brdfLutFile = getD3DResource("resources/BRDF_LUT.dds");
-	_pBRDFLut = pComputeCtx->createDDSTexture2DFromMemory(brdfLutFile.begin(), brdfLutFile.size());
+	_pBRDFLutMap = pComputeCtx->createDDSTexture2DFromMemory(brdfLutFile.begin(), brdfLutFile.size());
 
 	pComputeCtx->trackResource(std::move(pPannoEnvMap));
 }
 
 std::shared_ptr<dx12lib::UnorderedAccessCube> IBL::getEnvMap() const {
 	return _pEnvMap;
+}
+
+std::shared_ptr<dx12lib::UnorderedAccessCube> IBL::getPerFilterEnvMap() const {
+	return _pPerFilterEnvMap;
+}
+
+std::shared_ptr<dx12lib::SamplerTexture2D> IBL::getBRDFLutMap() const {
+	return _pBRDFLutMap;
 }
 
 const SH3 &IBL::getIrradianceMapSH3() const {
@@ -100,6 +111,8 @@ void IBL::buildConvolutionIrradiancePSO(std::weak_ptr<dx12lib::Device> pDevice) 
 }
 
 void IBL::buildEnvMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<dx12lib::IShaderResource2D> pPannoEnvMap) {
+	constexpr size_t kThreadCount = 32;
+
 	size_t width = pPannoEnvMap->getWidth();
 	size_t height = pPannoEnvMap->getHeight();
 	size_t size = std::max(width, height) / 3;
@@ -130,7 +143,7 @@ void IBL::buildConvolutionIrradianceMap(dx12lib::ComputeContextProxy pComputeCtx
 	size_t height = pPannoEnvMap->getHeight();
 	size_t size = 128;
 	float fSize = static_cast<float>(size);
-	float fStep = 0.075f;
+	float fStep = 0.025f;
 
 	_pTest = pComputeCtx->createUnorderedAccessCube(size, size, 1);
 	size_t groupX = static_cast<size_t>(std::ceil(static_cast<float>(size) / 8));
@@ -162,9 +175,8 @@ void IBL::buildConvolutionIrradianceMap(dx12lib::ComputeContextProxy pComputeCtx
 				coeffs[i] += Vector3(shCoeffs.m[i]);
 		}
 
-		float normalizingFactor = 1.f;//((4.f * DX::XM_PI) / (size * size * 6));
 		for (size_t j = 0; j < 9; ++j)
-			_irradianceMapSH3._m[j] = float4(coeffs[j] * normalizingFactor);
+			_irradianceMapSH3._m[j] = float4(coeffs[j]);
 	});
 
 	pComputeCtx->transitionBarrier(_pTest, D3D12_RESOURCE_STATE_GENERIC_READ);
@@ -175,10 +187,10 @@ void IBL::buildConvolutionIrradianceMap(dx12lib::ComputeContextProxy pComputeCtx
 
 void IBL::buildPerFilterEnvPSO(std::weak_ptr<dx12lib::Device> pDevice) {
 	auto pSharedDevice = pDevice.lock();
-	auto pRootSignature = pSharedDevice->createRootSignature(1, 1);
+	auto pRootSignature = pSharedDevice->createRootSignature(2, 1);
 	pRootSignature->initStaticSampler(0, getLinearWrapStaticSampler(0));
-	pRootSignature->at(0).initAsDescriptorTable({
-		{ dx12lib::RegisterSlot::CBV0, 1 },
+	pRootSignature->at(0).initAsConstants(dx12lib::RegisterSlot::CBV0, 1);
+	pRootSignature->at(1).initAsDescriptorTable({
 		{ dx12lib::RegisterSlot::SRV0, 1 },
 		{ dx12lib::RegisterSlot::UAV0, 5 },
 	});
@@ -198,7 +210,22 @@ void IBL::buildPerFilterEnvPSO(std::weak_ptr<dx12lib::Device> pDevice) {
 }
 
 void IBL::buildPerFilterEnvMap(dx12lib::ComputeContextProxy pComputeCtx) {
-	//_pPerFilterEnvMap = pComputeCtx->createUnorderedAccessCube(256, 256, )
+	constexpr size_t kThreadCount = 8;
+	constexpr size_t kMapSize = 256;
+	constexpr size_t kGroupCount = kMapSize / kThreadCount;
+	constexpr float fSize = static_cast<float>(kMapSize);
+
+	_pPerFilterEnvMap = pComputeCtx->createUnorderedAccessCube(kMapSize, kMapSize, 5, nullptr, DXGI_FORMAT_R16G16B16A16_FLOAT);
+	pComputeCtx->setComputePSO(_pPerFilterEnvPSO);
+	pComputeCtx->setCompute32BitConstants(dx12lib::RegisterSlot::CBV0, 1, &fSize);
+	pComputeCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV0, _pEnvMap->getSRV());
+	dx12lib::ShaderRegister baseRegister = dx12lib::RegisterSlot::UAV0;
+	for (size_t i = 0; i < 5; ++i) {
+		auto shaderRegister = baseRegister + i;
+		pComputeCtx->setUnorderedAccessView(shaderRegister, _pPerFilterEnvMap->get2DArrayUAV(i));
+	}
+	pComputeCtx->dispatch(kGroupCount, kGroupCount, 6);
+	pComputeCtx->transitionBarrier(_pPerFilterEnvMap, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 }
 
 }

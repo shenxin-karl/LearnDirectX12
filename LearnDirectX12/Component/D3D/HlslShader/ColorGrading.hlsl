@@ -36,4 +36,12 @@ float3 GammaCorrection(float3 color, float gamma = 2.2) {
 	return pow(color, float3(invGamma, invGamma, invGamma));
 }
 
+float3 ConvertToLinear(float3 x) {
+    return x < 0.04045f ? x / 12.92 : pow((x + 0.055) / 1.055, 2.4);
+}
+
+float3 ConvertToSRGB(float3 x) {
+    return x < 0.0031308 ? 12.92 * x : 1.055 * pow(abs(x), 1.0 / 2.4) - 0.055;
+}
+
 #endif
