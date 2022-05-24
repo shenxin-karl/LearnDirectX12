@@ -25,4 +25,5 @@ set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Libraies")
 
 target_include_directories(${PROJECT_NAME} PRIVATE 
 	${CMAKE_CURRENT_SOURCE_DIR}/
+	${PROJECT_LIBRAIES_DIR}
 )

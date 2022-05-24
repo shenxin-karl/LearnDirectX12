@@ -6,7 +6,7 @@
 namespace com {
 
 void BaseApp::initialize() {
-	_pInputSystem = std::make_unique<InputSystem>(_title, _width, _height);
+	_pInputSystem = std::make_shared<InputSystem>(_title, _width, _height);
 	_pInputSystem->initialize();
 	_pInputSystem->pWindow->setResizeCallback([&](int width, int height) {
 		resize(width, height);
@@ -66,8 +66,8 @@ void BaseApp::endTick(std::shared_ptr<GameTimer> pGameTimer) {
 	if (_pInputSystem->pWindow->isPause())
 		return;
 
-	_pDevice->releaseStaleDescriptor();
 	onEndTick(pGameTimer);
+	_pDevice->releaseStaleDescriptor();
 }
 
 void BaseApp::resize(int width, int height) {

@@ -6,16 +6,17 @@
 
 int main() {
 	std::shared_ptr<com::GameTimer> pGameTimer = std::make_shared<com::GameTimer>();
-	BoxApp app;
+	Editor editor;
 	try {
-		app.initialize();
-		while (app.isRunning()) {
+
+		editor.initialize();
+		while (editor.isRunning()) {
 			pGameTimer->startNewFrame();
-			app.beginTick(pGameTimer);
-			app.tick(pGameTimer);
-			app.endTick(pGameTimer);
+			editor.beginTick(pGameTimer);
+			editor.tick(pGameTimer);
+			editor.endTick(pGameTimer);
 		}
-		app.destroy();
+		editor.destroy();
 	} catch (const std::exception &e) {
 		std::cerr << e.what() << std::endl;
 		MessageBox(nullptr, e.what(), "Error", MB_OK | MB_ICONHAND);

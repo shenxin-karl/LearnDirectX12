@@ -10,7 +10,7 @@ InputSystem::InputSystem(const std::string &title, int width, int height) {
 	pWindow = std::make_unique<Window>(width, height, title, this);
 	pMouse = std::make_unique<Mouse>(this);
 	pKeyboard = std::make_unique<Keyboard>();
-	pWindow->setMessageCallback([&](HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+	pWindow->setMessageDispatchCallback([&](HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		pMouse->handleMsg(hwnd, msg, wParam, lParam);
 		pKeyboard->handleMsg(hwnd, msg, wParam, lParam);
 	});

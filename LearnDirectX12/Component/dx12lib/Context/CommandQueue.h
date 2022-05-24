@@ -12,8 +12,9 @@ public:
 	CommandQueue(const CommandQueue &) = delete;
 	ID3D12CommandQueue *getD3D12CommandQueue() const;
 	uint64 signal(std::shared_ptr<SwapChain> pSwapChain);
+	void delayExecuted(ContextProxy pContext);
 	void executeCommandList(ContextProxy pContext);
-	void executeCommandList(const std::vector<ContextProxy> &contextList);
+	void executeCommandList(std::vector<ContextProxy> contextList);
 	bool isFenceComplete(uint64 fenceValue) const noexcept;
 	void waitForFenceValue(uint64 fenceValue);
 	uint32 getFrameResourceCount() const;
@@ -34,6 +35,7 @@ private:
 	WRL::ComPtr<ID3D12Fence>            _pFence;
 	WRL::ComPtr<ID3D12CommandQueue>     _pCommandQueue;
 	std::unique_ptr<FrameResourceQueue> _pFrameResourceQueue;
+	std::vector<ContextProxy>			_delayExecutedContextProxy;
 };
 
 }

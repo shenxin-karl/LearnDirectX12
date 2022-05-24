@@ -13,7 +13,7 @@ Window::Window(int width, int height, const std::string &title, InputSystem *pIn
 	, _shouldClose(false), result(-1), _pInputSystem(pInputSystem)
 {
 	_resizeCallback = [](int, int) {};
-	_messageCallback = [](HWND, UINT, WPARAM, LPARAM) {};
+	_messageDispatchCallback = [](HWND, UINT, WPARAM, LPARAM) {};
 
 	RECT wr;
 	wr.left = 100;
@@ -31,7 +31,10 @@ Window::Window(int width, int height, const std::string &title, InputSystem *pIn
 
 	assert(_hwnd != nullptr && "hwnd is nullptr");
 	ShowWindow(_hwnd, SW_SHOWDEFAULT);
+	::UpdateWindow(_hwnd);
 	_shouldClose = false;
+
+	// Show the window
 }
 
 bool Window::shouldClose() const {
@@ -46,8 +49,12 @@ int Window::getReturnCode() const {
 	return result;
 }
 
-void Window::setMessageCallback(const std::function<void(HWND, UINT, WPARAM, LPARAM)> &callback) {
-	_messageCallback = callback;
+void Window::setMessageDispatchCallback(const std::function<void(HWND, UINT, WPARAM, LPARAM)> &callback) {
+	_messageDispatchCallback = callback;
+}
+
+void Window::setPrepareMessageCallBack(const std::function<bool(HWND, UINT, WPARAM, LPARAM)> &callback) {
+	_prepareMessageCallBack = callback;
 }
 
 void Window::setResizeCallback(const std::function<void(int x, int y)> &callback) {
@@ -137,6 +144,9 @@ LRESULT CALLBACK Window::handleMsgThunk(HWND hwnd, UINT msg, WPARAM wParam, LPAR
 
 // set virtual code https://docs.microsoft.com/zh-cn/windows/win32/inputdev/virtual-key-codes
 LRESULT Window::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+	if (_prepareMessageCallBack != nullptr && _prepareMessageCallBack(hwnd, msg, wParam, lParam))
+		return true;
+
 	switch (msg) {
 	case WM_DESTROY:
 	case WM_CLOSE:
@@ -211,7 +221,7 @@ LRESULT Window::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		break;
 	}
 	}
-	_messageCallback(hwnd, msg, wParam, lParam);
+	_messageDispatchCallback(hwnd, msg, wParam, lParam);
 	return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 

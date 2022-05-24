@@ -20,7 +20,8 @@ public:
 	bool shouldClose() const;
 	void setShouldClose(bool flag);
 	int getReturnCode() const;
-	void setMessageCallback(const std::function<void(HWND, UINT, WPARAM, LPARAM)> &callback);
+	void setMessageDispatchCallback(const std::function<void(HWND, UINT, WPARAM, LPARAM)> &callback);
+	void setPrepareMessageCallBack(const std::function<bool(HWND, UINT, WPARAM, LPARAM)> &callback);
 	void setResizeCallback(const std::function<void(int x, int y)> &callback);
 	int getWidth() const;
 	int getHeight() const;
@@ -45,7 +46,8 @@ private:
 	int  result;
 	std::string _title;
 	InputSystem *_pInputSystem = nullptr;
-	std::function<void(HWND, UINT, WPARAM, LPARAM)> _messageCallback;
+	std::function<void(HWND, UINT, WPARAM, LPARAM)> _messageDispatchCallback;
+	std::function<bool(HWND, UINT, WPARAM, LPARAM)> _prepareMessageCallBack;
 	std::function<void(int x, int y)>				_resizeCallback;
 	std::shared_ptr<GameTimer>						_pGameTimer;
 public:

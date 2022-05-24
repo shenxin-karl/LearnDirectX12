@@ -43,7 +43,7 @@ protected:
 	std::shared_ptr<dx12lib::Adapter>   _pAdapter;
 	std::shared_ptr<dx12lib::Device>    _pDevice;
 	std::shared_ptr<dx12lib::SwapChain> _pSwapChain;
-	std::unique_ptr<InputSystem>        _pInputSystem;
+	std::shared_ptr<InputSystem>        _pInputSystem;
 };
 
 }

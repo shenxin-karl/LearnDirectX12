@@ -15,8 +15,8 @@
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
 
 #pragma once
-#include "imgui.h"      // IMGUI_IMPL_API
-#include <dxgiformat.h> // DXGI_FORMAT
+#include <Imgui/imgui.h>    // IMGUI_IMPL_API
+#include <dxgiformat.h>     // DXGI_FORMAT
 
 struct ID3D12Device;
 struct ID3D12DescriptorHeap;

@@ -42,15 +42,22 @@ uint64 CommandQueue::signal(std::shared_ptr<SwapChain> pSwapChain) {
 	return _fenceValue;
 }
 
+void CommandQueue::delayExecuted(ContextProxy pContext) {
+	_delayExecutedContextProxy.push_back(pContext);
+}
+
 void CommandQueue::executeCommandList(ContextProxy pContext) {
 	std::vector<ContextProxy> cmdLists;
 	cmdLists.push_back(pContext);
 	executeCommandList(cmdLists);
 }
 
-void CommandQueue::executeCommandList(const std::vector<ContextProxy> &contextList) {
+void CommandQueue::executeCommandList(std::vector<ContextProxy> contextList) {
 	std::unordered_set<ID3D12CommandList *> hashset;
 	std::vector<ID3D12CommandList *> lists;
+
+	contextList.insert(contextList.end(), _delayExecutedContextProxy.begin(), _delayExecutedContextProxy.end());
+	_delayExecutedContextProxy.clear();
 
 	ResourceStateTracker::lock();
 	for (auto &pContext : contextList) {
@@ -65,6 +72,7 @@ void CommandQueue::executeCommandList(const std::vector<ContextProxy> &contextLi
 		lists.push_back(pPendingCmdList->getD3DCommandList());
 		lists.push_back(pD3DCmdList);
 	}
+
 	_pCommandQueue->ExecuteCommandLists(static_cast<UINT>(lists.size()), lists.data());
 	ResourceStateTracker::unlock();
 }
