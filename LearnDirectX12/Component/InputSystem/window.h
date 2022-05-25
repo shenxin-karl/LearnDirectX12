@@ -12,8 +12,8 @@ class InputSystem;
 class GameTimer;
 
 class Window : public ITick {
-	class WindowClass;
 public:
+	class WindowClass;
 	Window(int width, int height, const std::string &title, InputSystem *pInputSystem);
 	Window(const Window &) = delete;
 	Window &operator=(const Window &) = delete;
@@ -62,11 +62,13 @@ public:
 class Window::WindowClass {
 	HINSTANCE hInstance_ = nullptr;
 private:
+	using HandleMessageFuncType = LRESULT (CALLBACK *)(HWND, UINT, WPARAM, LPARAM);
 	static inline std::unique_ptr<WindowClass> _pSingleton = std::make_unique<WindowClass>();
 public:
 	WindowClass();
 	static HINSTANCE getInstance();
 	static const char *getClassName();
+	static inline HandleMessageFuncType pHandleMessageFunc = &(DefWindowProc);
 };
 
 }

@@ -7,6 +7,7 @@
 #include "InputSystem/window.h"
 
 Editor::Editor() {
+    _canPause = false;
     _pImGuiProxy = std::make_unique<ImGui::ImGuiProxy>();
     assert(_pEditor == nullptr);
     _pEditor = this;

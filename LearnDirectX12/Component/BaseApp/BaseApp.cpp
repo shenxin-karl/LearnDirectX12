@@ -43,7 +43,7 @@ void BaseApp::destroy() {
 
 void BaseApp::beginTick(std::shared_ptr<GameTimer> pGameTimer) {
 	_pInputSystem->beginTick(pGameTimer);
-	if (_pInputSystem->pWindow->isPause()) {
+	if (_canPause && _pInputSystem->pWindow->isPause()) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(1000.f / 60.f)));
 		return;
 	}
@@ -55,7 +55,7 @@ void BaseApp::beginTick(std::shared_ptr<GameTimer> pGameTimer) {
 
 void BaseApp::tick(std::shared_ptr<GameTimer> pGameTimer) {
 	_pInputSystem->tick(pGameTimer);
-	if (_pInputSystem->pWindow->isPause())
+	if (_canPause && _pInputSystem->pWindow->isPause())
 		return;
 
 	onTick(pGameTimer);
@@ -63,7 +63,7 @@ void BaseApp::tick(std::shared_ptr<GameTimer> pGameTimer) {
 
 void BaseApp::endTick(std::shared_ptr<GameTimer> pGameTimer) {
 	_pInputSystem->endTick(pGameTimer);
-	if (_pInputSystem->pWindow->isPause())
+	if (_canPause && _pInputSystem->pWindow->isPause())
 		return;
 
 	onEndTick(pGameTimer);

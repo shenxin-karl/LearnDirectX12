@@ -8,7 +8,6 @@ int main() {
 	std::shared_ptr<com::GameTimer> pGameTimer = std::make_shared<com::GameTimer>();
 	Editor editor;
 	try {
-
 		editor.initialize();
 		while (editor.isRunning()) {
 			pGameTimer->startNewFrame();

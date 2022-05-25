@@ -1,4 +1,3 @@
-#include <iostream>
 #include <format>
 #include <cassert>
 #include "Window.h"
@@ -9,11 +8,12 @@
 namespace com {
 
 Window::Window(int width, int height, const std::string &title, InputSystem *pInputSystem)
-	: _hwnd(nullptr), _width(width), _height(height), _title(title)
-	, _shouldClose(false), result(-1), _pInputSystem(pInputSystem)
+	: _hwnd(nullptr), _width(width), _height(height), _shouldClose(false)
+	, result(-1), _title(title), _pInputSystem(pInputSystem)
 {
 	_resizeCallback = [](int, int) {};
 	_messageDispatchCallback = [](HWND, UINT, WPARAM, LPARAM) {};
+	_prepareMessageCallBack = [](HWND, UINT, WPARAM, LPARAM) { return false; };
 
 	RECT wr;
 	wr.left = 100;
@@ -33,8 +33,6 @@ Window::Window(int width, int height, const std::string &title, InputSystem *pIn
 	ShowWindow(_hwnd, SW_SHOWDEFAULT);
 	::UpdateWindow(_hwnd);
 	_shouldClose = false;
-
-	// Show the window
 }
 
 bool Window::shouldClose() const {
@@ -93,7 +91,7 @@ void Window::beginTick(std::shared_ptr<GameTimer> pGameTimer) {
 	_pGameTimer = pGameTimer;
 	MSG msg;
 	BOOL getResult = 0;
-	while (PeekMessage(&msg, nullptr, 0, 0, true)) {
+	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
 		if (msg.message == WM_QUIT) {
 			_shouldClose = true;
 			result = static_cast<int>(msg.wParam);
@@ -139,12 +137,12 @@ LRESULT CALLBACK Window::handleMsgThunk(HWND hwnd, UINT msg, WPARAM wParam, LPAR
 	Window *ptr = reinterpret_cast<Window *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
 	if (ptr != nullptr)
 		return ptr->handleMsg(hwnd, msg, wParam, lParam);
-	return DefWindowProc(hwnd, msg, wParam, lParam);
+	return (*WindowClass::pHandleMessageFunc)(hwnd, msg, wParam, lParam);
 }
 
 // set virtual code https://docs.microsoft.com/zh-cn/windows/win32/inputdev/virtual-key-codes
 LRESULT Window::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-	if (_prepareMessageCallBack != nullptr && _prepareMessageCallBack(hwnd, msg, wParam, lParam))
+	if (_prepareMessageCallBack(hwnd, msg, wParam, lParam))
 		return true;
 
 	switch (msg) {
@@ -222,7 +220,7 @@ LRESULT Window::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	}
 	}
 	_messageDispatchCallback(hwnd, msg, wParam, lParam);
-	return DefWindowProc(hwnd, msg, wParam, lParam);
+	return (*WindowClass::pHandleMessageFunc)(hwnd, msg, wParam, lParam);
 }
 
 

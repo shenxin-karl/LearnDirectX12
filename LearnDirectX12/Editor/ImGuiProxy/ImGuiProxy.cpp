@@ -91,7 +91,8 @@ void ImGuiProxy::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 
 void ImGuiProxy::endTick(std::shared_ptr<com::GameTimer> pGameTimer) {
     // Update and Render additional Platform Windows
-    if (GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+    Editor *pEditor = Editor::instance();
+    if (pEditor->isRunning() && GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
         ImGui::UpdatePlatformWindows();
         ImGui::RenderPlatformWindowsDefault(nullptr, nullptr);
     }
