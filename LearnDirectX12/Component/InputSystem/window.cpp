@@ -20,7 +20,8 @@ Window::Window(int width, int height, const std::string &title, InputSystem *pIn
 	wr.right = wr.left + width;
 	wr.top = 100;
 	wr.bottom = wr.top + height;
-	AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, FALSE);
+	// 这行代码会引起 ImGui 的坐标不正确
+	//AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, FALSE);
 	_hwnd = CreateWindowEx(
 		0, WindowClass::getClassName(), title.c_str(),
 		WS_OVERLAPPEDWINDOW,
@@ -31,7 +32,7 @@ Window::Window(int width, int height, const std::string &title, InputSystem *pIn
 
 	assert(_hwnd != nullptr && "hwnd is nullptr");
 	ShowWindow(_hwnd, SW_SHOWDEFAULT);
-	::UpdateWindow(_hwnd);
+	UpdateWindow(_hwnd);
 	_shouldClose = false;
 }
 
@@ -241,7 +242,7 @@ Window::WindowClass::WindowClass() : hInstance_(GetModuleHandle(nullptr)) {
 	// register class
 	WNDCLASSEX wc;
 	wc.cbSize = sizeof(wc);
-	wc.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
+	wc.style = CS_CLASSDC;
 	wc.lpfnWndProc = handleMsgSetup;
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;

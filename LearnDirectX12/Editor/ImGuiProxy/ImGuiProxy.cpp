@@ -51,7 +51,7 @@ void ImGuiProxy::initialize() {
     // Setup Platform/Renderer backends
     ImGui_ImplWin32_Init(pEditor->getInputSystem()->pWindow->getHWND());
     ImGui_ImplDX12_Init(pEditor->getDevice()->getD3DDevice(),
-        dx12lib::kSwapChainBufferCount,
+        dx12lib::kFrameResourceCount,
         pEditor->getDevice()->getDesc().backBufferFormat,
         _pDescriptorHeap.Get(),
         _pDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
