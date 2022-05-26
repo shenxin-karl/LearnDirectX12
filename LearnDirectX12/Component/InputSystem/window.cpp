@@ -20,8 +20,7 @@ Window::Window(int width, int height, const std::string &title, InputSystem *pIn
 	wr.right = wr.left + width;
 	wr.top = 100;
 	wr.bottom = wr.top + height;
-	// 这行代码会引起 ImGui 的坐标不正确
-	//AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, FALSE);
+	AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, FALSE);
 	_hwnd = CreateWindowEx(
 		0, WindowClass::getClassName(), title.c_str(),
 		WS_OVERLAPPEDWINDOW,
@@ -91,7 +90,6 @@ bool Window::isPause() const {
 void Window::beginTick(std::shared_ptr<GameTimer> pGameTimer) {
 	_pGameTimer = pGameTimer;
 	MSG msg;
-	BOOL getResult = 0;
 	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
 		if (msg.message == WM_QUIT) {
 			_shouldClose = true;
@@ -154,15 +152,6 @@ LRESULT Window::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		_shouldClose = true;
 		break;
 	}
-	case WM_PAINT:
-	{
-		RECT rect;
-		GetWindowRect(hwnd, &rect);
-		_width = rect.right - rect.left;
-		_height = rect.bottom - rect.top;
-		_resizeDirty = true;
-		break;
-	}
 	case WM_ACTIVATE:
 	{
 		if (LOWORD(wParam) == WA_INACTIVE)
@@ -171,22 +160,10 @@ LRESULT Window::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			start();
 		break;
 	}
-	case WM_ENTERSIZEMOVE:
-	{
-		_resizing = true;
-		stop();
-		break;
-	}
-	case WM_EXITSIZEMOVE:
-	{
-		_resizing = false;
-		start();
-		break;
-	}
 	case WM_GETMINMAXINFO:
 	{
-		((MINMAXINFO *)lParam)->ptMinTrackSize.x = 200;
-		((MINMAXINFO *)lParam)->ptMinTrackSize.y = 200;
+		reinterpret_cast<MINMAXINFO *>(lParam)->ptMinTrackSize.x = 200;
+		reinterpret_cast<MINMAXINFO *>(lParam)->ptMinTrackSize.y = 200;
 		break;
 	}
 	case WM_SIZE:
@@ -211,8 +188,6 @@ LRESULT Window::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 				_paused = false;
 				_maximized = false;
 				_resizeDirty = true;
-			} else if (_resizing) {
-				break;
 			} else {
 				_resizeDirty = true;
 			}

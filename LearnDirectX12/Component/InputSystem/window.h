@@ -54,7 +54,6 @@ public:
 	bool _paused          = false;
 	bool _minimized       = false;
 	bool _maximized       = false;
-	bool _resizing        = false;
 	bool _fullScreenState = false;
 	bool _resizeDirty     = false;
 };
