@@ -2,7 +2,7 @@
 #include <Imgui/imgui.h>
 #include <imgui/backends/imgui_impl_dx12.h>
 #include <Imgui/backends/imgui_impl_win32.h>
-#include "Editor.h"
+#include "Editor/Editor.h"
 #include "Context/CommandQueue.h"
 #include "Device/SwapChain.h"
 #include "InputSystem/window.h"
@@ -36,7 +36,7 @@ void ImGuiProxy::initialize() {
         style.Colors[ImGuiCol_WindowBg].w = 1.0f;
     }
 
-    Editor *pEditor = Editor::instance();
+    ED::Editor *pEditor = ED::Editor::instance();
 
     // create imgui srv descriptor heap
     D3D12_DESCRIPTOR_HEAP_DESC desc = {};
@@ -76,13 +76,13 @@ void ImGuiProxy::beginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 }
 
 void ImGuiProxy::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
-    auto pCmdQueue = Editor::instance()->getDevice()->getCommandQueue();
+    auto pCmdQueue = ED::Editor::instance()->getDevice()->getCommandQueue();
     auto pDirectCtx = pCmdQueue->createDirectContextProxy();
     auto *pCmdList = pDirectCtx->getD3DCommandList();
 
     // Rendering
     ImGui::Render();
-    auto RTV = Editor::instance()->getSwapChain()->getRenderTarget2D()->getRTV();
+    auto RTV = ED::Editor::instance()->getSwapChain()->getRenderTarget2D()->getRTV();
     pCmdList->OMSetRenderTargets(1, RVPtr(RTV.getCPUDescriptorHandle()), FALSE, nullptr);
     pCmdList->SetDescriptorHeaps(1, _pDescriptorHeap.GetAddressOf());
     ImGui_ImplDX12_RenderDrawData(GetDrawData(), pCmdList);
@@ -91,7 +91,7 @@ void ImGuiProxy::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 
 void ImGuiProxy::endTick(std::shared_ptr<com::GameTimer> pGameTimer) {
     // Update and Render additional Platform Windows
-    Editor *pEditor = Editor::instance();
+    ED::Editor *pEditor = ED::Editor::instance();
     if (pEditor->isRunning() && GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
         ImGui::UpdatePlatformWindows();
         ImGui::RenderPlatformWindowsDefault(nullptr, nullptr);

@@ -1,12 +1,13 @@
-#include "Editor.h"
+#include "Editor/Editor.h"
 #include "GameTimer/GameTimer.h"
 #include <iostream>
 #include <memory>
 
 
+
 int main() {
 	std::shared_ptr<com::GameTimer> pGameTimer = std::make_shared<com::GameTimer>();
-	Editor editor;
+	ED::Editor editor;
 	try {
 		editor.initialize();
 		while (editor.isRunning()) {
