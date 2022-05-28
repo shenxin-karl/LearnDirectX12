@@ -33,6 +33,7 @@ public:
 	virtual void beginTick(std::shared_ptr<GameTimer> pGameTimer) override;
 	~Window();
 private:
+	static void centerWindow(HWND hwnd);
 	static LRESULT CALLBACK handleMsgSetup(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 	static LRESULT CALLBACK handleMsgThunk(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 	LRESULT handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);

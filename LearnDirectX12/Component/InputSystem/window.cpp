@@ -15,10 +15,13 @@ Window::Window(int width, int height, const std::string &title, InputSystem *pIn
 	_messageDispatchCallback = [](HWND, UINT, WPARAM, LPARAM) {};
 	_prepareMessageCallBack = [](HWND, UINT, WPARAM, LPARAM) { return false; };
 
+	int srcWidth = GetSystemMetrics(SM_CXSCREEN);
+	int srcHeight = GetSystemMetrics(SM_CYSCREEN);
+
 	RECT wr;
-	wr.left = 100;
+	wr.left = (srcWidth - width) / 2;
 	wr.right = wr.left + width;
-	wr.top = 100;
+	wr.top = (srcHeight - height) / 2;
 	wr.bottom = wr.top + height;
 	AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, FALSE);
 	_hwnd = CreateWindowEx(
@@ -30,6 +33,7 @@ Window::Window(int width, int height, const std::string &title, InputSystem *pIn
 	);
 
 	assert(_hwnd != nullptr && "hwnd is nullptr");
+	centerWindow(_hwnd);
 	ShowWindow(_hwnd, SW_SHOWDEFAULT);
 	UpdateWindow(_hwnd);
 	_shouldClose = false;
@@ -119,6 +123,22 @@ void Window::beginTick(std::shared_ptr<GameTimer> pGameTimer) {
 
 Window::~Window() {
 	DestroyWindow(_hwnd);
+}
+
+void Window::centerWindow(HWND hwnd) {
+	int srcWidth;
+	int srcHeight;
+	RECT rect;
+	srcWidth = GetSystemMetrics(SM_CXSCREEN);
+	srcHeight = GetSystemMetrics(SM_CYSCREEN);
+
+	GetWindowRect(hwnd, &rect);
+
+	long width = rect.right - rect.left;
+	long height = rect.bottom - rect.top;
+	rect.left = (srcWidth - width) / 2;
+	rect.top = (srcHeight - height) / 2;
+	SetWindowPos(hwnd, HWND_TOP, rect.left, rect.top, width, height, SWP_NOSIZE | SWP_NOZORDER);
 }
 
 LRESULT CALLBACK Window::handleMsgSetup(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
