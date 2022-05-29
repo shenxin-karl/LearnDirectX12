@@ -79,6 +79,16 @@ RenderTarget2D::RenderTarget2D(std::weak_ptr<Device> pDevice, size_t width, size
 	if (format == DXGI_FORMAT_UNKNOWN)
 		format = pSharedDevice->getDesc().backBufferFormat;
 
+	D3D12_CLEAR_VALUE clearValue = {};
+	if (pClearValue == nullptr) {
+		clearValue.Format = format;
+		clearValue.Color[0] = 0.f;
+		clearValue.Color[1] = 0.f;
+		clearValue.Color[2] = 0.f;
+		clearValue.Color[3] = 1.f;
+		pClearValue = &clearValue;
+	}
+
 	D3D12_RESOURCE_DESC renderTargetDesc;
 	renderTargetDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	renderTargetDesc.Alignment = 0;

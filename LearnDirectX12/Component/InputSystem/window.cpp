@@ -9,7 +9,7 @@ namespace com {
 
 Window::Window(int width, int height, const std::string &title, InputSystem *pInputSystem)
 	: _hwnd(nullptr), _width(width), _height(height), _shouldClose(false)
-	, result(-1), _title(title), _pInputSystem(pInputSystem)
+	, _result(-1), _title(title), _pInputSystem(pInputSystem)
 {
 	_resizeCallback = [](int, int) {};
 	_messageDispatchCallback = [](HWND, UINT, WPARAM, LPARAM) {};
@@ -34,8 +34,8 @@ Window::Window(int width, int height, const std::string &title, InputSystem *pIn
 
 	assert(_hwnd != nullptr && "hwnd is nullptr");
 	centerWindow(_hwnd);
-	ShowWindow(_hwnd, SW_SHOWDEFAULT);
 	UpdateWindow(_hwnd);
+	ShowWindow(_hwnd, SW_SHOWDEFAULT);
 	_shouldClose = false;
 }
 
@@ -48,7 +48,7 @@ void Window::setShouldClose(bool flag) {
 }
 
 int Window::getReturnCode() const {
-	return result;
+	return _result;
 }
 
 void Window::setMessageDispatchCallback(const std::function<void(HWND, UINT, WPARAM, LPARAM)> &callback) {
@@ -97,7 +97,7 @@ void Window::beginTick(std::shared_ptr<GameTimer> pGameTimer) {
 	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
 		if (msg.message == WM_QUIT) {
 			_shouldClose = true;
-			result = static_cast<int>(msg.wParam);
+			_result = static_cast<int>(msg.wParam);
 			return;
 		}
 		TranslateMessage(&msg);
@@ -119,6 +119,10 @@ void Window::beginTick(std::shared_ptr<GameTimer> pGameTimer) {
 		auto title = sbuf.str();
 		SetWindowText(_hwnd, title.c_str());
 	}
+}
+
+void Window::setCanPause(bool bPause) {
+	_canPause = bPause;
 }
 
 Window::~Window() {
@@ -221,9 +225,11 @@ LRESULT Window::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 
 void Window::stop() {
-	_paused = true;
-	if (_pGameTimer != nullptr)
-		_pGameTimer->stop();
+	if (_canPause && !_paused) {
+		_paused = true;
+		if (_pGameTimer != nullptr)
+			_pGameTimer->stop();
+	}
 }
 
 

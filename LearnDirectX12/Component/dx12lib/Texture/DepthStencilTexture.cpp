@@ -31,6 +31,14 @@ DepthStencil2D::DepthStencil2D(std::weak_ptr<Device> pDevice,
 	if (depthStencilFormat == DXGI_FORMAT_UNKNOWN)
 		depthStencilFormat = pSharedDevice->getDesc().depthStencilFormat;
 
+	D3D12_CLEAR_VALUE clearValue = {};
+	if (pClearValue == nullptr) {
+		clearValue.Format = depthStencilFormat;
+		clearValue.DepthStencil.Depth = 1.f;
+		clearValue.DepthStencil.Stencil = 0;
+		pClearValue = &clearValue;
+	}
+
 	D3D12_RESOURCE_DESC depthStencilDesc;
 	depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	depthStencilDesc.Alignment = 0;

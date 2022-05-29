@@ -151,8 +151,11 @@ void EditorLog::setShadowWindow(bool bShow) {
 void EditorLog::updateCurrentTime() {
     std::time_t t = std::time(nullptr);
     std::tm tm = *std::localtime(&t);
-    std::stringstream sbuf;
-    sbuf.imbue(std::locale("ja_JP.utf8"));
+
+    static std::locale fmt("ja_JP.utf8");
+
+	std::stringstream sbuf;
+    sbuf.imbue(fmt);
     sbuf << std::put_time(&tm, "%c");
     _currentTime = std::format("[{}]", sbuf.str());
 }

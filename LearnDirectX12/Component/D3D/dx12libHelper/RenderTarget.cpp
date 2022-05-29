@@ -5,8 +5,18 @@
 
 namespace d3d {
 
+RenderTarget::RenderTarget(RenderTarget &&other) noexcept
+: _pRenderTarget2D(std::move(other._pRenderTarget2D))
+, _pDepthStencil2D(std::move(other._pDepthStencil2D))
+{
+	_width = other._width;
+	_height = other._height;
+	_isBinding = other._isBinding;
+	_finalState = other._finalState;
+}
+
 RenderTarget::RenderTarget(std::shared_ptr<dx12lib::RenderTarget2D> pRenderTarget2D,
-	std::shared_ptr<dx12lib::DepthStencil2D> pDepthStencil2D)
+	                           std::shared_ptr<dx12lib::DepthStencil2D> pDepthStencil2D)
 	: _pRenderTarget2D(pRenderTarget2D), _pDepthStencil2D(pDepthStencil2D) {
 	assert(pRenderTarget2D->getWidth() == pDepthStencil2D->getWidth());
 	assert(pRenderTarget2D->getHeight() == pDepthStencil2D->getHeight());
@@ -52,7 +62,7 @@ void RenderTarget::bind(dx12lib::GraphicsContextProxy pCommonCtx) {
 
 void RenderTarget::unbind(dx12lib::CommonContextProxy pCommonCtx) {
 	_isBinding = false;
-	pCommonCtx->transitionBarrier(_pRenderTarget2D, D3D12_RESOURCE_STATE_PRESENT);
+	pCommonCtx->transitionBarrier(_pRenderTarget2D, _finalState);
 }
 
 D3D12_VIEWPORT RenderTarget::getViewport() const {
@@ -83,8 +93,14 @@ float2 RenderTarget::getInvRenderTargetSize() const {
 	return float2{ 1.f / static_cast<float>(_width), 1.f / static_cast<float>(_height) };
 }
 
+void RenderTarget::setFinalState(D3D12_RESOURCE_STATES finalState) {
+	_finalState = finalState;
+}
+
 RenderTarget::~RenderTarget() {
-	assert(!_isBinding);
+	if (_pRenderTarget2D != nullptr) {
+		assert(!_isBinding);
+	}
 }
 
 }

@@ -6,7 +6,10 @@
 #include "Context/CommandQueue.h"
 #include "InputSystem/window.h"
 #include "Scene/SceneManager.h"
-#include "Log/EditorLog.h"
+#include "EditorLog/EditorLog.h"
+#include "Scene/HirerarchyWindow.h"
+#include "Scene/InspectorWindow.h"
+#include "Scene/SceneWindow.h"
 
 namespace ED {
 
@@ -27,12 +30,15 @@ Editor::~Editor() {
 void Editor::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
     _pImGuiProxy->initialize();
     _pSceneMgr = std::make_shared<SceneManager>();
+    _pInputSystem->pWindow->setCanPause(false);
 
-    auto pHierarchyWindow = std::make_shared<HierarchyWindow>(_pSceneMgr);
-    auto pInspectorWindow = std::make_shared<InspectorWindow>(_pSceneMgr);
+    _pHierarchyWindow = std::make_shared<HierarchyWindow>(_pSceneMgr);
+    _pInspectorWindow = std::make_shared<InspectorWindow>(_pSceneMgr);
+    _pSceneWindow = std::make_shared<SceneWindow>();
 
-    attachWindow("Hierarchy", pHierarchyWindow);
-    attachWindow("Inspector", pInspectorWindow);
+    attachWindow("Hierarchy", _pHierarchyWindow);
+    attachWindow("Inspector", _pInspectorWindow);
+    attachWindow("Scene", _pSceneWindow);
     attachWindow("Log", EditorLog::instance());
 }
 

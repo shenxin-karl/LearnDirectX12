@@ -91,4 +91,12 @@ bool BaseApp::isRunning() const {
 	return !_pInputSystem->shouldClose();
 }
 
+void BaseApp::setGameTimer(std::shared_ptr<com::GameTimer> pGameTimer) {
+	_pGameTimer = pGameTimer;
+}
+
+auto BaseApp::getGameTimer() const -> std::shared_ptr<com::GameTimer> {
+	return _pGameTimer;
+}
+
 }

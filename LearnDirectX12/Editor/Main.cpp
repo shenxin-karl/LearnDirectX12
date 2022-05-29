@@ -10,6 +10,8 @@ int main() {
 	ED::Editor editor;
 	try {
 		editor.initialize();
+		editor.setGameTimer(pGameTimer);
+
 		while (editor.isRunning()) {
 			pGameTimer->startNewFrame();
 			editor.beginTick(pGameTimer);

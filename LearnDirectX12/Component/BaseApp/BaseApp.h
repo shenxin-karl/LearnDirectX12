@@ -28,6 +28,8 @@ public:
 	virtual void endTick(std::shared_ptr<GameTimer> pGameTimer) override;
 	virtual void resize(int width, int height);
 	bool isRunning() const;
+	void setGameTimer(std::shared_ptr<com::GameTimer> pGameTimer);
+	auto getGameTimer() const -> std::shared_ptr<com::GameTimer>;
 protected:
 	virtual void onInitialize(dx12lib::DirectContextProxy pDirectCtx) {}
 	virtual void onDestroy() {}
@@ -45,6 +47,7 @@ protected:
 	std::shared_ptr<dx12lib::Device>    _pDevice;
 	std::shared_ptr<dx12lib::SwapChain> _pSwapChain;
 	std::shared_ptr<InputSystem>        _pInputSystem;
+	std::shared_ptr<com::GameTimer>		_pGameTimer;
 };
 
 }

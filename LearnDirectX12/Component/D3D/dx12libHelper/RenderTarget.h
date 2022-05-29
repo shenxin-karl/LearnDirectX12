@@ -10,6 +10,7 @@ using namespace Math;
 
 class RenderTarget : public NonCopyable {
 public:
+	RenderTarget(RenderTarget &&other) noexcept;
 	RenderTarget(std::shared_ptr<dx12lib::RenderTarget2D> pRenderTarget2D, std::shared_ptr<dx12lib::DepthStencil2D> pDepthStencil2D);
 	explicit RenderTarget(std::shared_ptr<dx12lib::SwapChain> pSwapChain);
 	RenderTarget(dx12lib::GraphicsContextProxy pGraphicsCtx,
@@ -27,11 +28,13 @@ public:
 	D3D12_RECT getScissorRect() const;
 	float2 getRenderTargetSize() const;
 	float2 getInvRenderTargetSize() const;
+	void setFinalState(D3D12_RESOURCE_STATES finalState);
 	~RenderTarget();
 private:
 	size_t _width;
 	size_t _height;
 	bool   _isBinding = false;
+	D3D12_RESOURCE_STATES _finalState = D3D12_RESOURCE_STATE_PRESENT;
 	std::shared_ptr<dx12lib::RenderTarget2D> _pRenderTarget2D;
 	std::shared_ptr<dx12lib::DepthStencil2D> _pDepthStencil2D;
 };

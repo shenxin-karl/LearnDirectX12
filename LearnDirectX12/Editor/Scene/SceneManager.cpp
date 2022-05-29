@@ -1,9 +1,12 @@
+#include <cassert>
 #include "Scene/SceneManager.h"
 #include "SceneNode.h"
-#include <cassert>
-
+#include "Context/CommandQueue.h"
 #include "Editor/Editor.h"
 #include "Imgui/imgui.h"
+#include <DirectXColors.h>
+
+#include "GameTimer/GameTimer.h"
 
 namespace ED {
 
@@ -14,7 +17,7 @@ bool SceneManager::addNode(std::shared_ptr<SceneNode> pSceneNode) {
 		return false;
 	}
 
-	auto nodeIter = _nodes.insert(_nodes.end(), pSceneNode);
+	auto nodeIter = _nodeList.insert(_nodeList.end(), pSceneNode);
 	_nodeMap[pSceneNode->getName()] = nodeIter;
 	return true;
 }
@@ -26,55 +29,33 @@ void SceneManager::eraseNode(const std::string &name) {
 
 	auto nodeMapIter = _nodeMap.find(name);
 	auto nodeIter = nodeMapIter->second;
-	_nodes.erase(nodeIter);
+	_nodeList.erase(nodeIter);
 	_nodeMap.erase(nodeMapIter);
 }
 
 size_t SceneManager::getNodeSize() const {
-	return _nodes.size();
+	return _nodeList.size();
 }
 
 std::list<std::shared_ptr<SceneNode>> & SceneManager::getNodeList() {
-	return _nodes;
+	return _nodeList;
 }
 
-HierarchyWindow::HierarchyWindow(std::shared_ptr<SceneManager> pSceneMgr) : _pSceneMgr(pSceneMgr) {
-
-}
-
-void HierarchyWindow::showWindow() {
-	if (ImGui::Begin("Hierarchy", &_openHierarchy, 0)) {
-		if (ImGui::TreeNode("SceneNodes")) {
-			for (auto &pSceneNode : _pSceneMgr->getNodeList()) {
-				ImGui::Selectable(pSceneNode->getName().c_str());
-				if (ImGui::BeginPopupContextItem()) {
-					if (ImGui::Button("Delete"))
-						ImGui::CloseCurrentPopup();
-
-				}
-			}
-			ImGui::TreePop();
-		}
+void SceneManager::renderScene(d3d::RenderTarget renderTarget, dx12lib::DirectContextProxy pDirectCtx) {
+	auto *pEditor = Editor::instance();
+	auto pGameTimer = pEditor->getGameTimer();
+	renderTarget.bind(pDirectCtx);
+	{
+		float totalTime = pGameTimer->getTotalTime();
+		float4 color = {
+			std::cos(totalTime) * 0.5f + 0.5f,
+			std::sin(totalTime) * 0.5f + 0.5f,
+			1.f,
+			1.f,
+		};
+		renderTarget.clear(pDirectCtx, color);
 	}
-	ImGui::End();
-}
-
-bool *HierarchyWindow::getOpenFlagPtr() {
-	return &_openHierarchy;
-}
-
-InspectorWindow::InspectorWindow(std::shared_ptr<SceneManager> pSceneMgr) : _pSceneMgr(pSceneMgr) {
-}
-
-void InspectorWindow::showWindow() {
-	if (ImGui::Begin("Inspector", &_openInspector, 0)) {
-		
-	}
-	ImGui::End();
-}
-
-bool *InspectorWindow::getOpenFlagPtr() {
-	return &_openInspector;
+	renderTarget.unbind(pDirectCtx);
 }
 
 }

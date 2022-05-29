@@ -8,6 +8,9 @@ using namespace Math;
 
 namespace ED {
 
+class SceneWindow;
+class InspectorWindow;
+class HierarchyWindow;
 class SceneManager;
 
 class Editor : public com::BaseApp {
@@ -33,9 +36,13 @@ public:
 	std::shared_ptr<com::InputSystem> getInputSystem() const;
 	std::shared_ptr<dx12lib::Device> getDevice() const;
 	std::shared_ptr<dx12lib::SwapChain> getSwapChain() const;
-private:
+
 	std::shared_ptr<SceneManager>	   _pSceneMgr;
 	std::shared_ptr<ImGui::ImGuiProxy> _pImGuiProxy;
+	std::shared_ptr<HierarchyWindow>   _pHierarchyWindow;
+	std::shared_ptr<InspectorWindow>   _pInspectorWindow;
+	std::shared_ptr<SceneWindow>	   _pSceneWindow;
+private:
 	std::map<std::string, std::shared_ptr<IEditorMenu>> _menus;
 	std::map<std::string, std::shared_ptr<IEditorWindow>> _windows;
 };

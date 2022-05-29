@@ -31,6 +31,7 @@ public:
 	void setShowTitle(const std::string &title);
 	bool isPause() const;
 	virtual void beginTick(std::shared_ptr<GameTimer> pGameTimer) override;
+	void setCanPause(bool bPause);
 	~Window();
 private:
 	static void centerWindow(HWND hwnd);
@@ -44,7 +45,7 @@ private:
 	int	 _width;
 	int	 _height;
 	bool _shouldClose;
-	int  result;
+	int  _result;
 	std::string _title;
 	InputSystem *_pInputSystem = nullptr;
 	std::function<void(HWND, UINT, WPARAM, LPARAM)> _messageDispatchCallback;
@@ -52,6 +53,7 @@ private:
 	std::function<void(int x, int y)>				_resizeCallback;
 	std::shared_ptr<GameTimer>						_pGameTimer;
 public:
+	bool _canPause		  = true;
 	bool _paused          = false;
 	bool _minimized       = false;
 	bool _maximized       = false;
