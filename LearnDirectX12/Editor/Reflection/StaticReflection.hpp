@@ -180,7 +180,7 @@ namespace sr {
 
 #define MAKE_SYMBOL(s)                                              \
     decltype(::sr::_SymbolPrepare(                                  \
-		[] {                                                        \
+		[]() {                                                      \
 		    struct Tmp {                                            \
 	            constexpr static decltype(auto) get() noexcept {    \
 	                return s;                                       \
@@ -190,9 +190,10 @@ namespace sr {
 	    } () )                                                      \
 	)
 
-
     template<typename T>
-    struct FieldCount;
+    struct FieldCount {
+	    constexpr static size_t value = 0;
+    };
 
     template<typename T>
     constexpr static size_t FieldCountV = FieldCount<T>::value;
@@ -200,48 +201,103 @@ namespace sr {
 	template<typename T, size_t I>
 	struct Field;
 
+
+    // 静态反射, 没有运行时开销
     template<typename T>
-    struct StaticReflection {
+    struct StaticRefl {
+        static_assert(FieldCountV<T> > 0, "Reflection is not supported for this type");
+        using RawType = std::decay_t<T>;
+
         template<size_t I>
         constexpr static decltype(auto) getValue(T &obj) noexcept {
-            static_assert(I < FieldCountV<T>, "Index out of range");
-	        return Field<T, I>::getValue(obj);
+            static_assert(I < FieldCountV<RawType>, "Index out of range");
+	        return Field<RawType, I>::getValue(obj);
         }
 
         template<size_t I>
         constexpr static decltype(auto) getValue(const T &obj) noexcept {
-            static_assert(I < FieldCountV<T>, "Index out of range");
-            return Field<T, I>::getValue(obj);
+            static_assert(I < FieldCountV<RawType>, "Index out of range");
+            return Field<RawType, I>::getValue(obj);
         }
 
         template<size_t I>
         consteval static std::string_view getName() noexcept {
-            static_assert(I < FieldCountV<T>, "Index out of range");
-            return Field<T, I>::getName();
+            static_assert(I < FieldCountV<RawType>, "Index out of range");
+            return Field<RawType, I>::getName();
         }
 
         template<typename Symbol, int I = 0>
         consteval static int getIndexByName() noexcept {
             static_assert(Symbol::symbolTag, "Create strings using MAKE_SYMBOL");
-            if constexpr (Symbol::value == Field<T, I>::getName()) {
+            if constexpr (Symbol::value == Field<RawType, I>::getName()) {
                 return I;
             } else {
-	            if constexpr ((I+1) >= FieldCountV<T>)
+	            if constexpr ((I+1) >= FieldCountV<RawType>)
 					return -1;
                 else
                     return getIndexByName<Symbol, I+1>();
             }
         }
+
+        template<typename Symbol, int I = 0>
+        constexpr static decltype(auto) getValueByName(T &obj) {
+            static_assert(Symbol::symbolTag, "Create strings using MAKE_SYMBOL");
+            if constexpr (Symbol::value == Field<T, I>::getName()) {
+                return Field<RawType, I>::getValue(obj);
+            } else {
+                static_assert(I < FieldCountV<RawType>, "There are no matching reflection variables");
+                return getValueByName<Symbol, I+1>(obj);
+            }
+        }
+
+        template<typename Symbol, int I = 0>
+        constexpr static decltype(auto) getValueByName(const T &obj) {
+            static_assert(Symbol::symbolTag, "Create strings using MAKE_SYMBOL");
+            if constexpr (Symbol::value == Field<RawType, I>::getName()) {
+				return Field<RawType, I>::getValue(obj);
+            } else {
+                static_assert(I < FieldCountV<RawType>, "There are no matching reflection variables");
+                return getValueByName<Symbol, I + 1>(obj);
+            }
+        }
+
+        template<size_t I = 0, typename F>
+        constexpr static void foreach(T &obj, F &&func) {
+	        if constexpr (I < FieldCountV<RawType>) {
+                func(Field<RawType, I>::getName(), Field<RawType, I>::getValue(obj));
+		        return foreach<I+1>(obj, func);
+	        }
+        }
+
+        template<size_t I = 0, typename F>
+        constexpr static void foreach(const T &obj, F &&func) {
+            if constexpr (I < FieldCountV<RawType>) {
+                func(Field<RawType, I>::getValue(obj));
+                return foreach<I+1>(obj, func);
+            }
+        }
+    };
+
+    // 动态反射, 主要用于序列化和反序列.
+    // 动态反射的类型都是弱类型, 只区分 整数, 浮点数, 字符串, 类,
+    // 允许运行时通过 类型名字符串 查询发射信息
+    enum DRType {
+	    Integer,     // long
+        FloatPoint,  // double
+        String,      // std::string
+        Class,       // class       
     };
 
     struct MetaInfo {
-        size_t                  index;
-	    std::string_view        name;
-        const std::type_info   &type;
+        size_t index;
+        DRType weakType;
+	    std::string_view fieldName;
+        std::string_view typeName;
+        const std::type_info &typeInfo;
     };
 
     template<typename T>
-    struct DynamicReflection {
+    struct DynamicRefl {
 
     };
 
