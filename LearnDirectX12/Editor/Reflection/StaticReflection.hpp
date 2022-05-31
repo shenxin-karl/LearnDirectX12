@@ -9,6 +9,9 @@
 #pragma once
 #include <string_view>
 #include <type_traits>
+#include <typeinfo>
+#include "TypeList.hpp"
+
 #define PP_THIRD_ARG(a, b, c, ...) c
 #define VA_OPT_SUPPORTED_I(...) PP_THIRD_ARG(__VA_OPT__(, ), 1, 0, )
 #define VA_OPT_SUPPORTED VA_OPT_SUPPORTED_I(?)
@@ -156,6 +159,38 @@
 
 namespace sr {
 
+    template<char... C>
+    struct Symbol {
+        constexpr static bool symbolTag = true;
+        constexpr static size_t length = sizeof...(C);
+	    constexpr static char string[] = { C..., '\0' };
+        constexpr static std::string_view value{ string };
+    };
+
+    template<typename T, size_t... N>
+    constexpr decltype(auto) _SymbolPrepareImpl(T, std::index_sequence<N...>) {
+	    return Symbol<T::get()[N]...>{};
+    }
+
+    template<typename T>
+    constexpr decltype(auto) _SymbolPrepare(T t) {
+        using IndexSequence = std::make_index_sequence<sizeof(T::get()) - 1>;
+	    return _SymbolPrepareImpl(t, IndexSequence{});
+    }
+
+#define MAKE_SYMBOL(s)                                              \
+    decltype(::sr::_SymbolPrepare(                                  \
+		[] {                                                        \
+		    struct Tmp {                                            \
+	            constexpr static decltype(auto) get() noexcept {    \
+	                return s;                                       \
+	            }                                                   \
+		    };                                                      \
+	        return Tmp{};                                           \
+	    } () )                                                      \
+	)
+
+
     template<typename T>
     struct FieldCount;
 
@@ -165,16 +200,65 @@ namespace sr {
 	template<typename T, size_t I>
 	struct Field;
 
-#define _FIELD_EACH(T, I, arg)                                  \
-    template<>                                                  \
-    struct ::sr::Field<T, I> {                                  \
-        using type = decltype(std::declval<T>().arg);           \
-        static constexpr std::string_view getName() noexcept {  \
-            return _STR(arg);                                   \
-        }                                                       \
-        static decltype(auto) getValue(T &obj) noexcept {       \
-	        return (obj.arg);                                   \
-        }                                                       \
+    template<typename T>
+    struct StaticReflection {
+        template<size_t I>
+        constexpr static decltype(auto) getValue(T &obj) noexcept {
+            static_assert(I < FieldCountV<T>, "Index out of range");
+	        return Field<T, I>::getValue(obj);
+        }
+
+        template<size_t I>
+        constexpr static decltype(auto) getValue(const T &obj) noexcept {
+            static_assert(I < FieldCountV<T>, "Index out of range");
+            return Field<T, I>::getValue(obj);
+        }
+
+        template<size_t I>
+        consteval static std::string_view getName() noexcept {
+            static_assert(I < FieldCountV<T>, "Index out of range");
+            return Field<T, I>::getName();
+        }
+
+        template<typename Symbol, int I = 0>
+        consteval static int getIndexByName() noexcept {
+            static_assert(Symbol::symbolTag, "Create strings using MAKE_SYMBOL");
+            if constexpr (Symbol::value == Field<T, I>::getName()) {
+                return I;
+            } else {
+	            if constexpr ((I+1) >= FieldCountV<T>)
+					return -1;
+                else
+                    return getIndexByName<Symbol, I+1>();
+            }
+        }
+    };
+
+    struct MetaInfo {
+        size_t                  index;
+	    std::string_view        name;
+        const std::type_info   &type;
+    };
+
+    template<typename T>
+    struct DynamicReflection {
+
+    };
+
+
+#define _FIELD_EACH(T, I, arg)                                              \
+    template<>                                                              \
+    struct ::sr::Field<T, I> {                                              \
+        using type = decltype(std::declval<T>().arg);                       \
+        consteval static std::string_view getName() noexcept {              \
+            return _STR(arg);                                               \
+        }                                                                   \
+        constexpr static decltype(auto) getValue(T &obj) noexcept {         \
+	        return (obj.arg);                                               \
+        }                                                                   \
+		constexpr static decltype(auto) getValue(const T &obj) noexcept {   \
+			return (obj.arg);                                               \
+		}                                                                   \
     };                                                              
 
 #define _DEFINE_FIELD_COUNT(T, C)                               \
