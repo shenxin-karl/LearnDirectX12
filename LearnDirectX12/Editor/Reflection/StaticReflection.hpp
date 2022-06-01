@@ -10,6 +10,7 @@
 #include <string_view>
 #include <type_traits>
 #include <typeinfo>
+#include <unordered_map>
 #include "TypeList.hpp"
 
 #define PP_THIRD_ARG(a, b, c, ...) c
@@ -158,8 +159,9 @@
 #define _PASTE(x, y) _CONCATE(x, y)
 
 namespace sr {
+	struct MetaInfo;
 
-    template<char... C>
+	template<char... C>
     struct Symbol {
         constexpr static bool symbolTag = true;
         constexpr static size_t length = sizeof...(C);
@@ -279,26 +281,86 @@ namespace sr {
     };
 
     // 动态反射, 主要用于序列化和反序列.
-    // 动态反射的类型都是弱类型, 只区分 整数, 浮点数, 字符串, 类,
+    // 动态反射的类型都是弱类型, 只区分 布尔, 整数, 浮点数, 字符串, 表,
     // 允许运行时通过 类型名字符串 查询发射信息
     enum DRType {
-	    Integer,     // long
-        FloatPoint,  // double
-        String,      // std::string
-        Class,       // class       
+        Unknown,        // 未知的类型
+        Boolean,        // bool
+	    IntegerNumber,  // long
+        RealNumber,     // double
+        String,         // std::string
+        Table,          // Table       
     };
+
+    using DRBool = bool;
+    using DRInt = long;
+    using DRReal = double;
+    using DRString = std::string;
+
+    template<typename T>
+    constexpr DRType GetDRType() {
+        using RawType = std::decay_t<T>;
+        if constexpr (std::is_same_v<RawType, bool>) {
+			return DRType::Boolean;
+        } else if constexpr (std::is_enum_v<RawType> || std::is_integral_v<RawType>) {
+			return DRType::IntegerNumber;
+        } else if constexpr (std::is_floating_point_v<RawType>) {
+			return DRType::RealNumber;      
+        } else if constexpr (std::is_same_v<RawType, char *>          ||
+							 std::is_same_v<RawType, const char *>    ||
+						     std::is_same_v<RawType, std::string>     || 
+						     std::is_same_v<RawType, std::string_view> )
+    	{
+			return DRType::String;
+        } else if constexpr (std::is_class_v<RawType>) {
+            static_assert(FieldCountV<RawType> > 0, "This class does not register reflection");
+	        return DRType::Table;
+        } else {
+            if constexpr (requires{ std::begin(std::declval<T>()); }) {
+                DRType elementType = GetDRType< decltype(*std::begin(std::declval<T>())) >();
+                static_assert(elementType != DRType::Unknown, "The elements of this container are not registered for reflection");
+                return DRType::Table;
+            }
+            else if constexpr (std::is_array_v<T>) {
+                DRType elementType = GetDRType< decltype(std::declval<T>()[0]) >();
+                static_assert(elementType != DRType::Unknown, "The elements of this array are not registered for reflection");
+                return DRType::Table;
+            }
+        }
+        return DRType::Unknown;
+    }
+
+    template<typename T>
+    constexpr DRType GetDRType(T &&) {
+	    return GetDRType<T>();
+    }
 
     struct MetaInfo {
         size_t index;
         DRType weakType;
 	    std::string_view fieldName;
         std::string_view typeName;
-        const std::type_info &typeInfo;
+        const std::type_info *pTypeInfo;
     };
 
     template<typename T>
-    struct DynamicRefl {
+    class DynamicRefl {
+        using RawType = std::decay_t<T>;
+        static inline std::unordered_map<std::string, size_t> sNameToIndexMap;
+        static inline std::vector<MetaInfo> sMetaInfos;
 
+        template<size_t I = 0>
+        static void initialize() noexcept {
+	        using FieldType = Field<RawType, I>;
+            MetaInfo metaInfo = {
+                .index = I,
+                //.weakType = 
+            };
+        }
+    public:
+        DynamicRefl() {
+	        
+        }
     };
 
 
