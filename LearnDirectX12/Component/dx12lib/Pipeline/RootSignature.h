@@ -45,6 +45,7 @@ public:
 	const RootParameter &at(size_t index) const;
 	std::optional<ShaderParamLocation> getShaderParamLocation(const ShaderRegister &sr) const;
 	const DescriptorsPerTable &getDescriptorPerTableByType(D3D12_DESCRIPTOR_HEAP_TYPE heapType) const;
+	bool isFinalized() const;
 private:
 	bool _finalized = false;
 	size_t _numRootParams;

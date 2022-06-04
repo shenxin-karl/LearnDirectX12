@@ -164,16 +164,16 @@ void LandAndWater::renderWaterPass(dx12lib::DirectContextProxy pDirectCtx) {
 	std::string_view passName = "WaterPSO";
 	auto pPSO = _psoMap[passName.data()];
 	pDirectCtx->setGraphicsPSO(pPSO);
-	pDirectCtx->setConstantBuffer(_pPassCB, CBPass);
-	pDirectCtx->setConstantBuffer(_pLightCB, CBLight);
-	pDirectCtx->setConstantBuffer(_pWaterCB, CBWater);
+	pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV0, _pPassCB);
+	pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV1, _pLightCB);
+	pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV3, _pWaterCB);
 	pDirectCtx->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	auto &renderItems = _renderItemMap[passName.data()];
 	for (auto &rItem : renderItems) {
 		pDirectCtx->setVertexBuffer(rItem._pMesh->getVertexBuffer());
 		pDirectCtx->setIndexBuffer(rItem._pMesh->getIndexBuffer());
-		pDirectCtx->setConstantBuffer(rItem._pConstantBuffer, CBObject);
+		pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV2, rItem._pConstantBuffer);
 		rItem._pMesh->drawIndexdInstanced(pDirectCtx);
 	}
 }
@@ -184,15 +184,15 @@ void LandAndWater::drawOpaqueRenderItems(dx12lib::DirectContextProxy pDirectCtx,
 {
 	auto pPSO = _psoMap[passName.data()];
 	pDirectCtx->setGraphicsPSO(pPSO);
-	pDirectCtx->setConstantBuffer(_pPassCB, CBPass);
-	pDirectCtx->setConstantBuffer(_pLightCB, CBLight);
+	pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV0, _pPassCB);
+	pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV1, _pLightCB);
 	auto &renderItems = _renderItemMap[passName.data()];
 	pDirectCtx->setPrimitiveTopology(primitiveType);
 	for (auto &rItem : renderItems) {
 		pDirectCtx->setVertexBuffer(rItem._pMesh->getVertexBuffer());
 		pDirectCtx->setIndexBuffer(rItem._pMesh->getIndexBuffer());
-		pDirectCtx->setConstantBuffer(rItem._pConstantBuffer, CBObject);
-		pDirectCtx->setShaderResourceView(rItem._pAlbedoMap->getSRV(), SRAlbedo);
+		pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV2, rItem._pConstantBuffer);
+		pDirectCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV0, rItem._pAlbedoMap->getSRV());
 		rItem._pMesh->drawIndexdInstanced(pDirectCtx);
 	}
 }
@@ -259,13 +259,17 @@ void LandAndWater::buildConstantBuffer(dx12lib::DirectContextProxy pDirectCtx) {
 }
 
 void LandAndWater::buildTexturePSO(dx12lib::DirectContextProxy pDirectCtx) {
-	dx12lib::RootSignatureDescHelper desc(d3d::getStaticSamplers());
-	desc.resize(4);
-	desc[0].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);	// CBV
-	desc[1].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
-	desc[2].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2);
-	desc[3].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);	// SRV
-	auto pRootSignature = _pDevice->createRootSignature(desc);
+	auto pRootSignature = _pDevice->createRootSignature(2, 6);
+	pRootSignature->initStaticSampler(0, d3d::getStaticSamplers());
+	pRootSignature->at(0).initAsDescriptorTable({
+		{ dx12lib::RegisterSlot::CBV2, 1 },
+		{ dx12lib::RegisterSlot::SRV0, 1 },
+	});
+	pRootSignature->at(1).initAsDescriptorTable({
+		{ dx12lib::RegisterSlot::CBV0, 2 },
+	});
+	pRootSignature->finalize();
+
 	auto pTexturePSO = _pDevice->createGraphicsPSO("TexturePSO");
 	pTexturePSO->setRootSignature(pRootSignature);
 	pTexturePSO->setVertexShader(d3d::compileShader(L"shader/texture.hlsl", nullptr, "VS", "vs_5_0"));
@@ -285,13 +289,13 @@ void LandAndWater::buildTexturePSO(dx12lib::DirectContextProxy pDirectCtx) {
 }
 
 void LandAndWater::buildWaterPSO(dx12lib::DirectContextProxy pDirectCtx) {
-	dx12lib::RootSignatureDescHelper desc(d3d::getStaticSamplers());
-	desc.resize(4);
-	desc[0].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-	desc[1].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
-	desc[2].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2);
-	desc[3].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 3);
-	auto pRootSignature = _pDevice->createRootSignature(desc);
+	auto pRootSignature = _pDevice->createRootSignature(1, 6);
+	pRootSignature->initStaticSampler(0, d3d::getStaticSamplers());
+	pRootSignature->at(0).initAsDescriptorTable({
+		{ dx12lib::RegisterSlot::CBV0, 4 },
+	});
+	pRootSignature->finalize();
+
 	auto pWaterPSO = _pDevice->createGraphicsPSO("WaterPSO");
 	pWaterPSO->setRootSignature(pRootSignature);
 	pWaterPSO->setVertexShader(d3d::compileShader(L"shader/water.hlsl", nullptr, "VS", "vs_5_0"));

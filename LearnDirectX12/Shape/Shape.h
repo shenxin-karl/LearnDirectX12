@@ -34,14 +34,6 @@ struct RenderItem {
 	std::shared_ptr<dx12lib::SamplerTexture2D> _pAlbedo;
 };
 
-enum ShapeRootParameType : UINT {
-	CBPass   = 0,
-	CBLight  = 1,
-	CBObject = 2,
-	SRAlbedo = 3,
-};
-
-
 class Shape : public com::BaseApp {
 public:
 	Shape();

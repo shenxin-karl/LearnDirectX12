@@ -81,38 +81,38 @@ void MirrorApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		// draw opaque
 		auto pPSO = _psoMap[RenderLayer::Opaque];
 		pDirectCtx->setGraphicsPSO(pPSO);
-		pDirectCtx->setConstantBuffer(_pPassCB, CBPass);
-		pDirectCtx->setConstantBuffer(_pLightCB, CBLight);
+		pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV1, _pPassCB);
+		pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV2, _pLightCB);
 		drawRenderItems(pDirectCtx, RenderLayer::Opaque);
 
 		// mark stencil 
 		pPSO = _psoMap[RenderLayer::Mirrors];
 		pDirectCtx->setGraphicsPSO(pPSO);
-		pDirectCtx->setConstantBuffer(_pPassCB, CBPass);
-		pDirectCtx->setConstantBuffer(_pLightCB, CBLight);
+		pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV1, _pPassCB);
+		pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV2, _pLightCB);
 		pDirectCtx->setStencilRef(1);
 		drawRenderItems(pDirectCtx, RenderLayer::Mirrors);
 
 		// draw 
 		pPSO = _psoMap[RenderLayer::Reflected];
 		pDirectCtx->setGraphicsPSO(pPSO);
-		pDirectCtx->setConstantBuffer(_pPassCB, CBPass);
-		pDirectCtx->setConstantBuffer(_pReflectedLightCB, CBLight);
+		pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV1, _pPassCB);
+		pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV2, _pReflectedLightCB);
 		pDirectCtx->setStencilRef(1);
 		drawRenderItems(pDirectCtx, RenderLayer::Reflected);
 
 		// draw 
 		pPSO = _psoMap[RenderLayer::Transparent];
 		pDirectCtx->setGraphicsPSO(pPSO);
-		pDirectCtx->setConstantBuffer(_pPassCB, CBPass);
-		pDirectCtx->setConstantBuffer(_pLightCB, CBLight);
+		pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV1, _pPassCB);
+		pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV2, _pLightCB);
 		pDirectCtx->setStencilRef(0);
 		drawRenderItems(pDirectCtx, RenderLayer::Transparent);
 
 		pPSO = _psoMap[RenderLayer::Shadow];
 		pDirectCtx->setGraphicsPSO(pPSO);
-		pDirectCtx->setConstantBuffer(_pPassCB, CBPass);
-		pDirectCtx->setConstantBuffer(_pLightCB, CBLight);
+		pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV1, _pPassCB);
+		pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV2, _pLightCB);
 		pDirectCtx->setStencilRef(0);
 		drawRenderItems(pDirectCtx, RenderLayer::Shadow);
 
@@ -135,8 +135,8 @@ void MirrorApp::drawRenderItems(dx12lib::DirectContextProxy pDirectCtx, RenderLa
 	for (auto &rItem : _renderItems[layer]) {
 		pDirectCtx->setVertexBuffer(rItem._pMesh->getVertexBuffer());
 		pDirectCtx->setIndexBuffer(rItem._pMesh->getIndexBuffer());
-		pDirectCtx->setConstantBuffer(rItem._pObjectCB, CBObject);
-		pDirectCtx->setShaderResourceView(rItem._pAlbedoMap->getSRV(), SRAlbedo);
+		pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV0, rItem._pObjectCB);
+		pDirectCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV0, rItem._pAlbedoMap->getSRV());
 		rItem._submesh.drawIndexdInstanced(pDirectCtx);
 	}
 }
@@ -291,13 +291,17 @@ void MirrorApp::buildMeshs(dx12lib::DirectContextProxy pDirectCtx) {
 }
 
 void MirrorApp::buildPSOs(dx12lib::DirectContextProxy pDirectCtx) {
-	dx12lib::RootSignatureDescHelper desc(d3d::getStaticSamplers());
-	desc.resize(4);
-	desc[0].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);	// SRV
-	desc[1].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);	// CBV
-	desc[2].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
-	desc[3].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2);
-	auto pRootSignature = _pDevice->createRootSignature(desc);
+	auto pRootSignature = _pDevice->createRootSignature(2, 6);
+	pRootSignature->initStaticSampler(0, d3d::getStaticSamplers());
+	pRootSignature->at(0).initAsDescriptorTable({
+		{ dx12lib::RegisterSlot::CBV0, 1 },
+		{ dx12lib::RegisterSlot::SRV0, 1 },
+	});
+	pRootSignature->at(1).initAsDescriptorTable({
+		{ dx12lib::RegisterSlot::CBV1, 2 },
+	});
+	pRootSignature->finalize();
+
 	auto pOpaquePSO = _pDevice->createGraphicsPSO("OpaquePSO");
 	pOpaquePSO->setRootSignature(pRootSignature);
 	pOpaquePSO->setRenderTargetFormat(

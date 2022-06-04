@@ -68,11 +68,12 @@ void BasicTessellationApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) 
 	CD3DX12_RASTERIZER_DESC rasterizerDesc(D3D12_DEFAULT);
 	rasterizerDesc.FillMode = D3D12_FILL_MODE_WIREFRAME;
 
-	dx12lib::RootSignatureDescHelper rootDesc;
-	rootDesc.resize(2);
-	rootDesc[CB_Object].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-	rootDesc[CB_Pass].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
-	auto pRootSignature = _pDevice->createRootSignature(rootDesc);
+	auto pRootSignature = _pDevice->createRootSignature(1);
+	pRootSignature->at(0).initAsDescriptorTable({
+		{ dx12lib::RegisterSlot::CBV0, 2 }
+	});
+	pRootSignature->finalize();
+
 	_pTessellationPSO->setRootSignature(pRootSignature);
 	_pTessellationPSO->setRasterizerState(rasterizerDesc);
 	_pTessellationPSO->setPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH);
@@ -131,8 +132,8 @@ void BasicTessellationApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		renderTarget.clear(pDirectCtx, float4(DirectX::Colors::Black));
 
 		pDirectCtx->setGraphicsPSO(_pTessellationPSO);
-		pDirectCtx->setConstantBuffer(_pObjectCB, CB_Object);
-		pDirectCtx->setConstantBuffer(_pPassCB, CB_Pass);
+		pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV0, _pObjectCB);
+		pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV1, _pPassCB);
 		pDirectCtx->setVertexBuffer(_pQuadMesh->getVertexBuffer());
 		pDirectCtx->setIndexBuffer(_pQuadMesh->getIndexBuffer());
 		pDirectCtx->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST);

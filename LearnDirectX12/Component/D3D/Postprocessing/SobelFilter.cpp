@@ -36,9 +36,11 @@ void SobelFilter::tryBuildRootSignature(dx12lib::ComputeContextProxy pComputeLis
 		return;
 
 	auto pSharedDevice = pComputeList->getDevice().lock();
-	_pRootSignature = pSharedDevice->createRootSignature(2);
-	(*_pRootSignature)[0].setTableRange(0, dx12lib::RegisterSlot::SRV0);
-	(*_pRootSignature)[0].setTableRange(1, dx12lib::RegisterSlot::UAV0);
+	_pRootSignature = pSharedDevice->createRootSignature(1);
+	_pRootSignature->at(0).initAsDescriptorTable({
+		{ dx12lib::RegisterSlot::SRV0, 1 },
+		{ dx12lib::RegisterSlot::UAV0, 1 },
+	});
 	_pRootSignature->finalize();
 }
 

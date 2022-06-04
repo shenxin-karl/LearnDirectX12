@@ -49,9 +49,9 @@ void BezierPatchApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 
 		// draw bezier patch triangle
 		pDirectCtx->setGraphicsPSO(_pBezierPatchPSO);
-		pDirectCtx->setConstantBuffer(_pObjectCB, CB_Object);
-		pDirectCtx->setConstantBuffer(_pPassCB, CB_Pass);
-		pDirectCtx->setConstantBuffer(_pLightCB, CB_Light);
+		pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV0, _pObjectCB);
+		pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV1, _pPassCB);
+		pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV2, _pLightCB);
 		pDirectCtx->setVertexBuffer(_pQuadMesh->getVertexBuffer());
 		pDirectCtx->setIndexBuffer(_pQuadMesh->getIndexBuffer());
 		pDirectCtx->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_16_CONTROL_POINT_PATCHLIST);
@@ -184,12 +184,12 @@ void BezierPatchApp::buildBezierPatchPSO() {
 	};
 	_pBezierPatchPSO->setInputLayout(inputLayout);
 
-	dx12lib::RootSignatureDescHelper rootDesc;
-	rootDesc.resize(3);
-	rootDesc[CB_Object].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-	rootDesc[CB_Pass].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
-	rootDesc[CB_Light].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2);
-	auto pRootSignature = _pDevice->createRootSignature(rootDesc);
+	auto pRootSignature = _pDevice->createRootSignature(1);
+	pRootSignature->at(0).initAsDescriptorTable({
+		{ dx12lib::RegisterSlot::CBV0, 3 }
+	});
+	pRootSignature->finalize();
+
 	_pBezierPatchPSO->setRootSignature(pRootSignature);
 	_pBezierPatchPSO->finalize();
 }

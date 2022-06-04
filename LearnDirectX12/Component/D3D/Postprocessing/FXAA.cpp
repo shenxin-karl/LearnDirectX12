@@ -52,11 +52,13 @@ void FXAA::tryBuildRootSignature(std::weak_ptr<dx12lib::Device> pDevice) {
 		return;
 
 	auto pSharedDevice = pDevice.lock();
-	_pRootSignature = pSharedDevice->createRootSignature(1, 1);
+	_pRootSignature = pSharedDevice->createRootSignature(2, 1);
 	_pRootSignature->initStaticSampler(0, getLinearClampStaticSampler(0));
-	_pRootSignature->at(0).initAsDescriptorTable(2);
-	_pRootSignature->at(0).setTableRange(0, dx12lib::RegisterSlot::SRV0);
-	_pRootSignature->at(0).setTableRange(1, dx12lib::RegisterSlot::UAV0);
+	_pRootSignature->at(0).initAsConstants(dx12lib::RegisterSlot::CBV0, 4);
+	_pRootSignature->at(1).initAsDescriptorTable({
+		{ dx12lib::RegisterSlot::SRV0, 1 },
+		{ dx12lib::RegisterSlot::UAV0, 1 },
+	});
 	_pRootSignature->finalize();
 }
 

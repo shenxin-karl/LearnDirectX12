@@ -16,12 +16,6 @@ struct CBObject {
 	d3d::Material gMaterial;
 };
 
-enum RootParame {
-	CB_Object = 0,
-	CB_Pass   = 1,
-	CB_Light  = 2,
-};
-
 class BezierPatchApp : public com::BaseApp {
 public:
 	BezierPatchApp();

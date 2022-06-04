@@ -20,13 +20,6 @@ enum RenderLayer : std::size_t {
 	Count,
 };
 
-enum RootParame : std::uint32_t {
-	SRAlbedo = 0,
-	CBObject = 1,
-	CBPass   = 2,
-	CBLight  = 3,
-};
-
 struct ObjectCBType {
 	float4x4      matWorld;
 	float4x4      matNormal;

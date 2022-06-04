@@ -10,11 +10,6 @@ struct PatchVertex {
 	float3 position;
 };
 
-enum RootParame {
-	CB_Object,
-	CB_Pass,
-};
-
 class BasicTessellationApp : public com::BaseApp {
 public:
 	BasicTessellationApp();

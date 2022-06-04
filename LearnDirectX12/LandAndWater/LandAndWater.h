@@ -32,14 +32,6 @@ public:
 	void init(const WaterParameDesc &desc);
 };
 
-enum RootParameType {
-	CBPass   = 0,
-	CBLight  = 1,
-	CBObject = 2,
-	CBWater  = 3,
-	SRAlbedo = 3,
-};
-
 constexpr std::size_t kMaxWaterParameCount = 4;
 struct WaterCBType {
 	WaterParame waterParames[kMaxWaterParameCount];

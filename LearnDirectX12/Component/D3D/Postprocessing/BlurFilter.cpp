@@ -80,11 +80,12 @@ void BlurFilter::buildBlurPSO(std::weak_ptr<dx12lib::Device> pDevice) {
 
 		auto pSharedDevice = pDevice.lock();
 		auto pRootSignature = pSharedDevice->createRootSignature(2);
-		(*pRootSignature)[0].initAsConstants(dx12lib::RegisterSlot::CBV0, 12);
-		(*pRootSignature)[1].initAsDescriptorTable(2);
-		(*pRootSignature)[1].setTableRange(0, dx12lib::RegisterSlot::SRV0);
-		(*pRootSignature)[1].setTableRange(1, dx12lib::RegisterSlot::UAV0);
-
+		pRootSignature->at(0).initAsConstants(dx12lib::RegisterSlot::CBV0, 12);
+		pRootSignature->at(1).initAsDescriptorTable({
+			{ dx12lib::RegisterSlot::SRV0, 1 },
+			{ dx12lib::RegisterSlot::UAV0, 1 },
+		});
+		pRootSignature->finalize();
 
 		_pHorzBlurPSO = pSharedDevice->createComputePSO("HorizontalBlurPSO");
 		_pVertBlurPSO = pSharedDevice->createComputePSO("VerticalBlurPSO");

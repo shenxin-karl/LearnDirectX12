@@ -4,6 +4,7 @@
 #include "D3D/Shader/ShaderCommon.h"
 #include "D3D/Tool/Mesh.h"
 #include "D3D/Tool/Camera.h"
+#include "dx12lib/Pipeline/ShaderRegister.hpp"
 #include <DirectXCollision.h>
 
 using namespace Math;
@@ -32,14 +33,6 @@ struct InstanceData {
 	uint32_t pad1 = 0;
 };
 
-enum RootParame : size_t {
-	CB_Pass = 0,
-	CB_Light = 1,
-	SR_InstanceData = 2,
-	SR_MaterialData = 3,
-	SR_DiffuseMapArray = 4,
-};
-
 class InstanceApp : public com::BaseApp {
 public:
 	InstanceApp();
@@ -63,6 +56,8 @@ private:
 private:
 	constexpr static inline size_t kMaxInstanceSize = 150;
 	constexpr static inline size_t kMaxTextureArraySize = 5;
+	static inline dx12lib::ShaderRegister sInstanceShaderRegister{ dx12lib::RegisterSlot::SRV0, dx12lib::RegisterSpace::Space1 };
+	static inline dx12lib::ShaderRegister sMaterialShaderRegister{ dx12lib::RegisterSlot::SRV1, dx12lib::RegisterSpace::Space1 };
 
 	std::unique_ptr<d3d::SkyBox> _pSkyBox;
 	std::shared_ptr<d3d::FirstPersonCamera> _pCamera;

@@ -263,6 +263,10 @@ RootSignature::getDescriptorPerTableByType(D3D12_DESCRIPTOR_HEAP_TYPE heapType) 
 	}
 }
 
+bool RootSignature::isFinalized() const {
+	return _finalized;
+}
+
 size_t RootSignature::getPerTableIndexByRangeType(D3D12_DESCRIPTOR_RANGE_TYPE type) {
 	switch (type) {
 	case D3D12_DESCRIPTOR_RANGE_TYPE_CBV:

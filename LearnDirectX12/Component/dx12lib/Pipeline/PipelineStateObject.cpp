@@ -9,6 +9,7 @@ PSO::PSO(std::weak_ptr<Device> pDevice, const std::string &name) : _name(name) {
 }
 
 void PSO::setRootSignature(std::shared_ptr<RootSignature> pRootSignature) {
+	assert(pRootSignature->isFinalized());
 	_pRootSignature = pRootSignature;
 	_dirty = true;
 }

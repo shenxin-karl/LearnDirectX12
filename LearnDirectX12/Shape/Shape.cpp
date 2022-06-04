@@ -75,13 +75,16 @@ void Shape::onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int heig
 }
 
 void Shape::buildTexturePSO(dx12lib::DirectContextProxy pDirectCtx) {
-	dx12lib::RootSignatureDescHelper rootDesc(d3d::getStaticSamplers());
-	rootDesc.resize(4);
-	rootDesc[0].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-	rootDesc[1].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
-	rootDesc[2].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2);
-	rootDesc[3].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
-	auto pRootSignature = _pDevice->createRootSignature(rootDesc);
+	auto pRootSignature = _pDevice->createRootSignature(2, 6);
+	pRootSignature->initStaticSampler(0, d3d::getStaticSamplers());
+	pRootSignature->at(0).initAsDescriptorTable({
+		{ dx12lib::RegisterSlot::CBV0, 2 },
+	});
+	pRootSignature->at(1).initAsDescriptorTable({
+		{ dx12lib::RegisterSlot::CBV2, 1 },
+		{ dx12lib::RegisterSlot::SRV0, 1 },
+	});
+	pRootSignature->finalize();
 
 	auto pPSO = _pDevice->createGraphicsPSO("TexturePSO");
 	pPSO->setRootSignature(pRootSignature);
@@ -103,12 +106,14 @@ void Shape::buildTexturePSO(dx12lib::DirectContextProxy pDirectCtx) {
 }
 
 void Shape::buildColorPSO(dx12lib::DirectContextProxy pDirectCtx) {
-	dx12lib::RootSignatureDescHelper rootDesc;
-	rootDesc.resize(3);
-	rootDesc[0].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-	rootDesc[1].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
-	rootDesc[2].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2);
-	auto pRootSignature = _pDevice->createRootSignature(rootDesc);
+	auto pRootSignature = _pDevice->createRootSignature(2);
+	pRootSignature->at(0).initAsDescriptorTable({
+		{ dx12lib::RegisterSlot::CBV0, 2 }
+	});
+	pRootSignature->at(1).initAsDescriptorTable({
+		{ dx12lib::RegisterSlot::CBV2, 1 }
+	});
+	pRootSignature->finalize();
 
 	auto pPSO = _pDevice->createGraphicsPSO("ColorPSO");
 	pPSO->setRootSignature(pRootSignature);
@@ -330,16 +335,16 @@ void Shape::renderShapesPass(dx12lib::DirectContextProxy pDirectCtx) {
 	auto pPSO = _PSOMap[passPSOName];
 	pDirectCtx->setGraphicsPSO(pPSO);
 
-	pDirectCtx->setConstantBuffer(_pPassCB, ShapeRootParameType::CBPass);
-	pDirectCtx->setConstantBuffer(_pGameLightsCB, ShapeRootParameType::CBLight);
+	pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV0, _pPassCB);
+	pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV1, _pGameLightsCB);
 
 	auto psoRenderItems = _renderItems[passPSOName];
 	for (auto &rItem : psoRenderItems) {
 		pDirectCtx->setVertexBuffer(rItem._pMesh->_pVertexBuffer);
 		pDirectCtx->setIndexBuffer(rItem._pMesh->_pIndexBuffer);
 		pDirectCtx->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		pDirectCtx->setConstantBuffer(rItem._pObjectCB, ShapeRootParameType::CBObject);
-		pDirectCtx->setShaderResourceView(rItem._pAlbedo->getSRV(), ShapeRootParameType::SRAlbedo);
+		pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV2, rItem._pObjectCB);
+		pDirectCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV0, rItem._pAlbedo->getSRV());
 		pDirectCtx->drawIndexedInstanced(
 			rItem._pMesh->_pIndexBuffer->getIndexCount(), 1, 0,
 			0, 0
@@ -352,14 +357,14 @@ void Shape::renderSkullPass(dx12lib::DirectContextProxy pDirectCtx) {
 	auto pPSO = _PSOMap[passPSOName];
 
 	pDirectCtx->setGraphicsPSO(pPSO);
-	pDirectCtx->setConstantBuffer(_pPassCB, ShapeRootParameType::CBPass);
-	pDirectCtx->setConstantBuffer(_pGameLightsCB, ShapeRootParameType::CBLight);
+	pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV0, _pPassCB);
+	pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV1, _pGameLightsCB);
 	auto psoRenderItems = _renderItems[passPSOName];
 	auto &rItem = psoRenderItems[0];
 	pDirectCtx->setVertexBuffer(rItem._pMesh->_pVertexBuffer);
 	pDirectCtx->setIndexBuffer(rItem._pMesh->_pIndexBuffer);
 	pDirectCtx->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	pDirectCtx->setConstantBuffer(rItem._pObjectCB, ShapeRootParameType::CBObject);
+	pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV2, rItem._pObjectCB);
 	pDirectCtx->drawIndexedInstanced(
 		rItem._pMesh->_pIndexBuffer->getIndexCount(), 1, 0,
 		0, 0

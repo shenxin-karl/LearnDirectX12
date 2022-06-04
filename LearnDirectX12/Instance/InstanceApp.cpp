@@ -59,19 +59,18 @@ void InstanceApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		renderTarget.clear(pDirectCtx, float4(DirectX::Colors::LightSkyBlue));
 
 		pDirectCtx->setGraphicsPSO(_pInstancePSO);
-		pDirectCtx->setConstantBuffer(_pPassCB, CB_Pass);
-		pDirectCtx->setConstantBuffer(_pLightCB, CB_Light);
-		pDirectCtx->setStructuredBuffer(_pMaterialData, SR_MaterialData);
+		pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV0, _pPassCB);
+		pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV1, _pLightCB);
+		pDirectCtx->setStructuredBuffer(sMaterialShaderRegister, _pMaterialData);
 
 		size_t srvCount = std::min(_textures.size(), kMaxTextureArraySize);
+		dx12lib::ShaderRegister baseRegister = dx12lib::RegisterSlot::SRV0;
 		for (size_t idx = 0; idx < srvCount; ++idx)
-			pDirectCtx->setShaderResourceView(_textures[idx]->getSRV(), SR_DiffuseMapArray, idx);
+			pDirectCtx->setShaderResourceView(baseRegister + idx, _textures[idx]->getSRV());
 
 		std::vector<RenderItem> renderItems = cullingByFrustum();
 		doDrawInstance(pDirectCtx, _geometryMap["skull"], renderItems);
-
 		_pSkyBox->render(pDirectCtx, _pCamera);
-
 		renderTarget.unbind(pDirectCtx);
 	}
 	pCmdQueue->executeCommandList(pDirectCtx);
@@ -165,15 +164,20 @@ void InstanceApp::buildMaterial(dx12lib::CommonContextProxy pCommonCtx) {
 
 void InstanceApp::buildPSO() {
 	UINT texArrayCount = static_cast<UINT>(std::min(kMaxTextureArraySize, _textures.size()));
+	sInstanceShaderRegister.slot = dx12lib::RegisterSlot::SRV0;
+	sInstanceShaderRegister.space = dx12lib::RegisterSpace::Space1;
 
-	dx12lib::RootSignatureDescHelper rootDesc(d3d::getStaticSamplers());
-	rootDesc.resize(5);
-	rootDesc[CB_Pass].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-	rootDesc[CB_Light].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
-	rootDesc[SR_InstanceData].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 1);
-	rootDesc[SR_MaterialData].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, 1);
-	rootDesc[SR_DiffuseMapArray].initAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, texArrayCount, 0, 0);
-	auto pRootSignature = _pDevice->createRootSignature(rootDesc);
+	auto pRootSignature = _pDevice->createRootSignature(2, 6);
+	pRootSignature->initStaticSampler(0, d3d::getStaticSamplers());
+	pRootSignature->at(0).initAsDescriptorTable({
+		{ dx12lib::RegisterSlot::CBV0, 2 },
+	});
+	pRootSignature->at(1).initAsDescriptorTable({
+		{ dx12lib::RegisterSlot::SRV0, texArrayCount },
+		{ sInstanceShaderRegister, 1 },
+		{ sMaterialShaderRegister, 1 },
+	});
+	pRootSignature->finalize();
 
 	_pInstancePSO = _pDevice->createGraphicsPSO("InstancePSO");
 	_pInstancePSO->setRootSignature(pRootSignature);
@@ -274,8 +278,7 @@ void InstanceApp::doDrawInstance(dx12lib::GraphicsContextProxy pGraphicsCtx,
 		instData.matNormal = float4x4(matNormal);
 	}
 
-	pGraphicsCtx->setStructuredBuffer(_pInstanceBuffer, SR_InstanceData);
-
+	pGraphicsCtx->setStructuredBuffer(sInstanceShaderRegister, _pInstanceBuffer);
 	pGraphicsCtx->setVertexBuffer(pMesh->getVertexBuffer());
 	pGraphicsCtx->setIndexBuffer(pMesh->getIndexBuffer());
 	pGraphicsCtx->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

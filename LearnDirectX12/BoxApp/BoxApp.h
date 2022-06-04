@@ -23,10 +23,6 @@ struct BoxMesh {
 	UINT _startIndexLocation = 0;
 };
 
-enum BoxRootParame : UINT {
-	WorldViewProjCBuffer = 0,
-};
-
 struct CBObject {
 	float4x4      gMatWorld;
 	float4x4	  gMatNormal;
