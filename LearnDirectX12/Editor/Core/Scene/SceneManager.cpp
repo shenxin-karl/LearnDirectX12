@@ -1,5 +1,5 @@
 #include <cassert>
-#include "Scene/SceneManager.h"
+#include "Core/Scene/SceneManager.h"
 #include "SceneNode.h"
 #include "Context/CommandQueue.h"
 #include "Editor/Editor.h"
@@ -37,12 +37,12 @@ size_t SceneManager::getNodeSize() const {
 	return _nodeList.size();
 }
 
-std::list<std::shared_ptr<SceneNode>> & SceneManager::getNodeList() {
+std::list<std::shared_ptr<SceneNode>> &SceneManager::getNodeList() {
 	return _nodeList;
 }
 
 void SceneManager::renderScene(d3d::RenderTarget renderTarget, dx12lib::DirectContextProxy pDirectCtx) {
-	auto *pEditor = Editor::instance();
+	auto &pEditor = Editor::instance();
 	auto pGameTimer = pEditor->getGameTimer();
 	renderTarget.bind(pDirectCtx);
 	{

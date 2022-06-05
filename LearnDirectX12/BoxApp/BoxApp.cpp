@@ -14,6 +14,7 @@
 #include <dx12lib/Pipeline/PipelineStd.h>
 
 #include "D3D/Sky/SkyBox.h"
+#include "InputSystem/Window.h"
 
 BoxApp::BoxApp() {
 	_title = "BoxApp";
@@ -103,6 +104,14 @@ void BoxApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	pObject->gSH3 = _pIBL->getIrradianceMapSH3();
 	pObject->gMaterial.roughness = sin(pGameTimer->getTotalTime()) * 0.5f + 0.5f;
 	pObject->gMaterial.metallic = cos(pGameTimer->getTotalTime()) * 0.5f + 0.5f;
+
+	char buffer[128] = { '\0' };
+	sprintf_s(buffer, "BoxApp roughness: %.2f, metallic: %.2f", 
+		pObject->gMaterial.roughness, 
+		pObject->gMaterial.metallic
+	);
+
+	_pInputSystem->pWindow->setShowTitle(buffer);
 }
 
 void BoxApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {

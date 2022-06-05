@@ -27,6 +27,7 @@ private:
 	using NodeList = std::list<std::shared_ptr<SceneNode>>;
 	NodeList _nodeList;
 	NodeIndexMap _nodeMap;
+	std::unique_ptr<d3d::FirstPersonCamera> _pMainCamera;
 };
 
 }

@@ -37,7 +37,7 @@ void ImGuiProxy::initialize() {
         style.Colors[ImGuiCol_WindowBg].w = 1.0f;
     }
 
-    ED::Editor *pEditor = ED::Editor::instance();
+    auto pEditor = ED::Editor::instance();
 
     // create imgui srv descriptor heap
     D3D12_DESCRIPTOR_HEAP_DESC desc = {};
@@ -105,7 +105,7 @@ void ImGuiProxy::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 
 void ImGuiProxy::endTick(std::shared_ptr<com::GameTimer> pGameTimer) {
     // Update and Render additional Platform Windows
-    ED::Editor *pEditor = ED::Editor::instance();
+    auto &pEditor = ED::Editor::instance();
     if (pEditor->isRunning() && GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
         ImGui::UpdatePlatformWindows();
         ImGui::RenderPlatformWindowsDefault(nullptr, nullptr);
@@ -118,7 +118,7 @@ void ImGuiProxy::image(ImGuiSrvSlot slot, dx12lib::ShaderResourceView srv, size_
 
     auto *pDevice = ED::Editor::instance()->getDevice()->getD3DDevice();
     CD3DX12_CPU_DESCRIPTOR_HANDLE destHandle(_pDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
-    destHandle.Offset(static_cast<UINT>(offset), _descriptorIncrementSize);
+    destHandle.Offset(static_cast<UINT>(offset), static_cast<UINT>(_descriptorIncrementSize));
 
 	D3D12_CPU_DESCRIPTOR_HANDLE *pDestDescriptorHandle = &destHandle;
     UINT pDestDescriptorRangeSizes[] = { 1 };
@@ -135,7 +135,7 @@ void ImGuiProxy::image(ImGuiSrvSlot slot, dx12lib::ShaderResourceView srv, size_
     );
 
     CD3DX12_GPU_DESCRIPTOR_HANDLE texHandle(_pDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
-    texHandle.Offset(static_cast<UINT>(offset), _descriptorIncrementSize);
+    texHandle.Offset(static_cast<UINT>(offset), static_cast<UINT>(_descriptorIncrementSize));
     ImVec2 size(static_cast<float>(width), static_cast<float>(height));
     ImGui::Image(reinterpret_cast<ImTextureID>(texHandle.ptr), size);
 }

@@ -11,7 +11,7 @@ struct MetaInfo;
 // 动态反射, 主要用于序列化和反序列.
 // 动态反射的类型都是弱类型, 只区分 布尔, 整数, 浮点数, 字符串, 表,
 // 允许运行时通过 类型名字符串 查询发射信息
-enum DRType {
+enum class DRType {
     Unknown,        // 未知的类型
     Boolean,        // bool
     IntegerNumber,  // long
@@ -64,21 +64,24 @@ consteval DRType toDRType(T &&) {
     return toDRType<T>();
 }
 
-struct EmptyType {
-};
+struct TableType {};
+struct UnknownType {};
 
 template<DRType DR>
 constexpr auto formDRType() {
-	if constexpr (DR == Boolean)
+	if constexpr (DR == DRType::Boolean)
 		return DRBool();
-    else if constexpr (DR == IntegerNumber)
+    else if constexpr (DR == DRType::IntegerNumber)
 		return DRInt();
-    else if constexpr (DR == RealNumber)
+    else if constexpr (DR == DRType::RealNumber)
 		return DRReal();
-    else if constexpr (DR == String)
+    else if constexpr (DR == DRType::String)
 		return DRString();
-    else
-        return EmptyType();
+    else if constexpr (DR == DRType::Table)
+        return TableType();
+
+    static_assert(DR != Unknown, "Encountered a type that could not reflect");
+    return UnknownType();
 }
 
 struct TransformFunc {
@@ -87,7 +90,7 @@ struct TransformFunc {
 public:
     template<typename DstType, typename SrcType>
     static void setFunction(void *pData, const DstType &data) noexcept {
-	    static_cast<SrcType *>(pData) = data;
+	    *static_cast<SrcType *>(pData) =  static_cast<DstType>(data);
     }
 
     template<typename DstType, typename SrcType>
@@ -96,23 +99,34 @@ public:
     }
 };
 
+class Table {
+private:
+    void *_pTable = nullptr;
+
+};
+
 class DRValue {
 public:
     auto toBool() const -> DRBool;
     auto toInt() const -> DRInt;
     auto toReal() const -> DRReal;
     auto toString() const -> const DRString &;
-    auto toBool(DRBool vBool) -> void;
-    auto toInt(DRInt vInt) -> void;
-    auto toString(const DRString &vString) -> void;
+    auto toTable() const -> const Table &;
+    auto isConstant() const;
     explicit operator const DRBool &() const;
     explicit operator const DRInt &() const;
     explicit operator const DRReal &() const;
     explicit operator const DRString &() const;
+    explicit operator const Table &() const;
     DRValue &operator=(DRBool vBool);
     DRValue &operator=(DRInt vInt);
+    DRValue &operator=(DRReal vReal);
     DRValue &operator=(const DRString &vString);
 private:
+    template<typename T>
+    DRValue(T &&object, MetaInfo *pMetaInfo, TransformFunc transformFunc);
+private:
+    bool _isConstant = false;
     void *_pData = nullptr;
     MetaInfo *_pMetaInfo = nullptr;
 	TransformFunc _transformFunc;
@@ -154,9 +168,11 @@ class DynamicReflItem {
             std::string fieldName = FieldType::getName().data();
             sNameToIndexMap[fieldName] = I;
             sMetaInfos[I] = metaInfo;
-            if constexpr (!std::is_same_v<DstType, EmptyType>) {
-	            sTransformFunc[I].pGetFunc = &TransformFunc::getFunction<DstType, SrcType>;
-                sTransformFunc[I].pSetFunc = &TransformFunc::setFunction<DstType, SrcType>;
+            if constexpr (!std::is_same_v<DstType, TableType>) {
+            	void *pGetFunc = &TransformFunc::getFunction<DstType, SrcType>;
+                void *pSetFunc = &TransformFunc::setFunction<DstType, SrcType>;
+				sTransformFunc[I].pGetFunc = pGetFunc;
+            	sTransformFunc[I].pSetFunc = pSetFunc;
             }
             initialize<I+1>();
         }

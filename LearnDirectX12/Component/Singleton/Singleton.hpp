@@ -5,15 +5,20 @@ namespace com {
 
 template<typename T>
 class Singleton {
-	static inline std::unique_ptr<T> singletonPtr_;
+	static inline std::shared_ptr<T> sPSingleton;
 public:
-	static T *instance() noexcept {
-		return singletonPtr_.get();
+	static std::shared_ptr<T> &instance() noexcept {
+		return sPSingleton;
 	}
 
 	template<typename... Args>
 	static void emplace(Args&&... args) {
-		singletonPtr_ = std::make_unique<T>(std::forward<Args>(args)...);
+		sPSingleton = std::make_unique<T>(std::forward<Args>(args)...);
+	}
+
+	template<typename U> requires(std::is_base_of_v<T, U>)
+	static void emplace(std::shared_ptr<U> &&ptr) {
+		sPSingleton = std::move(ptr);
 	}
 };
 

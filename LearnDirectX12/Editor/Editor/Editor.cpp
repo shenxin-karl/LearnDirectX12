@@ -5,11 +5,9 @@
 #include "D3D/dx12libHelper/RenderTarget.h"
 #include "Context/CommandQueue.h"
 #include "InputSystem/window.h"
-#include "Scene/SceneManager.h"
-#include "EditorLog/EditorLog.h"
-#include "Scene/HirerarchyWindow.h"
-#include "Scene/InspectorWindow.h"
-#include "Scene/SceneWindow.h"
+#include "Log/LogSystemEditor.h"
+#include "MenuBar/EditorMenuBar.h"
+
 
 namespace ED {
 
@@ -19,8 +17,8 @@ Editor::Editor() {
     _height = 760;
     _canPause = false;
     _pImGuiProxy = std::make_shared<ImGui::ImGuiProxy>();
-    assert(_pEditor == nullptr);
-    _pEditor = this;
+    assert(pEditor == nullptr);
+    pEditor = this;
 }
 
 Editor::~Editor() {
@@ -29,17 +27,23 @@ Editor::~Editor() {
 
 void Editor::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
     _pImGuiProxy->initialize();
-    _pSceneMgr = std::make_shared<SceneManager>();
+    //_pSceneMgr = std::make_shared<SceneManager>();
     _pInputSystem->pWindow->setCanPause(false);
 
-    _pHierarchyWindow = std::make_shared<HierarchyWindow>(_pSceneMgr);
-    _pInspectorWindow = std::make_shared<InspectorWindow>(_pSceneMgr);
-    _pSceneWindow = std::make_shared<SceneWindow>();
+    //_pHierarchyWindow = std::make_shared<HierarchyWindow>(_pSceneMgr);
+    //_pInspectorWindow = std::make_shared<InspectorWindow>(_pSceneMgr);
 
-    attachWindow("Hierarchy", _pHierarchyWindow);
-    attachWindow("Inspector", _pInspectorWindow);
-    attachWindow("Scene", _pSceneWindow);
-    attachWindow("Log", EditorLog::instance());
+    std::vector<std::string> mainMenuBarList {
+        "Window"
+    };
+    _pMainMenuBar = std::make_shared<EditorMenuBar>(mainMenuBarList);
+    //_pSceneWindow = std::make_shared<SceneWindow>();
+
+    //attachWindow("Hierarchy", _pHierarchyWindow);
+    //attachWindow("Inspector", _pInspectorWindow);
+    //attachWindow("Scene", _pSceneWindow);
+    LogSystemEditor::emplace(std::make_shared<LogSystemEditor>("EditorLog.txt"));
+    attachWindow("Log", std::static_pointer_cast<LogSystemEditor>(LogSystemEditor::instance()));
 }
 
 void Editor::onDestroy() {
@@ -48,7 +52,7 @@ void Editor::onDestroy() {
 
 void Editor::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
     _pImGuiProxy->beginTick(pGameTimer);
-    EditorLog::instance()->updateCurrentTime();
+    std::static_pointer_cast<LogSystemEditor>(LogSystemEditor::instance())->updateCurrentTime();
 }
 
 void Editor::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
@@ -62,11 +66,7 @@ void Editor::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
         renderTarget.clear(pDirectCtx, clearColor);
 
         showEditorMainMenuBar();
-
-        for (auto &&[name, ptr] : _windows) {
-			if (*ptr->getOpenFlagPtr())
-                ptr->showWindow();
-        }
+        showEditorWindow();
 
         _pImGuiProxy->tick(pGameTimer);
         renderTarget.unbind(pDirectCtx);
@@ -89,33 +89,21 @@ void Editor::detachWindow(const std::string &name) {
     _windows.erase(name);
 }
 
-void Editor::attachMenu(const std::string &name, std::shared_ptr<IEditorMenu> pMenu) {
-    _menus[name] = pMenu;
-}
-
-void Editor::detachMenu(const std::string &name) {
-    _menus.erase(name);
-}
 
 void Editor::showEditorMainMenuBar() {
     if (ImGui::BeginMainMenuBar()) {
-        if (ImGui::BeginMenu("Windows")) {
-            for (auto &&[name, ptr] : _windows) 
-	            ImGui::MenuItem(name.c_str(), nullptr, ptr->getOpenFlagPtr());
-			ImGui::EndMenu();    
-        }
-        for (auto &&[name, ptr] : _menus) {
-	        if (ImGui::BeginMenu(name.c_str())) {
-				ptr->showMenu();
-                ImGui::EndMenu();
-            }
-        }
+		_pMainMenuBar->drawMenuBar();
 		ImGui::EndMainMenuBar();
     }
 }
 
-Editor *Editor::instance() noexcept {
-    return _pEditor;
+void Editor::showEditorWindow() {
+    for (auto &&[name, pWindow] : _windows)
+        pWindow->showWindow();
+}
+
+Editor* &Editor::instance() noexcept {
+    return pEditor;
 }
 
 std::shared_ptr<com::InputSystem> Editor::getInputSystem() const {
