@@ -1,10 +1,9 @@
 #pragma once
 #include <string>
-#include "Editor/IEditorItem.h"
 
-namespace ED {
+namespace core {
 
-class SceneNode : public IEditorItem {
+class SceneNode {
 public:
 	explicit SceneNode(const std::string &name);
 	SceneNode(const SceneNode &) = delete;

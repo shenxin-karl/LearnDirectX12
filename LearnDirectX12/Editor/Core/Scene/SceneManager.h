@@ -9,7 +9,7 @@ namespace d3d {
 	class RenderTarget;
 }
 
-namespace ED {
+namespace core {
 
 class SceneNode;
 

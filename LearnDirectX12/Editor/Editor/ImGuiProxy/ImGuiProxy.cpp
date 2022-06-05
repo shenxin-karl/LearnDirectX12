@@ -7,6 +7,7 @@
 #include "Editor/Editor.h"
 #include "Context/CommandQueue.h"
 #include "Device/SwapChain.h"
+#include "Editor/MenuBar/EditorMenuBar.h"
 #include "InputSystem/window.h"
 #include "Texture/RenderTargetTexture.h"
 
@@ -65,6 +66,8 @@ void ImGuiProxy::initialize() {
     );
 
     pEditor->getInputSystem()->pWindow->setPrepareMessageCallBack(&ImGui_ImplWin32_WndProcHandler);
+
+    initDockMenuBar();
 }
 
 void ImGuiProxy::destroy() {
@@ -140,6 +143,10 @@ void ImGuiProxy::image(ImGuiSrvSlot slot, dx12lib::ShaderResourceView srv, size_
     ImGui::Image(reinterpret_cast<ImTextureID>(texHandle.ptr), size);
 }
 
+std::shared_ptr<ED::EditorMenuBar> ImGuiProxy::getDockMenuBar() const {
+    return _pDockMenuBar;
+}
+
 void ImGuiProxy::showAppDockSpace() {
     // If you strip some features of, this demo is pretty much equivalent to calling DockSpaceOverViewport()!
 // In most cases you should be able to just call DockSpaceOverViewport() and ignore all the code below!
@@ -195,33 +202,41 @@ void ImGuiProxy::showAppDockSpace() {
     // Disabling fullscreen would allow the window to be moved to the front of other windows,
     // which we can't undo at the moment without finer window depth/z control.
     if (ImGui::BeginMenuBar()) {
-        if (ImGui::BeginMenu("Window Options")) {
-            ImGui::MenuItem("Padding", nullptr, &_optPadding);
-            if (ImGui::MenuItem("Style Dark", nullptr, _styleIndex == 1)) {
-                _styleIndex = 1;
-                ImGui::StyleColorsDark();
-            }
-            if (ImGui::MenuItem("Style Light", nullptr, _styleIndex == 2)) {
-                _styleIndex = 2;
-                ImGui::StyleColorsLight();
-            }
-            if (ImGui::MenuItem("Style Classic", nullptr, _styleIndex == 3)) {
-                _styleIndex = 3;
-                ImGui::StyleColorsClassic();
-            }
-            ImGui::Separator();
-
-            if (ImGui::MenuItem("Flag: NoSplit", "", (_dockSpaceFlag & ImGuiDockNodeFlags_NoSplit) != 0)) { _dockSpaceFlag ^= ImGuiDockNodeFlags_NoSplit; }
-            if (ImGui::MenuItem("Flag: NoResize", "", (_dockSpaceFlag & ImGuiDockNodeFlags_NoResize) != 0)) { _dockSpaceFlag ^= ImGuiDockNodeFlags_NoResize; }
-            if (ImGui::MenuItem("Flag: NoDockingInCentralNode", "", (_dockSpaceFlag & ImGuiDockNodeFlags_NoDockingInCentralNode) != 0)) { _dockSpaceFlag ^= ImGuiDockNodeFlags_NoDockingInCentralNode; }
-            if (ImGui::MenuItem("Flag: AutoHideTabBar", "", (_dockSpaceFlag & ImGuiDockNodeFlags_AutoHideTabBar) != 0)) { _dockSpaceFlag ^= ImGuiDockNodeFlags_AutoHideTabBar; }
-            if (ImGui::MenuItem("Flag: PassthruCentralNode", "", (_dockSpaceFlag & ImGuiDockNodeFlags_PassthruCentralNode) != 0, true)) { _dockSpaceFlag ^= ImGuiDockNodeFlags_PassthruCentralNode; }
-            ImGui::Separator();
-            ImGui::EndMenu();
-        }
+		_pDockMenuBar->drawMenuBar();
         ImGui::EndMenuBar();
     }
     ImGui::End();
+}
+
+void ImGuiProxy::initDockMenuBar() {
+    std::vector<std::string> dockMenuBarList { "Window Options" };
+    _pDockMenuBar = std::make_shared<ED::EditorMenuBar>(dockMenuBarList);
+
+    auto *pMenuBarItem = _pDockMenuBar->getBarItem("Window Options");
+    auto *pMenu = pMenuBarItem->addSubItemGroup("DockSpace");
+    pMenu->menuItems.push_back([&]() {
+        ImGui::MenuItem("Padding", nullptr, &_optPadding);
+        if (ImGui::MenuItem("Style Dark", nullptr, _styleIndex == 1)) {
+            _styleIndex = 1;
+            ImGui::StyleColorsDark();
+        }
+        if (ImGui::MenuItem("Style Light", nullptr, _styleIndex == 2)) {
+            _styleIndex = 2;
+            ImGui::StyleColorsLight();
+        }
+        if (ImGui::MenuItem("Style Classic", nullptr, _styleIndex == 3)) {
+            _styleIndex = 3;
+            ImGui::StyleColorsClassic();
+        }
+        ImGui::Separator();
+
+        if (ImGui::MenuItem("Flag: NoSplit", "", (_dockSpaceFlag & ImGuiDockNodeFlags_NoSplit) != 0)) { _dockSpaceFlag ^= ImGuiDockNodeFlags_NoSplit; }
+        if (ImGui::MenuItem("Flag: NoResize", "", (_dockSpaceFlag & ImGuiDockNodeFlags_NoResize) != 0)) { _dockSpaceFlag ^= ImGuiDockNodeFlags_NoResize; }
+        if (ImGui::MenuItem("Flag: NoDockingInCentralNode", "", (_dockSpaceFlag & ImGuiDockNodeFlags_NoDockingInCentralNode) != 0)) { _dockSpaceFlag ^= ImGuiDockNodeFlags_NoDockingInCentralNode; }
+        if (ImGui::MenuItem("Flag: AutoHideTabBar", "", (_dockSpaceFlag & ImGuiDockNodeFlags_AutoHideTabBar) != 0)) { _dockSpaceFlag ^= ImGuiDockNodeFlags_AutoHideTabBar; }
+        if (ImGui::MenuItem("Flag: PassthruCentralNode", "", (_dockSpaceFlag & ImGuiDockNodeFlags_PassthruCentralNode) != 0, true)) { _dockSpaceFlag ^= ImGuiDockNodeFlags_PassthruCentralNode; }
+        ImGui::Separator();
+    });
 }
 
 }

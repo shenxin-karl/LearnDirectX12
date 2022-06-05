@@ -1,6 +1,6 @@
-#include "Scene/SceneNode.h"
+#include "Core/Scene/SceneNode.h"
 
-namespace ED {
+namespace core {
 
 SceneNode::SceneNode(const std::string &name) : _name(name) {
 }

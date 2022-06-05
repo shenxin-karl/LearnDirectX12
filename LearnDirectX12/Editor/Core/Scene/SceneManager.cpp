@@ -1,14 +1,13 @@
 #include <cassert>
-#include "Core/Scene/SceneManager.h"
-#include "SceneNode.h"
-#include "Context/CommandQueue.h"
-#include "Editor/Editor.h"
-#include "Imgui/imgui.h"
+#include <Context/CommandQueue.h>
+#include <Imgui/imgui.h>
 #include <DirectXColors.h>
+#include <GameTimer/GameTimer.h>
+#include "Core/Scene/SceneManager.h"
+#include "Core/Scene/SceneNode.h"
+#include "Editor/Editor.h"
 
-#include "GameTimer/GameTimer.h"
-
-namespace ED {
+namespace core {
 
 bool SceneManager::addNode(std::shared_ptr<SceneNode> pSceneNode) {
 	auto iter = _nodeMap.find(pSceneNode->getName());

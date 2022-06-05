@@ -1,19 +1,16 @@
 #pragma once
 #include <Singleton/Singleton.hpp>
-#include "BaseApp/BaseApp.h"
-#include "Math/MathStd.hpp"
-#include "ImGuiProxy/ImGuiProxy.h"
-#include "IEditorItem.h"
+#include <BaseApp/BaseApp.h>
+#include <Math/MathStd.hpp>
+#include "Editor/ImGuiProxy/ImGuiProxy.h"
+#include "Editor/IEditorItem.h"
 
 using namespace Math;
 
 namespace ED {
-	class EditorMenuBar;
 
-	class SceneWindow;
-class InspectorWindow;
-class HierarchyWindow;
-class SceneManager;
+class SceneManagerEditor;
+class EditorMenuBar;
 
 class Editor : public com::BaseApp {
 public:
@@ -39,12 +36,9 @@ public:
 	std::shared_ptr<dx12lib::Device> getDevice() const;
 	std::shared_ptr<dx12lib::SwapChain> getSwapChain() const;
 
-	std::shared_ptr<SceneManager>	   _pSceneMgr;
-	std::shared_ptr<ImGui::ImGuiProxy> _pImGuiProxy;
-	//std::shared_ptr<HierarchyWindow>   _pHierarchyWindow;
-	//std::shared_ptr<InspectorWindow>   _pInspectorWindow;
-	//std::shared_ptr<SceneWindow>	   _pSceneWindow;
-	std::shared_ptr<EditorMenuBar>	   _pMainMenuBar;
+	std::shared_ptr<SceneManagerEditor>	 _pSceneMgr;
+	std::shared_ptr<ImGui::ImGuiProxy>   _pImGuiProxy;
+	std::shared_ptr<EditorMenuBar>	     _pMainMenuBar;
 private:
 	std::map<std::string, std::shared_ptr<IEditorWindow>> _windows;
 };

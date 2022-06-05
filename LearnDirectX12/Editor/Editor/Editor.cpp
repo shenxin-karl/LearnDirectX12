@@ -2,11 +2,11 @@
 #include <Imgui/imgui.h>
 #include <imgui/backends/imgui_impl_dx12.h>
 #include <Imgui/backends/imgui_impl_win32.h>
-#include "D3D/dx12libHelper/RenderTarget.h"
-#include "Context/CommandQueue.h"
-#include "InputSystem/window.h"
-#include "Log/LogSystemEditor.h"
-#include "MenuBar/EditorMenuBar.h"
+#include <D3D/dx12libHelper/RenderTarget.h>
+#include <Context/CommandQueue.h>
+#include <InputSystem/window.h>
+#include "Editor/LogSystem/LogSystemEditor.h"
+#include "Editor/MenuBar/EditorMenuBar.h"
 
 
 namespace ED {

@@ -6,6 +6,10 @@
 #include "Imgui/imgui.h"
 #include "Resource/ResourceView.hpp"
 
+namespace ED {
+	class EditorMenuBar;
+}
+
 namespace dx12lib {
 	class Device;
 }
@@ -28,14 +32,17 @@ public:
 		Count,
 	};
 	void image(ImGuiSrvSlot slot, dx12lib::ShaderResourceView srv, size_t width, size_t height);
+	std::shared_ptr<ED::EditorMenuBar> getDockMenuBar() const;
 private:
 	void showAppDockSpace();
+	void initDockMenuBar();
 private:
 	int  _styleIndex = 1;
 	bool _enableDockSpace = true;
 	bool _optPadding = false;
-	ImGuiDockNodeFlags _dockSpaceFlag = ImGuiDockNodeFlags_None;
 	size_t _descriptorIncrementSize = 0;
+	std::shared_ptr<ED::EditorMenuBar> _pDockMenuBar;
+	ImGuiDockNodeFlags _dockSpaceFlag = ImGuiDockNodeFlags_None;
 	WRL::ComPtr<ID3D12DescriptorHeap> _pDescriptorHeap;
 };
 
