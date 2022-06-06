@@ -8,6 +8,10 @@ WRL::ComPtr<ID3D12Resource> DepthStencil2D::getD3DResource() const {
 	return _pResource;
 }
 
+D3D12_CLEAR_VALUE DepthStencil2D::getClearValue() const {
+	return _clearValue;
+}
+
 ShaderResourceView DepthStencil2D::getSRV(size_t mipSlice) const {
 	assert(mipSlice == 0);
 	return _shaderResourceView;
@@ -31,13 +35,14 @@ DepthStencil2D::DepthStencil2D(std::weak_ptr<Device> pDevice,
 	if (depthStencilFormat == DXGI_FORMAT_UNKNOWN)
 		depthStencilFormat = pSharedDevice->getDesc().depthStencilFormat;
 
-	D3D12_CLEAR_VALUE clearValue = {};
 	if (pClearValue == nullptr) {
-		clearValue.Format = depthStencilFormat;
-		clearValue.DepthStencil.Depth = 1.f;
-		clearValue.DepthStencil.Stencil = 0;
-		pClearValue = &clearValue;
+		_clearValue.Format = depthStencilFormat;
+		_clearValue.DepthStencil.Depth = 1.f;
+		_clearValue.DepthStencil.Stencil = 0;
+	} else {
+		_clearValue = *pClearValue;
 	}
+	pClearValue = &_clearValue;
 
 	D3D12_RESOURCE_DESC depthStencilDesc;
 	depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;

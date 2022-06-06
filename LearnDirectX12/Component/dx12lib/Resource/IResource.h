@@ -46,16 +46,19 @@ interface IShaderResourceCube : IShaderResource {
 /////////////////////////////////////////////RenderTarget/////////////////////////////////////////////
 interface IRenderTarget2D : IShaderResource2D {
 	bool checkRTVState(D3D12_RESOURCE_STATES currentState) const override;
+	virtual D3D12_CLEAR_VALUE getClearValue() const = 0;
 	virtual RenderTargetView getRTV(size_t mipSlice = 0) const = 0;
 };
 
 interface IRenderTarget2DArray : IShaderResource2DArray {
 	bool checkRTVState(D3D12_RESOURCE_STATES currentState) const override;
+	virtual D3D12_CLEAR_VALUE getClearValue() const = 0;
 	virtual RenderTargetView getPlaneRTV(size_t planeSlice, size_t mipSlice = 0) const = 0;
 };
 
 interface IRenderTargetCube : IShaderResourceCube {
 	bool checkRTVState(D3D12_RESOURCE_STATES currentState) const override;
+	virtual D3D12_CLEAR_VALUE getClearValue() const = 0;
 	virtual RenderTargetView getFaceRTV(CubeFace face, size_t mipSlice = 0) const = 0;
 };
 /////////////////////////////////////////////UnorderedAccess/////////////////////////////////////////////
@@ -80,6 +83,7 @@ interface IUnorderedAccessCube : IShaderResourceCube {
 interface IDepthStencil2D : IShaderResource2D {
 	bool checkDSVState(D3D12_RESOURCE_STATES currentState) const override;
 	bool checkSRVState(D3D12_RESOURCE_STATES currentState) const override;
+	virtual D3D12_CLEAR_VALUE getClearValue() const = 0;
 	virtual DepthStencilView getDSV() const = 0;
 };
 

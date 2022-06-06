@@ -3,9 +3,10 @@
 #include <iostream>
 #include <memory>
 #include "Reflection/StaticReflection.hpp"
+#include "Core/Utility/Utility.h"
 
 int main() {
-	std::shared_ptr<com::GameTimer> pGameTimer = std::make_shared<com::GameTimer>();
+	std::shared_ptr<com::GameTimer> pGameTimer = core::getGlobalGameTimer();
 	ED::Editor editor;
 	try {
 		editor.initialize();

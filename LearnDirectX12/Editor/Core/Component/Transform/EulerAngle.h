@@ -1,5 +1,5 @@
 #pragma once
-#include "Component/IComponent.h"
+#include "Core/Component/IComponent.h"
 #include "Math/MathStd.hpp"
 
 namespace Math {

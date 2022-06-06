@@ -8,7 +8,7 @@ namespace ED {
 LogSystemEditor::LogSystemEditor(const std::string &fileName) : LogSystem(fileName), _localeFormat("ja_JP.utf8") {
 	clear();
 
-    auto &pMainMenuBar = Editor::instance()->_pMainMenuBar;
+    auto &pMainMenuBar = Editor::instance()->pMainMenuBar;
     Menu *pWindowMenu = pMainMenuBar->getBarItem("Window");
 
     pWindowMenu->addSubItemGroup("Log")->menuItems.push_back([&]() {
@@ -16,7 +16,7 @@ LogSystemEditor::LogSystemEditor(const std::string &fileName) : LogSystem(fileNa
     });
 }
 
-void LogSystemEditor::showWindow() {
+void LogSystemEditor::drawLogWindow() {
     if (!_showLogWindow)
         return;
 

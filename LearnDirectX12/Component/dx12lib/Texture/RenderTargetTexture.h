@@ -8,6 +8,7 @@ public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
 	ShaderResourceView getSRV(size_t mipSlice = 0) const override;
 	RenderTargetView getRTV(size_t mipSlice = 0) const override;
+	D3D12_CLEAR_VALUE getClearValue() const override;
 protected:
 	RenderTarget2D(std::weak_ptr<Device> pDevice, 
 		WRL::ComPtr<ID3D12Resource> pResource, 
@@ -20,6 +21,7 @@ protected:
 		DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN
 	);
 private:
+	D3D12_CLEAR_VALUE _clearValue;
 	std::weak_ptr<Device> _pDevice;
 	WRL::ComPtr<ID3D12Resource> _pResource;
 	mutable ViewManager<RenderTargetView> _rtvMgr;
@@ -45,6 +47,7 @@ protected:
 		DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN
 	);
 private:
+	D3D12_CLEAR_VALUE _clearValue;
 	std::weak_ptr<Device> _pDevice;
 	WRL::ComPtr<ID3D12Resource> _pResource;
 	mutable ViewManager<ShaderResourceView> _srvMgr;
@@ -70,6 +73,7 @@ protected:
 		DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN
 	);
 private:
+	D3D12_CLEAR_VALUE _clearValue;
 	std::weak_ptr<Device> _pDevice;
 	WRL::ComPtr<ID3D12Resource> _pResource;
 	mutable ViewManager<ShaderResourceView> _srvMgr;

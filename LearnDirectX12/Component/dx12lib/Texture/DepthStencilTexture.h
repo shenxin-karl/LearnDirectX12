@@ -8,6 +8,7 @@ namespace dx12lib {
 class DepthStencil2D : public IDepthStencil2D {
 public:
 	WRL::ComPtr<ID3D12Resource> getD3DResource() const override;
+	D3D12_CLEAR_VALUE getClearValue() const override;
 	ShaderResourceView getSRV(size_t mipSlice = 0) const override;
 	DepthStencilView getDSV() const override;
 	~DepthStencil2D() override;
@@ -24,6 +25,7 @@ protected:
 	);
 	void createViews(std::weak_ptr<Device> pDevice);
 private:
+	D3D12_CLEAR_VALUE _clearValue;
 	DepthStencilView _depthStencilView;
 	ShaderResourceView _shaderResourceView;
 	WRL::ComPtr<ID3D12Resource> _pResource;

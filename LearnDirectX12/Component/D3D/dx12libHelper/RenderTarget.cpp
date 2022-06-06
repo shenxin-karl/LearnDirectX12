@@ -46,6 +46,14 @@ std::shared_ptr<dx12lib::DepthStencil2D> RenderTarget::getDepthTarget2D() const 
 	return _pDepthStencil2D;
 }
 
+void RenderTarget::clear(dx12lib::GraphicsContextProxy pCommonCtx) {
+	assert(_isBinding);
+	auto rtClearValue = _pRenderTarget2D->getClearValue();
+	auto dsClearValue = _pDepthStencil2D->getClearValue();
+	pCommonCtx->clearColor(_pRenderTarget2D, float4(rtClearValue.Color));
+	pCommonCtx->clearDepthStencil(_pDepthStencil2D, dsClearValue.DepthStencil.Depth, dsClearValue.DepthStencil.Stencil);
+}
+
 void RenderTarget::clear(dx12lib::GraphicsContextProxy pCommonCtx, const Math::float4 &color, float depth, UINT stencil) {
 	assert(_isBinding);
 	pCommonCtx->clearColor(_pRenderTarget2D, color);

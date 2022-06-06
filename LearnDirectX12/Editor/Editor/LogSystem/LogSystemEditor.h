@@ -22,10 +22,10 @@ namespace Log {
 }
 
 
-class LogSystemEditor : public core::LogSystem, public IEditorWindow {
+class LogSystemEditor : public core::LogSystem {
 public:
     LogSystemEditor(const std::string &fileName);
-    void showWindow() override;
+    void drawLogWindow();
     void clear();
     void setShowWindow(bool bShow);
     void updateCurrentTime();

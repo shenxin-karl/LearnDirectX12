@@ -21,6 +21,7 @@ public:
 	);
 	std::shared_ptr<dx12lib::RenderTarget2D> getRenderTarget2D() const;
 	std::shared_ptr<dx12lib::DepthStencil2D> getDepthTarget2D() const;
+	void clear(dx12lib::GraphicsContextProxy pCommonCtx);
 	void clear(dx12lib::GraphicsContextProxy pCommonCtx, const Math::float4 &color, float depth = 1.f, UINT stencil = 0);
 	void bind(dx12lib::GraphicsContextProxy pCommonCtx);
 	void unbind(dx12lib::CommonContextProxy pCommonCtx);

@@ -3,6 +3,7 @@
 #include <Imgui/imgui.h>
 #include <DirectXColors.h>
 #include <GameTimer/GameTimer.h>
+#include "Core/Utility/Utility.h"
 #include "Core/Scene/SceneManager.h"
 #include "Core/Scene/SceneNode.h"
 #include "Editor/Editor.h"
@@ -41,18 +42,17 @@ std::list<std::shared_ptr<SceneNode>> &SceneManager::getNodeList() {
 }
 
 void SceneManager::renderScene(d3d::RenderTarget renderTarget, dx12lib::DirectContextProxy pDirectCtx) {
-	auto &pEditor = Editor::instance();
-	auto pGameTimer = pEditor->getGameTimer();
+	auto pGameTimer = getGlobalGameTimer();
 	renderTarget.bind(pDirectCtx);
 	{
-		float totalTime = pGameTimer->getTotalTime();
-		float4 color = {
-			std::cos(totalTime) * 0.5f + 0.5f,
-			std::sin(totalTime) * 0.5f + 0.5f,
-			1.f,
-			1.f,
-		};
-		renderTarget.clear(pDirectCtx, color);
+		//float totalTime = pGameTimer->getTotalTime();
+		//float4 color = {
+		//	std::cos(totalTime) * 0.5f + 0.5f,
+		//	std::sin(totalTime) * 0.5f + 0.5f,
+		//	1.f,
+		//	1.f,
+		//};
+		renderTarget.clear(pDirectCtx);
 	}
 	renderTarget.unbind(pDirectCtx);
 }

@@ -1,9 +1,10 @@
 #pragma once
-#include <ITick.h>
 #include <memory>
 #include <unordered_map>
+#include <ITick.h>
+#include <D3D/dx12libHelper/RenderTarget.h>
+#include <D3D/Tool/Camera.h>
 #include "Editor/IEditorItem.h"
-#include "D3D/dx12libHelper/RenderTarget.h"
 
 namespace d3d {
 	class RenderTarget;

@@ -7,6 +7,7 @@
 #include <InputSystem/window.h>
 #include "Editor/LogSystem/LogSystemEditor.h"
 #include "Editor/MenuBar/EditorMenuBar.h"
+#include "Scene/SceneManagerEditor.h"
 
 
 namespace ED {
@@ -16,7 +17,7 @@ Editor::Editor() {
     _width = 1280;
     _height = 760;
     _canPause = false;
-    _pImGuiProxy = std::make_shared<ImGui::ImGuiProxy>();
+    pImGuiProxy = std::make_shared<ImGui::ImGuiProxy>();
     assert(pEditor == nullptr);
     pEditor = this;
 }
@@ -26,32 +27,26 @@ Editor::~Editor() {
 }
 
 void Editor::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
-    _pImGuiProxy->initialize();
-    //_pSceneMgr = std::make_shared<SceneManager>();
+    pImGuiProxy->initialize();
+
+    pSceneMgr = std::make_shared<SceneManagerEditor>();
     _pInputSystem->pWindow->setCanPause(false);
 
-    //_pHierarchyWindow = std::make_shared<HierarchyWindow>(_pSceneMgr);
-    //_pInspectorWindow = std::make_shared<InspectorWindow>(_pSceneMgr);
 
     std::vector<std::string> mainMenuBarList {
         "Window"
     };
-    _pMainMenuBar = std::make_shared<EditorMenuBar>(mainMenuBarList);
-    //_pSceneWindow = std::make_shared<SceneWindow>();
+    pMainMenuBar = std::make_shared<EditorMenuBar>(mainMenuBarList);
 
-    //attachWindow("Hierarchy", _pHierarchyWindow);
-    //attachWindow("Inspector", _pInspectorWindow);
-    //attachWindow("Scene", _pSceneWindow);
     LogSystemEditor::emplace(std::make_shared<LogSystemEditor>("EditorLog.txt"));
-    attachWindow("Log", std::static_pointer_cast<LogSystemEditor>(LogSystemEditor::instance()));
 }
 
 void Editor::onDestroy() {
-    _pImGuiProxy->destroy();
+    pImGuiProxy->destroy();
 }
 
 void Editor::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
-    _pImGuiProxy->beginTick(pGameTimer);
+    pImGuiProxy->beginTick(pGameTimer);
     std::static_pointer_cast<LogSystemEditor>(LogSystemEditor::instance())->updateCurrentTime();
 }
 
@@ -65,41 +60,30 @@ void Editor::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
         renderTarget.bind(pDirectCtx);
         renderTarget.clear(pDirectCtx, clearColor);
 
-        showEditorMainMenuBar();
-        showEditorWindow();
+        // Main menu bar
+        if (ImGui::BeginMainMenuBar()) {
+            pMainMenuBar->drawMenuBar();
+            ImGui::EndMainMenuBar();
+        }
 
-        _pImGuiProxy->tick(pGameTimer);
+        // log
+        std::static_pointer_cast<LogSystemEditor>(core::LogSystem::instance())->drawLogWindow();
+
+        pSceneMgr->drawSceneWindow();
+        pSceneMgr->drawHierarchyWindow();
+        pSceneMgr->drawInspectorWindow();
+
+        pImGuiProxy->tick(pGameTimer);
         renderTarget.unbind(pDirectCtx);
     }
     pCmdQueue->executeCommandList(pDirectCtx);
 }
 
 void Editor::onEndTick(std::shared_ptr<com::GameTimer> pGameTimer) {
-    _pImGuiProxy->endTick(pGameTimer);
+    pImGuiProxy->endTick(pGameTimer);
 
     auto pCmdQueue = _pDevice->getCommandQueue();
     pCmdQueue->signal(_pSwapChain);
-}
-
-void Editor::attachWindow(const std::string &name, std::shared_ptr<IEditorWindow> pWindow) {
-    _windows[name] = pWindow;
-}
-
-void Editor::detachWindow(const std::string &name) {
-    _windows.erase(name);
-}
-
-
-void Editor::showEditorMainMenuBar() {
-    if (ImGui::BeginMainMenuBar()) {
-		_pMainMenuBar->drawMenuBar();
-		ImGui::EndMainMenuBar();
-    }
-}
-
-void Editor::showEditorWindow() {
-    for (auto &&[name, pWindow] : _windows)
-        pWindow->showWindow();
 }
 
 Editor* &Editor::instance() noexcept {

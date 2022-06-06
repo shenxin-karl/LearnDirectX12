@@ -62,9 +62,13 @@ RenderTargetView RenderTarget2D::getRTV(size_t mipSlice) const {
 	return RTV;
 }
 
+D3D12_CLEAR_VALUE RenderTarget2D::getClearValue() const {
+	return _clearValue;
+}
+
 RenderTarget2D::RenderTarget2D(std::weak_ptr<Device> 
-                                       pDevice, WRL::ComPtr<ID3D12Resource> pResource,
-                                       D3D12_RESOURCE_STATES state)
+                               pDevice, WRL::ComPtr<ID3D12Resource> pResource,
+                               D3D12_RESOURCE_STATES state)
 : _pDevice(pDevice), _pResource(pResource)
 {
 	ResourceStateTracker::addGlobalResourceState(_pResource.Get(), state);
@@ -79,15 +83,16 @@ RenderTarget2D::RenderTarget2D(std::weak_ptr<Device> pDevice, size_t width, size
 	if (format == DXGI_FORMAT_UNKNOWN)
 		format = pSharedDevice->getDesc().backBufferFormat;
 
-	D3D12_CLEAR_VALUE clearValue = {};
 	if (pClearValue == nullptr) {
-		clearValue.Format = format;
-		clearValue.Color[0] = 0.f;
-		clearValue.Color[1] = 0.f;
-		clearValue.Color[2] = 0.f;
-		clearValue.Color[3] = 1.f;
-		pClearValue = &clearValue;
+		_clearValue.Format = format;
+		_clearValue.Color[0] = 0.f;
+		_clearValue.Color[1] = 0.f;
+		_clearValue.Color[2] = 0.f;
+		_clearValue.Color[3] = 1.f;
+	} else {
+		_clearValue = *pClearValue;	
 	}
+	pClearValue = &_clearValue;
 
 	D3D12_RESOURCE_DESC renderTargetDesc;
 	renderTargetDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
@@ -225,6 +230,17 @@ RenderTarget2DArray::RenderTarget2DArray(std::weak_ptr<Device> pDevice,
 	if (format == DXGI_FORMAT_UNKNOWN)
 		format = pSharedDevice->getDesc().backBufferFormat;
 
+	if (pClearValue == nullptr) {
+		_clearValue.Format = format;
+		_clearValue.Color[0] = 0.f;
+		_clearValue.Color[1] = 0.f;
+		_clearValue.Color[2] = 0.f;
+		_clearValue.Color[3] = 1.f;
+	} else {
+		_clearValue = *pClearValue;
+	}
+	pClearValue = &_clearValue;
+
 	D3D12_RESOURCE_DESC renderTargetDesc;
 	renderTargetDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	renderTargetDesc.Alignment = 0;
@@ -346,6 +362,17 @@ RenderTargetCube::RenderTargetCube(std::weak_ptr<Device> pDevice, size_t width, 
 	auto pSharedDevice = pDevice.lock();
 	if (format == DXGI_FORMAT_UNKNOWN)
 		format = pSharedDevice->getDesc().backBufferFormat;
+
+	if (pClearValue == nullptr) {
+		_clearValue.Format = format;
+		_clearValue.Color[0] = 0.f;
+		_clearValue.Color[1] = 0.f;
+		_clearValue.Color[2] = 0.f;
+		_clearValue.Color[3] = 1.f;
+	} else {
+		_clearValue = *pClearValue;
+	}
+	pClearValue = &_clearValue;
 
 	D3D12_RESOURCE_DESC renderTargetDesc;
 	renderTargetDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
