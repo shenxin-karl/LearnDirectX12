@@ -378,6 +378,10 @@ POINT FirstPersonCamera::getLastMousePosition() const {
 	return _lastMousePosition;
 }
 
+void FirstPersonCamera::setMotionState(MotionState ms) {
+	_moveState[ms] = true;
+}
+
 void FirstPersonCamera::responseEvent(std::shared_ptr<com::GameTimer> pGameTimer) {
 	float deltaTime = pGameTimer->getDeltaTime();
 	float advance = 0.f;

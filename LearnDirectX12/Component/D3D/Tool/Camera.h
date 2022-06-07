@@ -117,20 +117,23 @@ public:
 	float getYaw() const;
 	float getRoll() const;
 	POINT getLastMousePosition() const;
+
+	enum MotionState {
+		Forward = 0,
+		backward = 1,
+		Left = 2,
+		Right = 3,
+		LeftRotate = 4,
+		RightRotate = 5,
+	};
+	void setMotionState(MotionState ms);
 public:
+
 	float _mouseWheelSensitivity = 1.f;		
 	float _mouseMoveSensitivity = 0.2f;		// degrees
 	float _rollSensitivity = 15.f;			// degrees
 	float _cameraMoveSpeed = 5.f;			// The number of positions moved in one second
 private:
-	enum {
-		Forward     = 0,
-		backward    = 1,
-		Left        = 2,
-		Right       = 3,
-		LeftRotate  = 4,
-		RightRotate = 5,
-	};
 	void responseEvent(std::shared_ptr<com::GameTimer> pGameTimer);
 private:
 	float    _pitch;

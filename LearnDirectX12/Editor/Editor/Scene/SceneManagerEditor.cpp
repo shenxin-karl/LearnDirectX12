@@ -5,13 +5,18 @@
 #include "Editor/Scene/SceneManagerEditor.h"
 #include "Editor/ImGuiProxy/ImGuiProxy.h"
 #include "Editor/Editor.h"
+#include "Editor/ImGuiProxy/ImGuiInput.h"
 
 namespace ED {
+
+SceneManagerEditor::SceneManagerEditor() : _sceneWindowInputFilter("Scene") {
+	_sceneWindowInputFilter.setImGuiInput(Editor::instance()->pImGuiProxy->getImGuiInput());
+}
 
 void SceneManagerEditor::drawSceneWindow() {
 	constexpr ImGuiWindowFlags kWindowFlags = ImGuiWindowFlags_NoScrollbar;
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-	ImGui::Begin("Scene", &showSceneWindow, kWindowFlags);
+	ImGui::Begin(_sceneWindowInputFilter.getWindowName().c_str(), &showSceneWindow, kWindowFlags);
 	{
 		Editor *pEditor = Editor::instance();
 		auto pSharedDevice = pEditor->getDevice();
@@ -34,6 +39,9 @@ void SceneManagerEditor::drawSceneWindow() {
 	}
 	ImGui::End();
 	ImGui::PopStyleVar();
+
+	handleImGuiInput();
+
 }
 
 void SceneManagerEditor::drawHierarchyWindow() {
@@ -66,6 +74,32 @@ void SceneManagerEditor::resizeRenderTarget(size_t width, size_t height, dx12lib
 	pGraphicsCtx->trackResource(std::move(_pDepthStencil2D));
 	_pRenderTarget2D = pGraphicsCtx->createRenderTarget2D(width, height);
 	_pDepthStencil2D = pGraphicsCtx->createDepthStencil2D(width, height);
+}
+
+void SceneManagerEditor::handleImGuiInput() {
+	_sceneWindowInputFilter.update();
+
+	auto pImGuiInput = _sceneWindowInputFilter.getImGuiInput();
+	if (_sceneWindowInputFilter.isPassKeyBoardFilter()) {
+		if (pImGuiInput->isKeyPressed(ImGuiKey_W))
+			_pMainCamera->setMotionState(d3d::FirstPersonCamera::Forward);
+		if (pImGuiInput->isKeyPressed(ImGuiKey_S))
+			_pMainCamera->setMotionState(d3d::FirstPersonCamera::backward);
+		if (pImGuiInput->isKeyPressed(ImGuiKey_A))
+			_pMainCamera->setMotionState(d3d::FirstPersonCamera::Left);
+		if (pImGuiInput->isKeyPressed(ImGuiKey_D))
+			_pMainCamera->setMotionState(d3d::FirstPersonCamera::Right);
+		if (pImGuiInput->isKeyPressed(ImGuiKey_Q))
+			_pMainCamera->setMotionState(d3d::FirstPersonCamera::LeftRotate);
+		if (pImGuiInput->isKeyPressed(ImGuiKey_E))
+			_pMainCamera->setMotionState(d3d::FirstPersonCamera::RightRotate);
+	}
+
+	if (_sceneWindowInputFilter.isPassMouseFilter() && pImGuiInput->isMouseDown(ImGuiMouseButton_Right)) {
+		ImVec2 mouseDelta = pImGuiInput->getMouseDelta();
+		_pMainCamera->setYaw(_pMainCamera->getYaw() + mouseDelta.x);
+		_pMainCamera->setPitch(_pMainCamera->getPitch() + mouseDelta.y);
+	}
 }
 
 }

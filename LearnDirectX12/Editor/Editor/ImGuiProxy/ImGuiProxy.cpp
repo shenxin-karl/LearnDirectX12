@@ -4,6 +4,8 @@
 #include <Imgui/imgui.h>
 #include <imgui/backends/imgui_impl_dx12.h>
 #include <Imgui/backends/imgui_impl_win32.h>
+
+#include "ImGuiInput.h"
 #include "Editor/Editor.h"
 #include "Context/CommandQueue.h"
 #include "Device/SwapChain.h"
@@ -68,6 +70,8 @@ void ImGuiProxy::initialize() {
     pEditor->getInputSystem()->pWindow->setPrepareMessageCallBack(&ImGui_ImplWin32_WndProcHandler);
 
     initDockMenuBar();
+
+    _pImGuiInput = std::make_shared<ED::ImGuiInput>();
 }
 
 void ImGuiProxy::destroy() {
@@ -94,6 +98,8 @@ void ImGuiProxy::tick(std::shared_ptr<com::GameTimer> pGameTimer) {
 
     // Rendering
     ImGui::Render();
+
+    _pImGuiInput->update();
 
     auto pRenderTarget = ED::Editor::instance()->getSwapChain()->getRenderTarget2D();
     pDirectCtx->transitionBarrier(pRenderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -145,6 +151,10 @@ void ImGuiProxy::image(ImGuiSrvSlot slot, dx12lib::ShaderResourceView srv, size_
 
 std::shared_ptr<ED::EditorMenuBar> ImGuiProxy::getDockMenuBar() const {
     return _pDockMenuBar;
+}
+
+std::shared_ptr<ED::ImGuiInput> ImGuiProxy::getImGuiInput() const {
+    return _pImGuiInput;
 }
 
 void ImGuiProxy::showAppDockSpace() {

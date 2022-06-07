@@ -54,6 +54,10 @@ ImVec2 ImGuiInput::getLastMousePos() const {
 	return _lastMousePos;
 }
 
+ImVec2 ImGuiInput::getMouseDelta() const {
+	return _mouseDelta;
+}
+
 void ImGuiInput::reset() {
 	_mouseWheel = 0.f;
 	_mouseDelta = {  0.f, 0.f };
@@ -75,9 +79,9 @@ void ImGuiInput::update() {
 		_mouseWheel = io.MouseWheel;
 		_lastMousePos = io.MousePos;
 		for (size_t i = 0; i < std::size(io.MouseDown); ++i) {
-			_mouseDownState[i] = ImGui::IsMouseDown(i);
-			_mouseClickedState[i] = ImGui::IsMouseClicked(i);
-			_mouseReleasedState[i] = ImGui::IsMouseReleased(i);
+			_mouseDownState[i] = ImGui::IsMouseDown(static_cast<ImGuiMouseButton>(i));
+			_mouseClickedState[i] = ImGui::IsMouseClicked(static_cast<ImGuiMouseButton>(i));
+			_mouseReleasedState[i] = ImGui::IsMouseReleased(static_cast<ImGuiMouseButton>(i));
 		}
 	}
 
@@ -93,7 +97,7 @@ void ImGuiInput::update() {
 
 	if (io.WantTextInput) {
 		for (auto &&inputQueueCharacter : io.InputQueueCharacters)
-			_charQueues.push_back(inputQueueCharacter);
+			_charQueues.push_back(static_cast<char>(inputQueueCharacter));
 	}
 }
 

@@ -19,6 +19,7 @@ public:
 	float getMouseWheel() const;
 	const std::vector<char> &getCharQueues() const;
 	ImVec2 getLastMousePos() const;
+	ImVec2 getMouseDelta() const;
 	void reset();
 	void update();
 private:

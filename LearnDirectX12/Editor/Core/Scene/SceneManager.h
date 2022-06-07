@@ -23,7 +23,7 @@ public:
 	size_t getNodeSize() const;
 	std::list<std::shared_ptr<SceneNode>> &getNodeList();
 	void renderScene(d3d::RenderTarget renderTarget, dx12lib::DirectContextProxy pDirectCtx);
-private:
+protected:
 	using NodeIndexMap = std::unordered_map<std::string, std::list<std::shared_ptr<SceneNode>>::iterator>;
 	using NodeList = std::list<std::shared_ptr<SceneNode>>;
 	NodeList _nodeList;

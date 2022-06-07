@@ -7,7 +7,10 @@
 #include "Resource/ResourceView.hpp"
 
 namespace ED {
-	class EditorMenuBar;
+
+class ImGuiInput;
+class EditorMenuBar;
+
 }
 
 namespace dx12lib {
@@ -33,6 +36,7 @@ public:
 	};
 	void image(ImGuiSrvSlot slot, dx12lib::ShaderResourceView srv, size_t width, size_t height);
 	std::shared_ptr<ED::EditorMenuBar> getDockMenuBar() const;
+	std::shared_ptr<ED::ImGuiInput> getImGuiInput() const;
 private:
 	void showAppDockSpace();
 	void initDockMenuBar();
@@ -44,6 +48,7 @@ private:
 	std::shared_ptr<ED::EditorMenuBar> _pDockMenuBar;
 	ImGuiDockNodeFlags _dockSpaceFlag = ImGuiDockNodeFlags_None;
 	WRL::ComPtr<ID3D12DescriptorHeap> _pDescriptorHeap;
+	std::shared_ptr<ED::ImGuiInput> _pImGuiInput;
 };
 
 }
