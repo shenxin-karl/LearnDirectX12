@@ -4,6 +4,8 @@
 
 namespace ED {
 
+class ISceneNodeEditor;
+
 class SceneManagerEditor : public core::SceneManager {
 public:
 	SceneManagerEditor();
@@ -21,6 +23,7 @@ private:
 	size_t _sceneWidth  = 0;
 	size_t _sceneHeight = 0;
 	ED::ImGuiInputFilter _sceneWindowInputFilter;
+	std::shared_ptr<ISceneNodeEditor> _pSelectedSceneNode;
 	std::shared_ptr<dx12lib::RenderTarget2D> _pRenderTarget2D;
 	std::shared_ptr<dx12lib::DepthStencil2D> _pDepthStencil2D;
 };

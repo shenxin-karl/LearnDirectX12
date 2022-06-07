@@ -224,7 +224,7 @@ void ImGuiProxy::initDockMenuBar() {
 
     auto *pMenuBarItem = _pDockMenuBar->getBarItem("Window Options");
     auto *pMenu = pMenuBarItem->addSubItemGroup("DockSpace");
-    pMenu->menuItems.push_back([&]() {
+    pMenu->menuItems = [&]() {
         ImGui::MenuItem("Padding", nullptr, &_optPadding);
         if (ImGui::MenuItem("Style Dark", nullptr, _styleIndex == 1)) {
             _styleIndex = 1;
@@ -246,7 +246,7 @@ void ImGuiProxy::initDockMenuBar() {
         if (ImGui::MenuItem("Flag: AutoHideTabBar", "", (_dockSpaceFlag & ImGuiDockNodeFlags_AutoHideTabBar) != 0)) { _dockSpaceFlag ^= ImGuiDockNodeFlags_AutoHideTabBar; }
         if (ImGui::MenuItem("Flag: PassthruCentralNode", "", (_dockSpaceFlag & ImGuiDockNodeFlags_PassthruCentralNode) != 0, true)) { _dockSpaceFlag ^= ImGuiDockNodeFlags_PassthruCentralNode; }
         ImGui::Separator();
-    });
+    };
 }
 
 }

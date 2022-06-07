@@ -8,7 +8,7 @@ namespace ED {
 struct Menu {
 	struct MenuItemGroup {
 		std::string groupName;
-		std::vector<std::function<void()>> menuItems;
+		std::function<void()> menuItems;
 	};
 
 	MenuItemGroup *getSubItemGroupByName(const std::string &groupName);

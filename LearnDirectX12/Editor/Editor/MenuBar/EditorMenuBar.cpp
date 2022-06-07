@@ -73,10 +73,8 @@ void EditorMenuBar::drawMenuBar() const {
 
 	for (size_t i = 0; i < _menuBarItems.size(); ++i) {
 		if (ImGui::BeginMenu(_menuBarItems[i].name.c_str())) {
-			for (auto &menuItemGroup : _menuBarItems[i].subItemGroups) {
-				for (auto &menuItem : menuItemGroup.menuItems)
-					menuItem();
-			}
+			for (auto &menuItemGroup : _menuBarItems[i].subItemGroups)
+				menuItemGroup.menuItems();
 			ImGui::EndMenu();
 		}
 	}

@@ -2,15 +2,26 @@
 #include <dx12lib/Texture/TextureStd.h>
 #include <D3D/dx12libHelper/RenderTarget.h>
 #include "Core/Scene/SceneNode.h"
+#include "Editor/Editor.h"
 #include "Editor/Scene/SceneManagerEditor.h"
 #include "Editor/ImGuiProxy/ImGuiProxy.h"
-#include "Editor/Editor.h"
 #include "Editor/ImGuiProxy/ImGuiInput.h"
+#include "Editor/LogSystem/LogSystemEditor.h"
+#include "Editor/MenuBar/EditorMenuBar.h"
+#include "Editor/Scene/SceneNodeEditor.h"
 
 namespace ED {
 
 SceneManagerEditor::SceneManagerEditor() : _sceneWindowInputFilter("Scene") {
 	_sceneWindowInputFilter.setImGuiInput(Editor::instance()->pImGuiProxy->getImGuiInput());
+
+	auto pEditor = Editor::instance();
+	auto *pMenu = pEditor->pMainMenuBar->registerBarItem("Windows");
+	auto *pMenuItemGroup = pMenu->addSubItemGroup("SceneManagerEditor");
+	pMenuItemGroup->menuItems.push_back([&]() {
+		ImGui::MenuItem("Scene", nullptr, &showSceneWindow);
+		ImGui::MenuItem("Hierarchy", nullptr, &showHierarchyWindow);
+	});
 }
 
 void SceneManagerEditor::drawSceneWindow() {
@@ -41,22 +52,38 @@ void SceneManagerEditor::drawSceneWindow() {
 	ImGui::PopStyleVar();
 
 	handleImGuiInput();
-
 }
 
 void SceneManagerEditor::drawHierarchyWindow() {
-	if (ImGui::Begin("Hierarchy", &showHierarchyWindow, 0)) {
-		if (ImGui::TreeNode("SceneNodes")) {
-			for (auto &pSceneNode : getNodeList()) {
-				ImGui::Selectable(pSceneNode->getName().c_str());
-				if (ImGui::BeginPopupContextItem()) {
-					if (ImGui::Button("Delete"))
-						ImGui::CloseCurrentPopup();
-				}
+	if (!ImGui::Begin("Hierarchy", &showHierarchyWindow, 0)) {
+		ImGui::End();
+		return;
+	}
+
+
+	bool isSelected = false;
+	bool isRightMouseButton = false;
+	for (auto &pSceneNode : getNodeList()) {
+		ImGui::Selectable(pSceneNode->getName().c_str());
+		if (!isSelected) {
+			if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) {
+				_pSelectedSceneNode = std::dynamic_pointer_cast<ISceneNodeEditor>(pSceneNode);
+				isRightMouseButton = ImGui::IsMouseClicked(ImGuiMouseButton_Right);
+				isSelected = true;
+				continue;
 			}
-			ImGui::TreePop();
+			if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+				_pSelectedSceneNode = std::dynamic_pointer_cast<ISceneNodeEditor>(pSceneNode);
+				isSelected = true;
+			}
 		}
 	}
+
+	if (isRightMouseButton && ImGui::BeginPopupContextWindow()) {
+		if (ImGui::Selectable("111")) Log::debug("1111");
+		ImGui::EndPopup();
+	}
+
 	ImGui::End();
 }
 

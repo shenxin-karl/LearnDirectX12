@@ -11,9 +11,9 @@ LogSystemEditor::LogSystemEditor(const std::string &fileName) : LogSystem(fileNa
     auto &pMainMenuBar = Editor::instance()->pMainMenuBar;
     Menu *pWindowMenu = pMainMenuBar->getBarItem("Window");
 
-    pWindowMenu->addSubItemGroup("Log")->menuItems.push_back([&]() {
+    pWindowMenu->addSubItemGroup("Log")->menuItems = [&]() {
         ImGui::MenuItem("Log", nullptr, &_showLogWindow);
-    });
+    };
 }
 
 void LogSystemEditor::drawLogWindow() {
