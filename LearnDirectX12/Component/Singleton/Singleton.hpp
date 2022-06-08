@@ -20,6 +20,10 @@ public:
 	static void emplace(std::shared_ptr<U> &&ptr) {
 		sPSingleton = std::move(ptr);
 	}
+
+	static void destroy() {
+		sPSingleton = nullptr;
+	}
 };
 
 }

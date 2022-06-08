@@ -1,11 +1,11 @@
 #pragma once
-#include "Core/Scene/SceneNode.h"
 
 namespace ED {
 
-class ISceneNodeEditor : virtual public core::SceneNode {
+class ISceneNodeEditor {
 public:
-	using core::SceneNode::SceneNode;
+	ISceneNodeEditor() = default;
+	virtual ~ISceneNodeEditor() = default;
 	virtual void showInspector() = 0;
 };
 

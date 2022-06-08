@@ -31,6 +31,9 @@ SceneManagerEditor::~SceneManagerEditor() {
 }
 
 void SceneManagerEditor::drawSceneWindow() {
+	if (!showSceneWindow)
+		return;
+
 	constexpr ImGuiWindowFlags kWindowFlags = ImGuiWindowFlags_NoScrollbar;
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 	ImGui::Begin(_sceneWindowInputFilter.getWindowName().c_str(), &showSceneWindow, kWindowFlags);
@@ -61,6 +64,9 @@ void SceneManagerEditor::drawSceneWindow() {
 }
 
 void SceneManagerEditor::drawHierarchyWindow() {
+	if (!showHierarchyWindow)
+		return;
+
 	if (!ImGui::Begin("Hierarchy", &showHierarchyWindow, 0)) {
 		ImGui::End();
 		return;
@@ -96,6 +102,23 @@ void SceneManagerEditor::drawInspectorWindow() {
 	if (ImGui::Begin("Inspector", &showInspectorWindow, 0)) {
 
 	}
+	ImGui::End();
+}
+
+void SceneManagerEditor::drawLightingWindow() {
+	if (!showLightWindow)
+		return;
+
+	if (!ImGui::Begin("Light", &showLightWindow)) {
+		ImGui::End();
+		return;
+	}
+
+	ImGui::Text("SkyBox:");
+	ImGui::SameLine();
+	ImGui::InputText("##SkyBox:", _skyBoxName.data(), _skyBoxName.length(), ImGuiInputTextFlags_ReadOnly);
+	ImGui::SameLine();
+	ImGui::Button("Select...");
 	ImGui::End();
 }
 

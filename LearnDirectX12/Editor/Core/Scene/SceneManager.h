@@ -27,6 +27,10 @@ protected:
 	using NodeList = std::list<std::shared_ptr<SceneNode>>;
 	NodeList _nodeList;
 	NodeIndexMap _nodeMap;
+
+	std::string	_skyBoxName;
+	std::shared_ptr<d3d::SkyBox>		    _pSkyBox;
+
 	std::unique_ptr<d3d::FirstPersonCamera> _pMainCamera;
 };
 

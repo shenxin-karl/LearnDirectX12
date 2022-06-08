@@ -21,6 +21,8 @@ class SkyBox {
 public:
 	SkyBox(const SkyBoxDesc &desc);
 	void render(dx12lib::GraphicsContextProxy pGraphicsCtx, std::shared_ptr<CameraBase> pCamera) const;
+	std::shared_ptr<dx12lib::IShaderResourceCube> getEnvironmentMap() const;
+	void setEnvironmentMap(std::shared_ptr<dx12lib::IShaderResourceCube> pCubeMap);
 private:
 	void buildCubeVertexBuffer(dx12lib::GraphicsContextProxy pGraphicsCtx);
 private:

@@ -5,6 +5,7 @@
 #include <D3D/dx12libHelper/RenderTarget.h>
 #include <Context/CommandQueue.h>
 #include <InputSystem/window.h>
+#include "Core/Utility/Utility.h"
 #include "Editor/LogSystem/LogSystemEditor.h"
 #include "Editor/MenuBar/EditorMenuBar.h"
 #include "Scene/SceneManagerEditor.h"
@@ -29,14 +30,14 @@ Editor::~Editor() {
 
 void Editor::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
     pImGuiProxy->initialize();
-
     pSceneMgr = std::make_shared<SceneManagerEditor>();
     _pInputSystem->pWindow->setCanPause(false);
-
     LogSystemEditor::emplace(std::make_shared<LogSystemEditor>("EditorLog.txt"));
+    core::initDefaultSkyBox(pDirectCtx);
 }
 
 void Editor::onDestroy() {
+    LogSystemEditor::destroy();
     pImGuiProxy->destroy();
 }
 
@@ -65,8 +66,10 @@ void Editor::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
         static_cast<LogSystemEditor *>(core::LogSystem::instance())->drawLogWindow();
 
         pSceneMgr->drawSceneWindow();
+        pSceneMgr->drawLightingWindow();
         pSceneMgr->drawHierarchyWindow();
         pSceneMgr->drawInspectorWindow();
+
 
         pImGuiProxy->tick(pGameTimer);
         renderTarget.unbind(pDirectCtx);

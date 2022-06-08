@@ -13,11 +13,13 @@ public:
 	void drawSceneWindow();
 	void drawHierarchyWindow();
 	void drawInspectorWindow();
+	void drawLightingWindow();
 private:
 	void resizeRenderTarget(size_t width, size_t height, dx12lib::GraphicsContextProxy pGraphicsCtx);
 	void handleImGuiInput();
 public:
 	bool showSceneWindow	 = true;
+	bool showLightWindow     = true;
 	bool showHierarchyWindow = true;
 	bool showInspectorWindow = true;
 private:

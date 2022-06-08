@@ -99,6 +99,15 @@ void SkyBox::render(dx12lib::GraphicsContextProxy pGraphicsCtx, std::shared_ptr<
 	pGraphicsCtx->drawInstanced(_pCubeVertexBuffer->getVertexCount(), 1, 0);
 }
 
+std::shared_ptr<dx12lib::IShaderResourceCube> SkyBox::getEnvironmentMap() const {
+	return _pCubeMap;
+}
+
+void SkyBox::setEnvironmentMap(std::shared_ptr<dx12lib::IShaderResourceCube> pCubeMap) {
+	assert(pCubeMap != nullptr);
+	_pCubeMap = pCubeMap;
+}
+
 void SkyBox::buildCubeVertexBuffer(dx12lib::GraphicsContextProxy pGraphicsCtx) {
 	float3 skyboxVertices[] = {
 		{ -1.0f,+1.0f,-1.0f }, { -1.0f,-1.0f,-1.0f }, { +1.0f,-1.0f,-1.0f },

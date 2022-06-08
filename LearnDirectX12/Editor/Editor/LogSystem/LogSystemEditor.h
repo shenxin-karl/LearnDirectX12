@@ -70,7 +70,7 @@ namespace Log {
             if (pos != std::string::npos)
                 shortFileName = shortFileName.substr(pos+1);
 
-            auto pEditorLog = std::static_pointer_cast<LogSystemEditor>(LogSystemEditor::instance());
+            auto pEditorLog = static_cast<LogSystemEditor *>(LogSystemEditor::instance());
             msg += std::format(" {}:{} ", shortFileName, fmt._location.line());
             msg += std::format(fmt._fmt, std::forward<Args>(args)...);
             msg += '\n';
