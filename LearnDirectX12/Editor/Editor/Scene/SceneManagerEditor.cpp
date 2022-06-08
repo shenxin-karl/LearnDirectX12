@@ -2,6 +2,7 @@
 #include <dx12lib/Texture/TextureStd.h>
 #include <D3D/dx12libHelper/RenderTarget.h>
 #include "Core/Scene/SceneNode.h"
+#include "Editor/EditorStd.h"
 #include "Editor/Editor.h"
 #include "Editor/Scene/SceneManagerEditor.h"
 #include "Editor/ImGuiProxy/ImGuiProxy.h"
@@ -16,12 +17,17 @@ SceneManagerEditor::SceneManagerEditor() : _sceneWindowInputFilter("Scene") {
 	_sceneWindowInputFilter.setImGuiInput(Editor::instance()->pImGuiProxy->getImGuiInput());
 
 	auto pEditor = Editor::instance();
-	auto *pMenu = pEditor->pMainMenuBar->registerBarItem("Windows");
-	auto *pMenuItemGroup = pMenu->addSubItemGroup("SceneManagerEditor");
-	pMenuItemGroup->menuItems.push_back([&]() {
+	auto *pMenu = pEditor->pMainMenuBar->registerBarItem(MainMenuBar::Windows);
+	pMenu->addSubItemGroup("SceneManagerEditor")->menuItems = [&]() {
 		ImGui::MenuItem("Scene", nullptr, &showSceneWindow);
 		ImGui::MenuItem("Hierarchy", nullptr, &showHierarchyWindow);
-	});
+	};
+}
+
+SceneManagerEditor::~SceneManagerEditor() {
+	auto pEditor = Editor::instance();
+	auto *pMenu = pEditor->pMainMenuBar->getBarItem(MainMenuBar::Windows);
+	pMenu->removeSubItemGroupByName("SceneManagerEditor");
 }
 
 void SceneManagerEditor::drawSceneWindow() {
@@ -59,7 +65,6 @@ void SceneManagerEditor::drawHierarchyWindow() {
 		ImGui::End();
 		return;
 	}
-
 
 	bool isSelected = false;
 	bool isRightMouseButton = false;

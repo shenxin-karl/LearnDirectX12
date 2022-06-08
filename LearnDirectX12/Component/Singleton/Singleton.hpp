@@ -7,8 +7,8 @@ template<typename T>
 class Singleton {
 	static inline std::shared_ptr<T> sPSingleton;
 public:
-	static std::shared_ptr<T> &instance() noexcept {
-		return sPSingleton;
+	static T *instance() noexcept {
+		return sPSingleton.get();
 	}
 
 	template<typename... Args>

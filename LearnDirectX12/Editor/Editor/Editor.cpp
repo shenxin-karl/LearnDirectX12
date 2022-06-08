@@ -18,6 +18,7 @@ Editor::Editor() {
     _height = 760;
     _canPause = false;
     pImGuiProxy = std::make_shared<ImGui::ImGuiProxy>();
+    pMainMenuBar = std::make_shared<EditorMenuBar>();
     assert(pEditor == nullptr);
     pEditor = this;
 }
@@ -32,12 +33,6 @@ void Editor::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
     pSceneMgr = std::make_shared<SceneManagerEditor>();
     _pInputSystem->pWindow->setCanPause(false);
 
-
-    std::vector<std::string> mainMenuBarList {
-        "Window"
-    };
-    pMainMenuBar = std::make_shared<EditorMenuBar>(mainMenuBarList);
-
     LogSystemEditor::emplace(std::make_shared<LogSystemEditor>("EditorLog.txt"));
 }
 
@@ -47,7 +42,7 @@ void Editor::onDestroy() {
 
 void Editor::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
     pImGuiProxy->beginTick(pGameTimer);
-    std::static_pointer_cast<LogSystemEditor>(LogSystemEditor::instance())->updateCurrentTime();
+    static_cast<LogSystemEditor *>(core::LogSystem::instance())->updateCurrentTime();
 }
 
 void Editor::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
@@ -67,7 +62,7 @@ void Editor::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
         }
 
         // log
-        std::static_pointer_cast<LogSystemEditor>(core::LogSystem::instance())->drawLogWindow();
+        static_cast<LogSystemEditor *>(core::LogSystem::instance())->drawLogWindow();
 
         pSceneMgr->drawSceneWindow();
         pSceneMgr->drawHierarchyWindow();

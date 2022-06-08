@@ -2,7 +2,6 @@
 #include "ITick.h"
 #include <wrl.h>
 #include <d3d12.h>
-#include "Editor/IEditorItem.h"
 #include "Imgui/imgui.h"
 #include "Resource/ResourceView.hpp"
 

@@ -4,7 +4,6 @@
 #include <ITick.h>
 #include <D3D/dx12libHelper/RenderTarget.h>
 #include <D3D/Tool/Camera.h>
-#include "Editor/IEditorItem.h"
 
 namespace d3d {
 	class RenderTarget;

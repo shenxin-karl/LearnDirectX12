@@ -1,3 +1,4 @@
+#include "Editor/EditorStd.h"
 #include "LogSystemEditor.h"
 #include "Editor/Editor.h"
 #include "Editor/MenuBar/EditorMenuBar.h"
@@ -9,11 +10,16 @@ LogSystemEditor::LogSystemEditor(const std::string &fileName) : LogSystem(fileNa
 	clear();
 
     auto &pMainMenuBar = Editor::instance()->pMainMenuBar;
-    Menu *pWindowMenu = pMainMenuBar->getBarItem("Window");
-
+    Menu *pWindowMenu = pMainMenuBar->registerBarItem(MainMenuBar::Windows);
     pWindowMenu->addSubItemGroup("Log")->menuItems = [&]() {
         ImGui::MenuItem("Log", nullptr, &_showLogWindow);
     };
+}
+
+LogSystemEditor::~LogSystemEditor() {
+    auto &pMainMenuBar = Editor::instance()->pMainMenuBar;
+    Menu *pWindowMenu = pMainMenuBar->getBarItem(MainMenuBar::Windows);
+    pWindowMenu->removeSubItemGroupByName("Log");
 }
 
 void LogSystemEditor::drawLogWindow() {

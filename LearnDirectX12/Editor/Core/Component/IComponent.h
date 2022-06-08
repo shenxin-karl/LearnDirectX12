@@ -1,5 +1,4 @@
 #pragma once
-#include "Editor/IEditorItem.h"
 
 namespace com {
 

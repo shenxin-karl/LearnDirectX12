@@ -9,6 +9,7 @@ class ISceneNodeEditor;
 class SceneManagerEditor : public core::SceneManager {
 public:
 	SceneManagerEditor();
+	~SceneManagerEditor();
 	void drawSceneWindow();
 	void drawHierarchyWindow();
 	void drawInspectorWindow();

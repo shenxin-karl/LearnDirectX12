@@ -3,7 +3,6 @@
 #include <BaseApp/BaseApp.h>
 #include <Math/MathStd.hpp>
 #include "Editor/ImGuiProxy/ImGuiProxy.h"
-#include "Editor/IEditorItem.h"
 
 using namespace Math;
 
@@ -30,9 +29,9 @@ public:
 	std::shared_ptr<dx12lib::Device> getDevice() const;
 	std::shared_ptr<dx12lib::SwapChain> getSwapChain() const;
 
-	std::shared_ptr<SceneManagerEditor>	 pSceneMgr;
-	std::shared_ptr<ImGui::ImGuiProxy>   pImGuiProxy;
 	std::shared_ptr<EditorMenuBar>	     pMainMenuBar;
+	std::shared_ptr<ImGui::ImGuiProxy>   pImGuiProxy;
+	std::shared_ptr<SceneManagerEditor>	 pSceneMgr;
 };
 
 }

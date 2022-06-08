@@ -3,7 +3,6 @@
 #include <source_location>
 #include <string>
 #include <Imgui/imgui.h>
-#include "Editor/IEditorItem.h"
 #include <format>
 #include <mutex>
 #include "Core/LogSystem/LogSystem.h"
@@ -25,6 +24,7 @@ namespace Log {
 class LogSystemEditor : public core::LogSystem {
 public:
     LogSystemEditor(const std::string &fileName);
+    ~LogSystemEditor();
     void drawLogWindow();
     void clear();
     void setShowWindow(bool bShow);
