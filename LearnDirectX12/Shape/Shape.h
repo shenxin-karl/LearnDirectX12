@@ -34,6 +34,23 @@ struct RenderItem {
 	std::shared_ptr<dx12lib::SamplerTexture2D> _pAlbedo;
 };
 
+struct Keyframe {
+	Keyframe();
+	~Keyframe();
+public:
+	float      timePoint;
+	Vector3    translation;
+	Vector3	   scale;
+	Quaternion rotationQuat;
+};
+
+struct BoneAnimation {
+	float getStartTime() const;
+	float getEndTime() const;
+	Matrix4 interpolate(float time) const;
+	std::vector<Keyframe> keyframes;
+};
+
 class Shape : public com::BaseApp {
 public:
 	Shape();
