@@ -3,6 +3,7 @@
 #include "D3D/Tool/Camera.h"
 #include "D3D/Shader/ShaderCommon.h"
 #include "D3D/Postprocessing/SobelFilter.h"
+#include "D3D/dx12libHelper/RenderTarget.h"
 #include "dx12lib/Texture/TextureStd.h"
 #include "dx12lib/Context/ContextStd.h"
 #include "dx12lib/Device/DeviceStd.h"
@@ -12,8 +13,59 @@
 #include "InputSystem/InputSystem.h"
 #include "InputSystem/Mouse.h"
 #include <DirectXColors.h>
+#include <DirectXMath.h>
 
-#include "D3D/dx12libHelper/RenderTarget.h"
+Keyframe::Keyframe() : timePoint(0.f), scale(1.f) {
+}
+
+float BoneAnimation::getStartTime() const {
+	return keyframes.front().timePoint;
+}
+
+float BoneAnimation::getEndTime() const {
+	return keyframes.back().timePoint;
+}
+
+Matrix4 BoneAnimation::interpolate(float time) const {
+	assert(!keyframes.empty());
+	Vector4 origin { 0.f, 0.f, 0.f, 1.f };
+	if (time <= getStartTime()) {
+		const auto &first = keyframes.front();
+		return Matrix4(DirectX::XMMatrixAffineTransformation(
+			first.scale,
+			origin,
+			first.rotationQuat,
+			first.translation
+		));
+	}
+	if (time >= getEndTime()) {
+		const auto &back = keyframes.back();
+		return Matrix4(DirectX::XMMatrixAffineTransformation(
+			back.scale,
+			origin,
+			back.rotationQuat,
+			back.translation
+		));
+	}
+	for (size_t i = 0; i < keyframes.size()-1; ++i) {
+		bool inside = (time >= keyframes[i].timePoint && time < keyframes[i+1].timePoint);
+		if (!inside)
+			continue;
+
+		float t = (time - keyframes[i].timePoint) / (keyframes[i+1].timePoint - keyframes[i].timePoint);
+		Vector3 scale = lerp(keyframes[i].scale, keyframes[i+1].scale, t);
+		Vector3 translation = lerp(keyframes[i].translation, keyframes[i+1].translation, t);
+		Quaternion rotate = slerp(keyframes[i].rotationQuat, keyframes[i+1].rotationQuat, t);
+		return Matrix4(DirectX::XMMatrixAffineTransformation(
+			scale,
+			origin,
+			rotate,
+			translation
+		));
+	}
+	assert(false);
+	return Matrix4::identity();
+}
 
 Shape::Shape() {
 	_title = "Shape";
@@ -42,6 +94,7 @@ void Shape::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 	buildGeometry(pDirectCtx);
 	loadTextures(pDirectCtx);
 	buildMaterials();
+	buildSkullAnimation();
 	buildRenderItem(pDirectCtx);
 	_pSobelFilter = std::make_unique<d3d::SobelFilter>(pDirectCtx, _width, _height);
 }
@@ -49,6 +102,7 @@ void Shape::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 void Shape::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	pollEvent();
 	updatePassCB(pGameTimer);
+	updateSkullAnimation(pGameTimer);
 }
 
 void Shape::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
@@ -61,8 +115,8 @@ void Shape::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		renderTarget.clear(pDirectCtx, float4(DirectX::Colors::LightSkyBlue));
 		renderShapesPass(pDirectCtx);
 		renderSkullPass(pDirectCtx);
-		_pSobelFilter->apply(pDirectCtx, renderTarget.getRenderTarget2D());
-		pDirectCtx->copyResource(renderTarget.getRenderTarget2D(), _pSobelFilter->getOutput());
+		//_pSobelFilter->apply(pDirectCtx, renderTarget.getRenderTarget2D());
+		//pDirectCtx->copyResource(renderTarget.getRenderTarget2D(), _pSobelFilter->getOutput());
 		renderTarget.unbind(pDirectCtx);
 	}
 	pCmdQueue->executeCommandList(pDirectCtx);
@@ -143,8 +197,10 @@ void Shape::buildRenderItem(dx12lib::DirectContextProxy pDirectCtx) {
 	constexpr const char *pTexturePSOName = "TexturePSO";
 	auto &textureRenderItems = _renderItems[pTexturePSOName];
 
+	Matrix4 matWorld = Matrix4::makeTranslation(0.f, 0.5f, 0.f) * Matrix4::makeScale(2.f);
 	boxObjCb.material = _materials["boxMat"];
-	boxObjCb.world = float4x4(Matrix4::makeTranslation(0.f, 0.5f, 0.f) * Matrix4::makeScale(2.f));
+	boxObjCb.matWorld = float4x4(matWorld);
+	boxObjCb.matNormal = float4x4(transpose(inverse(matWorld)));
 	boxItem._pMesh = _geometrys["box"];
 	boxItem._pAlbedo = _textureMap["bricks.dds"];
 	boxItem._pObjectCB = pDirectCtx->createFRConstantBuffer<ObjectCB>(boxObjCb);
@@ -153,7 +209,8 @@ void Shape::buildRenderItem(dx12lib::DirectContextProxy pDirectCtx) {
 	RenderItem gridItem;
 	ObjectCB gridObjCB;
 	gridObjCB.material = _materials["gridMat"];
-	gridObjCB.world = MathHelper::identity4x4();;
+	gridObjCB.matWorld = MathHelper::identity4x4();;
+	gridObjCB.matNormal = float4x4(Matrix4::identity());
 	gridItem._pMesh = _geometrys["grid"];
 	gridItem._pAlbedo = _textureMap["tile.dds"];
 	gridItem._pObjectCB = pDirectCtx->createFRConstantBuffer<ObjectCB>(gridObjCB);
@@ -170,10 +227,20 @@ void Shape::buildRenderItem(dx12lib::DirectContextProxy pDirectCtx) {
 		ObjectCB leftSphereObjCB;
 		ObjectCB rightSphereObjCB;
 
-		leftCylObjCB.world = float4x4(Matrix4::makeTranslation(-5.f, 1.5f, -10.f + i * 5.f));
-		rightCylObjCB.world = float4x4(Matrix4::makeTranslation(+5.f, 1.5f, -10.f + i * 5.f));
-		leftSphereObjCB.world = float4x4(Matrix4::makeTranslation(-5.f, 3.5f, -10.f + i * 5.f));
-		rightSphereObjCB.world = float4x4(Matrix4::makeTranslation(+5.f, 3.5f, -10.f + i * 5.f));
+		Matrix4 matWorld0 = Matrix4::makeTranslation(-5.f, 1.5f, -10.f + i * 5.f);
+		Matrix4 matWorld1 = Matrix4::makeTranslation(+5.f, 1.5f, -10.f + i * 5.f);
+		Matrix4 matWorld2 = Matrix4::makeTranslation(-5.f, 3.5f, -10.f + i * 5.f);
+		Matrix4 matWorld3 = Matrix4::makeTranslation(+5.f, 3.5f, -10.f + i * 5.f);
+
+		leftCylObjCB.matWorld = float4x4(matWorld0);
+		rightCylObjCB.matWorld = float4x4(matWorld1);
+		leftSphereObjCB.matWorld = float4x4(matWorld2);
+		rightSphereObjCB.matWorld = float4x4(matWorld3);
+
+		leftCylObjCB.matNormal = float4x4(transpose(inverse(matWorld0)));
+		rightCylObjCB.matNormal = float4x4(transpose(inverse(matWorld1)));
+		leftSphereObjCB.matNormal = float4x4(transpose(inverse(matWorld2)));
+		rightSphereObjCB.matNormal = float4x4(transpose(inverse(matWorld3)));
 
 		leftCylObjCB.material = _materials["cylinderMat"];
 		rightCylObjCB.material = _materials["cylinderMat"];
@@ -206,11 +273,16 @@ void Shape::buildRenderItem(dx12lib::DirectContextProxy pDirectCtx) {
 	auto &colorRenderItems = _renderItems[pColorPSOName];
 	RenderItem skullItem;
 	ObjectCB skullObjCB;
+	matWorld = Matrix4::makeTranslation(0.f, 1.f, 0.f);
 	skullObjCB.material = _materials["skullMat"];
-	skullObjCB.world = float4x4(Matrix4::makeTranslation(0.f, 1.f, 0.f) * Matrix4::makeScale(0.5f));
+	skullObjCB.matWorld = float4x4(matWorld);
+	skullObjCB.matNormal = float4x4(transpose(inverse(matWorld)));
 	skullItem._pMesh = _geometrys["skull"];
 	skullItem._pObjectCB = pDirectCtx->createFRConstantBuffer<ObjectCB>(skullObjCB);
 	colorRenderItems.push_back(skullItem);
+
+	_skullMatWorld = skullObjCB.matWorld;
+	_pSkullObjCB = skullItem._pObjectCB;
 }
 
 void Shape::buildGeometry(dx12lib::DirectContextProxy pDirectCtx) {
@@ -325,6 +397,39 @@ void Shape::buildMaterials() {
 	_materials["skullMat"] = skullMat;
 }
 
+void Shape::buildSkullAnimation() {
+	Quaternion q0 { Vector3(0.f, 1.f, 0.f), DirectX::XMConvertToRadians(30.f) };
+	Quaternion q1 { Vector3(1.f, 1.f, 2.f), DirectX::XMConvertToRadians(45.0f) };
+	Quaternion q2 { Vector3(0.f, 1.f, 0.f), DirectX::XMConvertToRadians(-30.0f) };
+	Quaternion q3 { Vector3(1.f, 0.f, 0.f), DirectX::XMConvertToRadians(70.0f) };
+
+	_skullAnimation.keyframes.resize(5);
+	_skullAnimation.keyframes[0].timePoint = 0.f;
+	_skullAnimation.keyframes[0].translation = Vector3(-7.f, 0.f, 0.f);
+	_skullAnimation.keyframes[0].scale = Vector3(0.5f);
+	_skullAnimation.keyframes[0].rotationQuat = q0;
+
+	_skullAnimation.keyframes[1].timePoint = 2.f;
+	_skullAnimation.keyframes[1].translation = Vector3(0.f, 2.f, 10.f);
+	_skullAnimation.keyframes[1].scale = Vector3(0.5f);
+	_skullAnimation.keyframes[1].rotationQuat = q1;
+
+	_skullAnimation.keyframes[2].timePoint = 4.0f;
+	_skullAnimation.keyframes[2].translation = Vector3(7.f, 0.f, 0.f);
+	_skullAnimation.keyframes[2].scale = Vector3(0.5f);
+	_skullAnimation.keyframes[2].rotationQuat = q2;
+
+	_skullAnimation.keyframes[3].timePoint = 6.0f;
+	_skullAnimation.keyframes[3].translation = Vector3(0.0f, 1.0f, -10.0f);
+	_skullAnimation.keyframes[3].scale = Vector3(0.5f);
+	_skullAnimation.keyframes[3].rotationQuat = q3;
+
+	_skullAnimation.keyframes[4].timePoint = 8.0f;
+	_skullAnimation.keyframes[4].translation = Vector3(-7.0f, 0.0f, 0.0f);
+	_skullAnimation.keyframes[4].scale = Vector3(0.5f);
+	_skullAnimation.keyframes[4].rotationQuat = q0;
+}
+
 void Shape::loadTextures(dx12lib::DirectContextProxy pDirectCtx) {
 	_textureMap["bricks.dds"] = pDirectCtx->createDDSTexture2DFromFile(L"resource/bricks.dds");
 	_textureMap["tile.dds"] = pDirectCtx->createDDSTexture2DFromFile(L"resource/tile.dds");
@@ -384,4 +489,25 @@ void Shape::updatePassCB(std::shared_ptr<com::GameTimer> pGameTimer) {
 	pGPUPassCB->invRenderTargetSize = _pSwapChain->getInvRenderTargetSize();
 	pGPUPassCB->totalTime = pGameTimer->getTotalTime();
 	pGPUPassCB->deltaTime = pGameTimer->getDeltaTime();
+}
+
+void Shape::updateSkullAnimation(std::shared_ptr<com::GameTimer> pGameTimer) {
+	_animationTimePoint += pGameTimer->getDeltaTime();
+	if (_animationTimePoint > _skullAnimation.getEndTime())
+		_animationTimePoint = 0.f;
+
+	float4 color {
+		std::sin(pGameTimer->getTotalTime()) * 0.5f + 0.5f,
+		0.3f,
+		std::cos(pGameTimer->getTotalTime()) * 0.5f + 0.5f,
+		1.f
+	};
+
+	Matrix4 matWorld { _skullMatWorld };
+	Matrix4 animationMatrix = _skullAnimation.interpolate(_animationTimePoint);
+	matWorld = animationMatrix * matWorld;
+	auto pSkullCBVisitor = _pSkullObjCB->visit();
+	pSkullCBVisitor->matWorld = float4x4(matWorld);
+	pSkullCBVisitor->matNormal = float4x4(transpose(inverse(matWorld)));
+	pSkullCBVisitor->material.diffuseAlbedo = color;
 }

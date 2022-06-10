@@ -15,8 +15,8 @@ float CarToonDiffShadingFactor(float NdotL) {
     return NdotL <= 0.f ? 0.4 : (NdotL <= 0.5 ? 0.6 : 1.0);
 }    
     
-float CarToonSpecShadingFactor(float HdotN) {
-    return NdotH <= 0.1 ? 0.0 : (HdotN <= 0.8 ? 0.5 : 0.8);
+float CarToonSpecShadingFactor(float NdotH) {
+    return NdotH <= 0.1 ? 0.0 : (NdotH <= 0.8 ? 0.5 : 0.8);
 }
     #define DIFF_SHADING_FACTOR(NdotL) CarToonDiffShadingFactor(NdotL)
     #define SPEC_SHADING_FACTOR(NdotH) CarToonSpecShadingFactor(NdotH)

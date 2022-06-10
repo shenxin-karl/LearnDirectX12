@@ -24,7 +24,8 @@ struct Mesh {
 };
 
 struct ObjectCB {
-	float4x4          world;
+	float4x4          matWorld;
+	float4x4		  matNormal;
 	d3d::Material	  material;
 };
 
@@ -36,7 +37,6 @@ struct RenderItem {
 
 struct Keyframe {
 	Keyframe();
-	~Keyframe();
 public:
 	float      timePoint;
 	Vector3    translation;
@@ -66,12 +66,19 @@ private:
 	void buildGeometry(dx12lib::DirectContextProxy pDirectCtx);
 	void buildGameLight(dx12lib::DirectContextProxy pDirectCtx);
 	void buildMaterials();
+	void buildSkullAnimation();
 	void loadTextures(dx12lib::DirectContextProxy pDirectCtx);
 	void renderShapesPass(dx12lib::DirectContextProxy pDirectCtx);
 	void renderSkullPass(dx12lib::DirectContextProxy pDirectCtx);
 	void pollEvent();
 	void updatePassCB(std::shared_ptr<com::GameTimer> pGameTimer);
+	void updateSkullAnimation(std::shared_ptr<com::GameTimer> pGameTimer);
 private:
+	float4x4 _skullMatWorld;
+	BoneAnimation _skullAnimation;
+	float _animationTimePoint = 0.f;
+	FRConstantBufferPtr<ObjectCB> _pSkullObjCB;
+
 	std::unique_ptr<d3d::SobelFilter> _pSobelFilter;
 	std::unique_ptr<d3d::CoronaCamera>  _pCamera;
 	FRConstantBufferPtr<d3d::CBLightType> _pGameLightsCB;

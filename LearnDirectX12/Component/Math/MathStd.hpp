@@ -353,11 +353,11 @@ private:
 class Quaternion {
 public:
 	FORCEINLINE Quaternion();
-	FORCEINLINE Quaternion(const Vector3 &axis, const Scalar &angle);
+	FORCEINLINE Quaternion(const Vector3 &axis, const float &angle);
 	FORCEINLINE Quaternion(float pitch, float yaw, float roll);
 	FORCEINLINE explicit Quaternion(const Matrix3 &matrix);
 	FORCEINLINE explicit Quaternion(DX::FXMVECTOR vec);
-	FORCEINLINE explicit operator DX::XMVECTOR() const;
+	FORCEINLINE operator DX::XMVECTOR() const;
 	FORCEINLINE explicit operator Matrix3() const;
 	FORCEINLINE explicit operator Matrix4() const;
 	FORCEINLINE Quaternion operator~() const;

@@ -10,7 +10,8 @@ cbuffer CBLight : register(b1){
 };
 
 cbuffer CBObject : register(b2){
-    float4x4 gWorld;
+    float4x4 gMatWorld;
+    float4x4 gMatNormal;
     Material gMaterial;
 };
 
@@ -29,10 +30,10 @@ struct VertexOut {
 
 VertexOut VS(VertexIn vin) {
     VertexOut vout;
-    float4 worldPositon = mul(gWorld, float4(vin.position, 1.0));
+    float4 worldPositon = mul(gMatWorld, float4(vin.position, 1.0));
     vout.SVPosition     = mul(gPassCB.viewProj, worldPositon);
     vout.wpos           = worldPositon.xyz;
-    vout.wnrm           = vin.normal;
+    vout.wnrm           = mul((float3x3)gMatNormal, vin.normal);
     vout.texcoord       = vin.texcoord;
     return vout;
 }

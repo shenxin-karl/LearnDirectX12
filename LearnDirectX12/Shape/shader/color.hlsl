@@ -1,4 +1,4 @@
-//#define USE_CARTOON_SHADING  
+// #define USE_CARTOON_SHADING  
 #include "../../Component/D3D/HlslShader/ShaderCommon.hlsl"
 #include "../../Component/D3D/HlslShader/LightingUtil.hlsl"
 
@@ -12,6 +12,7 @@ cbuffer CBLight : register(b1) {
 
 cbuffer CBObject : register(b2) {
 	float4x4  gWorld;
+	float4x4  gMatNormal;
 	Material  gMaterial;
 };
 
@@ -31,7 +32,7 @@ VertexOut VS(VertexIn vin) {
 	float4 worldPos = mul(gWorld, float4(vin.position, 1.0f));
 	vout.svPosition = mul(gPassCB.viewProj, worldPos);
 	vout.wpos = worldPos;
-	vout.wnrm = vin.normal;
+	vout.wnrm = mul((float3x3)gMatNormal, vin.normal);
 	return vout;
 }
 
@@ -42,5 +43,5 @@ float4 PS(VertexOut pin) : SV_Target {
     result += ComputePointLight(gLight.lights[1], gMaterial, pin.wnrm, viewDir, pin.wpos);
     result += ComputeSpotLight(gLight.lights[2], gMaterial, pin.wnrm, viewDir, pin.wpos);
     result += gMaterial.diffuseAlbedo.rgb * gLight.ambientLight.rgb;
-    return float4(result, 1.f);
+	return float4(result, 1.0);
 }

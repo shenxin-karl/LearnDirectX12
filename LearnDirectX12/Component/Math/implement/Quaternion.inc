@@ -3,7 +3,7 @@ FORCEINLINE Quaternion::Quaternion() {
 	_vec = DX::XMQuaternionIdentity();
 }
 
-FORCEINLINE Quaternion::Quaternion(const Vector3 &axis, const Scalar &angle) {
+FORCEINLINE Quaternion::Quaternion(const Vector3 &axis, const float &angle) {
 	_vec = DX::XMQuaternionRotationAxis(axis, angle);
 }
 
