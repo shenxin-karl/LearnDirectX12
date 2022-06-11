@@ -350,7 +350,7 @@ private:
 	DX::XMMATRIX _mat;
 };
 
-class Quaternion {
+class alignas(16) Quaternion {
 public:
 	FORCEINLINE Quaternion();
 	FORCEINLINE Quaternion(const Vector3 &axis, const float &angle);
@@ -365,6 +365,8 @@ public:
 	FORCEINLINE Vector3 operator*(const Vector3 &rhs) const;
 	FORCEINLINE Quaternion &operator=(const Quaternion &rhs);
 	FORCEINLINE Quaternion &operator*=(const Quaternion &rhs);
+	friend BoolVector operator==(const Quaternion &, const Quaternion &);
+	friend BoolVector operator!=(const Quaternion &, const Quaternion &);
 	friend Quaternion normalize(const Quaternion &q);
 	friend Quaternion inverse(const Quaternion &q);
 	friend Quaternion slerp(const Quaternion &lhs, const Quaternion &rhs, float t);
@@ -380,6 +382,14 @@ public:
 	};
 };
 
+
+class Transfrom {
+public:
+public:
+	Vector3    scale;
+	Vector3    translation;
+	Quaternion rotate;
+};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /// FloatStore<2>

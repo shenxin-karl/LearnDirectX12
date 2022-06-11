@@ -53,6 +53,14 @@ FORCEINLINE Quaternion &Quaternion::operator*=(const Quaternion &rhs) {
 	return *this;
 }
 
+FORCEINLINE BoolVector operator==(const Quaternion &lhs, const Quaternion &rhs) {
+	return BoolVector(DX::XMVectorEqual(lhs._vec, rhs._vec));
+}
+
+FORCEINLINE BoolVector operator!=(const Quaternion &lhs, const Quaternion &rhs) {
+	return BoolVector(DX::XMVectorEqual(lhs._vec, rhs._vec));
+}
+
 FORCEINLINE Quaternion normalize(const Quaternion &q) {
 	return Quaternion(DX::XMQuaternionNormalize(q._vec));
 }
