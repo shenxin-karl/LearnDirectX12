@@ -384,8 +384,8 @@ void MirrorApp::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 	RenderItem floorRItem;
 	ObjectCBType floorObjectCB;
 	auto pRoomGeo = _meshMap["roomGeo"];
-	floorObjectCB.matWorld = Math::MathHelper::identity4x4();
-	floorObjectCB.matNormal = Math::MathHelper::identity4x4();
+	floorObjectCB.matWorld = Math::float4x4::identity();
+	floorObjectCB.matNormal = Math::float4x4::identity();
 	floorObjectCB.material = _materialMap["floorMat"];
 	floorRItem._pMesh = pRoomGeo;
 	floorRItem._pObjectCB = pDirectCtx->createFRConstantBuffer<ObjectCBType>(floorObjectCB);
@@ -395,8 +395,8 @@ void MirrorApp::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 
 	RenderItem wallsRItem;
 	ObjectCBType wallObjectCB;
-	wallObjectCB.matWorld = Math::MathHelper::identity4x4();
-	wallObjectCB.matNormal = Math::MathHelper::identity4x4();
+	wallObjectCB.matWorld = Math::float4x4::identity();
+	wallObjectCB.matNormal = Math::float4x4::identity();
 	wallObjectCB.material = _materialMap["bricksMat"];
 	wallsRItem._pAlbedoMap = _textureMap["bricks3.dds"];
 	wallsRItem._pMesh = pRoomGeo;
@@ -411,7 +411,7 @@ void MirrorApp::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 	Matrix4 skullOffset = Matrix4::makeTranslation(_skullTranslation.x, _skullTranslation.y, _skullTranslation.z);
 	Matrix4 skullWorld =  skullOffset * skullRotate * skullScale;
 	skullObjectCB.matWorld = float4x4(skullWorld);
-	skullObjectCB.matNormal = Math::MathHelper::identity4x4();
+	skullObjectCB.matNormal = Math::float4x4::identity();
 	skullObjectCB.material = _materialMap["skullMat"];
 	skullRItem._pMesh = _meshMap["skullGeo"];
 	skullRItem._submesh = skullRItem._pMesh->getSubmesh("skull");
@@ -453,8 +453,8 @@ void MirrorApp::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 	RenderItem mirrorRItem;
 	ObjectCBType mirrorObjectCB;
 	mirrorObjectCB.material = _materialMap["icemirrorMat"];
-	mirrorObjectCB.matWorld = Math::MathHelper::identity4x4();
-	mirrorObjectCB.matNormal = Math::MathHelper::identity4x4();
+	mirrorObjectCB.matWorld = Math::float4x4::identity();
+	mirrorObjectCB.matNormal = Math::float4x4::identity();
 	mirrorRItem._pAlbedoMap = _textureMap["ice.dds"];
 	mirrorRItem._pMesh = pRoomGeo;
 	mirrorRItem._pObjectCB = pDirectCtx->createFRConstantBuffer<ObjectCBType>(mirrorObjectCB);

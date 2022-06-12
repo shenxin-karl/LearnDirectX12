@@ -24,8 +24,9 @@ struct Mesh {
 };
 
 struct ObjectCB {
-	float4x4          matWorld;
-	float4x4		  matNormal;
+	float4x4          matWorld    = float4x4::identity();
+	float4x4		  matNormal   = float4x4::identity();
+	float4x4		  matTexCoord = float4x4::identity();
 	d3d::Material	  material;
 };
 

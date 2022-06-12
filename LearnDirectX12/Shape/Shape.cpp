@@ -209,8 +209,9 @@ void Shape::buildRenderItem(dx12lib::DirectContextProxy pDirectCtx) {
 	RenderItem gridItem;
 	ObjectCB gridObjCB;
 	gridObjCB.material = _materials["gridMat"];
-	gridObjCB.matWorld = MathHelper::identity4x4();;
+	gridObjCB.matWorld = float4x4::identity();
 	gridObjCB.matNormal = float4x4(Matrix4::identity());
+	gridObjCB.matTexCoord = float4x4(Matrix4::makeScale(10.f, 10.f, 1.f));
 	gridItem._pMesh = _geometrys["grid"];
 	gridItem._pAlbedo = _textureMap["tile.dds"];
 	gridItem._pObjectCB = pDirectCtx->createFRConstantBuffer<ObjectCB>(gridObjCB);
@@ -327,7 +328,7 @@ void Shape::buildGeometry(dx12lib::DirectContextProxy pDirectCtx) {
 		std::transform(mesh.vertices.begin(), mesh.vertices.end(), std::back_inserter(vertices), [](auto &v) {
 			return SkullVertex(v.position, v.normal);
 		});
-		std::transform(mesh.indices.begin(), mesh.indices.end(), std::back_inserter(indices), [](auto &i) {
+		std::ranges::transform(mesh.indices, std::back_inserter(indices), [](auto &i) {
 			return static_cast<std::uint16_t>(i);
 		});
 		std::shared_ptr<Mesh> pMesh = std::make_shared<Mesh>();
@@ -357,10 +358,19 @@ void Shape::buildGameLight(dx12lib::DirectContextProxy pDirectCtx) {
 	auto pGPUGameLightCB = _pGameLightsCB->map();
 	pGPUGameLightCB->directLightCount = 1;
 	pGPUGameLightCB->pointLightCount = 1;
-	pGPUGameLightCB->spotLightCount = 0;
+	pGPUGameLightCB->spotLightCount = 1;
 	pGPUGameLightCB->ambientLight = float4(0.1f, 0.1f, 0.1f, 1.f);
 
-	pGPUGameLightCB->lights[0].initAsDirectionLight(float3(-3, 6, -3), float3(1.f));
+	pGPUGameLightCB->lights[0].initAsDirectionLight(float3(-3, 6, -3), float3(0.8f));
+	pGPUGameLightCB->lights[1].initAsPointLight(float3(-5.f), float3(0.4f, 0.f, 0.f), 0.f, 20.f);
+	pGPUGameLightCB->lights[2].initAsSpotLight(
+		float3(0.f, 20.f, 0.f), 
+		float3(0.f, -1.f, 0.f),
+		float3(0.1f, 0.1f, 0.9f),
+		0.f,
+		50.f,
+		32.f
+	);
 }
 
 void Shape::buildMaterials() {
@@ -391,7 +401,8 @@ void Shape::buildMaterials() {
 	_materials["cylinderMat"] = cylinderMat;
 
 	d3d::Material skullMat;
-	skullMat.diffuseAlbedo = float4(DX::Colors::Gold);
+	//skullMat.diffuseAlbedo = float4(DX::Colors::Gold);
+	skullMat.diffuseAlbedo = float4(DX::Colors::White);
 	skullMat.roughness = 0.8f;
 	skullMat.metallic = 0.2f;
 	_materials["skullMat"] = skullMat;
@@ -411,7 +422,7 @@ void Shape::buildSkullAnimation() {
 
 	_skullAnimation.keyframes[1].timePoint = 2.f;
 	_skullAnimation.keyframes[1].translation = Vector3(0.f, 2.f, 10.f);
-	_skullAnimation.keyframes[1].scale = Vector3(0.5f);
+	_skullAnimation.keyframes[1].scale = Vector3(0.45f);
 	_skullAnimation.keyframes[1].rotationQuat = q1;
 
 	_skullAnimation.keyframes[2].timePoint = 4.0f;
@@ -421,7 +432,7 @@ void Shape::buildSkullAnimation() {
 
 	_skullAnimation.keyframes[3].timePoint = 6.0f;
 	_skullAnimation.keyframes[3].translation = Vector3(0.0f, 1.0f, -10.0f);
-	_skullAnimation.keyframes[3].scale = Vector3(0.5f);
+	_skullAnimation.keyframes[3].scale = Vector3(0.65f);
 	_skullAnimation.keyframes[3].rotationQuat = q3;
 
 	_skullAnimation.keyframes[4].timePoint = 8.0f;
@@ -496,18 +507,10 @@ void Shape::updateSkullAnimation(std::shared_ptr<com::GameTimer> pGameTimer) {
 	if (_animationTimePoint > _skullAnimation.getEndTime())
 		_animationTimePoint = 0.f;
 
-	float4 color {
-		std::sin(pGameTimer->getTotalTime()) * 0.5f + 0.5f,
-		0.3f,
-		std::cos(pGameTimer->getTotalTime()) * 0.5f + 0.5f,
-		1.f
-	};
-
 	Matrix4 matWorld { _skullMatWorld };
 	Matrix4 animationMatrix = _skullAnimation.interpolate(_animationTimePoint);
 	matWorld = animationMatrix * matWorld;
 	auto pSkullCBVisitor = _pSkullObjCB->visit();
 	pSkullCBVisitor->matWorld = float4x4(matWorld);
 	pSkullCBVisitor->matNormal = float4x4(transpose(inverse(matWorld)));
-	pSkullCBVisitor->material.diffuseAlbedo = color;
 }

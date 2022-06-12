@@ -17,9 +17,9 @@ struct FloatStore;
 using float2 = FloatStore<2>;
 using float3 = FloatStore<3>;
 using float4 = FloatStore<4>;
-using float3x3 = DX::XMFLOAT3X3;
-using float4x3 = DX::XMFLOAT4X3;
-using float4x4 = DX::XMFLOAT4X4;
+using float3x3 = FloatStore<33>;
+using float4x3 = FloatStore<43>;
+using float4x4 = FloatStore<44>;
 
 class Vector2;
 class Vector3;
@@ -45,13 +45,15 @@ struct FloatStore<2> : public DX::XMFLOAT2 {
 	FORCEINLINE friend std::ostream &operator<<(std::ostream &os, const FloatStore &v) noexcept;
 	FORCEINLINE FloatStore operator-() const noexcept;
 	FORCEINLINE explicit operator DX::XMVECTOR() const noexcept;
-
 	template<typename T> requires(std::is_convertible_v<T, float>)
 	FORCEINLINE explicit FloatStore(T v) noexcept;
 
 	template<typename T1, typename T2>
 		requires(std::is_convertible_v<T1, float> &&std::is_convertible_v<T2, float>)
 	FORCEINLINE FloatStore(T1 x, T2 y) noexcept;
+
+	FORCEINLINE static const FloatStore<2> &identity() noexcept;
+	FORCEINLINE static const FloatStore<2> &zero() noexcept;
 };
 
 template<>
@@ -87,6 +89,8 @@ struct FloatStore<3> : public DX::XMFLOAT3 {
 
 	template<size_t N> requires(N <= 3)
 	FORCEINLINE explicit operator const FloatStore<N> &() const noexcept;
+	FORCEINLINE static const FloatStore<3> &identity() noexcept;
+	FORCEINLINE static const FloatStore<3> &zero() noexcept;
 };
 
 template<>
@@ -121,6 +125,29 @@ struct FloatStore<4> : public DX::XMFLOAT4 {
 
 	template<size_t N> requires(N <= 4)
 	FORCEINLINE explicit operator const FloatStore<N> &() const noexcept;
+	FORCEINLINE static const FloatStore<4> &identity() noexcept;
+	FORCEINLINE static const FloatStore<4> &zero() noexcept;
+};
+
+template<>
+struct FloatStore<33> : public DX::XMFLOAT3X3 {
+public:
+	using DX::XMFLOAT3X3::XMFLOAT3X3;
+	FORCEINLINE static const FloatStore<33> &identity() noexcept;
+};
+
+template<>
+struct FloatStore<43> : public DX::XMFLOAT4X3 {
+public:
+	using DX::XMFLOAT4X3::XMFLOAT4X3;
+	FORCEINLINE static const FloatStore<43> &identity() noexcept;
+};
+
+template<>
+struct FloatStore<44> : public DX::XMFLOAT4X4 {
+public:
+	using DX::XMFLOAT4X4::XMFLOAT4X4;
+	FORCEINLINE static const FloatStore<44> &identity() noexcept;
 };
 
 class alignas(16) Scalar {
@@ -401,6 +428,8 @@ public:
 /// FloatStore<4>
 #include "Math/implement/FloatStore4.inc"
 /////////////////////////////////////////////////////////////////////////////////////////////////
+/// FloatStoreMatrix
+#include "Math/implement/FloatStoreMatrix.inc"
 /// Swizzle
 #include "Math/implement/Swizzle.inc"
 
@@ -418,7 +447,8 @@ public:
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /// BoolVector
 #if 1
-FORCEINLINE BoolVector::BoolVector(DX::FXMVECTOR vec) noexcept : _vec(vec) {
+
+	FORCEINLINE BoolVector::BoolVector(DX::FXMVECTOR vec) noexcept : _vec(vec) {
 }
 FORCEINLINE BoolVector::operator DX::XMVECTOR() const {
 	return _vec;

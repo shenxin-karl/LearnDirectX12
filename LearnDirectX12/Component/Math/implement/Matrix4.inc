@@ -67,7 +67,7 @@ FORCEINLINE Matrix4::operator float4x3() const noexcept {
 	DX::XMStoreFloat4x3(&res, _mat);
 	return res;
 }
-FORCEINLINE Matrix4::operator DirectX::XMFLOAT4X4() const noexcept {
+FORCEINLINE Matrix4::operator float4x4() const noexcept {
 	float4x4 res;
 	DX::XMStoreFloat4x4(&res, _mat);
 	return res;

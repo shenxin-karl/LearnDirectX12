@@ -45,3 +45,13 @@ template<size_t N> requires(N <= 4)
 FORCEINLINE FloatStore<4>::operator const FloatStore<N> &() const noexcept {
 	return reinterpret_cast<const FloatStore<N> &>(*this);
 }
+
+FORCEINLINE const FloatStore<4> & FloatStore<4>::identity() noexcept {
+	static FloatStore<4> object(1.f);
+	return object;
+}
+
+FORCEINLINE const FloatStore<4> & FloatStore<4>::zero() noexcept {
+	static FloatStore<4> object(0.f);
+	return object;
+}

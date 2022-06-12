@@ -35,3 +35,13 @@ template<typename T1, typename T2>
 	requires(std::is_convertible_v<T1, float> &&std::is_convertible_v<T2, float>)
 FORCEINLINE FloatStore<2>::FloatStore(T1 x, T2 y) noexcept : DX::XMFLOAT2(float(x), float(y)) {
 }
+
+FORCEINLINE const FloatStore<2> &FloatStore<2>::identity() noexcept {
+	static FloatStore<2> object(1.f);
+	return object;
+}
+
+FORCEINLINE const FloatStore<2> &FloatStore<2>::zero() noexcept {
+	static FloatStore<2> object(0.f);
+	return object;
+}

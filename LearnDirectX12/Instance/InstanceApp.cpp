@@ -238,7 +238,7 @@ void InstanceApp::buildRenderItem() {
 				item.materialIdx = disMat(gen);
 				item.diffuseMapIdx = disMap(gen);
 
-				item.matWorld = XMFLOAT4X4(
+				item.matWorld = float4x4(
 					1.0f, 0.0f, 0.0f, 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					0.0f, 0.0f, 1.0f, 0.0f,

@@ -13,6 +13,7 @@ cbuffer CBLight : register(b1) {
 cbuffer CBObject : register(b2) {
 	float4x4  gWorld;
 	float4x4  gMatNormal;
+	float4x4  gMatTexCoord;
 	Material  gMaterial;
 };
 

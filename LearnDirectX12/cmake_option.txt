@@ -1,1 +1,1 @@
--G "Visual Studio 16 2019" -DENABLE_TEST=1
+-G "Visual Studio 17 2022" -DENABLE_TEST=1

@@ -449,8 +449,8 @@ void LandAndWater::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 	boxOBjectCB.material = boxMat;
 	Matrix4 boxWorldMat = Matrix4::makeScale(5.f, 5.f, 5.f) * Matrix4::makeTranslation(0.f, 2.3f, 0.f);
 	boxOBjectCB.world = float4x4(boxWorldMat);
-	boxOBjectCB.normalMat = MathHelper::identity4x4();
-	boxOBjectCB.matTransform = MathHelper::identity4x4();
+	boxOBjectCB.normalMat = float4x4::identity();
+	boxOBjectCB.matTransform = float4x4::identity();
 	RenderItem boxRItem;
 	boxRItem._pMesh = pBoxMesh;
 	boxRItem._pConstantBuffer = pDirectCtx->createFRConstantBuffer<CBObjectType>(boxOBjectCB);
@@ -462,8 +462,8 @@ void LandAndWater::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 	landOBjectCB.material = landMat;
 	Matrix4 landMatTransform = Matrix4::makeScale(5.f, 5.f, 1.f);
 	landOBjectCB.matTransform = float4x4(landMatTransform);
-	landOBjectCB.world = MathHelper::identity4x4();
-	landOBjectCB.normalMat = MathHelper::identity4x4();
+	landOBjectCB.world = float4x4::identity();
+	landOBjectCB.normalMat = float4x4::identity();
 	RenderItem landRItem;
 	landRItem._pMesh = pLandMesh;
 	landRItem._pConstantBuffer = pDirectCtx->createFRConstantBuffer<CBObjectType>(landOBjectCB);
@@ -473,9 +473,9 @@ void LandAndWater::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 	auto waterMat = _materialMap["waterMat"];
 	CBObjectType waterOBjectCB;
 	waterOBjectCB.material = waterMat;
-	waterOBjectCB.world = MathHelper::identity4x4();
-	waterOBjectCB.normalMat = MathHelper::identity4x4();
-	waterOBjectCB.matTransform = MathHelper::identity4x4();
+	waterOBjectCB.world = float4x4::identity();
+	waterOBjectCB.normalMat = float4x4::identity();
+	waterOBjectCB.matTransform = float4x4::identity();
 	RenderItem waterRItem;
 	waterRItem._pMesh = pWaterMesh;
 	waterRItem._pConstantBuffer = pDirectCtx->createFRConstantBuffer<CBObjectType>(waterOBjectCB);
@@ -483,9 +483,9 @@ void LandAndWater::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 	RenderItem treeBillboards;
 	CBObjectType treeObjectCB;
 	treeObjectCB.material = _materialMap["TreeBillboardMat"];
-	treeObjectCB.world = MathHelper::identity4x4();
-	treeObjectCB.normalMat = MathHelper::identity4x4();
-	treeObjectCB.matTransform = MathHelper::identity4x4();
+	treeObjectCB.world = float4x4::identity();
+	treeObjectCB.normalMat = float4x4::identity();
+	treeObjectCB.matTransform = float4x4::identity();
 	treeBillboards._pMesh = _geometryMap["TreeBillboardGeo"];
 	treeBillboards._pConstantBuffer = pDirectCtx->createFRConstantBuffer<CBObjectType>(treeObjectCB);
 	treeBillboards._pAlbedoMap = _textureMap["treeArray2.dds"];
