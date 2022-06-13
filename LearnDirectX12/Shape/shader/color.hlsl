@@ -58,5 +58,5 @@ float4 PS(VertexOut pin) : SV_Target {
     result += gMaterial.diffuseAlbedo.rgb * gLight.ambientLight.rgb;
     result += (gMaterial.diffuseAlbedo * gLight.ambientLight).rgb;
 	result += BoxCubeMapLookup(gMaterial, viewDir, pin.wnrm);
-	return float4(result, 1.0);
+	return float4(result, gMaterial.diffuseAlbedo.a);
 }

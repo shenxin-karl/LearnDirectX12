@@ -27,7 +27,7 @@ void Light::initAsSpotLight(float3 position,
 	float falloffEnd, 
 	float spotPower) 
 {
-	this->direction = normalize(Vector3(direction)).xyz;
+	this->direction = normalize(-Vector3(direction)).xyz;
 	this->strength = strength;
 	this->position = position;
 	this->falloffStart = falloffStart;

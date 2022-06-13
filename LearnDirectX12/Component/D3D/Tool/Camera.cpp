@@ -156,7 +156,7 @@ void CoronaCamera::update(std::shared_ptr<com::GameTimer> pGameTimer) {
 	
 	Matrix4 view = DirectX::XMMatrixLookAtLH(lookFrom, lookAt, lookUp);
 	Matrix4 proj = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(_fov), _aspect, _nearClip, _farClip);
-	Matrix4 viewProj = proj * view ;
+	Matrix4 viewProj = proj * view;
 
 	Matrix4 invView = inverse(view);
 	Matrix4 invProj = inverse(proj);

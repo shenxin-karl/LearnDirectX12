@@ -198,7 +198,7 @@ FORCEINLINE Scalar dot(const Vector3 &v1, const Vector3 &v2) noexcept {
 	return Scalar(DX::XMVector3Dot(v1, v2));
 }
 FORCEINLINE Vector3 cross(const Vector3 &v0, const Vector3 &v1) {
-	return Scalar(DX::XMVector3Cross(v0, v1));
+	return Vector3(DX::XMVector3Cross(v0, v1));
 }
 FORCEINLINE Scalar length(const Vector3 &v) {
 	return Scalar(DX::XMVector3Length(v));

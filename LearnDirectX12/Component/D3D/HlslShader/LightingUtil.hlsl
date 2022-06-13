@@ -127,7 +127,7 @@ float3 ComputeSpotLight(Light light, Material mat, float3 normal, float3 viewDir
     float attenuation = CalcAttenuation(dis, light.falloffStart, light.falloffEnd);
     lightStrength *= attenuation;
     
-    float spotFactor = pow(saturate(dot(-L, light.direction)), light.spotPower);
+    float spotFactor = pow(saturate(dot(L, light.direction)), light.spotPower);
     lightStrength *= spotFactor;
 
     return BlinnPhong(lightStrength, L, N, V, mat);

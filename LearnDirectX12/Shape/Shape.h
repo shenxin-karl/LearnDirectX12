@@ -11,6 +11,7 @@ struct ShapeVertex {
 	float3 position;
 	float3 normal;
 	float2 texcoord;
+	float3 tangent;
 };
 
 struct SkullVertex {
@@ -34,6 +35,7 @@ struct RenderItem {
 	std::shared_ptr<Mesh> _pMesh;
 	FRConstantBufferPtr<ObjectCB> _pObjectCB;
 	std::shared_ptr<dx12lib::SamplerTexture2D> _pAlbedo;
+	std::shared_ptr<dx12lib::SamplerTexture2D> _pNormal;
 };
 
 struct Keyframe {
