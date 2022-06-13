@@ -80,8 +80,9 @@ private:
 	float _animationTimePoint = 0.f;
 	FRConstantBufferPtr<ObjectCB> _pSkullObjCB;
 
+	std::unique_ptr<d3d::SkyBox>	  _pSkyBox;
 	std::unique_ptr<d3d::SobelFilter> _pSobelFilter;
-	std::unique_ptr<d3d::CoronaCamera>  _pCamera;
+	std::shared_ptr<d3d::CoronaCamera>  _pCamera;
 	FRConstantBufferPtr<d3d::CBLightType> _pGameLightsCB;
 	FRConstantBufferPtr<d3d::CBPassType>  _pPassCB;
 	std::unordered_map<std::string, d3d::Material> _materials;

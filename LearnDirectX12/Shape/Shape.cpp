@@ -15,6 +15,8 @@
 #include <DirectXColors.h>
 #include <DirectXMath.h>
 
+#include "D3D/Sky/SkyBox.h"
+
 Keyframe::Keyframe() : timePoint(0.f), scale(1.f) {
 }
 
@@ -85,7 +87,7 @@ void Shape::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 		100.f,
 		static_cast<float>(_width) / static_cast<float>(_height),
 	};
-	_pCamera = std::make_unique<d3d::CoronaCamera>(cameraDesc);
+	_pCamera = std::make_shared<d3d::CoronaCamera>(cameraDesc);
 	_pCamera->_mouseWheelSensitivity = 1.f;
 	_pPassCB = pDirectCtx->createFRConstantBuffer<d3d::CBPassType>();
 	buildTexturePSO(pDirectCtx);
@@ -97,6 +99,13 @@ void Shape::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 	buildSkullAnimation();
 	buildRenderItem(pDirectCtx);
 	_pSobelFilter = std::make_unique<d3d::SobelFilter>(pDirectCtx, _width, _height);
+
+	d3d::SkyBoxDesc skyBoxDesc;
+	skyBoxDesc.pGraphicsCtx = pDirectCtx;
+	skyBoxDesc.filename = L"resource/desertcube1024.dds";
+	skyBoxDesc.renderTargetFormat = _pDevice->getDesc().backBufferFormat;
+	skyBoxDesc.depthStencilFormat = _pDevice->getDesc().depthStencilFormat;
+	_pSkyBox = std::make_unique<d3d::SkyBox>(skyBoxDesc);
 }
 
 void Shape::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
@@ -115,6 +124,7 @@ void Shape::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		renderTarget.clear(pDirectCtx, float4(DirectX::Colors::LightSkyBlue));
 		renderShapesPass(pDirectCtx);
 		renderSkullPass(pDirectCtx);
+		_pSkyBox->render(pDirectCtx, _pCamera);
 		//_pSobelFilter->apply(pDirectCtx, renderTarget.getRenderTarget2D());
 		//pDirectCtx->copyResource(renderTarget.getRenderTarget2D(), _pSobelFilter->getOutput());
 		renderTarget.unbind(pDirectCtx);
@@ -160,9 +170,11 @@ void Shape::buildTexturePSO(dx12lib::DirectContextProxy pDirectCtx) {
 }
 
 void Shape::buildColorPSO(dx12lib::DirectContextProxy pDirectCtx) {
-	auto pRootSignature = _pDevice->createRootSignature(2);
+	auto pRootSignature = _pDevice->createRootSignature(2, 6);
+	pRootSignature->initStaticSampler(0, d3d::getStaticSamplers());
 	pRootSignature->at(0).initAsDescriptorTable({
-		{ dx12lib::RegisterSlot::CBV0, 2 }
+		{ dx12lib::RegisterSlot::CBV0, 2 },
+		{ dx12lib::RegisterSlot::SRV0, 1 },
 	});
 	pRootSignature->at(1).initAsDescriptorTable({
 		{ dx12lib::RegisterSlot::CBV2, 1 }
@@ -362,7 +374,7 @@ void Shape::buildGameLight(dx12lib::DirectContextProxy pDirectCtx) {
 	pGPUGameLightCB->ambientLight = float4(0.1f, 0.1f, 0.1f, 1.f);
 
 	pGPUGameLightCB->lights[0].initAsDirectionLight(float3(-3, 6, -3), float3(0.8f));
-	pGPUGameLightCB->lights[1].initAsPointLight(float3(-5.f), float3(0.4f, 0.f, 0.f), 0.f, 20.f);
+	pGPUGameLightCB->lights[1].initAsPointLight(float3(0.f, 5.f, -10.f), float3(0.4f, 0.4f, 0.f), 0.f, 20.f);
 	pGPUGameLightCB->lights[2].initAsSpotLight(
 		float3(0.f, 20.f, 0.f), 
 		float3(0.f, -1.f, 0.f),
@@ -403,8 +415,8 @@ void Shape::buildMaterials() {
 	d3d::Material skullMat;
 	//skullMat.diffuseAlbedo = float4(DX::Colors::Gold);
 	skullMat.diffuseAlbedo = float4(DX::Colors::White);
-	skullMat.roughness = 0.8f;
-	skullMat.metallic = 0.2f;
+	skullMat.roughness = 0.5f;
+	skullMat.metallic = 0.5f;
 	_materials["skullMat"] = skullMat;
 }
 
@@ -414,28 +426,29 @@ void Shape::buildSkullAnimation() {
 	Quaternion q2 { Vector3(0.f, 1.f, 0.f), DirectX::XMConvertToRadians(-30.0f) };
 	Quaternion q3 { Vector3(1.f, 0.f, 0.f), DirectX::XMConvertToRadians(70.0f) };
 
+	constexpr float scale = 2.f;
 	_skullAnimation.keyframes.resize(5);
-	_skullAnimation.keyframes[0].timePoint = 0.f;
+	_skullAnimation.keyframes[0].timePoint = 0.f * scale;
 	_skullAnimation.keyframes[0].translation = Vector3(-7.f, 0.f, 0.f);
 	_skullAnimation.keyframes[0].scale = Vector3(0.5f);
 	_skullAnimation.keyframes[0].rotationQuat = q0;
 
-	_skullAnimation.keyframes[1].timePoint = 2.f;
+	_skullAnimation.keyframes[1].timePoint = 2.f * scale;
 	_skullAnimation.keyframes[1].translation = Vector3(0.f, 2.f, 10.f);
 	_skullAnimation.keyframes[1].scale = Vector3(0.45f);
 	_skullAnimation.keyframes[1].rotationQuat = q1;
 
-	_skullAnimation.keyframes[2].timePoint = 4.0f;
+	_skullAnimation.keyframes[2].timePoint = 4.0f * scale;
 	_skullAnimation.keyframes[2].translation = Vector3(7.f, 0.f, 0.f);
 	_skullAnimation.keyframes[2].scale = Vector3(0.5f);
 	_skullAnimation.keyframes[2].rotationQuat = q2;
 
-	_skullAnimation.keyframes[3].timePoint = 6.0f;
+	_skullAnimation.keyframes[3].timePoint = 6.0f * scale;
 	_skullAnimation.keyframes[3].translation = Vector3(0.0f, 1.0f, -10.0f);
 	_skullAnimation.keyframes[3].scale = Vector3(0.65f);
 	_skullAnimation.keyframes[3].rotationQuat = q3;
 
-	_skullAnimation.keyframes[4].timePoint = 8.0f;
+	_skullAnimation.keyframes[4].timePoint = 8.0f * scale;
 	_skullAnimation.keyframes[4].translation = Vector3(-7.0f, 0.0f, 0.0f);
 	_skullAnimation.keyframes[4].scale = Vector3(0.5f);
 	_skullAnimation.keyframes[4].rotationQuat = q0;
@@ -475,6 +488,8 @@ void Shape::renderSkullPass(dx12lib::DirectContextProxy pDirectCtx) {
 	pDirectCtx->setGraphicsPSO(pPSO);
 	pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV0, _pPassCB);
 	pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV1, _pGameLightsCB);
+	pDirectCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV0, _pSkyBox->getEnvironmentMap()->getSRV());
+
 	auto psoRenderItems = _renderItems[passPSOName];
 	auto &rItem = psoRenderItems[0];
 	pDirectCtx->setVertexBuffer(rItem._pMesh->_pVertexBuffer);

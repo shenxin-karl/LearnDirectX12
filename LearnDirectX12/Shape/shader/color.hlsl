@@ -37,6 +37,18 @@ VertexOut VS(VertexIn vin) {
 	return vout;
 }
 
+TextureCube gCubeMap : register(t0);
+float3 BoxCubeMapLookup(Material material, float3 viewDir, float3 normal) {
+	float cosIncidenceAngle = max(dot(normalize(viewDir), normalize(normal)), 0.0);
+	float3 R0 = lerp(0.04, material.diffuseAlbedo.rgb, material.metallic);
+	float3 specFactor = SchlickFresnelRoughness(cosIncidenceAngle, R0, material.roughness);
+
+	float3 R = reflect(-viewDir, normal);
+	float3 spec = gCubeMap.Sample(gSamLinearWrap, R).rgb * specFactor;
+	spec *= (1.0 - material.roughness);
+	return spec;
+}
+
 float4 PS(VertexOut pin) : SV_Target { 
     float3 viewDir = gPassCB.eyePos - pin.wpos;
     float3 result = float3(0, 0, 0);
@@ -44,5 +56,7 @@ float4 PS(VertexOut pin) : SV_Target {
     result += ComputePointLight(gLight.lights[1], gMaterial, pin.wnrm, viewDir, pin.wpos);
     result += ComputeSpotLight(gLight.lights[2], gMaterial, pin.wnrm, viewDir, pin.wpos);
     result += gMaterial.diffuseAlbedo.rgb * gLight.ambientLight.rgb;
+    result += (gMaterial.diffuseAlbedo * gLight.ambientLight).rgb;
+	result += BoxCubeMapLookup(gMaterial, viewDir, pin.wnrm);
 	return float4(result, 1.0);
 }

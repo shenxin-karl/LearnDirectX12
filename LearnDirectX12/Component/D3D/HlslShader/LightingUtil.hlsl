@@ -98,7 +98,7 @@ float3 ComputeDirectionLight(Light light, Material mat, float3 normal, float3 vi
 }
 
 float3 ComputePointLight(Light light, Material mat, float3 normal, float3 viewDir, float3 worldPosition) {
-    float3 lightVec = worldPosition - light.position;
+    float3 lightVec = light.position - worldPosition;
     float dis = length(lightVec);
     if (dis > light.falloffEnd)
         return 0.f;

@@ -10,6 +10,8 @@ class CommandList;
 template<typename T>
 class _ContextProxy {
 public:
+	_ContextProxy() = default;
+
 	_ContextProxy(std::shared_ptr<CommandList> pCmdList) : _pCmdList(pCmdList) {
 	}
 
