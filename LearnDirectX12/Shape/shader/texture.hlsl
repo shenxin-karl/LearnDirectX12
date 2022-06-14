@@ -73,8 +73,8 @@ float4 PS(VertexOut pin) : SV_Target{
     result += ComputePointLight(gLight.lights[1], gMaterial, normal, viewDir, pin.position);
     result += ComputeSpotLight(gLight.lights[2], gMaterial, normal, viewDir, pin.position);
     result += (diffAlbedo * gLight.ambientLight).rgb;
-    //return float4(result, diffAlbedo.a);
+    return float4(result, diffAlbedo.a);
 
-    float3 T = normalize(pin.tangent);
-    return float4(T * 0.5 + 0.5, 0.0);
+    //float3 c =  normalize(pin.tangent);
+    //return float4(c * 0.5 + 0.5, 1.0);
 }

@@ -117,6 +117,7 @@ bool GometryGenerator::generateTangent(MeshData &mesh) const {
 		return false;
 
 	std::vector<Vector3> tangents(mesh.vertices.size(), Vector3(0));
+	std::vector<Vector3> bitangents(mesh.vertices.size(), Vector3(0));
 	for (size_t i = 0; i < mesh.indices.size() - 2; i += 3) {
 		size_t idx0 = mesh.indices[i+0];
 		size_t idx1 = mesh.indices[i+1];
@@ -128,18 +129,26 @@ bool GometryGenerator::generateTangent(MeshData &mesh) const {
 		Vector3 E2 = Vector3(v2.position) - Vector3(v0.position);
 		float t1 = v1.texcoord.y - v0.texcoord.y;
 		float t2 = v2.texcoord.y - v0.texcoord.y;
+		float u0 = v1.texcoord.x - v0.texcoord.x;
+		float u1 = v2.texcoord.x - v0.texcoord.x;
 		Vector3 tangent = (t2 * E1) - (t1 * E2);
-		tangents[idx0] += tangent;
-		tangents[idx1] += tangent;
-		tangents[idx2] += tangent;
+		Vector3 binormal = (-u1 * E1) + (u0 * E2);
+		for (size_t j = i; j < i+3; ++j) {
+			size_t index = mesh.indices[j];
+			tangents[index] += tangent;
+			bitangents[index] += binormal;
+		}
 	}
 
 	for (size_t i = 0; i < tangents.size(); ++i) {
 		Vertex &v = mesh.vertices[i];
 		Vector3 t = tangents[i];
-		Vector3 normal = Vector3(v.normal);
-		t -= normal * dot(normal, t);		// 正交修正
+		Vector3 n = Vector3(v.normal);
+		t -= n * dot(n, t);		// 正交修正
 		t = normalize(t);
+		if (dot(cross(n, t), bitangents[i]) < 0.f)
+			t = -t;
+
 		v.tangent = static_cast<float3>(t);
 	}
 
@@ -152,6 +161,7 @@ bool GometryGenerator::generateTangentAndNormal(MeshData &mesh) const {
 
 	std::vector<Vector3> normals(mesh.vertices.size(), Vector3(0));
 	std::vector<Vector3> tangents(mesh.vertices.size(), Vector3(0));
+	std::vector<Vector3> bitangents(mesh.vertices.size(), Vector3(0));
 	for (size_t i = 0; i < mesh.indices.size()-2; i += 3) {
 		size_t idx0 = mesh.indices[i+0];
 		size_t idx1 = mesh.indices[i+1];
@@ -159,16 +169,20 @@ bool GometryGenerator::generateTangentAndNormal(MeshData &mesh) const {
 		const Vertex &v0 = mesh.vertices[idx0];
 		const Vertex &v1 = mesh.vertices[idx1];
 		const Vertex &v2 = mesh.vertices[idx2];
-		Vector3 E1 = Vector3(v0.position) - Vector3(v1.position);
-		Vector3 E2 = Vector3(v0.position) - Vector3(v2.position);
+		Vector3 E1 = Vector3(v1.position) - Vector3(v0.position);
+		Vector3 E2 = Vector3(v2.position) - Vector3(v0.position);
 		float t1 = v1.texcoord.y - v0.texcoord.y;
 		float t2 = v2.texcoord.y - v0.texcoord.y;
+		float u0 = v1.texcoord.x - v0.texcoord.x;
+		float u1 = v2.texcoord.x - v0.texcoord.x;
 		Vector3 normal = cross(E1, E2);
 		Vector3 tangent = (t2 * E1) - (t1 * E2);
+		Vector3 binormal = (-u1 * E1) + (u0 * E2);
 		for (size_t j = i; j < i+3; ++j) {
 			size_t index = mesh.indices[j];
 			normals[index] += normal;
 			tangents[index] += tangent;
+			bitangents[index] += binormal;
 		}
 	}
 
@@ -178,6 +192,10 @@ bool GometryGenerator::generateTangentAndNormal(MeshData &mesh) const {
 		Vector3 t = tangents[i];
 		t -= n * dot(n, t);		// 正交修正
 		t = normalize(t);
+
+		if (dot(cross(n, t), bitangents[i]) < 0.f)
+			t = -t;
+
 		v.normal = static_cast<float3>(n);
 		v.tangent = static_cast<float3>(t);
 	}
@@ -291,48 +309,43 @@ MeshData GometryGenerator::createBox(float width, float height, float depth, uin
 	float y = 0.5f * height;
 	float z = 0.5f * depth;
 	std::vector<Vertex> vertices = {
-		{ Vertex{ float3(-x, -y, -z), float2(0.0f, 1.0f), } },
-		{ Vertex{ float3(-x, +y, -z), float2(0.0f, 0.0f), } },
-		{ Vertex{ float3(+x, +y, -z), float2(1.0f, 0.0f), } },
-		{ Vertex{ float3(+x, -y, -z), float2(1.0f, 1.0f), } },
-		{ Vertex{ float3(-x, -y, +z), float2(1.0f, 1.0f), } },
-		{ Vertex{ float3(+x, -y, +z), float2(0.0f, 1.0f), } },
-		{ Vertex{ float3(+x, +y, +z), float2(0.0f, 0.0f), } },
-		{ Vertex{ float3(-x, +y, +z), float2(1.0f, 0.0f), } },
-		{ Vertex{ float3(-x, +y, -z), float2(0.0f, 1.0f), } },
-		{ Vertex{ float3(-x, +y, +z), float2(0.0f, 0.0f), } },
-		{ Vertex{ float3(+x, +y, +z), float2(1.0f, 0.0f), } },
-		{ Vertex{ float3(+x, +y, -z), float2(1.0f, 1.0f), } },
-		{ Vertex{ float3(-x, -y, -z), float2(1.0f, 1.0f), } },
-		{ Vertex{ float3(+x, -y, -z), float2(0.0f, 1.0f), } },
-		{ Vertex{ float3(+x, -y, +z), float2(0.0f, 0.0f), } },
-		{ Vertex{ float3(-x, -y, +z), float2(1.0f, 0.0f), } },
-		{ Vertex{ float3(-x, -y, +z), float2(0.0f, 1.0f), } },
-		{ Vertex{ float3(-x, +y, +z), float2(0.0f, 0.0f), } },
-		{ Vertex{ float3(-x, +y, -z), float2(1.0f, 0.0f), } },
-		{ Vertex{ float3(-x, -y, -z), float2(1.0f, 1.0f), } },
-		{ Vertex{ float3(+x, -y, -z), float2(0.0f, 1.0f), } },
-		{ Vertex{ float3(+x, +y, -z), float2(0.0f, 0.0f), } },
-		{ Vertex{ float3(+x, +y, +z), float2(1.0f, 0.0f), } },
-		{ Vertex{ float3(+x, -y, +z), float2(1.0f, 1.0f), } },
+		Vertex{ float3{ -x, -y, -z },  float2{ 0.0f, 1.0f } },
+		Vertex{ float3{ -x, +y, -z },  float2{ 0.0f, 0.0f } },
+		Vertex{ float3{ +x, +y, -z },  float2{ 1.0f, 0.0f } },
+		Vertex{ float3{ +x, -y, -z },  float2{ 1.0f, 1.0f } },
+		Vertex{ float3{ +x, -y, -z },  float2{ 0.0f, 1.0f } },
+		Vertex{ float3{ +x, +y, -z },  float2{ 0.0f, 0.0f } },
+		Vertex{ float3{ +x, +y, +z },  float2{ 1.0f, 0.0f } },
+		Vertex{ float3{ +x, -y, +z },  float2{ 1.0f, 1.0f } },
+		Vertex{ float3{ +x, -y, +z },  float2{ 0.0f, 1.0f } },
+		Vertex{ float3{ +x, +y, +z },  float2{ 0.0f, 0.0f } },
+		Vertex{ float3{ -x, +y, +z },  float2{ 1.0f, 0.0f } },
+		Vertex{ float3{ -x, -y, +z },  float2{ 1.0f, 1.0f } },
+		Vertex{ float3{ -x, -y, +z },  float2{ 0.0f, 1.0f } },
+		Vertex{ float3{ -x, +y, +z },  float2{ 0.0f, 0.0f } },
+		Vertex{ float3{ -x, +y, -z },  float2{ 1.0f, 0.0f } },
+		Vertex{ float3{ -x, -y, -z },  float2{ 1.0f, 1.0f } },
+		Vertex{ float3{ -x, +y, -z },  float2{ 0.0f, 1.0f } },
+		Vertex{ float3{ -x, +y, +z },  float2{ 0.0f, 0.0f } },
+		Vertex{ float3{ +x, +y, +z },  float2{ 1.0f, 0.0f } },
+		Vertex{ float3{ +x, +y, -z },  float2{ 1.0f, 1.0f } },
+		Vertex{ float3{ -x, -y, +z },  float2{ 0.0f, 1.0f } },
+		Vertex{ float3{ -x, -y, -z },  float2{ 0.0f, 0.0f } },
+		Vertex{ float3{ +x, -y, -z },  float2{ 1.0f, 0.0f } },
+		Vertex{ float3{ +x, -y, +z },  float2{ 1.0f, 1.0f } },
 	};
+
 	std::vector<uint32> indices = {
-		// front
 		0, 1, 2,
-		0, 2, 3, 
-		// right
+		0, 2, 3,
 		4, 5, 6,
 		4, 6, 7,
-		// top
-		8, 9, 10,
+		8, 9,  10,
 		8, 10, 11,
-		// left
 		12, 13, 14,
 		12, 14, 15,
-		// bottom
 		16, 17, 18,
 		16, 18, 19,
-		// back
 		20, 21, 22,
 		20, 22, 23,
 	};

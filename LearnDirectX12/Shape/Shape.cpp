@@ -210,7 +210,7 @@ void Shape::buildRenderItem(dx12lib::DirectContextProxy pDirectCtx) {
 	constexpr const char *pTexturePSOName = "TexturePSO";
 	auto &textureRenderItems = _renderItems[pTexturePSOName];
 
-	Matrix4 matWorld = Matrix4::makeTranslation(0.f, 0.5f, 0.f) * Matrix4::makeScale(2.f);
+	Matrix4 matWorld = Matrix4::makeTranslation(0.f, 1.5f, 0.f) * Matrix4::makeScale(2.f);
 	boxObjCb.material = _materials["boxMat"];
 	boxObjCb.matWorld = float4x4(matWorld);
 	boxObjCb.matNormal = float4x4(transpose(inverse(matWorld)));
@@ -308,7 +308,7 @@ void Shape::buildRenderItem(dx12lib::DirectContextProxy pDirectCtx) {
 
 void Shape::buildGeometry(dx12lib::DirectContextProxy pDirectCtx) {
 	com::GometryGenerator gen;
-	com::MeshData box = gen.createBox(1.5f, 0.5f, 1.5f, 3);
+	com::MeshData box = gen.createBox(1.5f, 1.5f, 1.5f, 3);
 	com::MeshData grid = gen.createGrid(20.f, 30.f, 60, 40);
 	com::MeshData sphere = gen.createCubeSphere(0.5f, 3);
 	com::MeshData cylinder = gen.createCylinder(0.5f, 0.3f, 3.f, 20, 20);
@@ -404,20 +404,20 @@ void Shape::buildMaterials() {
 
 	d3d::Material boxMat;
 	boxMat.diffuseAlbedo = float4(DX::Colors::White);
-	boxMat.roughness = 1.0f;
-	boxMat.metallic = 0.f;
+	boxMat.roughness = 0.8f;
+	boxMat.metallic = 0.2f;
 	_materials["boxMat"] = boxMat;
 
 	d3d::Material gridMat;
 	gridMat.diffuseAlbedo = float4(DX::Colors::White);
-	gridMat.roughness = 1.f;
-	gridMat.metallic = 0.1f;
+	gridMat.roughness = 0.8f;
+	gridMat.metallic = 0.2f;
 	_materials["gridMat"] = gridMat;
 
 	d3d::Material cylinderMat;
 	cylinderMat.diffuseAlbedo = float4(DX::Colors::White);
-	cylinderMat.roughness = 1.f;
-	cylinderMat.metallic = 0.f;
+	cylinderMat.roughness = 0.8f;
+	cylinderMat.metallic = 0.2f;
 	_materials["cylinderMat"] = cylinderMat;
 
 	d3d::Material skullMat;
