@@ -112,6 +112,17 @@ void Shape::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	pollEvent();
 	updatePassCB(pGameTimer);
 	updateSkullAnimation(pGameTimer);
+
+	Vector3 dir { 1 };
+	float radian = DirectX::XMConvertToRadians(pGameTimer->getTotalTime() * 20.f);
+	Quaternion q { Vector3(0, 1, 0), radian };
+	Vector3 d = q * dir;
+
+	auto pLightCBVisitor = _pGameLightsCB->visit();
+	pLightCBVisitor->lights[0].initAsDirectionLight(
+		static_cast<float3>(d),
+		float3(0.8f)
+	);
 }
 
 void Shape::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
