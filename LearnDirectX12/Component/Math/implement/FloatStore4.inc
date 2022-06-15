@@ -16,9 +16,18 @@ FORCEINLINE float FloatStore<4>::operator[](size_t n) const noexcept {
 	assert(n < 4);
 	return reinterpret_cast<const float *>(this)[n];
 }
+
 FORCEINLINE FloatStore<4>::FloatStore(const DX::XMVECTORF32 &color) noexcept
 : FloatStore(color.operator DirectX::XMVECTOR()) {
 }
+
+FORCEINLINE FloatStore<4>::FloatStore(const Quaternion &q) {
+	x = q.x;
+	y = q.y;
+	z = q.z;
+	w = q.w;
+}
+
 FORCEINLINE std::ostream &operator<<(std::ostream &os, const FloatStore<4> &v) noexcept {
 	os << '(' << v.x << ", " << v.y << ", " << v.z << ", " << v.w << ')';
 	return os;

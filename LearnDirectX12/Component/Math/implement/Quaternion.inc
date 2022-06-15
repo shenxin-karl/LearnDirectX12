@@ -3,12 +3,20 @@ FORCEINLINE Quaternion::Quaternion() {
 	_vec = DX::XMQuaternionIdentity();
 }
 
-FORCEINLINE Quaternion::Quaternion(const Vector3 &axis, const float &angle) {
+FORCEINLINE Quaternion::Quaternion(const Vector3 &axis, float angle) {
 	_vec = DX::XMQuaternionRotationAxis(axis, angle);
+}
+
+FORCEINLINE Quaternion::Quaternion(const float3 &axis, float angle) : Quaternion(Vector3{ axis }, angle) {
+
 }
 
 FORCEINLINE Quaternion::Quaternion(float pitch, float yaw, float roll) {
 	_vec = DX::XMQuaternionRotationRollPitchYaw(pitch, yaw, roll);
+}
+
+FORCEINLINE Quaternion::Quaternion(const float4 &f4) {
+	_vec = DX::XMLoadFloat4(&f4);
 }
 
 FORCEINLINE Quaternion::Quaternion(const Matrix3 &matrix) {
@@ -21,6 +29,10 @@ FORCEINLINE Quaternion::Quaternion(DX::FXMVECTOR vec) {
 
 FORCEINLINE Quaternion::operator DX::XMVECTOR() const {
 	return _vec;
+}
+
+FORCEINLINE Quaternion::operator float4() const {
+	return *reinterpret_cast<const float4 *>(this);
 }
 
 FORCEINLINE Quaternion::operator Matrix3() const {

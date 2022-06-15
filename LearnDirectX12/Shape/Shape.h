@@ -4,6 +4,7 @@
 #include "D3D/d3dutil.h"
 #include "GameTimer/GameTimer.h"
 #include "BaseApp/BaseApp.h"
+#include "D3D/Animation/SkinnedData.h"
 
 using namespace Math;
 
@@ -38,22 +39,6 @@ struct RenderItem {
 	std::shared_ptr<dx12lib::SamplerTexture2D> _pNormal;
 };
 
-struct Keyframe {
-	Keyframe();
-public:
-	float      timePoint;
-	Vector3    translation;
-	Vector3	   scale;
-	Quaternion rotationQuat;
-};
-
-struct BoneAnimation {
-	float getStartTime() const;
-	float getEndTime() const;
-	Matrix4 interpolate(float time) const;
-	std::vector<Keyframe> keyframes;
-};
-
 class Shape : public com::BaseApp {
 public:
 	Shape();
@@ -78,7 +63,7 @@ private:
 	void updateSkullAnimation(std::shared_ptr<com::GameTimer> pGameTimer);
 private:
 	float4x4 _skullMatWorld;
-	BoneAnimation _skullAnimation;
+	d3d::BoneAnimation _skullAnimation;
 	float _animationTimePoint = 0.f;
 	FRConstantBufferPtr<ObjectCB> _pSkullObjCB;
 

@@ -26,6 +26,7 @@ class Vector3;
 class Vector4;
 class Matrix3;
 class Matrix4;
+class Quaternion;
 
 template<>
 struct FloatStore<2> : public DX::XMFLOAT2 {
@@ -104,6 +105,7 @@ struct FloatStore<4> : public DX::XMFLOAT4 {
 	FORCEINLINE FloatStore &operator=(const FloatStore &) noexcept = default;
 	FORCEINLINE FloatStore &operator=(FloatStore &&) noexcept = default;
 	FORCEINLINE explicit FloatStore(DX::FXMVECTOR v) noexcept;
+	FORCEINLINE explicit FloatStore(const Quaternion &q);
 	FORCEINLINE FloatStore(const FloatStore<2> &f2, float z, float w) noexcept;
 	FORCEINLINE FloatStore(const FloatStore<3> &f3, float w) noexcept;
 	FORCEINLINE float &operator[](size_t n) noexcept;
@@ -380,11 +382,14 @@ private:
 class alignas(16) Quaternion {
 public:
 	FORCEINLINE Quaternion();
-	FORCEINLINE Quaternion(const Vector3 &axis, const float &angle);
+	FORCEINLINE Quaternion(const Vector3 &axis, float angle);
+	FORCEINLINE Quaternion(const float3 &axis, float angle);
 	FORCEINLINE Quaternion(float pitch, float yaw, float roll);
+	FORCEINLINE explicit Quaternion(const float4 &f4);
 	FORCEINLINE explicit Quaternion(const Matrix3 &matrix);
 	FORCEINLINE explicit Quaternion(DX::FXMVECTOR vec);
 	FORCEINLINE operator DX::XMVECTOR() const;
+	FORCEINLINE explicit operator float4() const;
 	FORCEINLINE explicit operator Matrix3() const;
 	FORCEINLINE explicit operator Matrix4() const;
 	FORCEINLINE Quaternion operator~() const;
@@ -447,12 +452,12 @@ public:
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /// BoolVector
 #if 1
-
-	FORCEINLINE BoolVector::BoolVector(DX::FXMVECTOR vec) noexcept : _vec(vec) {
+FORCEINLINE BoolVector::BoolVector(DX::FXMVECTOR vec) noexcept : _vec(vec) {
 }
 FORCEINLINE BoolVector::operator DX::XMVECTOR() const {
 	return _vec;
 }
+
 #endif
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /// Matrix3x3

@@ -14,67 +14,13 @@
 #include "InputSystem/Mouse.h"
 #include <DirectXColors.h>
 #include <DirectXMath.h>
-
 #include "D3D/Sky/SkyBox.h"
-
-Keyframe::Keyframe() : timePoint(0.f), scale(1.f) {
-}
-
-float BoneAnimation::getStartTime() const {
-	return keyframes.front().timePoint;
-}
-
-float BoneAnimation::getEndTime() const {
-	return keyframes.back().timePoint;
-}
-
-Matrix4 BoneAnimation::interpolate(float time) const {
-	assert(!keyframes.empty());
-	Vector4 origin { 0.f, 0.f, 0.f, 1.f };
-	if (time <= getStartTime()) {
-		const auto &first = keyframes.front();
-		return Matrix4(DirectX::XMMatrixAffineTransformation(
-			first.scale,
-			origin,
-			first.rotationQuat,
-			first.translation
-		));
-	}
-	if (time >= getEndTime()) {
-		const auto &back = keyframes.back();
-		return Matrix4(DirectX::XMMatrixAffineTransformation(
-			back.scale,
-			origin,
-			back.rotationQuat,
-			back.translation
-		));
-	}
-	for (size_t i = 0; i < keyframes.size()-1; ++i) {
-		bool inside = (time >= keyframes[i].timePoint && time < keyframes[i+1].timePoint);
-		if (!inside)
-			continue;
-
-		float t = (time - keyframes[i].timePoint) / (keyframes[i+1].timePoint - keyframes[i].timePoint);
-		Vector3 scale = lerp(keyframes[i].scale, keyframes[i+1].scale, t);
-		Vector3 translation = lerp(keyframes[i].translation, keyframes[i+1].translation, t);
-		Quaternion rotate = slerp(keyframes[i].rotationQuat, keyframes[i+1].rotationQuat, t);
-		return Matrix4(DirectX::XMMatrixAffineTransformation(
-			scale,
-			origin,
-			rotate,
-			translation
-		));
-	}
-	assert(false);
-	return Matrix4::identity();
-}
 
 Shape::Shape() {
 	_title = "Shape";
 }
 
 Shape::~Shape() {
-
 }
 
 void Shape::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
@@ -448,29 +394,29 @@ void Shape::buildSkullAnimation() {
 	constexpr float scale = 2.f;
 	_skullAnimation.keyframes.resize(5);
 	_skullAnimation.keyframes[0].timePoint = 0.f * scale;
-	_skullAnimation.keyframes[0].translation = Vector3(-7.f, 0.f, 0.f);
-	_skullAnimation.keyframes[0].scale = Vector3(0.5f);
-	_skullAnimation.keyframes[0].rotationQuat = q0;
+	_skullAnimation.keyframes[0].translation = float3(-7.f, 0.f, 0.f);
+	_skullAnimation.keyframes[0].scale = float3(0.5f);
+	_skullAnimation.keyframes[0].rotationQuat = float4(q0);
 
 	_skullAnimation.keyframes[1].timePoint = 2.f * scale;
-	_skullAnimation.keyframes[1].translation = Vector3(0.f, 2.f, 10.f);
-	_skullAnimation.keyframes[1].scale = Vector3(0.45f);
-	_skullAnimation.keyframes[1].rotationQuat = q1;
+	_skullAnimation.keyframes[1].translation = float3(0.f, 2.f, 10.f);
+	_skullAnimation.keyframes[1].scale = float3(0.45f);
+	_skullAnimation.keyframes[1].rotationQuat = float4(q1);
 
 	_skullAnimation.keyframes[2].timePoint = 4.0f * scale;
-	_skullAnimation.keyframes[2].translation = Vector3(7.f, 0.f, 0.f);
-	_skullAnimation.keyframes[2].scale = Vector3(0.5f);
-	_skullAnimation.keyframes[2].rotationQuat = q2;
+	_skullAnimation.keyframes[2].translation = float3(7.f, 0.f, 0.f);
+	_skullAnimation.keyframes[2].scale = float3(0.5f);
+	_skullAnimation.keyframes[2].rotationQuat = float4(q2);
 
 	_skullAnimation.keyframes[3].timePoint = 6.0f * scale;
-	_skullAnimation.keyframes[3].translation = Vector3(0.0f, 1.0f, -10.0f);
-	_skullAnimation.keyframes[3].scale = Vector3(0.65f);
-	_skullAnimation.keyframes[3].rotationQuat = q3;
+	_skullAnimation.keyframes[3].translation = float3(0.0f, 1.0f, -10.0f);
+	_skullAnimation.keyframes[3].scale = float3(0.65f);
+	_skullAnimation.keyframes[3].rotationQuat = float4(q3);
 
 	_skullAnimation.keyframes[4].timePoint = 8.0f * scale;
-	_skullAnimation.keyframes[4].translation = Vector3(-7.0f, 0.0f, 0.0f);
-	_skullAnimation.keyframes[4].scale = Vector3(0.5f);
-	_skullAnimation.keyframes[4].rotationQuat = q0;
+	_skullAnimation.keyframes[4].translation = float3(-7.0f, 0.0f, 0.0f);
+	_skullAnimation.keyframes[4].scale = float3(0.5f);
+	_skullAnimation.keyframes[4].rotationQuat = float4(q0);
 }
 
 void Shape::loadTextures(dx12lib::DirectContextProxy pDirectCtx) {
@@ -547,7 +493,7 @@ void Shape::updateSkullAnimation(std::shared_ptr<com::GameTimer> pGameTimer) {
 		_animationTimePoint = 0.f;
 
 	Matrix4 matWorld { _skullMatWorld };
-	Matrix4 animationMatrix = _skullAnimation.interpolate(_animationTimePoint);
+	Matrix4 animationMatrix { _skullAnimation.interpolate(_animationTimePoint) };
 	matWorld = animationMatrix * matWorld;
 	auto pSkullCBVisitor = _pSkullObjCB->visit();
 	pSkullCBVisitor->matWorld = float4x4(matWorld);
