@@ -7,6 +7,15 @@ namespace d3d {
 
 using namespace Math;
 
+struct SkinnedVertex {
+	float3  position;
+	float2  texcoord;
+	float3  normal;
+	float3  tangent;
+	float3  boneWeights;
+	uint8_t boneIndices[4];
+};
+
 struct Keyframe {
 	Keyframe();
 public:
