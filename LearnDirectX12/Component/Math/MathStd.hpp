@@ -407,10 +407,10 @@ public:
 	friend std::ostream &operator<<(std::ostream &os, const Quaternion &q);
 public:
 	union {
+		DX::XMVECTOR _vec;
 #define VEC4
 #include "VectorMember.ini"
 #undef VEC4
-		DX::XMVECTOR _vec;
 	};
 };
 
