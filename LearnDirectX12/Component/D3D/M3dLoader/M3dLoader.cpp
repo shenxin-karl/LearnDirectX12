@@ -82,18 +82,18 @@ void M3dLoader::readMaterials(std::ifstream &fin, size_t numMaterials, std::vect
 	mat.resize(numMaterials);
 
 	fin >> ignore;
-	float4 albedo;
+	float3 albedo;
 	float3 fresnelR0;
 	for (size_t i = 0; i < numMaterials; ++i) {
 		fin >> ignore >> mat[i].name;
-		fin >> ignore >> albedo.x >> albedo.y >> albedo.z >> albedo.w;
+		fin >> ignore >> albedo.x >> albedo.y >> albedo.z;
 		fin >> ignore >> fresnelR0.x >> fresnelR0.y >> fresnelR0.z;
 		fin >> ignore >> mat[i].roughness;
 		fin >> ignore >> mat[i].alphaClip;
 		fin >> ignore >> mat[i].materialTypeName;
 		fin >> ignore >> mat[i].diffuseMapName;
 		fin >> ignore >> mat[i].normalMapName;
-		mat[i].diffuseAlbedo = albedo;
+		mat[i].diffuseAlbedo = float4(albedo, 1.f);
 		mat[i].fresnelR0 = fresnelR0;
 	}
 }
@@ -157,10 +157,11 @@ void M3dLoader::readSkinnedVertices(std::ifstream &fin, size_t numVertices, std:
 
 void M3dLoader::readTriangles(std::ifstream &fin, size_t numTriangles, std::vector<uint16_t> &indices) {
 	std::string ignore;
-	indices.resize(numTriangles);
+	assert(numTriangles > 0);
+	indices.resize(numTriangles * 3);
 
 	fin >> ignore; // triangles header text
-	for (size_t i = 0; i < numTriangles; i += 3) {
+	for (size_t i = 0; i < numTriangles; i++) {
 		fin >> indices[i+0];
 		fin >> indices[i+1];
 		fin >> indices[i+2];
@@ -187,9 +188,10 @@ void M3dLoader::readBoneHierarchy(std::ifstream &fin, size_t numBones, std::vect
 	boneIndexToParentIndex.resize(numBones);
 
 	fin >> ignore; // BoneHierarchy header text
-	for (size_t i = 0; i < numBones; ++i) 
+	for (size_t i = 0; i < numBones; ++i) {
+		fin >> ignore;
 		fin >> boneIndexToParentIndex[i];
-	
+	}
 }
 
 void M3dLoader::readAnimationClips(std::ifstream &fin, 
@@ -221,6 +223,7 @@ void M3dLoader::readBoneKeyframes(std::ifstream &fin, BoneAnimation &boneAnimati
 	fin >> ignore >> ignore >> keyframes;
 	fin >> ignore;	// {
 
+	boneAnimation.keyframes.resize(keyframes);
 	for (size_t i = 0; i < keyframes; ++i) {
 		auto &v = boneAnimation.keyframes[i];
 		auto &timePoint = v.timePoint;
