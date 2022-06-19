@@ -15,6 +15,8 @@
 #include <DirectXColors.h>
 #include <DirectXMath.h>
 #include "D3D/Sky/SkyBox.h"
+#include "D3D/M3dLoader/M3dLoader.h"
+#include "D3D/Tool/Mesh.h"
 
 Shape::Shape() {
 	_title = "Shape";
@@ -171,10 +173,14 @@ void Shape::buildRenderItem(dx12lib::DirectContextProxy pDirectCtx) {
 	boxObjCb.material = _materials["boxMat"];
 	boxObjCb.matWorld = float4x4(matWorld);
 	boxObjCb.matNormal = float4x4(transpose(inverse(matWorld)));
-	boxItem._pMesh = _geometrys["box"];
-	boxItem._pAlbedo = _textureMap["bricks.dds"];
-	boxItem._pNormal = _textureMap["bricks_nmap.dds"];
-	boxItem._pObjectCB = pDirectCtx->createFRConstantBuffer<ObjectCB>(boxObjCb);
+
+	auto pMesh = _geometrys["box"];
+	boxItem.subMesh = pMesh->getSubMesh();
+	boxItem.pVertexBuffer = pMesh->getVertexBuffer();
+	boxItem.pIndexBuffer = pMesh->getIndexBuffer();
+	boxItem.pAlbedo = _textureMap["bricks.dds"];
+	boxItem.pNormal = _textureMap["bricks_nmap.dds"];
+	boxItem.pObjectCb = pDirectCtx->createFRConstantBuffer<ObjectCB>(boxObjCb);
 	textureRenderItems.push_back(boxItem);
 
 	RenderItem gridItem;
@@ -183,10 +189,14 @@ void Shape::buildRenderItem(dx12lib::DirectContextProxy pDirectCtx) {
 	gridObjCB.matWorld = float4x4::identity();
 	gridObjCB.matNormal = float4x4(Matrix4::identity());
 	gridObjCB.matTexCoord = float4x4(Matrix4::makeScale(10.f, 10.f, 1.f));
-	gridItem._pMesh = _geometrys["grid"];
-	gridItem._pAlbedo = _textureMap["tile.dds"];
-	gridItem._pNormal = _textureMap["tile_nmap.dds"];
-	gridItem._pObjectCB = pDirectCtx->createFRConstantBuffer<ObjectCB>(gridObjCB);
+
+	pMesh = _geometrys["grid"];
+	gridItem.subMesh = pMesh->getSubMesh();
+	gridItem.pVertexBuffer = pMesh->getVertexBuffer();
+	gridItem.pIndexBuffer = pMesh->getIndexBuffer();
+	gridItem.pAlbedo = _textureMap["tile.dds"];
+	gridItem.pNormal = _textureMap["tile_nmap.dds"];
+	gridItem.pObjectCb = pDirectCtx->createFRConstantBuffer<ObjectCB>(gridObjCB);
 	textureRenderItems.push_back(gridItem);
 
 	for (std::size_t i = 0; i < 5; ++i) {
@@ -220,25 +230,37 @@ void Shape::buildRenderItem(dx12lib::DirectContextProxy pDirectCtx) {
 		leftSphereObjCB.material = _materials["sphereMat"];
 		rightSphereObjCB.material = _materials["sphereMat"];
 
-		leftCylRItem._pMesh = _geometrys["cylinder"];
-		rightCylRItem._pMesh = _geometrys["cylinder"];
-		leftSphereRItem._pMesh = _geometrys["sphere"];
-		rightSphereRItem._pMesh = _geometrys["sphere"];
+		auto pCylinderMesh = _geometrys["cylinder"];
+		auto pShapeMesh = _geometrys["sphere"];
+		leftCylRItem.subMesh = pCylinderMesh->getSubMesh();
+		rightCylRItem.subMesh = pCylinderMesh->getSubMesh();
+		leftSphereRItem.subMesh = pShapeMesh->getSubMesh();
+		rightSphereRItem.subMesh = pShapeMesh->getSubMesh();
 
-		leftCylRItem._pAlbedo = _textureMap["bricks2.dds"];
-		rightCylRItem._pAlbedo = _textureMap["bricks2.dds"];
-		leftSphereRItem._pAlbedo = _textureMap["bricks2.dds"];
-		rightSphereRItem._pAlbedo = _textureMap["bricks2.dds"];
+		leftCylRItem.pVertexBuffer = pCylinderMesh->getVertexBuffer();
+		rightCylRItem.pVertexBuffer = pCylinderMesh->getVertexBuffer();
+		leftSphereRItem.pVertexBuffer = pShapeMesh->getVertexBuffer();
+		rightSphereRItem.pVertexBuffer = pShapeMesh->getVertexBuffer();
 
-		leftCylRItem._pNormal = _textureMap["bricks2_nmap.dds"];
-		rightCylRItem._pNormal = _textureMap["bricks2_nmap.dds"];
-		leftSphereRItem._pNormal = _textureMap["bricks2_nmap.dds"];
-		rightSphereRItem._pNormal = _textureMap["bricks2_nmap.dds"];
+		leftCylRItem.pIndexBuffer = pCylinderMesh->getIndexBuffer();
+		rightCylRItem.pIndexBuffer = pCylinderMesh->getIndexBuffer();
+		leftSphereRItem.pIndexBuffer = pShapeMesh->getIndexBuffer();
+		rightSphereRItem.pIndexBuffer = pShapeMesh->getIndexBuffer();
 
-		leftCylRItem._pObjectCB = pDirectCtx->createFRConstantBuffer<ObjectCB>(leftCylObjCB);
-		rightCylRItem._pObjectCB = pDirectCtx->createFRConstantBuffer<ObjectCB>(rightCylObjCB);
-		leftSphereRItem._pObjectCB = pDirectCtx->createFRConstantBuffer<ObjectCB>(leftSphereObjCB);
-		rightSphereRItem._pObjectCB = pDirectCtx->createFRConstantBuffer<ObjectCB>(rightSphereObjCB);
+		leftCylRItem.pAlbedo = _textureMap["bricks2.dds"];
+		rightCylRItem.pAlbedo = _textureMap["bricks2.dds"];
+		leftSphereRItem.pAlbedo = _textureMap["bricks2.dds"];
+		rightSphereRItem.pAlbedo = _textureMap["bricks2.dds"];
+
+		leftCylRItem.pNormal = _textureMap["bricks2_nmap.dds"];
+		rightCylRItem.pNormal = _textureMap["bricks2_nmap.dds"];
+		leftSphereRItem.pNormal = _textureMap["bricks2_nmap.dds"];
+		rightSphereRItem.pNormal = _textureMap["bricks2_nmap.dds"];
+
+		leftCylRItem.pObjectCb = pDirectCtx->createFRConstantBuffer<ObjectCB>(leftCylObjCB);
+		rightCylRItem.pObjectCb = pDirectCtx->createFRConstantBuffer<ObjectCB>(rightCylObjCB);
+		leftSphereRItem.pObjectCb = pDirectCtx->createFRConstantBuffer<ObjectCB>(leftSphereObjCB);
+		rightSphereRItem.pObjectCb = pDirectCtx->createFRConstantBuffer<ObjectCB>(rightSphereObjCB);
 
 		textureRenderItems.push_back(leftCylRItem);
 		textureRenderItems.push_back(rightCylRItem);
@@ -255,15 +277,20 @@ void Shape::buildRenderItem(dx12lib::DirectContextProxy pDirectCtx) {
 	skullObjCB.material = _materials["skullMat"];
 	skullObjCB.matWorld = float4x4(matWorld);
 	skullObjCB.matNormal = float4x4(transpose(inverse(matWorld)));
-	skullItem._pMesh = _geometrys["skull"];
-	skullItem._pObjectCB = pDirectCtx->createFRConstantBuffer<ObjectCB>(skullObjCB);
+
+	pMesh = _geometrys["skull"];
+	skullItem.subMesh = pMesh->getSubMesh();
+	skullItem.pVertexBuffer = pMesh->getVertexBuffer();
+	skullItem.pIndexBuffer = pMesh->getIndexBuffer();
+	skullItem.pObjectCb = pDirectCtx->createFRConstantBuffer<ObjectCB>(skullObjCB);
 	colorRenderItems.push_back(skullItem);
 
 	_skullMatWorld = skullObjCB.matWorld;
-	_pSkullObjCB = skullItem._pObjectCB;
+	_pSkullObjCB = skullItem.pObjectCb;
 }
 
 void Shape::buildGeometry(dx12lib::DirectContextProxy pDirectCtx) {
+	const char * pStr= "%d";
 	com::GometryGenerator gen;
 	com::MeshData box = gen.createBox(1.5f, 1.5f, 1.5f, 3);
 	com::MeshData grid = gen.createGrid(20.f, 30.f, 60, 40);
@@ -283,18 +310,18 @@ void Shape::buildGeometry(dx12lib::DirectContextProxy pDirectCtx) {
 			return static_cast<std::uint16_t>(i);
 		});
 
-		std::shared_ptr<Mesh> pMesh = std::make_shared<Mesh>();
-		pMesh->_pVertexBuffer = pDirectCtx->createVertexBuffer(
+		auto pVertexBuffer = pDirectCtx->createVertexBuffer(
 			vertices.data(),
 			vertices.size(),
 			sizeof(ShapeVertex)
 		);
-		pMesh->_pIndexBuffer = pDirectCtx->createIndexBuffer(
+
+		auto pIndexBuffer = pDirectCtx->createIndexBuffer(
 			indices.data(),
 			indices.size(),
 			DXGI_FORMAT_R16_UINT
 		);
-		return pMesh;
+		return std::make_shared<d3d::Mesh>(pVertexBuffer, pIndexBuffer);;
 	};
 
 	auto buildSkullMesh = [&](const com::MeshData &mesh) {
@@ -308,18 +335,18 @@ void Shape::buildGeometry(dx12lib::DirectContextProxy pDirectCtx) {
 		std::ranges::transform(mesh.indices, std::back_inserter(indices), [](auto &i) {
 			return static_cast<std::uint16_t>(i);
 		});
-		std::shared_ptr<Mesh> pMesh = std::make_shared<Mesh>();
-		pMesh->_pVertexBuffer = pDirectCtx->createVertexBuffer(
+
+		auto pVertexBuffer = pDirectCtx->createVertexBuffer(
 			vertices.data(),
 			vertices.size(),
 			sizeof(SkullVertex)
 		);
-		pMesh->_pIndexBuffer = pDirectCtx->createIndexBuffer(
+		auto pIndexBuffer = pDirectCtx->createIndexBuffer(
 			indices.data(),
 			indices.size(),
 			DXGI_FORMAT_R16_UINT
 		);
-		return pMesh;
+		return std::make_shared<d3d::Mesh>(pVertexBuffer, pIndexBuffer);;
 	};
 
 	_geometrys["box"] = buildShapeMesh(box);
@@ -419,6 +446,18 @@ void Shape::buildSkullAnimation() {
 	_skullAnimation.keyframes[4].rotationQuat = float4(q0);
 }
 
+void Shape::loadModelAndBuildRenderItem() {
+	std::vector<d3d::SkinnedVertex> vertices;
+	std::vector<uint16_t> indices;
+	std::vector<d3d::M3dLoader::Subset> subsets;
+	std::vector<d3d::M3dLoader::M3dMaterial> materials;
+	d3d::SkinnedData skinnedData;
+	if (!d3d::M3dLoader::loadM3d("resource/soldier.m3d", vertices, indices, subsets, materials, skinnedData)) {
+		assert(false);
+		return;
+	}
+}
+
 void Shape::loadTextures(dx12lib::DirectContextProxy pDirectCtx) {
 	_textureMap["bricks.dds"] = pDirectCtx->createDDSTexture2DFromFile(L"resource/bricks.dds");
 	_textureMap["bricks_nmap.dds"] = pDirectCtx->createDDSTexture2DFromFile(L"resource/bricks_nmap.dds");
@@ -438,16 +477,13 @@ void Shape::renderShapesPass(dx12lib::DirectContextProxy pDirectCtx) {
 
 	auto psoRenderItems = _renderItems[passPSOName];
 	for (auto &rItem : psoRenderItems) {
-		pDirectCtx->setVertexBuffer(rItem._pMesh->_pVertexBuffer);
-		pDirectCtx->setIndexBuffer(rItem._pMesh->_pIndexBuffer);
+		pDirectCtx->setVertexBuffer(rItem.pVertexBuffer);
+		pDirectCtx->setIndexBuffer(rItem.pIndexBuffer);
 		pDirectCtx->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV2, rItem._pObjectCB);
-		pDirectCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV0, rItem._pAlbedo->getSRV());
-		pDirectCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV1, rItem._pNormal->getSRV());
-		pDirectCtx->drawIndexedInstanced(
-			rItem._pMesh->_pIndexBuffer->getIndexCount(), 1, 0,
-			0, 0
-		);
+		pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV2, rItem.pObjectCb);
+		pDirectCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV0, rItem.pAlbedo->getSRV());
+		pDirectCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV1, rItem.pNormal->getSRV());
+		rItem.subMesh.drawIndexedInstanced(pDirectCtx);
 	}
 }
 
@@ -462,14 +498,30 @@ void Shape::renderSkullPass(dx12lib::DirectContextProxy pDirectCtx) {
 
 	auto psoRenderItems = _renderItems[passPSOName];
 	auto &rItem = psoRenderItems[0];
-	pDirectCtx->setVertexBuffer(rItem._pMesh->_pVertexBuffer);
-	pDirectCtx->setIndexBuffer(rItem._pMesh->_pIndexBuffer);
+	pDirectCtx->setVertexBuffer(rItem.pVertexBuffer);
+	pDirectCtx->setIndexBuffer(rItem.pIndexBuffer);
 	pDirectCtx->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV2, rItem._pObjectCB);
-	pDirectCtx->drawIndexedInstanced(
-		rItem._pMesh->_pIndexBuffer->getIndexCount(), 1, 0,
-		0, 0
-	);
+	pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV2, rItem.pObjectCb);
+	rItem.subMesh.drawIndexedInstanced(pDirectCtx);
+}
+
+void Shape::renderSkinnedAnimationPass(dx12lib::DirectContextProxy pDirectCtx) {
+	const std::string passPSOName = "SkinnedPSO";
+	auto pso = _PSOMap[passPSOName];
+
+	pDirectCtx->setGraphicsPSO(pso);
+	pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV0, _pPassCB);
+	pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV1, _pGameLightsCB);
+	pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV3, _pSkinnedBoneCb);
+	for (auto &rItem : _renderItems[passPSOName]) {
+		pDirectCtx->setVertexBuffer(rItem.pVertexBuffer);
+		pDirectCtx->setIndexBuffer(rItem.pIndexBuffer);
+		pDirectCtx->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV2, rItem.pObjectCb);
+		pDirectCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV0, rItem.pAlbedo->getSRV());
+		pDirectCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV1, rItem.pNormal->getSRV());
+		rItem.subMesh.drawIndexedInstanced(pDirectCtx);
+	}
 }
 
 void Shape::pollEvent() {
@@ -480,6 +532,7 @@ void Shape::pollEvent() {
 void Shape::updatePassCB(std::shared_ptr<com::GameTimer> pGameTimer) {
 	_pCamera->update(pGameTimer);
 	auto pGPUPassCB = _pPassCB->map();
+
 	_pCamera->updatePassCB(*pGPUPassCB);
 	pGPUPassCB->renderTargetSize = _pSwapChain->getRenderTargetSize();
 	pGPUPassCB->invRenderTargetSize = _pSwapChain->getInvRenderTargetSize();

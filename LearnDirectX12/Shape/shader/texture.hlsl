@@ -16,11 +16,21 @@ cbuffer CBObject : register(b2){
     Material gMaterial;
 };
 
+#ifdef SKINNED_ANIMATION
+cbuffer CBBoneTransform : register(b3) {
+	float4x4 gBoneTransforms[96];
+};
+#endif
+
 struct VertexIn {
     float3 position : POSITION;
     float3 normal   : NORMAL;
     float2 texcoord : TEXCOORD;
     float3 tangent  : TANGENT;
+#ifdef SKINNED_ANIMATION
+    float3 boneWeights : BONEWEIGHTS;
+    uint4  boneIndices : BONEINDICES;
+#endif
 };
 
 struct VertexOut {
@@ -32,6 +42,29 @@ struct VertexOut {
 };
 
 VertexOut VS(VertexIn vin) {
+#ifdef SKINNED_ANIMATION
+    float weights[4] = {
+        vin.boneWeights.x,
+		vin.boneWeights.y,
+		vin.boneWeights.z,
+		(1.0 - vin.boneWeights.x - vin.boneWeights.y - vin.boneWeights.z)
+    };
+
+    float3 localPosition = 0.0;
+    float3 localNormal = 0.0;
+    float3 localTangent = 0.0;
+    for (int i = 0; i < 4; ++i) {
+        int index = vin.boneIndices[i];
+        localPosition += weights[i] * mul(gBoneTransforms[index], float4(vin.position, 1.0)).xyz;
+        localNormal   += weights[i] * mul((float3x3)gBoneTransforms[index], vin.normal);
+        localTangent  += weights[i] * mul((float3x3)gBoneTransforms[index], vin.tangent);
+    }
+
+    vin.position = localPosition;
+    vin.normal = localNormal;
+    vin.tangent = localTangent;
+#endif
+
     VertexOut vout;
     float4 worldPos = mul(gMatWorld, float4(vin.position, 1.0));
     vout.SVPosition = mul(gPassCB.viewProj, worldPos)    ;
@@ -56,7 +89,7 @@ float3 NormalSampleToWorldSpace(VertexOut pin) {
            normal.z * N ;
 }
 
-float4 PS(VertexOut pin) : SV_Target{
+float4 PS(VertexOut pin) : SV_Target {
     float3 viewDir = gPassCB.eyePos - pin.position;
     float3 result = float3(0.0, 0.0, 0.0);
        
@@ -74,7 +107,4 @@ float4 PS(VertexOut pin) : SV_Target{
     result += ComputeSpotLight(gLight.lights[2], gMaterial, normal, viewDir, pin.position);
     result += (diffAlbedo * gLight.ambientLight).rgb;
     return float4(result, diffAlbedo.a);
-
-    //float3 c =  normalize(pin.tangent);
-    //return float4(c * 0.5 + 0.5, 1.0);
 }

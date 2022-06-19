@@ -174,7 +174,7 @@ void LandAndWater::renderWaterPass(dx12lib::DirectContextProxy pDirectCtx) {
 		pDirectCtx->setVertexBuffer(rItem._pMesh->getVertexBuffer());
 		pDirectCtx->setIndexBuffer(rItem._pMesh->getIndexBuffer());
 		pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV2, rItem._pConstantBuffer);
-		rItem._pMesh->drawIndexdInstanced(pDirectCtx);
+		rItem._pMesh->drawIndexedInstanced(pDirectCtx);
 	}
 }
 
@@ -193,7 +193,7 @@ void LandAndWater::drawOpaqueRenderItems(dx12lib::DirectContextProxy pDirectCtx,
 		pDirectCtx->setIndexBuffer(rItem._pMesh->getIndexBuffer());
 		pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV2, rItem._pConstantBuffer);
 		pDirectCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV0, rItem._pAlbedoMap->getSRV());
-		rItem._pMesh->drawIndexdInstanced(pDirectCtx);
+		rItem._pMesh->drawIndexedInstanced(pDirectCtx);
 	}
 }
 

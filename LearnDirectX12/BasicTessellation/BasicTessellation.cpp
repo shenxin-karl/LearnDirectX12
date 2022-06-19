@@ -137,7 +137,7 @@ void BasicTessellationApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		pDirectCtx->setVertexBuffer(_pQuadMesh->getVertexBuffer());
 		pDirectCtx->setIndexBuffer(_pQuadMesh->getIndexBuffer());
 		pDirectCtx->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST);
-		_pQuadMesh->drawIndexdInstanced(pDirectCtx);
+		_pQuadMesh->drawIndexedInstanced(pDirectCtx);
 
 		renderTarget.unbind(pDirectCtx);
 	}

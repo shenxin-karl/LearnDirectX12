@@ -15,18 +15,19 @@ namespace d3d {
 // 如果 count 是 -1 表示无效 submesh
 // 如果 startIndexLocation 是 -1, 表示为没有索引
 struct SubMesh {
-	std::string   _name;
-	std::uint32_t _count;				
-	std::uint32_t _startIndexLocation;
-	std::uint32_t _baseVertexLocation;
+	inline static std::string invalidSubMeshName = "Invalid";
+	std::string   name				 = invalidSubMeshName;
+	std::uint32_t count				 = -1;				
+	std::uint32_t startIndexLocation = -1;
+	std::uint32_t baseVertexLocation = -1;
 public:
 	explicit operator bool() const;
-	void drawInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx,
+	void drawInstanced(dx12lib::GraphicsContextProxy pGraphicsCtx,
 		size_t instanceCount = 1,
 		size_t startInstanceLocation = 0
 	) const;
 
-	void drawIndexdInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx,
+	void drawIndexedInstanced(dx12lib::GraphicsContextProxy pGraphicsCtx,
 		size_t instanceCount = 1,
 		size_t startInstanceLocation = 0
 	) const;
@@ -46,7 +47,7 @@ public:
 		const std::vector<SubMesh> &subMeshs = {}
 	);
 
-	void appendSubMesh(const SubMesh &submesh);
+	void appendSubMesh(const SubMesh &subMesh);
 
 	std::shared_ptr<dx12lib::VertexBuffer> getVertexBuffer() const;
 	std::shared_ptr<dx12lib::IndexBuffer> getIndexBuffer() const;
@@ -55,17 +56,18 @@ public:
 	iteraotr begin() const;
 	iteraotr end() const;
 
-	void drawInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx,
+	void drawInstanced(dx12lib::GraphicsContextProxy pGraphicsCtx,
 		size_t instanceCount = 1,
 		size_t startInstanceLocation = 0
 	) const;
 
-	void drawIndexdInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx,
+	void drawIndexedInstanced(dx12lib::GraphicsContextProxy pGraphicsCtx,
 		size_t instanceCount = 1,
 		size_t startInstanceLocation = 0
 	) const;
 
-	SubMesh getSubmesh(const std::string &name) const;
+	SubMesh getSubMesh(const std::string &name) const;
+	SubMesh getSubMesh() const;
 
 	const DX::BoundingBox &getBounds() const;
 };

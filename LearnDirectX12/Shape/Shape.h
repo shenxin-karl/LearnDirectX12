@@ -5,6 +5,7 @@
 #include "GameTimer/GameTimer.h"
 #include "BaseApp/BaseApp.h"
 #include "D3D/Animation/SkinnedData.h"
+#include "D3D/Tool/Mesh.h"
 
 using namespace Math;
 
@@ -20,11 +21,6 @@ struct SkullVertex {
 	float3 normal;
 };
 
-struct Mesh {
-	std::shared_ptr<dx12lib::VertexBuffer> _pVertexBuffer;
-	std::shared_ptr<dx12lib::IndexBuffer>  _pIndexBuffer;
-};
-
 struct ObjectCB {
 	float4x4          matWorld    = float4x4::identity();
 	float4x4		  matNormal   = float4x4::identity();
@@ -32,11 +28,18 @@ struct ObjectCB {
 	d3d::Material	  material;
 };
 
+struct SkinnedBoneCB {
+	constexpr static size_t kMaxCount = 96;
+	float4x4 boneTransforms[kMaxCount];
+};
+
 struct RenderItem {
-	std::shared_ptr<Mesh> _pMesh;
-	FRConstantBufferPtr<ObjectCB> _pObjectCB;
-	std::shared_ptr<dx12lib::SamplerTexture2D> _pAlbedo;
-	std::shared_ptr<dx12lib::SamplerTexture2D> _pNormal;
+	d3d::SubMesh subMesh;
+	FRConstantBufferPtr<ObjectCB> pObjectCb;
+	std::shared_ptr<dx12lib::VertexBuffer> pVertexBuffer;
+	std::shared_ptr<dx12lib::IndexBuffer> pIndexBuffer;
+	std::shared_ptr<dx12lib::SamplerTexture2D> pAlbedo;
+	std::shared_ptr<dx12lib::SamplerTexture2D> pNormal;
 };
 
 class Shape : public com::BaseApp {
@@ -55,9 +58,11 @@ private:
 	void buildGameLight(dx12lib::DirectContextProxy pDirectCtx);
 	void buildMaterials();
 	void buildSkullAnimation();
+	void loadModelAndBuildRenderItem();
 	void loadTextures(dx12lib::DirectContextProxy pDirectCtx);
 	void renderShapesPass(dx12lib::DirectContextProxy pDirectCtx);
 	void renderSkullPass(dx12lib::DirectContextProxy pDirectCtx);
+	void renderSkinnedAnimationPass(dx12lib::DirectContextProxy pDirectCtx);
 	void pollEvent();
 	void updatePassCB(std::shared_ptr<com::GameTimer> pGameTimer);
 	void updateSkullAnimation(std::shared_ptr<com::GameTimer> pGameTimer);
@@ -67,13 +72,17 @@ private:
 	float _animationTimePoint = 0.f;
 	FRConstantBufferPtr<ObjectCB> _pSkullObjCB;
 
+	// ½ÇÉ«¶¯»­
+	d3d::SkinnedData _skinnedData;
+	FRConstantBufferPtr<SkinnedBoneCB> _pSkinnedBoneCb;
+
 	std::unique_ptr<d3d::SkyBox>	  _pSkyBox;
 	std::unique_ptr<d3d::SobelFilter> _pSobelFilter;
 	std::shared_ptr<d3d::CoronaCamera>  _pCamera;
 	FRConstantBufferPtr<d3d::CBLightType> _pGameLightsCB;
 	FRConstantBufferPtr<d3d::CBPassType>  _pPassCB;
 	std::unordered_map<std::string, d3d::Material> _materials;
-	std::unordered_map<std::string, std::shared_ptr<Mesh>> _geometrys;
+	std::unordered_map<std::string, std::shared_ptr<d3d::Mesh>> _geometrys;
 	std::unordered_map<std::string, std::vector<RenderItem>> _renderItems;
 	std::unordered_map<std::string, std::shared_ptr<dx12lib::GraphicsPSO>> _PSOMap;
 	std::unordered_map<std::string, std::shared_ptr<dx12lib::SamplerTexture2D>> _textureMap;

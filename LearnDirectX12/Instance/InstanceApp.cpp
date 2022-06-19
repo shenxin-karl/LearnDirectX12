@@ -282,5 +282,5 @@ void InstanceApp::doDrawInstance(dx12lib::GraphicsContextProxy pGraphicsCtx,
 	pGraphicsCtx->setVertexBuffer(pMesh->getVertexBuffer());
 	pGraphicsCtx->setIndexBuffer(pMesh->getIndexBuffer());
 	pGraphicsCtx->setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	pMesh->drawIndexdInstanced(pGraphicsCtx, idx);
+	pMesh->drawIndexedInstanced(pGraphicsCtx, idx);
 }

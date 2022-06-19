@@ -5,31 +5,31 @@
 namespace d3d {
 
 SubMesh::operator bool() const {
-	return _count != -1;
+	return count != -1;
 }
 
-void SubMesh::drawInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx,
+void SubMesh::drawInstanced(dx12lib::GraphicsContextProxy pGraphicsCtx,
 	size_t instanceCount /*= 1*/,
 	size_t startInstanceLocation /*= 0 */) const {
-	assert(bool(*this) && "this submesh invalid");
-	pGrahpicsCtx->drawInstanced(
-		_count,
+	assert(static_cast<bool>(*this) && "this submesh invalid");
+	pGraphicsCtx->drawInstanced(
+		count,
 		instanceCount,
-		_baseVertexLocation,
+		baseVertexLocation,
 		startInstanceLocation
 	);
 }
 
-void SubMesh::drawIndexdInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx,
+void SubMesh::drawIndexedInstanced(dx12lib::GraphicsContextProxy pGraphicsCtx,
 	size_t instanceCount /*= 1*/,
 	size_t startInstanceLocation /*= 0 */) const
 {
 	assert(bool(*this) && "this submesh invalid");
-	pGrahpicsCtx->drawIndexedInstanced(
-		_count,
+	pGraphicsCtx->drawIndexedInstanced(
+		count,
 		instanceCount,
-		_startIndexLocation,
-		_baseVertexLocation,
+		startIndexLocation,
+		baseVertexLocation,
 		startInstanceLocation
 	);
 }
@@ -40,10 +40,12 @@ Mesh::Mesh(std::shared_ptr<dx12lib::VertexBuffer> pVertexBuffer,
 	const std::vector<SubMesh> &subMeshs) 
 : _pVertexBuffer(pVertexBuffer), _pIndexBuffer(pIndexBuffer), _subMeshs(subMeshs), _bounds(bounds)
 {
+	if (subMeshs.empty())
+		_subMeshs.push_back(getSubMesh());
 }
 
-void Mesh::appendSubMesh(const SubMesh &submesh) {
-	_subMeshs.emplace_back(submesh);
+void Mesh::appendSubMesh(const SubMesh &subMesh) {
+	_subMeshs.emplace_back(subMesh);
 }
 
 std::shared_ptr<dx12lib::VertexBuffer> Mesh::getVertexBuffer() const {
@@ -63,45 +65,41 @@ Mesh::iteraotr Mesh::end() const {
 }
 
 
-void Mesh::drawInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx,
+void Mesh::drawInstanced(dx12lib::GraphicsContextProxy pGraphicsCtx,
 	size_t instanceCount /*= 1*/,
 	size_t startInstanceLocation /*= 0 */) const {
-	if (!_subMeshs.empty()) {
-		for (auto &submesh : *this)
-			submesh.drawInstanced(pGrahpicsCtx, instanceCount, startInstanceLocation);
-	} else {
-		pGrahpicsCtx->drawInstanced(
-			_pVertexBuffer->getVertexCount(),
-			instanceCount, 0, startInstanceLocation
-		);
-	}
+	for (auto &subMesh : *this)
+		subMesh.drawInstanced(pGraphicsCtx, instanceCount, startInstanceLocation);
 }
 
 
-void Mesh::drawIndexdInstanced(dx12lib::GraphicsContextProxy pGrahpicsCtx,
+void Mesh::drawIndexedInstanced(dx12lib::GraphicsContextProxy pGraphicsCtx,
 	size_t instanceCount /*= 1*/,
 	size_t startInstanceLocation /*= 0 */) const
 {
-	if (!_subMeshs.empty()) {
-		for (auto &submesh : *this)
-			submesh.drawIndexdInstanced(pGrahpicsCtx, instanceCount, startInstanceLocation);
-	} else {
-		pGrahpicsCtx->drawIndexedInstanced(
-			_pIndexBuffer->getIndexCount(),
-			instanceCount, 0, 0, startInstanceLocation
-		);
-	}
+	for (auto &subMesh : *this)
+		subMesh.drawIndexedInstanced(pGraphicsCtx, instanceCount, startInstanceLocation);
 }
 
-SubMesh Mesh::getSubmesh(const std::string &name) const {
+SubMesh Mesh::getSubMesh(const std::string &name) const {
 	SubMesh res;
 	for (const auto &submesh : *this) {
-		if (submesh._name == name) {
+		if (submesh.name == name) {
 			res = submesh;
 			break;
 		}
 	}
 	return res;
+}
+
+SubMesh Mesh::getSubMesh() const {
+	assert(_pVertexBuffer != nullptr || _pIndexBuffer != nullptr);
+	SubMesh subMesh;
+	subMesh.name = "MeshAllSubMesh";
+	subMesh.baseVertexLocation = 0;
+	subMesh.startIndexLocation = 0;
+	subMesh.count = (_pIndexBuffer != nullptr) ? _pIndexBuffer->getIndexCount() : _pVertexBuffer->getVertexCount();
+	return subMesh;
 }
 
 const DX::BoundingBox& Mesh::getBounds() const {

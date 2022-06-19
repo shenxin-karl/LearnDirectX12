@@ -137,7 +137,7 @@ void MirrorApp::drawRenderItems(dx12lib::DirectContextProxy pDirectCtx, RenderLa
 		pDirectCtx->setIndexBuffer(rItem._pMesh->getIndexBuffer());
 		pDirectCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV0, rItem._pObjectCB);
 		pDirectCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV0, rItem._pAlbedoMap->getSRV());
-		rItem._submesh.drawIndexdInstanced(pDirectCtx);
+		rItem._submesh.drawIndexedInstanced(pDirectCtx);
 	}
 }
 
@@ -390,7 +390,7 @@ void MirrorApp::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 	floorRItem._pMesh = pRoomGeo;
 	floorRItem._pObjectCB = pDirectCtx->createFRConstantBuffer<ObjectCBType>(floorObjectCB);
 	floorRItem._pAlbedoMap = _textureMap["checkboard.dds"];
-	floorRItem._submesh = pRoomGeo->getSubmesh("floor");
+	floorRItem._submesh = pRoomGeo->getSubMesh("floor");
 	_renderItems[RenderLayer::Opaque].push_back(floorRItem);
 
 	RenderItem wallsRItem;
@@ -401,7 +401,7 @@ void MirrorApp::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 	wallsRItem._pAlbedoMap = _textureMap["bricks3.dds"];
 	wallsRItem._pMesh = pRoomGeo;
 	wallsRItem._pObjectCB = pDirectCtx->createFRConstantBuffer<ObjectCBType>(wallObjectCB);
-	wallsRItem._submesh = pRoomGeo->getSubmesh("wall");
+	wallsRItem._submesh = pRoomGeo->getSubMesh("wall");
 	_renderItems[RenderLayer::Opaque].push_back(wallsRItem);
 
 	RenderItem skullRItem;
@@ -414,7 +414,7 @@ void MirrorApp::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 	skullObjectCB.matNormal = Math::float4x4::identity();
 	skullObjectCB.material = _materialMap["skullMat"];
 	skullRItem._pMesh = _meshMap["skullGeo"];
-	skullRItem._submesh = skullRItem._pMesh->getSubmesh("skull");
+	skullRItem._submesh = skullRItem._pMesh->getSubMesh("skull");
 	skullRItem._pAlbedoMap = _textureMap["white1x1.dds"];
 	skullRItem._pObjectCB = pDirectCtx->createFRConstantBuffer<ObjectCBType>(skullObjectCB);
 	_pSkullObjectCB = skullRItem._pObjectCB;
@@ -458,7 +458,7 @@ void MirrorApp::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 	mirrorRItem._pAlbedoMap = _textureMap["ice.dds"];
 	mirrorRItem._pMesh = pRoomGeo;
 	mirrorRItem._pObjectCB = pDirectCtx->createFRConstantBuffer<ObjectCBType>(mirrorObjectCB);
-	mirrorRItem._submesh = pRoomGeo->getSubmesh("mirror");
+	mirrorRItem._submesh = pRoomGeo->getSubMesh("mirror");
 	_renderItems[RenderLayer::Mirrors].push_back(mirrorRItem);
 	_renderItems[RenderLayer::Transparent].push_back(mirrorRItem);
 }
