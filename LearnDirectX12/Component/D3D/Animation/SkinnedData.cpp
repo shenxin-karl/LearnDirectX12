@@ -2,9 +2,6 @@
 
 namespace d3d {
 
-Keyframe::Keyframe() : timePoint(0.f), scale(1.f) {
-}
-
 float BoneAnimation::getStartTime() const {
 	return keyframes.front().timePoint;
 }

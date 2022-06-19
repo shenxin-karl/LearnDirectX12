@@ -40,6 +40,7 @@ void Shape::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 	_pPassCB = pDirectCtx->createFRConstantBuffer<d3d::CBPassType>();
 	buildTexturePSO(pDirectCtx);
 	buildColorPSO(pDirectCtx);
+	buildSkinnedAnimationPSO(pDirectCtx);
 	buildGameLight(pDirectCtx);
 	buildGeometry(pDirectCtx);
 	loadTextures(pDirectCtx);
@@ -157,6 +158,44 @@ void Shape::buildColorPSO(dx12lib::DirectContextProxy pDirectCtx) {
 	pPSO->setPixelShader(d3d::compileShader(L"shader/color.hlsl", nullptr, "PS", "ps_5_0"));
 	pPSO->finalize();
 	_PSOMap["ColorPSO"] = pPSO;
+}
+
+void Shape::buildSkinnedAnimationPSO(dx12lib::DirectContextProxy pDirectCtx) {
+	auto pRootSignature = _pDevice->createRootSignature(2, 6);
+	pRootSignature->initStaticSampler(0, d3d::getStaticSamplers());
+	pRootSignature->at(0).initAsDescriptorTable({
+		{ dx12lib::RegisterSlot::CBV0, 2 },
+	});
+	pRootSignature->at(1).initAsDescriptorTable({
+		{ dx12lib::RegisterSlot::CBV2, 2 },
+		{ dx12lib::RegisterSlot::SRV0, 2 },
+	});
+	pRootSignature->finalize();
+
+	auto pPSO = _pDevice->createGraphicsPSO("SkinnedAnimationPSO");
+	pPSO->setRootSignature(pRootSignature);
+	pPSO->setRenderTargetFormat(
+		_pSwapChain->getRenderTargetFormat(),
+		_pSwapChain->getDepthStencilFormat()
+	);
+
+	std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout = {
+		dx12lib::VInputLayoutDescHelper(&d3d::SkinnedVertex::position, "POSITION", DXGI_FORMAT_R32G32B32_FLOAT),
+		dx12lib::VInputLayoutDescHelper(&d3d::SkinnedVertex::normal, "NORMAL", DXGI_FORMAT_R32G32B32_FLOAT),
+		dx12lib::VInputLayoutDescHelper(&d3d::SkinnedVertex::texcoord, "TEXCOORD", DXGI_FORMAT_R32G32_FLOAT),
+		dx12lib::VInputLayoutDescHelper(&d3d::SkinnedVertex::tangent, "TANGENT", DXGI_FORMAT_R32G32B32_FLOAT),
+		dx12lib::VInputLayoutDescHelper(&d3d::SkinnedVertex::boneWeights, "BONEWEIGHTS", DXGI_FORMAT_R32G32B32_FLOAT),
+		dx12lib::VInputLayoutDescHelper(&d3d::SkinnedVertex::boneIndices, "BONEINDICES", DXGI_FORMAT_R8G8B8A8_UINT),
+	};
+
+	D3D_SHADER_MACRO macros[] = {
+		{ "SKINNED_ANIMATION", nullptr },
+		{ nullptr, nullptr },
+	};
+	pPSO->setInputLayout(inputLayout);
+	pPSO->setVertexShader(d3d::compileShader(L"shader/texture.hlsl", macros, "VS", "vs_5_0"));
+	pPSO->setPixelShader(d3d::compileShader(L"shader/texture.hlsl", macros, "PS", "ps_5_0"));
+	pPSO->finalize();
 }
 
 void Shape::buildRenderItem(dx12lib::DirectContextProxy pDirectCtx) {
@@ -446,15 +485,22 @@ void Shape::buildSkullAnimation() {
 	_skullAnimation.keyframes[4].rotationQuat = float4(q0);
 }
 
-void Shape::loadModelAndBuildRenderItem() {
+void Shape::loadModelAndBuildRenderItem(dx12lib::DirectContextProxy pDirectCtx) {
 	std::vector<d3d::SkinnedVertex> vertices;
 	std::vector<uint16_t> indices;
 	std::vector<d3d::M3dLoader::Subset> subsets;
 	std::vector<d3d::M3dLoader::M3dMaterial> materials;
-	d3d::SkinnedData skinnedData;
-	if (!d3d::M3dLoader::loadM3d("resource/soldier.m3d", vertices, indices, subsets, materials, skinnedData)) {
+	if (!d3d::M3dLoader::loadM3d("resource/soldier.m3d", vertices, indices, subsets, materials, _skinnedData)) {
 		assert(false);
 		return;
+	}
+
+	auto pVertexBuffer = pDirectCtx->createVertexBuffer(vertices.data(), vertices.size(), sizeof(d3d::SkinnedVertex));
+	auto pIndexBuffer = pDirectCtx->createIndexBuffer(indices.data(), indices.size(), DXGI_FORMAT_R16_UINT);
+	for (size_t i = 0; i < subsets.size(); ++i) {
+		const auto &subSet = subsets[i];
+		const auto &material = materials[i];
+		assert(subSet.id != -1);
 	}
 }
 
@@ -506,7 +552,7 @@ void Shape::renderSkullPass(dx12lib::DirectContextProxy pDirectCtx) {
 }
 
 void Shape::renderSkinnedAnimationPass(dx12lib::DirectContextProxy pDirectCtx) {
-	const std::string passPSOName = "SkinnedPSO";
+	const std::string passPSOName = "SkinnedAnimationPSO";
 	auto pso = _PSOMap[passPSOName];
 
 	pDirectCtx->setGraphicsPSO(pso);

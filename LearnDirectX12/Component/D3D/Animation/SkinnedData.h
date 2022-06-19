@@ -17,8 +17,6 @@ struct SkinnedVertex {
 };
 
 struct Keyframe {
-	Keyframe();
-public:
 	float  timePoint;
 	float3 translation;
 	float3 scale;

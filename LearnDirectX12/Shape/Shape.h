@@ -53,12 +53,13 @@ public:
 private:
 	void buildTexturePSO(dx12lib::DirectContextProxy pDirectCtx);
 	void buildColorPSO(dx12lib::DirectContextProxy pDirectCtx);
+	void buildSkinnedAnimationPSO(dx12lib::DirectContextProxy pDirectCtx);
 	void buildRenderItem(dx12lib::DirectContextProxy pDirectCtx);
 	void buildGeometry(dx12lib::DirectContextProxy pDirectCtx);
 	void buildGameLight(dx12lib::DirectContextProxy pDirectCtx);
 	void buildMaterials();
 	void buildSkullAnimation();
-	void loadModelAndBuildRenderItem();
+	void loadModelAndBuildRenderItem(dx12lib::DirectContextProxy pDirectCtx);
 	void loadTextures(dx12lib::DirectContextProxy pDirectCtx);
 	void renderShapesPass(dx12lib::DirectContextProxy pDirectCtx);
 	void renderSkullPass(dx12lib::DirectContextProxy pDirectCtx);
