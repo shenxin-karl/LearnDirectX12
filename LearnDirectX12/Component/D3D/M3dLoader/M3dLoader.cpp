@@ -1,6 +1,7 @@
 #include <D3D/M3dLoader/M3dLoader.h>
 #include <fstream>
 #include <intsafe.h>
+#include <iostream>
 
 namespace d3d {
 
@@ -162,8 +163,8 @@ void M3dLoader::readTriangles(std::ifstream &fin, size_t numTriangles, std::vect
 
 	fin >> ignore; // triangles header text
 	for (size_t i = 0; i < numTriangles; ++i) {
-		fin >> indices[i*3 + 0];
 		fin >> indices[i*3 + 1];
+		fin >> indices[i*3 + 0];
 		fin >> indices[i*3 + 2];
 	}
 }

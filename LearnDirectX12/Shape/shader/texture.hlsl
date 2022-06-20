@@ -67,7 +67,7 @@ VertexOut VS(VertexIn vin) {
 
     VertexOut vout;
     float4 worldPos = mul(gMatWorld, float4(vin.position, 1.0));
-    vout.SVPosition = mul(gPassCB.viewProj, worldPos)    ;
+    vout.SVPosition = mul(gPassCB.viewProj, worldPos);
     vout.position   = worldPos.xyz;
     vout.normal     = mul((float3x3)gMatNormal, vin.normal);
     vout.tangent    = mul((float3x3)gMatNormal, vin.tangent);
@@ -103,8 +103,8 @@ float4 PS(VertexOut pin) : SV_Target {
 
     float3 normal = NormalSampleToWorldSpace(pin);
     result += ComputeDirectionLight(gLight.lights[0], mat, normal, viewDir);
-    result += ComputePointLight(gLight.lights[1], gMaterial, normal, viewDir, pin.position);
-    result += ComputeSpotLight(gLight.lights[2], gMaterial, normal, viewDir, pin.position);
+    result += ComputePointLight(gLight.lights[1], mat, normal, viewDir, pin.position);
+    result += ComputeSpotLight(gLight.lights[2], mat, normal, viewDir, pin.position);
     result += (diffAlbedo * gLight.ambientLight).rgb;
     return float4(result, diffAlbedo.a);
 }

@@ -71,11 +71,12 @@ private:
 private:
 	float4x4 _skullMatWorld;
 	d3d::BoneAnimation _skullAnimation;
-	float _animationTimePoint = 0.f;
+	float _skullAnimationTimePoint = 0.f;
 	FRConstantBufferPtr<ObjectCB> _pSkullObjCB;
 
 	// ½ÇÉ«¶¯»­
 	d3d::SkinnedData _skinnedData;
+	float _skinnedAnimationTimePoint = 0.f;
 	FRConstantBufferPtr<SkinnedBoneCB> _pSkinnedBoneCb;
 
 	std::unique_ptr<d3d::SkyBox>	  _pSkyBox;

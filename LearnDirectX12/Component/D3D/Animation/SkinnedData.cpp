@@ -86,7 +86,7 @@ float SkinnedData::getClipStartTime(const std::string &clipName) const {
 
 float SkinnedData::getClipEndTime(const std::string &clipName) const {
 	if (auto iter = _animations.find(clipName); iter != _animations.end())
-		return iter->second.getClipStartTime();
+		return iter->second.getClipEndTime();
 
 	assert(false);
 	return 0.f;

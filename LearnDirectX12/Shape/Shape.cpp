@@ -14,6 +14,8 @@
 #include "InputSystem/Mouse.h"
 #include <DirectXColors.h>
 #include <DirectXMath.h>
+#include <iostream>
+
 #include "D3D/Sky/SkyBox.h"
 #include "D3D/M3dLoader/M3dLoader.h"
 #include "D3D/Tool/Mesh.h"
@@ -513,6 +515,11 @@ void Shape::loadModelAndBuildRenderItem(dx12lib::DirectContextProxy pDirectCtx) 
 	};
 
 
+	Matrix4 scale = Matrix4::makeScale(0.08f);
+	Matrix4 translation = Matrix4::makeTranslation(0.f, 0.f, -7.5f);
+	Matrix4 world = translation * scale;
+	float4x4 matWorld{ world };
+
 	auto pVertexBuffer = pDirectCtx->createVertexBuffer(vertices.data(), vertices.size(), sizeof(d3d::SkinnedVertex));
 	auto pIndexBuffer = pDirectCtx->createIndexBuffer(indices.data(), indices.size(), DXGI_FORMAT_R16_UINT);
 	auto &renderItemQueue = _renderItems["SkinnedAnimationPSO"];
@@ -522,9 +529,8 @@ void Shape::loadModelAndBuildRenderItem(dx12lib::DirectContextProxy pDirectCtx) 
 		assert(subSet.id != -1);
 
 		RenderItem rItem;
-		Matrix4 world = Matrix4::makeScale(0.1f);
 		ObjectCB objectCb;
-		objectCb.matWorld = float4x4(world);
+		objectCb.matWorld = matWorld;
 		objectCb.matNormal = float4x4::identity();
 		objectCb.matTexCoord = float4x4::identity();
 		objectCb.material.roughness = material.roughness;
@@ -533,7 +539,6 @@ void Shape::loadModelAndBuildRenderItem(dx12lib::DirectContextProxy pDirectCtx) 
 		objectCb.material.metallic = std::clamp(objectCb.material.metallic, 0.f, 1.f);
 
 		rItem.pObjectCb = pDirectCtx->createFRConstantBuffer<ObjectCB>(objectCb);
-
 		rItem.subMesh.name = std::to_string(subSet.id);
 		rItem.subMesh.count = subSet.faceCount * 3;
 		rItem.subMesh.startIndexLocation = subSet.faceStart * 3;
@@ -631,12 +636,12 @@ void Shape::updatePassCB(std::shared_ptr<com::GameTimer> pGameTimer) {
 }
 
 void Shape::updateSkullAnimationCb(std::shared_ptr<com::GameTimer> pGameTimer) {
-	_animationTimePoint += pGameTimer->getDeltaTime();
-	if (_animationTimePoint > _skullAnimation.getEndTime())
-		_animationTimePoint = 0.f;
+	_skullAnimationTimePoint += pGameTimer->getDeltaTime();
+	if (_skullAnimationTimePoint > _skullAnimation.getEndTime())
+		_skullAnimationTimePoint = 0.f;
 
 	Matrix4 matWorld { _skullMatWorld };
-	Matrix4 animationMatrix { _skullAnimation.interpolate(_animationTimePoint) };
+	Matrix4 animationMatrix { _skullAnimation.interpolate(_skullAnimationTimePoint) };
 	matWorld = animationMatrix * matWorld;
 	auto pSkullCBVisitor = _pSkullObjCB->visit();
 	pSkullCBVisitor->matWorld = float4x4(matWorld);
@@ -644,7 +649,13 @@ void Shape::updateSkullAnimationCb(std::shared_ptr<com::GameTimer> pGameTimer) {
 }
 
 void Shape::updateSkinnedAnimationCb(std::shared_ptr<com::GameTimer> pGameTimer) {
+	_skinnedAnimationTimePoint += pGameTimer->getDeltaTime();
+	if (_skinnedAnimationTimePoint > _skinnedData.getClipEndTime("Take1"))
+		_skinnedAnimationTimePoint = 0.f;
+
 	auto pSkinnedBoneCbVisit = _pSkinnedBoneCb->visit();
-	for (size_t i = 0; i < SkinnedBoneCB::kMaxCount; ++i)
-		pSkinnedBoneCbVisit->boneTransforms[i] = float4x4::identity();
+	std::vector<float4x4> boneTransforms = _skinnedData.getFinalTransforms("Take1", _skinnedAnimationTimePoint);
+	size_t limit = std::min(SkinnedBoneCB::kMaxCount, boneTransforms.size());
+	for (size_t i = 0; i < limit; ++i)
+		pSkinnedBoneCbVisit->boneTransforms[i] = boneTransforms[i];
 }
