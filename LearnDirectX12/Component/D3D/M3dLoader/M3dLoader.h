@@ -19,10 +19,10 @@ public:
 
 	struct Subset {
 		size_t  id			= -1;
-		size_t  vertexStart = 0;
+		size_t  vertexStart = 0;		// 没有索引时才能使用
 		size_t  vertexCount = 0;
-		size_t  faceStart	= 0;
-		size_t  faceCount	= 0;
+		size_t  faceStart	= 0;		// 转换为索引起始地址时需要乘3
+		size_t  faceCount	= 0;		// 转换为索引数是需要乘3
 	};
 
 	static bool loadM3d(const std::string &fileName, 

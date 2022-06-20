@@ -161,10 +161,10 @@ void M3dLoader::readTriangles(std::ifstream &fin, size_t numTriangles, std::vect
 	indices.resize(numTriangles * 3);
 
 	fin >> ignore; // triangles header text
-	for (size_t i = 0; i < numTriangles; i++) {
-		fin >> indices[i+0];
-		fin >> indices[i+1];
-		fin >> indices[i+2];
+	for (size_t i = 0; i < numTriangles; ++i) {
+		fin >> indices[i*3 + 0];
+		fin >> indices[i*3 + 1];
+		fin >> indices[i*3 + 2];
 	}
 }
 

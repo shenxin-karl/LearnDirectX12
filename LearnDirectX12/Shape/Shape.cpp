@@ -38,6 +38,7 @@ void Shape::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 	_pCamera = std::make_shared<d3d::CoronaCamera>(cameraDesc);
 	_pCamera->_mouseWheelSensitivity = 1.f;
 	_pPassCB = pDirectCtx->createFRConstantBuffer<d3d::CBPassType>();
+	_pSkinnedBoneCb = pDirectCtx->createFRConstantBuffer<SkinnedBoneCB>();
 	buildTexturePSO(pDirectCtx);
 	buildColorPSO(pDirectCtx);
 	buildSkinnedAnimationPSO(pDirectCtx);
@@ -46,6 +47,7 @@ void Shape::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 	loadTextures(pDirectCtx);
 	buildMaterials();
 	buildSkullAnimation();
+	loadModelAndBuildRenderItem(pDirectCtx);
 	buildRenderItem(pDirectCtx);
 	_pSobelFilter = std::make_unique<d3d::SobelFilter>(pDirectCtx, _width, _height);
 
@@ -60,7 +62,8 @@ void Shape::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 void Shape::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	pollEvent();
 	updatePassCB(pGameTimer);
-	updateSkullAnimation(pGameTimer);
+	updateSkullAnimationCb(pGameTimer);
+	updateSkinnedAnimationCb(pGameTimer);
 
 	Vector3 dir { 1 };
 	float radian = DirectX::XMConvertToRadians(pGameTimer->getTotalTime() * 20.f);
@@ -84,6 +87,7 @@ void Shape::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		renderTarget.clear(pDirectCtx, float4(DirectX::Colors::LightSkyBlue));
 		renderShapesPass(pDirectCtx);
 		renderSkullPass(pDirectCtx);
+		renderSkinnedAnimationPass(pDirectCtx);
 		_pSkyBox->render(pDirectCtx, _pCamera);
 		//_pSobelFilter->apply(pDirectCtx, renderTarget.getRenderTarget2D());
 		//pDirectCtx->copyResource(renderTarget.getRenderTarget2D(), _pSobelFilter->getOutput());
@@ -196,6 +200,8 @@ void Shape::buildSkinnedAnimationPSO(dx12lib::DirectContextProxy pDirectCtx) {
 	pPSO->setVertexShader(d3d::compileShader(L"shader/texture.hlsl", macros, "VS", "vs_5_0"));
 	pPSO->setPixelShader(d3d::compileShader(L"shader/texture.hlsl", macros, "PS", "ps_5_0"));
 	pPSO->finalize();
+
+	_PSOMap["SkinnedAnimationPSO"] = pPSO;
 }
 
 void Shape::buildRenderItem(dx12lib::DirectContextProxy pDirectCtx) {
@@ -495,12 +501,50 @@ void Shape::loadModelAndBuildRenderItem(dx12lib::DirectContextProxy pDirectCtx) 
 		return;
 	}
 
+	auto loadTexture = [&](const std::string &name) {
+		auto iter = _textureMap.find(name);
+		if (iter != _textureMap.end())
+			return iter->second;
+
+		std::wstring wTextureName = std::to_wstring("resource/" + name);
+		auto pTexture = pDirectCtx->createDDSTexture2DFromFile(wTextureName);
+		assert(pTexture != nullptr);
+		return pTexture;
+	};
+
+
 	auto pVertexBuffer = pDirectCtx->createVertexBuffer(vertices.data(), vertices.size(), sizeof(d3d::SkinnedVertex));
 	auto pIndexBuffer = pDirectCtx->createIndexBuffer(indices.data(), indices.size(), DXGI_FORMAT_R16_UINT);
+	auto &renderItemQueue = _renderItems["SkinnedAnimationPSO"];
 	for (size_t i = 0; i < subsets.size(); ++i) {
 		const auto &subSet = subsets[i];
 		const auto &material = materials[i];
 		assert(subSet.id != -1);
+
+		RenderItem rItem;
+		Matrix4 world = Matrix4::makeScale(0.1f);
+		ObjectCB objectCb;
+		objectCb.matWorld = float4x4(world);
+		objectCb.matNormal = float4x4::identity();
+		objectCb.matTexCoord = float4x4::identity();
+		objectCb.material.roughness = material.roughness;
+		objectCb.material.diffuseAlbedo = material.diffuseAlbedo;
+		objectCb.material.metallic = (material.fresnelR0.x + material.fresnelR0.y + material.fresnelR0.z) / 3.f;
+		objectCb.material.metallic = std::clamp(objectCb.material.metallic, 0.f, 1.f);
+
+		rItem.pObjectCb = pDirectCtx->createFRConstantBuffer<ObjectCB>(objectCb);
+
+		rItem.subMesh.name = std::to_string(subSet.id);
+		rItem.subMesh.count = subSet.faceCount * 3;
+		rItem.subMesh.startIndexLocation = subSet.faceStart * 3;
+		rItem.subMesh.baseVertexLocation = 0;
+
+		rItem.pVertexBuffer = pVertexBuffer;
+		rItem.pIndexBuffer = pIndexBuffer;
+
+		rItem.pAlbedo = loadTexture(material.diffuseMapName);
+		rItem.pNormal = loadTexture(material.normalMapName);
+		renderItemQueue.push_back(rItem);
 	}
 }
 
@@ -586,7 +630,7 @@ void Shape::updatePassCB(std::shared_ptr<com::GameTimer> pGameTimer) {
 	pGPUPassCB->deltaTime = pGameTimer->getDeltaTime();
 }
 
-void Shape::updateSkullAnimation(std::shared_ptr<com::GameTimer> pGameTimer) {
+void Shape::updateSkullAnimationCb(std::shared_ptr<com::GameTimer> pGameTimer) {
 	_animationTimePoint += pGameTimer->getDeltaTime();
 	if (_animationTimePoint > _skullAnimation.getEndTime())
 		_animationTimePoint = 0.f;
@@ -597,4 +641,10 @@ void Shape::updateSkullAnimation(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pSkullCBVisitor = _pSkullObjCB->visit();
 	pSkullCBVisitor->matWorld = float4x4(matWorld);
 	pSkullCBVisitor->matNormal = float4x4(transpose(inverse(matWorld)));
+}
+
+void Shape::updateSkinnedAnimationCb(std::shared_ptr<com::GameTimer> pGameTimer) {
+	auto pSkinnedBoneCbVisit = _pSkinnedBoneCb->visit();
+	for (size_t i = 0; i < SkinnedBoneCB::kMaxCount; ++i)
+		pSkinnedBoneCbVisit->boneTransforms[i] = float4x4::identity();
 }

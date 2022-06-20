@@ -66,7 +66,8 @@ private:
 	void renderSkinnedAnimationPass(dx12lib::DirectContextProxy pDirectCtx);
 	void pollEvent();
 	void updatePassCB(std::shared_ptr<com::GameTimer> pGameTimer);
-	void updateSkullAnimation(std::shared_ptr<com::GameTimer> pGameTimer);
+	void updateSkullAnimationCb(std::shared_ptr<com::GameTimer> pGameTimer);
+	void updateSkinnedAnimationCb(std::shared_ptr<com::GameTimer> pGameTimer);
 private:
 	float4x4 _skullMatWorld;
 	d3d::BoneAnimation _skullAnimation;
