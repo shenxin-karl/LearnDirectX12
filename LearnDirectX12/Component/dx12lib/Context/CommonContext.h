@@ -29,6 +29,7 @@ interface ICommonContext : IContext {
 	virtual std::shared_ptr<SamplerTexture2DArray> createDDSTexture2DArrayFromMemory(const void *pData, size_t sizeInByte) = 0;
 	virtual std::shared_ptr<SamplerTextureCube> createDDSTextureCubeFromFile(const std::wstring &fileName) = 0;
 	virtual std::shared_ptr<SamplerTextureCube> createDDSTextureCubeFromMemory(const void *pData, size_t sizeInByte) = 0;
+	virtual std::shared_ptr<IShaderResource> createTextureFromFile(const std::wstring &fileName, bool sRGB = false) = 0;
 	virtual	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) = 0;
 	virtual void setConstantBufferView(const ShaderRegister &sr, const ConstantBufferView &crv) = 0;
 	virtual void setShaderResourceView(const ShaderRegister &sr, const ShaderResourceView &srv) = 0;

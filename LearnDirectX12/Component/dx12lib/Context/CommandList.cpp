@@ -18,6 +18,7 @@
 #include <dx12lib/Buffer/ConstantBuffer.h>
 #include <dx12lib/Buffer/IndexBuffer.h>
 #include <dx12lib/Buffer/VertexBuffer.h>
+#include <DirectXTex/DirectXTex/DirectXTex.h>
 #include <iostream>
 
 #if defined(_DEBUG) || defined(DEBUG)
@@ -212,8 +213,73 @@ std::shared_ptr<SamplerTextureCube> CommandList::createDDSTextureCubeFromMemory(
 	);
 }
 
+std::shared_ptr<IShaderResource> CommandList::createTextureFromFile(const std::wstring &fileName, bool sRGB) {
+	auto pos = fileName.find_last_of(L".");
+	if (pos == std::wstring::npos) {
+		assert(false);
+		return nullptr;
+	}
+
+	namespace DX = DirectX;
+	DX::TexMetadata  metadata{};
+	DX::ScratchImage scratchImage;
+	std::wstring extension = fileName.substr(pos);
+	if (extension == L".dds")
+		ThrowIfFailed(DX::LoadFromDDSFile(fileName.c_str(), DX::DDS_FLAGS_NONE, &metadata, scratchImage));
+	else if (extension == L".hdr")
+		ThrowIfFailed(DX::LoadFromHDRFile(fileName.c_str(), &metadata, scratchImage));
+	else if (extension == L".tga")
+		ThrowIfFailed(DX::LoadFromTGAFile(fileName.c_str(), &metadata, scratchImage));
+	else
+		ThrowIfFailed(DX::LoadFromWICFile(fileName.c_str(), DX::WIC_FLAGS_NONE, &metadata, scratchImage));
+
+	if (sRGB)
+		metadata.format = DX::MakeSRGB(metadata.format);
+
+	D3D12_RESOURCE_DESC textureDesc{};
+	switch (metadata.dimension) {
+	case DX::TEX_DIMENSION_TEXTURE2D:
+
+		break;
+	case DX::TEX_DIMENSION_TEXTURE3D:
+		break;
+	case DX::TEX_DIMENSION_TEXTURE1D:
+	default:
+		assert(false);
+		return nullptr;
+	}
+
+	auto pSharedDevice = getDevice().lock();
+	WRL::ComPtr<ID3D12Resource> pTextureResource;
+	ThrowIfFailed(pSharedDevice->getD3DDevice()->CreateCommittedResource(
+		RVPtr(CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT)),
+		D3D12_HEAP_FLAG_NONE,
+		nullptr,
+		D3D12_RESOURCE_STATE_COMMON,
+		nullptr,
+		IID_PPV_ARGS(&pTextureResource)
+	));
+
+	pTextureResource->SetName(fileName.c_str());
+	std::vector<D3D12_SUBRESOURCE_DATA> subResources{ scratchImage.GetImageCount() };
+	const DX::Image *pImages = scratchImage.GetImages();
+	for (size_t i = 0; i < scratchImage.GetImageCount(); ++i) {
+		auto &subResource = subResources[i];
+		subResource.RowPitch = pImages[i].rowPitch;
+		subResource.SlicePitch = pImages[i].slicePitch;
+		subResource.pData = pImages[i].pixels;
+	}
+
+	if (subResources.size() < pTextureResource->GetDesc().MipLevels) {
+		// TODO 生成 mipmap
+	}
+
+	// todo 根据不同的类型来创建对应的类
+	return nullptr;
+}
+
 void CommandList::setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType,
-	WRL::ComPtr<ID3D12DescriptorHeap> pHeap) {
+                                    WRL::ComPtr<ID3D12DescriptorHeap> pHeap) {
 	if (_currentGPUState.pDescriptorHeaps[heapType] != pHeap.Get()) {
 		_currentGPUState.pDescriptorHeaps[heapType] = pHeap.Get();
 		bindDescriptorHeaps();
@@ -568,6 +634,7 @@ void CommandList::reset() {
 		pReadBackBuffer->setCompleted(true);
 	_readBackBuffers.clear();
 	_staleResourceBuffers.clear();
+	_staleD3DResourceBuffers.clear();
 }
 
 void CommandList::setRootSignature(std::shared_ptr<RootSignature> pRootSignature, 
@@ -600,6 +667,43 @@ void CommandList::setShouldReset(bool bReset) {
 
 bool CommandList::shouldReset() const {
 	return _shouldReset;
+}
+
+void CommandList::trackResource(WRL::ComPtr<ID3D12Resource> pResource) {
+	if (pResource != nullptr)
+		_staleD3DResourceBuffers.push_back(pResource);
+}
+
+void CommandList::copyTextureSubResource(std::shared_ptr<IResource> pTexture, size_t firstSubResource,
+                                         size_t numSubResource, D3D12_SUBRESOURCE_DATA *pSubResourceData)
+{
+	assert(pTexture != nullptr);
+	auto pDestResource = pTexture->getD3DResource();
+	if (pDestResource != nullptr) {
+		transitionBarrier(pTexture, D3D12_RESOURCE_STATE_COPY_DEST);
+		flushResourceBarriers();
+		size_t requiredSize = GetRequiredIntermediateSize(pDestResource.Get(), firstSubResource, numSubResource);
+		WRL::ComPtr<ID3D12Resource> pSrcResource;
+		ThrowIfFailed(_pDevice.lock()->getD3DDevice()->CreateCommittedResource(
+			RVPtr(CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD)),
+			D3D12_HEAP_FLAG_NONE,
+			RVPtr(CD3DX12_RESOURCE_DESC::Buffer(requiredSize)),
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS(&pSrcResource)
+		));
+		UpdateSubresources(_pCommandList.Get(), 
+			pDestResource.Get(), 
+			pSrcResource.Get(),
+			0,
+			firstSubResource,
+			numSubResource,
+			pSubResourceData
+		);
+
+		trackResource(pDestResource);
+		trackResource(pSrcResource);
+	}
 }
 
 #define CheckState(ret, message)			\

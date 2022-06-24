@@ -163,5 +163,13 @@ interface IReadBackBuffer : IBufferResource {
 	virtual void setCompletedCallback(const std::function<void(IReadBackBuffer *)> &callback) = 0;
 };
 
+template<typename T, typename U> requires(std::is_base_of_v<IResource, U>)
+std::shared_ptr<T> DynamicResourceCast(const std::shared_ptr<U> &pOther) {
+	if constexpr (std::is_base_of_v<T, U >)
+		return std::static_pointer_cast<T>(pOther);
+	if constexpr (requires{ pOther->operator std::shared_ptr<T>(); })
+		return pOther->operator std::shared_ptr<T>();
+	return nullptr;
+}
 
 }

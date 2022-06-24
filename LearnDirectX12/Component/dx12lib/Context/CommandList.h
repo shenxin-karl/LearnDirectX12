@@ -24,6 +24,7 @@ public:
 	std::shared_ptr<SamplerTexture2DArray> createDDSTexture2DArrayFromMemory(const void *pData, size_t sizeInByte) override;
 	std::shared_ptr<SamplerTextureCube> createDDSTextureCubeFromFile(const std::wstring &fileName) override;
 	std::shared_ptr<SamplerTextureCube> createDDSTextureCubeFromMemory(const void *pData, size_t sizeInByte) override;
+	std::shared_ptr<IShaderResource> createTextureFromFile(const std::wstring &fileName, bool sRGB) override;
 
 	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) override;
 	void setConstantBufferView(const ShaderRegister &sr, const ConstantBufferView &cbv) override;
@@ -69,6 +70,7 @@ private:
 	friend class FrameResourceItem;
 	using ReadBackBufferPool = std::vector<std::shared_ptr<ReadBackBuffer>>;
 	using StaleResourcePool = std::vector<std::shared_ptr<IResource>>;
+	using StaleD3DResourcePool = std::vector<WRL::ComPtr<ID3D12Resource>>;
 	void setGraphicsRootSignature(std::shared_ptr<RootSignature> pRootSignature);
 	void setComputeRootSignature(std::shared_ptr<RootSignature> pRootSignature);
 	void close();
@@ -79,6 +81,12 @@ private:
 	void bindDescriptorHeaps();
 	void setShouldReset(bool bReset);
 	bool shouldReset() const;
+	void trackResource(WRL::ComPtr<ID3D12Resource> pResource);
+	void copyTextureSubResource(std::shared_ptr<IResource> pTexture,
+		size_t firstSubResource, 
+		size_t numSubResource, 
+		D3D12_SUBRESOURCE_DATA *pSubResourceData
+	);
 private:
 	bool								   _shouldReset = false;
 	D3D12_COMMAND_LIST_TYPE                _cmdListType;
@@ -89,6 +97,7 @@ private:
 	std::unique_ptr<DynamicDescriptorHeap> _pDynamicDescriptorHeaps[kDynamicDescriptorHeapCount];
 	ReadBackBufferPool                     _readBackBuffers;
 	StaleResourcePool					   _staleResourceBuffers;
+	StaleD3DResourcePool				   _staleD3DResourceBuffers;
 private:
 	struct CommandListState {
 		PSO           *pPSO;

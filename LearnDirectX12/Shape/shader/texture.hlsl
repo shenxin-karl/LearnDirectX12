@@ -67,10 +67,10 @@ VertexOut VS(VertexIn vin) {
 
     VertexOut vout;
     float4 worldPos = mul(gMatWorld, float4(vin.position, 1.0));
-    vout.SVPosition = mul(gPassCB.viewProj, worldPos);
+    vout.SVPosition = mul(gPassCB.viewProj, worldPos)    ;
     vout.position   = worldPos.xyz;
     vout.normal     = mul((float3x3)gMatNormal, vin.normal);
-    vout.tangent    = mul((float3x3)gMatNormal, vin.tangent);
+    vout.tangent    = mul((float3x3)gMatWorld, vin.tangent);
     vout.texcoord   = mul(gMatTexCoord, float4(vin.texcoord, 0.0, 1.0)).xy;
     return vout;
 }
