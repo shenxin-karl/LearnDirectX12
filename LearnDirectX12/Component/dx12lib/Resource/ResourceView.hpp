@@ -14,14 +14,14 @@ enum class ViewType {
 };
 
 template<ViewType Type>
-class _ResourceView {
+class ResourceView {
 public:
-	_ResourceView() = default;
-	_ResourceView(const _ResourceView &) = default;
-	_ResourceView(_ResourceView &&) noexcept = default;
-	_ResourceView &operator=(const _ResourceView &) = default;
-	_ResourceView &operator=(_ResourceView &&) noexcept = default;
-	_ResourceView(const DescriptorAllocation &descriptor, const IResource *pResource, size_t offset = 0)
+	ResourceView() = default;
+	ResourceView(const ResourceView &) = default;
+	ResourceView(ResourceView &&) noexcept = default;
+	ResourceView &operator=(const ResourceView &) = default;
+	ResourceView &operator=(ResourceView &&) noexcept = default;
+	ResourceView(const DescriptorAllocation &descriptor, const IResource *pResource, size_t offset = 0)
 	: _offset(offset), _descriptor(descriptor), _pResource(pResource)
 	{
 		assert(offset < descriptor.getNumHandle());
@@ -42,16 +42,16 @@ private:
 };
 
 template<typename T>
-class _BufferView {
+class BufferView {
 	friend class CommandList;
 public:
 	template<typename ... Args> requires(sizeof...(Args) > 0)
-	_BufferView(Args&&...args) : _view(std::forward<Args>(args)...) {}
-	_BufferView(D3D12_VERTEX_BUFFER_VIEW view) : _view(view) {}
-	_BufferView(const _BufferView &) = default;
-	_BufferView(_BufferView &&) noexcept = default;
-	_BufferView &operator=(const _BufferView &) = default;
-	_BufferView &operator=(_BufferView &&) noexcept = default;
+	BufferView(Args&&...args) : _view(std::forward<Args>(args)...) {}
+	BufferView(D3D12_VERTEX_BUFFER_VIEW view) : _view(view) {}
+	BufferView(const BufferView &) = default;
+	BufferView(BufferView &&) noexcept = default;
+	BufferView &operator=(const BufferView &) = default;
+	BufferView &operator=(BufferView &&) noexcept = default;
 	operator T() const {
 		return _view;
 	}
@@ -65,14 +65,14 @@ private:
 	T _view;
 };
 
-using RenderTargetView = _ResourceView<ViewType::RenderTarget>;
-using DepthStencilView = _ResourceView<ViewType::DepthStencil>;
-using ConstantBufferView = _ResourceView<ViewType::ConstantBuffer>;
-using ShaderResourceView = _ResourceView<ViewType::ShaderResource>;
-using StructuredBufferView = _ResourceView<ViewType::ShaderResource>;
-using UnorderedAccessView = _ResourceView<ViewType::UnorderedAccess>;
-using VertexBufferView = _BufferView<D3D12_VERTEX_BUFFER_VIEW>;
-using IndexBufferView = _BufferView<D3D12_INDEX_BUFFER_VIEW>;
+using RenderTargetView = ResourceView<ViewType::RenderTarget>;
+using DepthStencilView = ResourceView<ViewType::DepthStencil>;
+using ConstantBufferView = ResourceView<ViewType::ConstantBuffer>;
+using ShaderResourceView = ResourceView<ViewType::ShaderResource>;
+using StructuredBufferView = ResourceView<ViewType::ShaderResource>;
+using UnorderedAccessView = ResourceView<ViewType::UnorderedAccess>;
+using VertexBufferView = BufferView<D3D12_VERTEX_BUFFER_VIEW>;
+using IndexBufferView = BufferView<D3D12_INDEX_BUFFER_VIEW>;
 
 template<typename T>
 class ViewManager {

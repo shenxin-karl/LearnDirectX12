@@ -417,7 +417,7 @@ void Shape::buildGameLight(dx12lib::DirectContextProxy pDirectCtx) {
 	pGPUGameLightCB->lights[2].initAsSpotLight(
 		float3(0.f, 20.f, 0.f), 
 		float3(0.f, -1.f, 0.f),
-		float3(0.1f, 0.1f, 0.9f),
+		float3(0.f, 0.f, 1.f),
 		0.f,
 		50.f,
 		32.f

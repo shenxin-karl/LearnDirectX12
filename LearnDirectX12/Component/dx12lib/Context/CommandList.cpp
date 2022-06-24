@@ -104,7 +104,7 @@ std::shared_ptr<SamplerTexture2D> CommandList::createDDSTexture2DFromFile(const 
 	);
 	assert(pTexture != nullptr && pUploadHeap != nullptr);
 	assert(pTexture->GetDesc().Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D);
-	return std::make_shared<dx12libTool::MakeTexture2D>(_pDevice,
+	return std::make_shared<dx12libTool::MakeSamplerTexture2D>(_pDevice,
 		pTexture,
 		pUploadHeap,
 		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
@@ -124,7 +124,7 @@ std::shared_ptr<SamplerTexture2D> CommandList::createDDSTexture2DFromMemory(cons
 	);
 	assert(pTexture != nullptr && pUploadHeap != nullptr);
 	assert(pTexture->GetDesc().Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D);
-	return std::make_shared<dx12libTool::MakeTexture2D>(_pDevice,
+	return std::make_shared<dx12libTool::MakeSamplerTexture2D>(_pDevice,
 		pTexture,
 		pUploadHeap,
 		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
@@ -142,7 +142,7 @@ std::shared_ptr<SamplerTexture2DArray> CommandList::createDDSTexture2DArrayFromF
 	);
 	assert(pTexture != nullptr && pUploadHeap != nullptr);
 	assert(pTexture->GetDesc().DepthOrArraySize >= 1);
-	return std::make_shared<dx12libTool::MakeTexture2DArray>(
+	return std::make_shared<dx12libTool::MakeSamplerTexture2DArray>(
 		_pDevice,
 		pTexture,
 		pUploadHeap,
@@ -163,7 +163,7 @@ std::shared_ptr<SamplerTexture2DArray> CommandList::createDDSTexture2DArrayFromM
 
 	assert(pTexture != nullptr && pUploadHeap != nullptr);
 	assert(pTexture->GetDesc().DepthOrArraySize >= 1);
-	return std::make_shared<dx12libTool::MakeTexture2DArray>(
+	return std::make_shared<dx12libTool::MakeSamplerTexture2DArray>(
 		_pDevice,
 		pTexture,
 		pUploadHeap,
@@ -182,7 +182,7 @@ std::shared_ptr<SamplerTextureCube> CommandList::createDDSTextureCubeFromFile(co
 	);
 	assert(pTexture != nullptr && pUploadHeap != nullptr);
 	assert(pTexture->GetDesc().DepthOrArraySize == 6);
-	return std::make_shared<dx12libTool::MakeTextureCube>(
+	return std::make_shared<dx12libTool::MakeSamplerTextureCube>(
 		_pDevice, 
 		pTexture, 
 		pUploadHeap, 
@@ -205,7 +205,7 @@ std::shared_ptr<SamplerTextureCube> CommandList::createDDSTextureCubeFromMemory(
 
 	assert(pTexture != nullptr && pUploadHeap != nullptr);
 	assert(pTexture->GetDesc().DepthOrArraySize == 6);
-	return std::make_shared<dx12libTool::MakeTextureCube>(
+	return std::make_shared<dx12libTool::MakeSamplerTextureCube>(
 		_pDevice,
 		pTexture,
 		pUploadHeap,
@@ -239,11 +239,16 @@ std::shared_ptr<IShaderResource> CommandList::createTextureFromFile(const std::w
 	D3D12_RESOURCE_DESC textureDesc{};
 	switch (metadata.dimension) {
 	case DX::TEX_DIMENSION_TEXTURE2D:
-
-		break;
-	case DX::TEX_DIMENSION_TEXTURE3D:
+		textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(
+			metadata.format, 
+			static_cast<UINT64>(metadata.width),
+			static_cast<UINT>(metadata.height),
+			static_cast<UINT16>(metadata.arraySize),
+			static_cast<UINT16>(metadata.mipLevels)
+		);
 		break;
 	case DX::TEX_DIMENSION_TEXTURE1D:
+	case DX::TEX_DIMENSION_TEXTURE3D:
 	default:
 		assert(false);
 		return nullptr;
@@ -270,11 +275,46 @@ std::shared_ptr<IShaderResource> CommandList::createTextureFromFile(const std::w
 		subResource.pData = pImages[i].pixels;
 	}
 
+
 	if (subResources.size() < pTextureResource->GetDesc().MipLevels) {
 		// TODO 生成 mipmap
 	}
 
-	// todo 根据不同的类型来创建对应的类
+	auto pUploader = copyTextureSubResource(pTextureResource, 
+		0, 
+		subResources.size(), 
+		subResources.data()
+	);
+
+	switch (metadata.dimension) {
+	case DirectX::TEX_DIMENSION_TEXTURE2D:
+		if (metadata.arraySize == 1) {
+			return std::make_shared<dx12libTool::MakeSamplerTexture2D>(
+				_pDevice,
+				pTextureResource,
+				pUploader,
+				D3D12_RESOURCE_STATE_GENERIC_READ
+			);
+		} else if (metadata.arraySize == 6) {
+			return std::make_shared<dx12libTool::MakeSamplerTextureCube>(
+				_pDevice,
+				pTextureResource,
+				pUploader,
+				D3D12_RESOURCE_STATE_GENERIC_READ
+			);
+		} else {
+			return std::make_shared<dx12libTool::MakeSamplerTexture2DArray>(
+				_pDevice,
+				pTextureResource,
+				pUploader,
+				D3D12_RESOURCE_STATE_GENERIC_READ
+			);
+		}
+	case DirectX::TEX_DIMENSION_TEXTURE3D: 
+	case DirectX::TEX_DIMENSION_TEXTURE1D:
+	default: 
+		assert(false);
+	}
 	return nullptr;
 }
 
@@ -634,7 +674,6 @@ void CommandList::reset() {
 		pReadBackBuffer->setCompleted(true);
 	_readBackBuffers.clear();
 	_staleResourceBuffers.clear();
-	_staleD3DResourceBuffers.clear();
 }
 
 void CommandList::setRootSignature(std::shared_ptr<RootSignature> pRootSignature, 
@@ -669,41 +708,42 @@ bool CommandList::shouldReset() const {
 	return _shouldReset;
 }
 
-void CommandList::trackResource(WRL::ComPtr<ID3D12Resource> pResource) {
-	if (pResource != nullptr)
-		_staleD3DResourceBuffers.push_back(pResource);
-}
-
-void CommandList::copyTextureSubResource(std::shared_ptr<IResource> pTexture, size_t firstSubResource,
-                                         size_t numSubResource, D3D12_SUBRESOURCE_DATA *pSubResourceData)
+WRL::ComPtr<ID3D12Resource> CommandList::copyTextureSubResource(WRL::ComPtr<ID3D12Resource> pDestResource, 
+	size_t firstSubResource,
+	size_t numSubResource, 
+	D3D12_SUBRESOURCE_DATA *pSubResourceData)
 {
-	assert(pTexture != nullptr);
-	auto pDestResource = pTexture->getD3DResource();
-	if (pDestResource != nullptr) {
-		transitionBarrier(pTexture, D3D12_RESOURCE_STATE_COPY_DEST);
-		flushResourceBarriers();
-		size_t requiredSize = GetRequiredIntermediateSize(pDestResource.Get(), firstSubResource, numSubResource);
-		WRL::ComPtr<ID3D12Resource> pSrcResource;
-		ThrowIfFailed(_pDevice.lock()->getD3DDevice()->CreateCommittedResource(
-			RVPtr(CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD)),
-			D3D12_HEAP_FLAG_NONE,
-			RVPtr(CD3DX12_RESOURCE_DESC::Buffer(requiredSize)),
-			D3D12_RESOURCE_STATE_GENERIC_READ,
-			nullptr,
-			IID_PPV_ARGS(&pSrcResource)
-		));
-		UpdateSubresources(_pCommandList.Get(), 
-			pDestResource.Get(), 
-			pSrcResource.Get(),
-			0,
-			firstSubResource,
-			numSubResource,
-			pSubResourceData
-		);
+	if (pDestResource == nullptr) 
+		return nullptr;
 
-		trackResource(pDestResource);
-		trackResource(pSrcResource);
-	}
+	_pResourceStateTracker->transitionResource(pDestResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST);
+	flushResourceBarriers();
+
+	size_t requiredSize = GetRequiredIntermediateSize(
+		pDestResource.Get(), 
+		static_cast<UINT>(firstSubResource),
+		static_cast<UINT>(numSubResource)
+	);
+	WRL::ComPtr<ID3D12Resource> pSrcResource;
+	ThrowIfFailed(_pDevice.lock()->getD3DDevice()->CreateCommittedResource(
+		RVPtr(CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD)),
+		D3D12_HEAP_FLAG_NONE,
+		RVPtr(CD3DX12_RESOURCE_DESC::Buffer(requiredSize)),
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&pSrcResource)
+	));
+	UpdateSubresources(_pCommandList.Get(), 
+		pDestResource.Get(), 
+		pSrcResource.Get(),
+		0,
+		firstSubResource,
+		numSubResource,
+		pSubResourceData
+	);
+
+	_pResourceStateTracker->transitionResource(pDestResource.Get(), D3D12_RESOURCE_STATE_GENERIC_READ);
+	return pSrcResource;
 }
 
 #define CheckState(ret, message)			\
@@ -721,7 +761,6 @@ bool CommandList::CommandListState::debugCheckDraw() const {
 	CheckState(isSetViewport, "Viewprot not set");
 	CheckState(isSetScissorRect, "ScissorRect not set");
 	CheckState(checkVertexBuffer(), "No bound vertex buffer");
-	CheckState(checkTextures(), "No binding render textures");
 	CheckState(primitiveTopology != D3D_PRIMITIVE_TOPOLOGY_UNDEFINED, "unknow primitive topology");
 	return true;
 }
@@ -738,14 +777,6 @@ bool CommandList::CommandListState::debugCheckDrawIndex() const {
 bool CommandList::CommandListState::checkVertexBuffer() const {
 	for (auto *pVertexBuffer : pVertexBuffers) {
 		if (pVertexBuffers != nullptr)
-			return true;
-	}
-	return false;
-}
-
-bool CommandList::CommandListState::checkTextures() const {
-	for (auto *pTextures : pVertexBuffers) {
-		if (pTextures != nullptr)
 			return true;
 	}
 	return false;

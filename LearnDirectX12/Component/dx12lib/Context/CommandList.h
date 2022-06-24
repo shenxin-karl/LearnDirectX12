@@ -82,7 +82,7 @@ private:
 	void setShouldReset(bool bReset);
 	bool shouldReset() const;
 	void trackResource(WRL::ComPtr<ID3D12Resource> pResource);
-	void copyTextureSubResource(std::shared_ptr<IResource> pTexture,
+	WRL::ComPtr<ID3D12Resource> copyTextureSubResource(WRL::ComPtr<ID3D12Resource> pDestResource,
 		size_t firstSubResource, 
 		size_t numSubResource, 
 		D3D12_SUBRESOURCE_DATA *pSubResourceData
@@ -97,13 +97,11 @@ private:
 	std::unique_ptr<DynamicDescriptorHeap> _pDynamicDescriptorHeaps[kDynamicDescriptorHeapCount];
 	ReadBackBufferPool                     _readBackBuffers;
 	StaleResourcePool					   _staleResourceBuffers;
-	StaleD3DResourcePool				   _staleD3DResourceBuffers;
 private:
 	struct CommandListState {
 		PSO           *pPSO;
 		RootSignature *pRootSignature;
 		VertexBuffer  *pVertexBuffers[kVertexBufferSlotCount];
-		IResource     *pRTBuffers[kMaxRenderTargetCount];
 		IResource     *pDepthStencil;
 		IndexBuffer   *pIndexBuffer;
 		bool           isSetViewport;
@@ -115,7 +113,6 @@ private:
 		bool debugCheckDraw() const;
 		bool debugCheckDrawIndex() const;
 		bool checkVertexBuffer() const;
-		bool checkTextures() const;
 	};
 	CommandListState _currentGPUState;
 };

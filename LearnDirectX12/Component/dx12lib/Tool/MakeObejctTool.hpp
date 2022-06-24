@@ -57,9 +57,9 @@ using MakeFRSRStructuredBuffer = _MakeObjectTool<FRSRStructuredBuffer<T>>;
 
 
 // Texture
-using MakeTexture2D = _MakeObjectTool<SamplerTexture2D>;
-using MakeTexture2DArray = _MakeObjectTool<SamplerTexture2DArray>;
-using MakeTextureCube = _MakeObjectTool<SamplerTextureCube>;
+using MakeSamplerTexture2D = _MakeObjectTool<SamplerTexture2D>;
+using MakeSamplerTexture2DArray = _MakeObjectTool<SamplerTexture2DArray>;
+using MakeSamplerTextureCube = _MakeObjectTool<SamplerTextureCube>;
 
 using MakeRenderTarget2D = _MakeObjectTool<RenderTarget2D>;
 using MakeRenderTarget2DArray = _MakeObjectTool<RenderTarget2DArray>;

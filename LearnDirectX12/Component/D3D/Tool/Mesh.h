@@ -16,10 +16,10 @@ namespace d3d {
 // 如果 startIndexLocation 是 -1, 表示为没有索引
 struct SubMesh {
 	inline static std::string invalidSubMeshName = "Invalid";
-	std::string   name				 = invalidSubMeshName;
-	std::uint32_t count				 = -1;				
-	std::uint32_t startIndexLocation = -1;
-	std::uint32_t baseVertexLocation = -1;
+	std::string name			   = invalidSubMeshName;
+	std::size_t count			   = -1;				
+	std::size_t startIndexLocation = -1;
+	std::size_t baseVertexLocation = -1;
 public:
 	explicit operator bool() const;
 	void drawInstanced(dx12lib::GraphicsContextProxy pGraphicsCtx,
