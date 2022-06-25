@@ -20,7 +20,7 @@ foreach(fileItem ${AllFile})
 	source_group("${GROUP}" FILES "${fileItem}")
 endforeach()
 
-add_library("InputSystem" ${AllFile})
+add_library("InputSystem" STATIC ${AllFile})
 set_target_properties("InputSystem" PROPERTIES FOLDER "Component")
 
 target_include_directories(InputSystem PUBLIC 

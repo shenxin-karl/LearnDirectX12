@@ -17,7 +17,7 @@ foreach(fileItem ${AllFile})
 	source_group("${GROUP}" FILES "${fileItem}")
 endforeach()
 
-add_library("dx12lib" ${AllFile})
+add_library("dx12lib" STATIC ${AllFile})
 set_target_properties("dx12lib" PROPERTIES FOLDER "Component")
 
 target_include_directories(dx12lib PRIVATE 

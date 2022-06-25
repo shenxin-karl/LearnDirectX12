@@ -1,0 +1,3 @@
+[submodule "LearnDirectX12/Libraies/assimp"]
+	path = LearnDirectX12/Libraies/assimp
+	url = https://github.com/assimp/assimp.git
