@@ -26,10 +26,13 @@ set_target_properties("Geometry" PROPERTIES FOLDER "Component")
 
 target_include_directories(Geometry PUBLIC
 	${PROJECT_COMPONENT_DIR}/
+	${PROJECT_LIBRAIES_DIR}/assimp/include
+	${PROJECT_BUILD_DIR}/Libraies/assimp/include/
 )
 
 target_link_libraries(Geometry PUBLIC 
 	Math
+	assimp
 )
 
 

@@ -242,7 +242,7 @@ int main() {
 	//createCylinderTest();
 	//loopSubdivisionTest();
 	//loopBetaTest();
-	createShapeTest();
+	//createShapeTest();
 	//createGridTest();
 	//loadObject();
 	//convertTxtModelToObjFile("skull.txt", "skull.obj");

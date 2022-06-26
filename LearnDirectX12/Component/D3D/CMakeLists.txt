@@ -37,7 +37,10 @@ add_definitions(-DD3D_HLSL_SHADER_PATH="${CMAKE_CURRENT_SOURCE_DIR}/HlslShader")
 target_include_directories(D3D PUBLIC 
 	${PROJECT_COMPONENT_DIR}
 	${PROJECT_LIBRAIES_DIR}
+	${PROJECT_LIBRAIES_DIR}/assimp/include
+	${PROJECT_BUILD_DIR}/Libraies/assimp/include/
 )
+
 
 
 ## 出来 d3d shader 资源

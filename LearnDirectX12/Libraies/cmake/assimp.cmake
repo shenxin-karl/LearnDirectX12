@@ -1,12 +1,9 @@
-set(ASSIMP_BUILD_TESTS OFF)
 set(ASSIMP_INSTALL OFF)
-set(ASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT OFF)
-set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF)
-set(ASSIMP_BUILD_ZLIB OFF)
-set(ASSIMP_INJECT_DEBUG_POSTFIX OFF)
+set(BUILD_SHARED_LIBS OFF)
 add_subdirectory("assimp")
 
 set_target_properties("assimp" PROPERTIES FOLDER "Libraies/assimp")
 set_target_properties("UpdateAssimpLibsDebugSymbolsAndDLLs" PROPERTIES FOLDER "Libraies/assimp")
 set_target_properties("assimp_cmd" PROPERTIES FOLDER "Libraies/assimp")
 set_target_properties("zlibstatic" PROPERTIES FOLDER "Libraies/assimp")
+ 

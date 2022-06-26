@@ -20,8 +20,83 @@
 #include "D3D/M3dLoader/M3dLoader.h"
 #include "D3D/Tool/Mesh.h"
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
+
+struct Space {
+	size_t size = 0;
+	friend std::ostream &operator<<(std::ostream &os, const Space &s) {
+		for (size_t i = 0; i < s.size; ++i)
+			os << " ";
+		return os;
+	}
+
+	friend Space operator+(const Space &lhs, int rhs) {
+		return { lhs.size + rhs };
+	}
+};
+
+void processNode(aiNode *node, const aiScene *scene, Space space = {0}) {
+	std::cout << space << "--aiNode:" << node->mName.data << std::endl;
+	for (size_t i = 0; i < node->mNumMeshes; ++i) {
+		auto index = node->mMeshes[i];
+		aiMesh *pAiMesh = scene->mMeshes[index];
+		std::cout << (space + 1) << "MeshName: " << pAiMesh->mName.data << std::endl;
+		std::cout << (space + 1) << "boneCount: " << pAiMesh->mNumBones << std::endl;
+	}
+	
+	// 处理所有的子节点
+	for (size_t i = 0; i < node->mNumChildren; ++i)
+		processNode(node->mChildren[i], scene, space+1);
+}
+
+void test() {
+	auto flag = 0;
+	flag |= aiProcess_Triangulate;
+	flag |= aiProcess_GenNormals;
+	flag |= aiProcess_CalcTangentSpace;
+	flag |= aiProcess_ConvertToLeftHanded;
+	flag |= aiProcess_LimitBoneWeights;
+	Assimp::Importer importer;
+	const aiScene *pScene = importer.ReadFile("resource/Flying bee.glb", flag);
+	if (pScene == nullptr || 							// 场景节点为空
+		pScene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || 	// 不完全加载
+		pScene->mRootNode == nullptr) {					// 根节点为空
+		std::cerr << importer.GetErrorString() << std::endl;
+	}
+
+	processNode(pScene->mRootNode, pScene);
+
+
+	for (size_t i = 0; i < pScene->mNumMaterials; ++i) {
+		aiMaterial *pAiMaterial = pScene->mMaterials[i];
+		size_t textureCount = pAiMaterial->GetTextureCount(aiTextureType_DIFFUSE); 
+		std::cout << textureCount;
+		if (textureCount > 0) {
+			aiString str;
+			pAiMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &str);
+			std::cout << str.data << std::endl;
+		}
+	}
+
+
+	Space s;
+	for (size_t i = 0; i < pScene->mNumAnimations; ++i) {
+		auto *pAnimation = pScene->mAnimations[i];
+		for (size_t j = 0; j < pAnimation->mNumChannels; ++j) {
+			Space s1 = s + 1;
+			aiNodeAnim *animChannle = pAnimation->mChannels[j];
+			std::cout << s1 << animChannle->mNodeName.data << std::endl;
+		}
+	}
+}
+
+
 Shape::Shape() {
 	_title = "Shape";
+	test();
 }
 
 Shape::~Shape() {

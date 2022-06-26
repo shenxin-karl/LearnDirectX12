@@ -27,7 +27,10 @@ set_property(TARGET "Shape" PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURR
 
 target_include_directories(BoxApp PUBLIC
 	${CMAKE_CURRENT_SOURCE_DIR}/..
+	${PROJECT_LIBRAIES_DIR}/assimp/include
+	${PROJECT_BUILD_DIR}/Libraies/assimp/include/
 )
+
 
 target_link_libraries("Shape" PUBLIC 
 	BaseApp
@@ -35,4 +38,5 @@ target_link_libraries("Shape" PUBLIC
 	Geometry
 	D3D
 	dx12lib
+	assimp
 )

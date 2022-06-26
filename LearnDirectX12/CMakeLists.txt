@@ -42,6 +42,7 @@ list(APPEND allSubDir "Editor")
 
 set(PROJECT_COMPONENT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Component)
 set(PROJECT_LIBRAIES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Libraies)
+set(PROJECT_BUILD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Build)
 
 
 foreach(dirname ${allSubDir})
