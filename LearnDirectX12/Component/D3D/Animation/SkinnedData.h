@@ -6,6 +6,7 @@
 namespace d3d {
 
 using namespace Math;
+class AssimpLoader;
 
 struct SkinnedVertex {
 	float3  position;
@@ -38,6 +39,7 @@ struct AnimationClip {
 };
 
 class SkinnedData {
+	friend class AssimpLoader;
 public:
 	size_t getBoneCount() const;
 	float getClipStartTime(const std::string &clipName) const;

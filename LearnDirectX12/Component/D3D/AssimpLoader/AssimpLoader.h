@@ -7,45 +7,40 @@
 namespace d3d {
 
 class AssimpLoader {
-	struct ALMaterial {
-		std::string albedoMapName;			// SRGB 
-		std::string normalMapName;			
-		std::string metallicMapName;
-		std::string roughnessMapName;
-		std::string aoMapName;				// SRGB
-	};
-
 	struct ALMesh {
 		std::vector<com::Vertex> vertices;
 		std::vector<uint16_t> indices;
 		size_t materialIndex = -1;
 	};
-
 	struct ALSkinnedMesh {
 		std::vector<SkinnedVertex> vertices;
 		std::vector<uint16_t> indices;
 		size_t materialIndex = -1;
 		SkinnedData skinnedData;
 	};
-
-	static std::optional<std::string> load(const std::string &fileName,
-		std::vector<ALMesh> &meshes,
-		std::vector<ALMaterial> &materials
-	);
-
-	static std::optional<std::string> load(const std::string &fileName,
-		std::vector<ALSkinnedMesh> meshes,
-		std::vector<ALMaterial> &materails
-	);
-private:
-	static void processNode(std::vector<ALMesh> &meshes, std::vector<ALMaterial> &materails, aiNode *pAiNode, const aiScene *pScene);
-	static void processNode(std::vector<ALSkinnedMesh> &meshes, std::vector<ALMaterial> &materails, aiNode *pAiNode, const aiScene *pScene);
-	static void processMesh(std::vector<ALMesh> &meshes, std::vector<ALMaterial> &materials, aiMesh *pAiMesh, const aiScene *pScene);
-	static void processMesh(std::vector<ALSkinnedMesh> &meshes, std::vector<ALMaterial> &materails, aiMesh *pAiMesh, const aiScene *pScene);
-	static void processTriangles(std::vector<uint16_t> &indices, aiMesh *pAiMesh);
-	static size_t processMaterials(std::vector<ALMaterial> &materails, aiMesh *pAiMesh, const aiScene *pScene);
-	static void processBone(std::vector<SkinnedVertex> &vertices, std::vector<float4x4> &boneOffsets, aiMesh *pAiMesh);
+	struct BoneInfo {
+		std::vector<float4x4> boneOffsets;
+		std::vector<std::string> boneNames;
+		std::unordered_map<std::string, uint8_t> boneIndexMap;
+	};
+public:
+	explicit AssimpLoader(const std::string &fileName, bool bLoad = false);
+	bool load();
+	bool isLoad() const;
+	void parse(std::vector<ALMesh> &meshs);
+	void parse(std::vector<ALSkinnedMesh> &meshs);
 	static float4x4 convertFloat4x4(const aiMatrix4x4 &m);
+private:
+	static void processTriangles(std::vector<uint16_t> &indices, const aiMesh *pAiMesh);
+	static void processVertices(std::vector<com::Vertex> &vertices, const aiMesh *pAiMesh);
+	static void processSkinnedVertices(std::vector<SkinnedVertex> &vertices, const aiMesh *pAiMesh);
+	static void processBoneOffsets(BoneInfo &boneInfo, const aiMesh *pAiMesh);
+	void processBoneHierarchyAndAnimation(std::vector<BoneInfo> boneInfos, std::vector<ALSkinnedMesh> &meshs);
+private:
+	bool _isLoad = false;
+	const aiScene *_pScene = nullptr;
+	std::string _fileName;
+	Assimp::Importer _importer;
 };
 
 
