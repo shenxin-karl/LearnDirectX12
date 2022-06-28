@@ -23,6 +23,10 @@ class AssimpLoader {
 		std::vector<std::string> boneNames;
 		std::unordered_map<std::string, uint8_t> boneIndexMap;
 	};
+	struct AiNodeInfo {
+		size_t index;
+		float4x4 nodeTransform;
+	};
 public:
 	explicit AssimpLoader(const std::string &fileName, bool bLoad = false);
 	bool load();
@@ -30,12 +34,14 @@ public:
 	void parse(std::vector<ALMesh> &meshs);
 	void parse(std::vector<ALSkinnedMesh> &meshs);
 	static float4x4 convertFloat4x4(const aiMatrix4x4 &m);
+	static float3 convertFloat3(const aiVector3D &v);
+	static float4 convertFloat4(const aiQuaternion &q);
 private:
 	static void processTriangles(std::vector<uint16_t> &indices, const aiMesh *pAiMesh);
 	static void processVertices(std::vector<com::Vertex> &vertices, const aiMesh *pAiMesh);
 	static void processSkinnedVertices(std::vector<SkinnedVertex> &vertices, const aiMesh *pAiMesh);
 	static void processBoneOffsets(BoneInfo &boneInfo, const aiMesh *pAiMesh);
-	void processBoneHierarchyAndAnimation(std::vector<BoneInfo> boneInfos, std::vector<ALSkinnedMesh> &meshs);
+	void processBoneHierarchyAndAnimation(std::vector<ALSkinnedMesh> &meshs, const std::vector<BoneInfo> &boneInfos) const;
 private:
 	bool _isLoad = false;
 	const aiScene *_pScene = nullptr;

@@ -397,6 +397,7 @@ public:
 	FORCEINLINE Vector3 operator*(const Vector3 &rhs) const;
 	FORCEINLINE Quaternion &operator=(const Quaternion &rhs);
 	FORCEINLINE Quaternion &operator*=(const Quaternion &rhs);
+	FORCEINLINE DX::XMVECTOR *operator&();
 	friend BoolVector operator==(const Quaternion &, const Quaternion &);
 	friend BoolVector operator!=(const Quaternion &, const Quaternion &);
 	friend Quaternion normalize(const Quaternion &q);

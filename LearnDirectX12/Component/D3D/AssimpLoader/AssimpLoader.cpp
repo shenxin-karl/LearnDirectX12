@@ -71,6 +71,14 @@ float4x4 AssimpLoader::convertFloat4x4(const aiMatrix4x4 &m) {
 	return d;
 }
 
+float3 AssimpLoader::convertFloat3(const aiVector3D &v) {
+	return { v.x, v.y, v.z };
+}
+
+float4 AssimpLoader::convertFloat4(const aiQuaternion &q) {
+	return { q.x, q.y, q.z, q.w };
+}
+
 void AssimpLoader::processTriangles(std::vector<uint16_t> &indices, const aiMesh *pAiMesh) {
 	size_t numIndices = 0;
 	for (size_t i = 0; i < pAiMesh->mNumFaces; ++i)
@@ -148,44 +156,100 @@ void AssimpLoader::processBoneOffsets(BoneInfo &boneInfo, const aiMesh *pAiMesh)
 	}
 }
 
-void AssimpLoader::processBoneHierarchyAndAnimation(std::vector<BoneInfo> boneInfos, std::vector<ALSkinnedMesh> &meshs) {
-	std::vector<AnimationClip> clips;
-	std::unordered_map<std::string, std::string> boneParentName;
 
-	std::stack<const aiNode *> nodeStack;
-	nodeStack.push(_pScene->mRootNode);
-	while (!nodeStack.empty()) {
-		const aiNode *pAiNode = nodeStack.top();
-		const aiNode *pParent = pAiNode->mParent;
-		boneParentName[pAiNode->mName.C_Str()] = (pParent != nullptr) ? pParent->mName.C_Str() : "";
-		nodeStack.pop();
+void AssimpLoader::processBoneHierarchyAndAnimation(std::vector<ALSkinnedMesh> &meshs, const std::vector<BoneInfo> &boneInfos) const {
+	if (!_pScene->HasAnimations())
+		return;
+
+	std::vector<size_t> boneHierarchy;
+	std::vector<std::string> boneNames;
+	std::unordered_map<std::string, AiNodeInfo> boneInfoMap;
+	std::stack<const aiNode *> aiNodeStack;
+
+	// 计算好层级关系
+	aiNodeStack.push(_pScene->mRootNode);
+	while (!aiNodeStack.empty()) {
+		const aiNode *pAiNode = aiNodeStack.top();
+		std::string boneName{ pAiNode->mName.C_Str(), pAiNode->mName.length };
+		boneInfoMap[boneName] = { boneNames.size(), convertFloat4x4(pAiNode->mTransformation) };
+		boneNames.emplace_back(boneName);
+		if (pAiNode->mParent != nullptr) {
+			auto iter = boneInfoMap.find(pAiNode->mParent->mName.C_Str());
+			assert(iter != boneInfoMap.end());
+			boneHierarchy.push_back(iter->second.index);
+		} else {
+			boneHierarchy.push_back(-1);
+		}
+		aiNodeStack.pop();
 		for (size_t i = 0; i < pAiNode->mNumChildren; ++i)
-			nodeStack.push(pAiNode->mChildren[i]);
+			aiNodeStack.push(pAiNode->mChildren[i]);
 	}
 
-	for (size_t i = 0; i < boneInfos.size(); ++i) {
-		BoneInfo &boneInfo = boneInfos[i];
-		SkinnedData &skinnedData = meshs[i].skinnedData;
-		size_t boneSize = boneInfo.boneOffsets.size();
-		skinnedData._boneHierarchy.resize(boneSize);
-		skinnedData._boneOffsets.resize(boneSize);
-		for (size_t j = 0; j < boneInfo.boneOffsets.size(); ++i) {
-			size_t parentIndex = 0;
-			const auto &boneName = boneInfo.boneNames[i];
-			auto iter = boneParentName.find(boneName);
-			if (iter != boneParentName.end()) {
-				const auto &parentName = iter->second;
-				auto boneNameIter = boneInfo.boneIndexMap.find(parentName);
-				if (boneNameIter != boneInfo.boneIndexMap.end())
-					parentIndex = boneNameIter->second;
-			}
 
-			skinnedData._boneHierarchy[j] = parentIndex;
-			skinnedData._boneOffsets[j] = boneInfo.boneOffsets[j];
+	// 计算好 bone offsets
+	size_t nodeSize = boneNames.size();
+	for (size_t i = 0; i < meshs.size(); ++i) {
+		SkinnedData &skinnedData = meshs[i].skinnedData;
+		const BoneInfo &boneInfo = boneInfos[i];
+		skinnedData._boneHierarchy = boneHierarchy;
+		skinnedData._boneOffsets.resize(nodeSize);
+		for (size_t j = 0; j < nodeSize; ++j) {
+			const std::string &boneName = boneNames[i];
 		}
 	}
 
+	std::unordered_map<std::string, const aiNodeAnim *> aiNodeAnimMap;
+	auto processAnimations = [&](AnimationClip &animationClip) {
+		for (size_t i = 0; i < boneNames.size(); ++i) {
+			const std::string &boneName = boneNames[i];
+			BoneAnimation &boneAnimation = animationClip.boneAnimations[i];
+
+			// 这个动画下的这骨骼拥有关键帧
+			if (auto iter = aiNodeAnimMap.find(boneName); iter != aiNodeAnimMap.end()) {
+				const aiNodeAnim *pKeyframeInfo = iter->second;
+				assert(pKeyframeInfo->mNumPositionKeys > 0);
+				assert(pKeyframeInfo->mNumPositionKeys == pKeyframeInfo->mNumRotationKeys);
+				assert(pKeyframeInfo->mNumRotationKeys == pKeyframeInfo->mNumScalingKeys);
+				for (size_t j = 0; j < pKeyframeInfo->mNumPositionKeys; ++j) {
+					Keyframe keyframe;
+					keyframe.timePoint = pKeyframeInfo->mPositionKeys[i].mTime;
+					keyframe.translation = convertFloat3(pKeyframeInfo->mPositionKeys[i].mValue);
+					keyframe.scale = convertFloat3(pKeyframeInfo->mScalingKeys[i].mValue);
+					keyframe.rotationQuat = convertFloat4(pKeyframeInfo->mRotationKeys[i].mValue);
+					boneAnimation.keyframes.push_back(keyframe);
+				}
+
+			// 使用 aiNode::mTransformation 构建唯一的关键帧传递
+			} else {
+				Matrix4 nodeTransform = Matrix4(boneInfoMap[boneName].nodeTransform);
+				Vector3 scale;
+				Vector3 trans;
+				Quaternion rotateQuat;
+				DX::XMMatrixDecompose(&scale, &trans, &rotateQuat, nodeTransform.operator DX::XMMATRIX());
+				Keyframe keyframe;
+				keyframe.timePoint = std::numeric_limits<float>::infinity();
+				keyframe.scale = float3(scale);
+				keyframe.translation = float3(trans);
+				keyframe.rotationQuat = float4(rotateQuat);
+			}
+		}
+	};
+
 	for (size_t i = 0; i < _pScene->mNumAnimations; ++i) {
+		aiNodeAnimMap.clear();
+		const aiAnimation *pAnimation = _pScene->mAnimations[i];
+		for (size_t j = 0; j < pAnimation->mNumChannels; ++j) {
+			const aiNodeAnim *pAiNodeAnim = pAnimation->mChannels[j];
+			aiNodeAnimMap[pAiNodeAnim->mNodeName.C_Str()] = pAiNodeAnim;
+		}
+
+		// 处理关键帧
+		for (size_t j = 0; j < meshs.size(); ++j) {
+			SkinnedData &skinnedData = meshs[i].skinnedData;
+			AnimationClip &animationClip = skinnedData._animations[pAnimation->mName.C_Str()];
+			animationClip.boneAnimations.resize(nodeSize);
+			processAnimations(animationClip);
+		}
 		
 	}
 }
