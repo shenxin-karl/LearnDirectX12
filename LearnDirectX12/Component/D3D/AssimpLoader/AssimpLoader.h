@@ -31,8 +31,8 @@ public:
 	explicit AssimpLoader(const std::string &fileName, bool bLoad = false);
 	bool load();
 	bool isLoad() const;
-	void parse(std::vector<ALMesh> &meshs);
-	void parse(std::vector<ALSkinnedMesh> &meshs);
+	std::vector<ALMesh> parseMesh() const;
+	std::vector<ALSkinnedMesh> parseSkinnedMesh() const;
 	static float4x4 convertFloat4x4(const aiMatrix4x4 &m);
 	static float3 convertFloat3(const aiVector3D &v);
 	static float4 convertFloat4(const aiQuaternion &q);

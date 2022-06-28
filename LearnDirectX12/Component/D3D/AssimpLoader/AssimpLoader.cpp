@@ -35,30 +35,34 @@ bool AssimpLoader::isLoad() const {
 	return _isLoad;
 }
 
-void AssimpLoader::parse(std::vector<ALMesh> &meshs) {
+std::vector<AssimpLoader::ALMesh> AssimpLoader::parseMesh() const {
 	assert(isLoad());
+	std::vector<ALMesh> meshs;
 	for (size_t i = 0; i < _pScene->mNumMeshes; ++i) {
-		const aiMesh *pAiMesh = _pScene->mMeshes[i];
 		ALMesh mesh;
+		const aiMesh *pAiMesh = _pScene->mMeshes[i];
 		processVertices(mesh.vertices, pAiMesh);
 		processTriangles(mesh.indices, pAiMesh);
 		meshs.push_back(std::move(mesh));
 	}
+	return meshs;
 }
 
-
-
-void AssimpLoader::parse(std::vector<ALSkinnedMesh> &meshs) {
+std::vector<AssimpLoader::ALSkinnedMesh> AssimpLoader::parseSkinnedMesh() const {
 	assert(isLoad());
+	std::vector<ALSkinnedMesh> meshs;
 	std::vector<BoneInfo> boneInfos;
+	boneInfos.resize(_pScene->mNumMeshes);
 	for (size_t i = 0; i < _pScene->mNumMeshes; ++i) {
-		const aiMesh *pAiMesh = _pScene->mMeshes[i];
 		ALSkinnedMesh mesh;
+		const aiMesh *pAiMesh = _pScene->mMeshes[i];
 		processSkinnedVertices(mesh.vertices, pAiMesh);
 		processTriangles(mesh.indices, pAiMesh);
-		//processBoneOffsets();
+		processBoneOffsets(boneInfos[i], pAiMesh);
 		meshs.push_back(std::move(mesh));
 	}
+	processBoneHierarchyAndAnimation(meshs, boneInfos);
+	return meshs;
 }
 
 float4x4 AssimpLoader::convertFloat4x4(const aiMatrix4x4 &m) {
@@ -85,9 +89,11 @@ void AssimpLoader::processTriangles(std::vector<uint16_t> &indices, const aiMesh
 		numIndices += pAiMesh->mFaces[i].mNumIndices;
 
 	indices.resize(numIndices);
+	auto pDesc = indices.begin();
 	for (size_t i = 0; i < pAiMesh->mNumFaces; ++i) {
 		const aiFace &face = pAiMesh->mFaces[i];
-		copy_n(face.mIndices, face.mNumIndices, indices.begin());
+		copy_n(face.mIndices, face.mNumIndices, pDesc);
+		pDesc += face.mNumIndices;
 	}
 }
 
@@ -107,8 +113,7 @@ void AssimpLoader::processVertices(std::vector<com::Vertex> &vertices, const aiM
 			vertex.tangent.x = pAiMesh->mTangents[i].x;
 			vertex.tangent.y = pAiMesh->mTangents[i].y;
 			vertex.tangent.z = pAiMesh->mTangents[i].z;
-		}
-		else {
+		} else {
 			vertex.texcoord = float2::identity();
 			vertex.tangent = float3::identity();
 		}
@@ -131,8 +136,7 @@ void AssimpLoader::processSkinnedVertices(std::vector<SkinnedVertex> &vertices, 
 			vertex.tangent.x = pAiMesh->mTangents[i].x;
 			vertex.tangent.y = pAiMesh->mTangents[i].y;
 			vertex.tangent.z = pAiMesh->mTangents[i].z;
-		}
-		else {
+		} else {
 			vertex.texcoord = float2::identity();
 			vertex.tangent = float3::identity();
 		}
@@ -150,7 +154,7 @@ void AssimpLoader::processBoneOffsets(BoneInfo &boneInfo, const aiMesh *pAiMesh)
 	for (size_t i = 0; i < pAiMesh->mNumBones; ++i) {
 		const aiBone *pAiBone = pAiMesh->mBones[i];
 		std::string boneName{ pAiBone->mName.C_Str() };
-		boneInfo.boneIndexMap[boneName] = i;
+		boneInfo.boneIndexMap[boneName] = static_cast<uint8_t>(i);
 		boneInfo.boneNames.push_back(pAiBone->mName.C_Str());
 		boneInfo.boneOffsets[i] = convertFloat4x4(pAiBone->mOffsetMatrix);
 	}
@@ -186,7 +190,7 @@ void AssimpLoader::processBoneHierarchyAndAnimation(std::vector<ALSkinnedMesh> &
 	}
 
 
-	// 计算好 bone offsets
+	// 计算好 bone offsets 和赋值 bone hierarchy
 	size_t nodeSize = boneNames.size();
 	for (size_t i = 0; i < meshs.size(); ++i) {
 		SkinnedData &skinnedData = meshs[i].skinnedData;
@@ -194,13 +198,23 @@ void AssimpLoader::processBoneHierarchyAndAnimation(std::vector<ALSkinnedMesh> &
 		skinnedData._boneHierarchy = boneHierarchy;
 		skinnedData._boneOffsets.resize(nodeSize);
 		for (size_t j = 0; j < nodeSize; ++j) {
-			const std::string &boneName = boneNames[i];
+			const std::string &boneName = boneNames[j];
+			auto iter = boneInfo.boneIndexMap.find(boneName);
+			if (iter != boneInfo.boneIndexMap.end())
+				skinnedData._boneOffsets[j] = boneInfo.boneOffsets[iter->second];
+			else
+				skinnedData._boneOffsets[j] = float4x4::identity();
 		}
 	}
 
 	std::unordered_map<std::string, const aiNodeAnim *> aiNodeAnimMap;
-	auto processAnimations = [&](AnimationClip &animationClip) {
-		for (size_t i = 0; i < boneNames.size(); ++i) {
+	auto processAnimations = [&](AnimationClip &animationClip, float ticksPerSecond) {
+		if (ticksPerSecond < 0.0001f)
+			ticksPerSecond = 1.f;
+		else
+			ticksPerSecond = 1.f / ticksPerSecond;
+
+		for (size_t i = 0; i < nodeSize; ++i) {
 			const std::string &boneName = boneNames[i];
 			BoneAnimation &boneAnimation = animationClip.boneAnimations[i];
 
@@ -212,14 +226,14 @@ void AssimpLoader::processBoneHierarchyAndAnimation(std::vector<ALSkinnedMesh> &
 				assert(pKeyframeInfo->mNumRotationKeys == pKeyframeInfo->mNumScalingKeys);
 				for (size_t j = 0; j < pKeyframeInfo->mNumPositionKeys; ++j) {
 					Keyframe keyframe;
-					keyframe.timePoint = pKeyframeInfo->mPositionKeys[i].mTime;
-					keyframe.translation = convertFloat3(pKeyframeInfo->mPositionKeys[i].mValue);
-					keyframe.scale = convertFloat3(pKeyframeInfo->mScalingKeys[i].mValue);
-					keyframe.rotationQuat = convertFloat4(pKeyframeInfo->mRotationKeys[i].mValue);
+					keyframe.timePoint = static_cast<float>(pKeyframeInfo->mPositionKeys[j].mTime) * ticksPerSecond;
+					keyframe.translation = convertFloat3(pKeyframeInfo->mPositionKeys[j].mValue);
+					keyframe.scale = convertFloat3(pKeyframeInfo->mScalingKeys[j].mValue);
+					keyframe.rotationQuat = convertFloat4(pKeyframeInfo->mRotationKeys[j].mValue);
 					boneAnimation.keyframes.push_back(keyframe);
 				}
 
-			// 使用 aiNode::mTransformation 构建唯一的关键帧传递
+			// 当前动画中的这个骨骼不需要关键帧, 那么使用 aiNode::mTransformation 构建关键帧传递
 			} else {
 				Matrix4 nodeTransform = Matrix4(boneInfoMap[boneName].nodeTransform);
 				Vector3 scale;
@@ -231,13 +245,17 @@ void AssimpLoader::processBoneHierarchyAndAnimation(std::vector<ALSkinnedMesh> &
 				keyframe.scale = float3(scale);
 				keyframe.translation = float3(trans);
 				keyframe.rotationQuat = float4(rotateQuat);
+				boneAnimation.keyframes.push_back(keyframe);
 			}
 		}
 	};
 
+	// 处理每个动画
 	for (size_t i = 0; i < _pScene->mNumAnimations; ++i) {
-		aiNodeAnimMap.clear();
 		const aiAnimation *pAnimation = _pScene->mAnimations[i];
+
+		// 建立动画中骨骼名称到动画数据的HashMap
+		aiNodeAnimMap.clear();
 		for (size_t j = 0; j < pAnimation->mNumChannels; ++j) {
 			const aiNodeAnim *pAiNodeAnim = pAnimation->mChannels[j];
 			aiNodeAnimMap[pAiNodeAnim->mNodeName.C_Str()] = pAiNodeAnim;
@@ -245,12 +263,11 @@ void AssimpLoader::processBoneHierarchyAndAnimation(std::vector<ALSkinnedMesh> &
 
 		// 处理关键帧
 		for (size_t j = 0; j < meshs.size(); ++j) {
-			SkinnedData &skinnedData = meshs[i].skinnedData;
+			SkinnedData &skinnedData = meshs[j].skinnedData;
 			AnimationClip &animationClip = skinnedData._animations[pAnimation->mName.C_Str()];
 			animationClip.boneAnimations.resize(nodeSize);
-			processAnimations(animationClip);
+			processAnimations(animationClip, static_cast<float>(pAnimation->mTicksPerSecond));
 		}
-		
 	}
 }
 
