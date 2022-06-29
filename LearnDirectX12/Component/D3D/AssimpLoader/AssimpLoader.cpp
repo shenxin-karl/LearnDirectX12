@@ -35,11 +35,6 @@ bool AssimpLoader::isLoad() const {
 	return _isLoad;
 }
 
-
-static void parseMeshImpl(std::vector<AssimpLoader::ALMesh> &meshs, const aiNode *pAiNode, Matrix4 toParentSpace) {
-
-}
-
 std::vector<AssimpLoader::ALMesh> AssimpLoader::parseMesh() const {
 	assert(isLoad());
 	std::vector<ALMesh> meshs;

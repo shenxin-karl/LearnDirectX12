@@ -1,9 +1,10 @@
 #include <iostream>
+#include <GameTimer/GameTimer.h>
 #include "ShadowApp.h"
 
 int main() {
 	std::shared_ptr<com::GameTimer> pGameTimer = std::make_shared<com::GameTimer>();
-	Shape app;
+	ShadowApp app;
 	try {
 		app.initialize();
 		while (app.isRunning()) {
