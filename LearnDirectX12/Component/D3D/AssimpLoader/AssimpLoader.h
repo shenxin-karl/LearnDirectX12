@@ -7,15 +7,16 @@
 namespace d3d {
 
 class AssimpLoader {
+public:
 	struct ALMesh {
 		std::vector<com::Vertex> vertices;
 		std::vector<uint16_t> indices;
-		size_t materialIndex = -1;
+		aiMaterial *pAiMaterial = nullptr;
 	};
 	struct ALSkinnedMesh {
 		std::vector<SkinnedVertex> vertices;
 		std::vector<uint16_t> indices;
-		size_t materialIndex = -1;
+		aiMaterial *pAiMaterial = nullptr;
 		SkinnedData skinnedData;
 	};
 	struct BoneInfo {
@@ -38,15 +39,21 @@ public:
 	static float4 convertFloat4(const aiQuaternion &q);
 private:
 	static void processTriangles(std::vector<uint16_t> &indices, const aiMesh *pAiMesh);
-	static void processVertices(std::vector<com::Vertex> &vertices, const aiMesh *pAiMesh);
+	static void processVertices(std::vector<com::Vertex> &vertices, const aiMesh *pAiMesh, Matrix4 toLocalModel);
 	static void processSkinnedVertices(std::vector<SkinnedVertex> &vertices, const aiMesh *pAiMesh);
-	static void processBoneOffsets(BoneInfo &boneInfo, const aiMesh *pAiMesh);
+	void parseMeshImpl(std::vector<AssimpLoader::ALMesh> &meshs, const aiNode *pAiNode, Matrix4 toParentSpace) const;
+	void processBoneOffsets(std::vector<SkinnedVertex> &vertices, BoneInfo &boneInfo, const aiMesh *pAiMesh) const;
+	void processBoneHierarchy() const;
 	void processBoneHierarchyAndAnimation(std::vector<ALSkinnedMesh> &meshs, const std::vector<BoneInfo> &boneInfos) const;
 private:
 	bool _isLoad = false;
 	const aiScene *_pScene = nullptr;
 	std::string _fileName;
 	Assimp::Importer _importer;
+
+	mutable std::vector<size_t> _boneHierarchy;
+	mutable std::vector<std::string> _boneNames;
+	mutable std::unordered_map<std::string, AiNodeInfo> _boneInfoMap;
 };
 
 

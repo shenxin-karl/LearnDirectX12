@@ -38,7 +38,7 @@ list(APPEND allSubDir "BasicTessellation")
 list(APPEND allSubDir "BezierPatch")
 list(APPEND allSubDir "Instance")
 list(APPEND allSubDir "Editor")
-
+list(APPEND allSubDir "ShadowApp")
 
 set(PROJECT_COMPONENT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Component)
 set(PROJECT_LIBRAIES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Libraies)
