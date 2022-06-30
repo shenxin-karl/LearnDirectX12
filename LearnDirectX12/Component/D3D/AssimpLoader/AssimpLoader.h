@@ -2,7 +2,9 @@
 #include <Geometry/GeometryGenerator.h>
 #include <D3D/d3dutil.h>
 #include <D3D/Animation/SkinnedData.h>
-#include <optional>
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
 namespace d3d {
 

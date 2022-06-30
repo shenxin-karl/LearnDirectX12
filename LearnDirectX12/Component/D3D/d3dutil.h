@@ -25,7 +25,7 @@ class FXAA;
 class Mesh;
 class SkyBox;
 class IBL;
-class PCFShadow;
+class AssimpLoader;
 
 class RenderTarget;
 

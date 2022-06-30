@@ -1,6 +1,3 @@
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
 #include <D3D/AssimpLoader/AssimpLoader.h>
 #include <D3D/Tool/Mesh.h>
 #include <stack>
@@ -157,7 +154,7 @@ void AssimpLoader::parseMeshImpl(std::vector<AssimpLoader::ALMesh> &meshs,
 	const aiNode *pAiNode,
 	Matrix4 toParentSpace) const
 {
-	Matrix4 toLocalModel = toParentSpace * Matrix4(AssimpLoader::convertFloat4x4(pAiNode->mTransformation));
+	Matrix4 toLocalModel = toParentSpace * Matrix4(convertFloat4x4(pAiNode->mTransformation));
 	for (size_t i = 0; i < pAiNode->mNumMeshes; ++i) {
 		ALMesh mesh;
 		const aiMesh *pAiMesh = _pScene->mMeshes[i];
@@ -184,7 +181,7 @@ void AssimpLoader::processBoneOffsets(std::vector<SkinnedVertex> &vertices, Bone
 		boneInfo.boneOffsets[i] = convertFloat4x4(pAiBone->mOffsetMatrix);
 
 		auto iter = _boneInfoMap.find(boneName);
-		uint8_t boneIndex = (iter != _boneInfoMap.end()) ? iter->second.index : -1;
+		uint8_t boneIndex = static_cast<uint8_t>((iter != _boneInfoMap.end()) ? iter->second.index : -1);
 		assert(boneIndex != static_cast<uint8_t>(-1));
 
 		for (size_t j = 0; j < pAiBone->mNumWeights; ++j) {

@@ -1,4 +1,6 @@
 #include "ShadowApp.h"
+
+#include "Model.h"
 #include "Context/CommandQueue.h"
 #include "D3D/AssimpLoader/AssimpLoader.h"
 #include "D3D/dx12libHelper/RenderTarget.h"
@@ -66,16 +68,16 @@ void ShadowApp::onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int 
 }
 
 void ShadowApp::loadModel(dx12lib::DirectContextProxy pDirectCtx) {
-	auto loadModelImpl = [&](const std::string &path) {
+	auto loadModelImpl = [&](const std::string &name, const std::string &path) {
 		d3d::AssimpLoader loader(path, true);
 		assert(loader.isLoad());
-		auto meshs = loader.parseMesh();
-		for (auto &mesh : meshs) {
-			
-		}
+		_modelMap[name] = std::make_shared<Model>(pDirectCtx, loader);
 	};
+	loadModelImpl("Cathedral", "resources/Cathedral.glb");
+	loadModelImpl("QuaintVillag", "resources/Quaint Village.glb");
+	loadModelImpl("TreeHouse", "resources/Tree House.glb");
+}
 
-	loadModelImpl("resources/Cathedral.glb");
-	loadModelImpl("Quaint Village.glb");
-	loadModelImpl("Tree House.glb");
+void ShadowApp::buildRenderItem() const {
+
 }

@@ -87,7 +87,7 @@ using MeshIndexTypeToIntegerType_t = std::conditional_t<(IndexType == MeshIndexT
 	>
 >;
 
-template<typename T, MeshIndexType IndexType = MeshIndexType::UINT16>
+template<typename T = com::Vertex, MeshIndexType IndexType = MeshIndexType::UINT16>
 struct MakeMeshHelper {
 	static std::shared_ptr<dx12lib::VertexBuffer> 
 	buildVertexBuffer(dx12lib::GraphicsContextProxy pGrahpicsCtx, const com::MeshData &mesh) {
