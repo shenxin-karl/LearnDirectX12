@@ -10,10 +10,10 @@ cbuffer CLightCB : register(b1){
 };
 
 cbuffer CObjectCB : register(b2){
-    float4x4 gWorld;
-    float4x4 gNormalMat;
-    float4x4 gMatTransfrom;
-    Material gMaterial;
+    float4x4     gWorld;
+    float4x4     gNormalMat;
+    float4x4     gMatTransfrom;
+    MaterialData gMaterial;
 };
 
 struct VertexIn {
@@ -43,7 +43,7 @@ Texture2D gDiffuseMap : register(t0);
 float4 PS(VertexOut pin) : SV_Target {
     float4 diffuseAlbedo = gDiffuseMap.Sample(gSamAnisotropicClamp, pin.texcoord);
     clip(diffuseAlbedo.a - 0.1);
-    Material mat = {
+    MaterialData mat = {
         diffuseAlbedo, gMaterial.roughness, gMaterial.metallic,
         0.0, 0.0
     };

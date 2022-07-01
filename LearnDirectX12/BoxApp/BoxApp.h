@@ -26,7 +26,7 @@ struct BoxMesh {
 struct CBObject {
 	float4x4      gMatWorld;
 	float4x4	  gMatNormal;
-	d3d::Material gMaterial;
+	d3d::MaterialData gMaterial;
 	d3d::SH3	  gSH3;
 };
 

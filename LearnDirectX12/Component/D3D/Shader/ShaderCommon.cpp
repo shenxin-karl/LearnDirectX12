@@ -2,7 +2,7 @@
 
 namespace d3d {
 
-void Light::initAsDirectionLight(float3 direction, float3 strength) {
+void LightData::initAsDirectionLight(float3 direction, float3 strength) {
 	this->direction = normalize(Vector3(direction)).xyz;
 	this->strength = strength;
 	this->position = float3(0);
@@ -11,7 +11,7 @@ void Light::initAsDirectionLight(float3 direction, float3 strength) {
 	this->spotPower = 0.f;
 }
 
-void Light::initAsPointLight(float3 position, float3 strength, float falloffStart, float falloffEnd) {
+void LightData::initAsPointLight(float3 position, float3 strength, float falloffStart, float falloffEnd) {
 	this->direction = float3(0);
 	this->strength = strength;
 	this->position = position;
@@ -20,7 +20,7 @@ void Light::initAsPointLight(float3 position, float3 strength, float falloffStar
 	this->spotPower = 0.f;
 }
 
-void Light::initAsSpotLight(float3 position, 
+void LightData::initAsSpotLight(float3 position, 
 	float3 direction, 
 	float3 strength, 
 	float falloffStart, 

@@ -25,7 +25,7 @@ float CarToonSpecShadingFactor(float NdotH) {
 
 #ifndef _DECLARE_LIGHT_
 #define _DECLARE_LIGHT_
-struct Light {
+struct LightData {
     float3 strength;        // 辐射强度
     float  falloffStart;    // 点光源/聚光灯:衰减开始距离
     float3 direction;       // 方向光/聚光灯:光源方向
@@ -37,7 +37,7 @@ struct Light {
 
 #ifndef _DECLARE_MATERIAL_
 #define _DECLARE_MATERIAL_
-struct Material {
+struct MaterialData {
     float4 diffuseAlbedo;   // 反照率
     float  roughness;       // 粗糙度
     float  metallic;        // 金属度
@@ -68,7 +68,7 @@ float3 SchlickFresnel(float3 F0, float cosIncidenceAngle) {
     return F0 + (1.f - F0) * (cosTh * cosTh * cosTh * cosTh * cosTh);
 }
 
-float3 BlinnPhong(float3 lightStrength, float3 L, float3 N, float3 V, Material mat) {
+float3 BlinnPhong(float3 lightStrength, float3 L, float3 N, float3 V, MaterialData mat) {
     float m = max((1.f - mat.roughness) * 256.f, 1.f);
     float3 H = normalize(V + L);
     
@@ -88,7 +88,7 @@ float3 BlinnPhong(float3 lightStrength, float3 L, float3 N, float3 V, Material m
     return (diffAlbedo + specAlbedo) * lightStrength;
 }
 
-float3 ComputeDirectionLight(Light light, Material mat, float3 normal, float3 viewDir) {
+float3 ComputeDirectionLight(LightData light, MaterialData mat, float3 normal, float3 viewDir) {
     float3 V = normalize(viewDir);
     float3 N = normalize(normal);
     float3 L = light.direction;
@@ -97,7 +97,7 @@ float3 ComputeDirectionLight(Light light, Material mat, float3 normal, float3 vi
     return BlinnPhong(lightStrength, L, N, V, mat);
 }
 
-float3 ComputePointLight(Light light, Material mat, float3 normal, float3 viewDir, float3 worldPosition) {
+float3 ComputePointLight(LightData light, MaterialData mat, float3 normal, float3 viewDir, float3 worldPosition) {
     float3 lightVec = light.position - worldPosition;
     float dis = length(lightVec);
     if (dis > light.falloffEnd)
@@ -112,7 +112,7 @@ float3 ComputePointLight(Light light, Material mat, float3 normal, float3 viewDi
     return BlinnPhong(lightStrength, L, N, V, mat);
 }
 
-float3 ComputeSpotLight(Light light, Material mat, float3 normal, float3 viewDir, float3 worldPosition) {
+float3 ComputeSpotLight(LightData light, MaterialData mat, float3 normal, float3 viewDir, float3 worldPosition) {
     float3 lightVec = light.position - worldPosition;
     float dis = length(lightVec);
     if (dis > light.falloffEnd)
@@ -171,7 +171,7 @@ struct IBLParam {
     TextureCube  perFilterEnvMap;
 };
 
-float3 CalcIBLAmbient(float3 V, float3 N, Material material, IBLParam param) {
+float3 CalcIBLAmbient(float3 V, float3 N, MaterialData material, IBLParam param) {
     float3 albedo = (float3)material.diffuseAlbedo;
 	float3 R0 = lerp(0.04, albedo, material.metallic);
     float NdotV = max(dot(N, V), 0);

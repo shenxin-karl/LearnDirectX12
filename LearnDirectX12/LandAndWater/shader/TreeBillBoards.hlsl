@@ -10,10 +10,10 @@ cbuffer CLightCB : register(b1){
 };
 
 cbuffer COjbectCB : register(b2){
-    float4x4 gMatWorld;
-    float4x4 gMatNormal;
-    float4x4 gMatTransform;
-    Material gMaterial;
+    float4x4     gMatWorld;
+    float4x4     gMatNormal;
+    float4x4     gMatTransform;
+    MaterialData gMaterial;
 };
 
 struct VertexIn {
@@ -88,7 +88,7 @@ float4 PS(GeometryOut pin) : SV_Target {
     clip(diffuseAlbedo.a - 0.1);
     float3 result = float3(0.0, 0.0, 0.0);
     float3 viewDir = gPass.eyePos - pin.position;
-    Material mat = { diffuseAlbedo, gMaterial.roughness, gMaterial.metallic, 0.0, 0.0 };
+    MaterialData mat = { diffuseAlbedo, gMaterial.roughness, gMaterial.metallic, 0.0, 0.0 };
     result += ComputeDirectionLight(gLight.lights[0], mat, pin.normal, viewDir);
     result += ComputeDirectionLight(gLight.lights[1], mat, pin.normal, viewDir);
     result += ComputeDirectionLight(gLight.lights[2], mat, pin.normal, viewDir);

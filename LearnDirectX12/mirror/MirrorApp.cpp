@@ -189,32 +189,32 @@ void MirrorApp::loadTextures(dx12lib::DirectContextProxy pDirectCtx) {
 void MirrorApp::buildMaterials() {
 	namespace DX = DirectX;
 
-	d3d::Material skullMat;
+	d3d::MaterialData skullMat;
 	skullMat.diffuseAlbedo = float4(DX::Colors::White);
 	skullMat.roughness = 0.3f;
 	skullMat.metallic = 0.2f;
 
-	d3d::Material floorMat;
+	d3d::MaterialData floorMat;
 	floorMat.diffuseAlbedo = float4(DX::Colors::White);
 	floorMat.roughness = 0.95f;
 	floorMat.metallic = 0.05f;
 
-	d3d::Material bricksMat;
+	d3d::MaterialData bricksMat;
 	bricksMat.diffuseAlbedo = float4(DX::Colors::White);
 	bricksMat.roughness = 0.25f;
 	bricksMat.metallic = 0.05f;
 
-	d3d::Material checkertileMat;
+	d3d::MaterialData checkertileMat;
 	checkertileMat.diffuseAlbedo = float4(DX::Colors::White);
 	checkertileMat.roughness = 0.3f;
 	checkertileMat.metallic = 0.07f;
 
-	d3d::Material icemirrorMat;
+	d3d::MaterialData icemirrorMat;
 	icemirrorMat.diffuseAlbedo = float4(1.f, 1.f, 1.f, 0.3f);
 	icemirrorMat.roughness = 0.5f;
 	icemirrorMat.metallic = 0.1f;
 
-	d3d::Material shadowMat;
+	d3d::MaterialData shadowMat;
 	shadowMat.diffuseAlbedo = float4(0.0f, 0.0f, 0.0f, 0.5f);
 	shadowMat.metallic = 0.00f;
 	shadowMat.roughness = 0.0f;

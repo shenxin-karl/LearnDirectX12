@@ -413,22 +413,22 @@ void LandAndWater::loadTextures(dx12lib::DirectContextProxy pGrahpicsCtx) {
 void LandAndWater::buildMaterials() {
 	namespace DX = DirectX;
 
-	d3d::Material landMat = {
+	d3d::MaterialData landMat = {
 		float4(DX::Colors::White),
 		1.0f,
 		0.0f,
 	};
-	d3d::Material waterMat = {
+	d3d::MaterialData waterMat = {
 		float4(DX::Colors::LightGreen),
 		0.9f,
 		0.7f,
 	};
-	d3d::Material boxMat = {
+	d3d::MaterialData boxMat = {
 		float4(DX::Colors::LightBlue),
 		0.5f,
 		0.2f,
 	};
-	d3d::Material TreeBillboardMat = {
+	d3d::MaterialData TreeBillboardMat = {
 		float4(DX::Colors::White),
 		0.7f,
 		0.0f,

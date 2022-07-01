@@ -61,7 +61,7 @@ struct CBObjectType {
 	float4x4          world;
 	float4x4          normalMat;
 	float4x4          matTransform;
-	d3d::Material	  material;
+	d3d::MaterialData	  material;
 };
 
 struct RenderItem {
@@ -105,7 +105,7 @@ private:
 	FRConstantBufferPtr<d3d::CBPassType> _pPassCB;
 	FRConstantBufferPtr<d3d::CBLightType> _pLightCB;
 	std::unique_ptr<d3d::FirstPersonCamera> _pCamera;
-	std::map<std::string, d3d::Material> _materialMap;
+	std::map<std::string, d3d::MaterialData> _materialMap;
 	std::map<std::string, std::shared_ptr<d3d::Mesh>> _geometryMap;
 	std::map<std::string, std::vector<RenderItem>> _renderItemMap;
 	std::map<std::string, std::shared_ptr<dx12lib::GraphicsPSO>> _psoMap;

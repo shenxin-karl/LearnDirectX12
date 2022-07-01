@@ -13,7 +13,7 @@ struct PatchVertex {
 
 struct CBObject {
 	float4x4      gWorld;
-	d3d::Material gMaterial;
+	d3d::MaterialData gMaterial;
 };
 
 class BezierPatchApp : public com::BaseApp {

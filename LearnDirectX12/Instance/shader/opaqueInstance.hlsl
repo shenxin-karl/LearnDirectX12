@@ -52,7 +52,7 @@ VertexOut VS(VertexIn vin, uint instanceId : SV_InstanceID) {
 }
 
 Texture2D gDiffuseMapArray[NUM] : register(t0);
-StructuredBuffer<Material> gMaterialData : register(t1, space1);
+StructuredBuffer<MaterialData> gMaterialData : register(t1, space1);
 
 float4 TriplanarMapping(Texture2D diffuseMap, float3 worldPosition, float3 normal) {
 	float3 N = abs(normalize(normal));
@@ -63,7 +63,7 @@ float4 TriplanarMapping(Texture2D diffuseMap, float3 worldPosition, float3 norma
 }
 
 float4 PS(VertexOut pin) : SV_Target {
-	Material mat = gMaterialData[pin.materialIndex];
+	MaterialData mat = gMaterialData[pin.materialIndex];
 	float4 albedo = TriplanarMapping(gDiffuseMapArray[pin.diffuseMapIdx], pin.PosW, pin.NrmW);
 	mat.diffuseAlbedo *= albedo;
 

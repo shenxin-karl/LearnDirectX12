@@ -32,7 +32,7 @@ struct Model::CBObjectType {
 	float4x4 matWorld;
 	float4x4 matNormal;
 	float4x4 matTexCoord;
-	d3d::Material gMaterial;
+	d3d::MaterialData gMaterial;
 };
 
 struct Model::ModelRenderItem final : public IRenderItem {

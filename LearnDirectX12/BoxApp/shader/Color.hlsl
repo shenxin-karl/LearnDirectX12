@@ -14,10 +14,10 @@ struct VertexOut {
 };
 
 cbuffer CBObject : register(b0) {
-    float4x4 gMatWorld;
-    float4x4 gMatNormal;
-    Material gMaterial;
-    SH3      gSH3;
+    float4x4     gMatWorld;
+    float4x4     gMatNormal;
+    MaterialData gMaterial;
+    SH3          gSH3;
 };
 
 cbuffer CBPass : register(b1) {

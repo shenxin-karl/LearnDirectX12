@@ -64,7 +64,7 @@ private:
 	std::shared_ptr<dx12lib::GraphicsPSO>   _pInstancePSO;
 
 	std::vector<std::shared_ptr<dx12lib::SamplerTexture2D>> _textures;
-	std::vector<d3d::Material> _materials;
+	std::vector<d3d::MaterialData> _materials;
 
 	std::unordered_map<std::string, std::shared_ptr<d3d::Mesh>> _geometryMap;
 

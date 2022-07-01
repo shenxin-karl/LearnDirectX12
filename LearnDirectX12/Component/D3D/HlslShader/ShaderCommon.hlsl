@@ -3,7 +3,7 @@
 
 #ifndef _DECLARE_LIGHT_
 #define _DECLARE_LIGHT_
-struct Light {
+struct LightData {
 	float3  strength;		// 辐射强度
 	float   falloffStart;	// 点光源/聚光灯衰减开始距离
 	float3  direction;		// 方向光方向
@@ -15,7 +15,7 @@ struct Light {
 
 #ifndef _DECLARE_MATERIAL_
 #define _DECLARE_MATERIAL_
-struct Material {
+struct MaterialData {
     float4 diffuseAlbedo;	// 反照率
     float  roughness;		// 粗糙度
     float  metallic;		// 金属度
@@ -56,12 +56,12 @@ struct CBPassType {
 
 #define kMaxLightCount 16
 struct CBLightType {
-	int      directLightCount;
-	int      pointLightCount;
-	int      spotLightCount;
-	int      objectPad0;
-	float4	 ambientLight;
-	Light    lights[kMaxLightCount];
+	int       directLightCount;
+	int       pointLightCount;
+	int       spotLightCount;
+	int       objectPad0;
+	float4	  ambientLight;
+	LightData lights[kMaxLightCount];
 };
 
 #ifndef	DISABLE_DEFAULT_SAMPLER

@@ -7,7 +7,7 @@ namespace d3d {
 
 using namespace Math;
 
-struct Light {
+struct LightData {
 	float3  strength;		// 辐射强度
 	float   falloffStart;	// 点光源/聚光灯衰减开始距离
 	float3  direction;		// 方向光方向
@@ -26,7 +26,7 @@ public:
 	);
 };
 
-struct Material {
+struct MaterialData {
 	float4 diffuseAlbedo;   // 反照率
 	float  roughness;       // 粗糙度
 	float  metallic;        // 金属度
@@ -62,7 +62,7 @@ struct CBLightType {
 	int      spotLightCount   = 0;
 	int      objectPad0       = 0;
 	float4	 ambientLight     = float4(0.f);
-	Light    lights[kMaxLightCount];
+	LightData    lights[kMaxLightCount];
 };
 
 CD3DX12_STATIC_SAMPLER_DESC getPointWrapStaticSampler(UINT shaderRegister);

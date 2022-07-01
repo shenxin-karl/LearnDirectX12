@@ -440,31 +440,31 @@ void Shape::buildGameLight(dx12lib::DirectContextProxy pDirectCtx) {
 void Shape::buildMaterials() {
 	namespace DX = DirectX;
 
-	d3d::Material sphereMat;
+	d3d::MaterialData sphereMat;
 	sphereMat.diffuseAlbedo = float4(DX::Colors::White);
 	sphereMat.roughness = 0.5f;
 	sphereMat.metallic = 0.5f;
 	_materials["sphereMat"] = sphereMat;
 
-	d3d::Material boxMat;
+	d3d::MaterialData boxMat;
 	boxMat.diffuseAlbedo = float4(DX::Colors::White);
 	boxMat.roughness = 0.8f;
 	boxMat.metallic = 0.2f;
 	_materials["boxMat"] = boxMat;
 
-	d3d::Material gridMat;
+	d3d::MaterialData gridMat;
 	gridMat.diffuseAlbedo = float4(DX::Colors::White);
 	gridMat.roughness = 0.8f;
 	gridMat.metallic = 0.2f;
 	_materials["gridMat"] = gridMat;
 
-	d3d::Material cylinderMat;
+	d3d::MaterialData cylinderMat;
 	cylinderMat.diffuseAlbedo = float4(DX::Colors::White);
 	cylinderMat.roughness = 0.8f;
 	cylinderMat.metallic = 0.2f;
 	_materials["cylinderMat"] = cylinderMat;
 
-	d3d::Material skullMat;
+	d3d::MaterialData skullMat;
 	//skullMat.diffuseAlbedo = float4(DX::Colors::Gold);
 	skullMat.diffuseAlbedo = float4(DX::Colors::White);
 	skullMat.roughness = 0.5f;

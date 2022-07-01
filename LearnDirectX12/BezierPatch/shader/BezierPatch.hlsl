@@ -2,8 +2,8 @@
 #include "../../Component/D3D/HlslShader/LightingUtil.hlsl"
 
 cbuffer CBObject :  register(b0) {
-	float4x4 gWorld;
-	Material gMaterial;
+	float4x4     gWorld;
+	MaterialData gMaterial;
 };
 
 cbuffer CBPass : register(b1) {

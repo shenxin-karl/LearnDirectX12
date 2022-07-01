@@ -10,10 +10,10 @@ cbuffer CBLight : register(b1){
 };
 
 cbuffer CBObject : register(b2){
-    float4x4 gMatWorld;
-    float4x4 gMatNormal;
-    float4x4 gMatTexCoord;
-    Material gMaterial;
+    float4x4     gMatWorld;
+    float4x4     gMatNormal;
+    float4x4     gMatTexCoord;
+    MaterialData gMaterial;
 };
 
 #ifdef SKINNED_ANIMATION
@@ -94,7 +94,7 @@ float4 PS(VertexOut pin) : SV_Target {
     float3 result = float3(0.0, 0.0, 0.0);
        
     float4 diffAlbedo = gAlbedoMap.Sample(gSamLinearWrap, pin.texcoord) * gMaterial.diffuseAlbedo;
-    Material mat = {
+    MaterialData mat = {
         diffAlbedo,
         gMaterial.roughness,
         gMaterial.metallic,

@@ -152,14 +152,14 @@ void InstanceApp::buildMaterial(dx12lib::CommonContextProxy pCommonCtx) {
 
 	size_t count = disInt(gen);
 	for (size_t idx = 0; idx < count; ++idx) {
-		d3d::Material mat = {
+		d3d::MaterialData mat = {
 			float4(disFloat(gen), disFloat(gen), disFloat(gen), 1.f),
 			disFloat(gen),
 			disFloat(gen),
 		};
 		_materials.push_back(mat);
 	}
-	_pMaterialData = pCommonCtx->createStructuredBuffer(_materials.data(), _materials.size(), sizeof(d3d::Material));
+	_pMaterialData = pCommonCtx->createStructuredBuffer(_materials.data(), _materials.size(), sizeof(d3d::MaterialData));
 }
 
 void InstanceApp::buildPSO() {

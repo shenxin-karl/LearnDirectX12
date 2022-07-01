@@ -23,7 +23,7 @@ enum RenderLayer : std::size_t {
 struct ObjectCBType {
 	float4x4      matWorld;
 	float4x4      matNormal;
-	d3d::Material material;
+	d3d::MaterialData material;
 };
 
 struct RenderItem {
@@ -66,7 +66,7 @@ private:
 	FRConstantBufferPtr<d3d::CBPassType>  _pPassCB;
 	FRConstantBufferPtr<d3d::CBLightType> _pLightCB;
 	FRConstantBufferPtr<d3d::CBLightType> _pReflectedLightCB;
-	std::map<std::string, d3d::Material> _materialMap;
+	std::map<std::string, d3d::MaterialData> _materialMap;
 	std::map<std::string, std::shared_ptr<d3d::Mesh>> _meshMap;
 	std::map<RenderLayer, std::shared_ptr<dx12lib::GraphicsPSO>> _psoMap;
 	std::map<std::string, std::shared_ptr<dx12lib::IShaderResource>> _textureMap;

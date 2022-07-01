@@ -25,7 +25,7 @@ struct ObjectCB {
 	float4x4          matWorld    = float4x4::identity();
 	float4x4		  matNormal   = float4x4::identity();
 	float4x4		  matTexCoord = float4x4::identity();
-	d3d::Material	  material;
+	d3d::MaterialData	  material;
 };
 
 struct SkinnedBoneCB {
@@ -84,7 +84,7 @@ private:
 	std::shared_ptr<d3d::CoronaCamera>  _pCamera;
 	FRConstantBufferPtr<d3d::CBLightType> _pGameLightsCB;
 	FRConstantBufferPtr<d3d::CBPassType>  _pPassCB;
-	std::unordered_map<std::string, d3d::Material> _materials;
+	std::unordered_map<std::string, d3d::MaterialData> _materials;
 	std::unordered_map<std::string, std::shared_ptr<d3d::Mesh>> _geometrys;
 	std::unordered_map<std::string, std::vector<RenderItem>> _renderItems;
 	std::unordered_map<std::string, std::shared_ptr<dx12lib::GraphicsPSO>> _PSOMap;

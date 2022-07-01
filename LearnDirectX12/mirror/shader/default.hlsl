@@ -2,9 +2,9 @@
 #include "../../Component/D3D/HlslShader/LightingUtil.hlsl"
 
 cbuffer CObjectCB : register(b0) {
-    float4x4 gMatWorld;
-    float4x4 gMatNormal;
-    Material gMaterial;
+    float4x4     gMatWorld;
+    float4x4     gMatNormal;
+    MaterialData gMaterial;
 };
 
 cbuffer CPassCB : register(b1) {
@@ -41,7 +41,7 @@ VertexOut VS(VertexIn vin) {
 Texture2D gDiffuseMap : register(t0);
 float4 PS(VertexOut pin) : SV_Target {
     float4 diffuseAlbedo = gDiffuseMap.Sample(gSamAnisotropicWrap, pin.texcoord);
-    Material mat = { 
+    MaterialData mat = {
         diffuseAlbedo * gMaterial.diffuseAlbedo, 
         gMaterial.roughness, 
         gMaterial.metallic, 0, 0 
