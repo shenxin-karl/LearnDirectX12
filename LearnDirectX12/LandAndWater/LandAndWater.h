@@ -5,7 +5,7 @@
 #include "Math/MathHelper.h"
 #include "D3D/Shader/ShaderCommon.h"
 #include "D3D/d3dutil.h"
-#include "D3D/Tool/Mesh.h"
+#include "D3D/Model/Mesh/Mesh.h"
 
 using namespace Math;
 

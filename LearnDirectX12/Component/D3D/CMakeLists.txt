@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.8)
 project(D3D)
 
 # 开启多线程编译 和 使用 c++latest 版本
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /std:c++latest")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /EHsc /std:c++latest")
 
 file(GLOB_RECURSE HEADER_FILES *.h *.hpp *.ini)
 file(GLOB_RECURSE SOURCE_FILES *.cpp *.c)
@@ -55,6 +55,11 @@ cmrc_add_resource_library(D3D-resources ALIAS D3D::rc
 	"HlslShader/ConvolutionIrradianceMapCS.hlsl"
 	"HlslShader/PerFilterEnvMapCS.hlsl"
 	"resources/BRDF_LUT.dds"
+	"resources/DefaultAlbedoMap.dds"
+	"resources/DefaultAOMap.dds"
+	"resources/DefaultMetallicMap.dds"
+	"resources/DefaultNormalMap.dds"
+	"resources/DefaultRoughnessMap.dds"
 )
 
 set_target_properties(D3D-resources PROPERTIES FOLDER "CmrcResource")

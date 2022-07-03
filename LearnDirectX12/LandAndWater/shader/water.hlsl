@@ -20,10 +20,10 @@ cbuffer CLightCB : register(b1) {
 };
 
 cbuffer CObjectCB : register(b2) {
-    float4x4 gWorld;
-    float4x4 gNormalMat;
-    float4x4 gMatTransfrom;
-    Material gMaterial;
+    float4x4     gWorld;
+    float4x4     gNormalMat;
+    float4x4     gMatTransfrom;
+    MaterialData gMaterial;
 };
 
 cbuffer CWaterParameCB : register(b3) {

@@ -2,6 +2,11 @@
 
 namespace d3d {
 
+MaterialData MaterialData::defaultMaterialData{
+	float4(1.f), 1.f, 1.f
+};
+
+
 void LightData::initAsDirectionLight(float3 direction, float3 strength) {
 	this->direction = normalize(Vector3(direction)).xyz;
 	this->strength = strength;

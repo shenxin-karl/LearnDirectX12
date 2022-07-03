@@ -2,7 +2,7 @@
 #include "dx12lib/dx12libStd.h"
 #include "BaseApp/BaseApp.h"
 #include "D3D/Shader/ShaderCommon.h"
-#include "D3D/Tool/Mesh.h"
+#include "D3D/Model/Mesh/Mesh.h"
 #include "D3D/Tool/Camera.h"
 #include "dx12lib/Pipeline/ShaderRegister.hpp"
 #include <DirectXCollision.h>

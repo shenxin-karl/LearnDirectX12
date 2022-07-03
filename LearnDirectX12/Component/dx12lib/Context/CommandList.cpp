@@ -18,7 +18,6 @@
 #include <dx12lib/Buffer/ConstantBuffer.h>
 #include <dx12lib/Buffer/IndexBuffer.h>
 #include <dx12lib/Buffer/VertexBuffer.h>
-#include <DirectXTex/DirectXTex/DirectXTex.h>
 #include <iostream>
 
 #if defined(_DEBUG) || defined(DEBUG)
@@ -232,90 +231,30 @@ std::shared_ptr<IShaderResource> CommandList::createTextureFromFile(const std::w
 		ThrowIfFailed(DX::LoadFromTGAFile(fileName.c_str(), &metadata, scratchImage));
 	else
 		ThrowIfFailed(DX::LoadFromWICFile(fileName.c_str(), DX::WIC_FLAGS_NONE, &metadata, scratchImage));
-
 	if (sRGB)
 		metadata.format = DX::MakeSRGB(metadata.format);
+	return createTextureImpl(metadata, scratchImage);
+}
 
-	D3D12_RESOURCE_DESC textureDesc{};
-	switch (metadata.dimension) {
-	case DX::TEX_DIMENSION_TEXTURE2D:
-		textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(
-			metadata.format, 
-			static_cast<UINT64>(metadata.width),
-			static_cast<UINT>(metadata.height),
-			static_cast<UINT16>(metadata.arraySize),
-			static_cast<UINT16>(metadata.mipLevels)
-		);
-		break;
-	case DX::TEX_DIMENSION_TEXTURE1D:
-	case DX::TEX_DIMENSION_TEXTURE3D:
-	default:
-		assert(false);
-		return nullptr;
-	}
-
-	auto pSharedDevice = getDevice().lock();
-	WRL::ComPtr<ID3D12Resource> pTextureResource;
-	ThrowIfFailed(pSharedDevice->getD3DDevice()->CreateCommittedResource(
-		RVPtr(CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT)),
-		D3D12_HEAP_FLAG_NONE,
-		nullptr,
-		D3D12_RESOURCE_STATE_COMMON,
-		nullptr,
-		IID_PPV_ARGS(&pTextureResource)
-	));
-
-	pTextureResource->SetName(fileName.c_str());
-	std::vector<D3D12_SUBRESOURCE_DATA> subResources{ scratchImage.GetImageCount() };
-	const DX::Image *pImages = scratchImage.GetImages();
-	for (size_t i = 0; i < scratchImage.GetImageCount(); ++i) {
-		auto &subResource = subResources[i];
-		subResource.RowPitch = pImages[i].rowPitch;
-		subResource.SlicePitch = pImages[i].slicePitch;
-		subResource.pData = pImages[i].pixels;
-	}
-
-
-	if (subResources.size() < pTextureResource->GetDesc().MipLevels) {
-		// TODO 生成 mipmap
-	}
-
-	auto pUploader = copyTextureSubResource(pTextureResource, 
-		0, 
-		subResources.size(), 
-		subResources.data()
-	);
-
-	switch (metadata.dimension) {
-	case DirectX::TEX_DIMENSION_TEXTURE2D:
-		if (metadata.arraySize == 1) {
-			return std::make_shared<dx12libTool::MakeSamplerTexture2D>(
-				_pDevice,
-				pTextureResource,
-				pUploader,
-				D3D12_RESOURCE_STATE_GENERIC_READ
-			);
-		} else if (metadata.arraySize == 6) {
-			return std::make_shared<dx12libTool::MakeSamplerTextureCube>(
-				_pDevice,
-				pTextureResource,
-				pUploader,
-				D3D12_RESOURCE_STATE_GENERIC_READ
-			);
-		} else {
-			return std::make_shared<dx12libTool::MakeSamplerTexture2DArray>(
-				_pDevice,
-				pTextureResource,
-				pUploader,
-				D3D12_RESOURCE_STATE_GENERIC_READ
-			);
-		}
-	case DirectX::TEX_DIMENSION_TEXTURE3D: 
-	case DirectX::TEX_DIMENSION_TEXTURE1D:
-	default: 
-		assert(false);
-	}
-	return nullptr;
+std::shared_ptr<IShaderResource> CommandList::createTextureFromMemory(const std::string &extension, 
+	const void *pData, 
+	size_t sizeInByte,
+	bool sRGB) 
+{
+	namespace DX = DirectX;
+	DX::TexMetadata  metadata{};
+	DX::ScratchImage scratchImage;
+	if (extension == "dds")
+		ThrowIfFailed(DX::LoadFromDDSMemory(pData, sizeInByte, DX::DDS_FLAGS_NONE, &metadata, scratchImage));
+	else if (extension == "hdr")
+		ThrowIfFailed(DX::LoadFromHDRMemory(pData, sizeInByte, &metadata, scratchImage));
+	else if (extension == "tga")
+		ThrowIfFailed(DX::LoadFromTGAMemory(pData, sizeInByte, &metadata, scratchImage));
+	else
+		ThrowIfFailed(DX::LoadFromWICMemory(pData, sizeInByte, DX::WIC_FLAGS_NONE, &metadata, scratchImage));
+	if (sRGB)
+		metadata.format = DX::MakeSRGB(metadata.format);
+	return createTextureImpl(metadata, scratchImage);
 }
 
 void CommandList::setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType,
@@ -744,6 +683,90 @@ WRL::ComPtr<ID3D12Resource> CommandList::copyTextureSubResource(WRL::ComPtr<ID3D
 
 	_pResourceStateTracker->transitionResource(pDestResource.Get(), D3D12_RESOURCE_STATE_GENERIC_READ);
 	return pSrcResource;
+}
+
+std::shared_ptr<IShaderResource> CommandList::createTextureImpl(const DX::TexMetadata &metadata, const DX::ScratchImage &scratchImage) {
+	D3D12_RESOURCE_DESC textureDesc{};
+	switch (metadata.dimension) {
+	case DX::TEX_DIMENSION_TEXTURE2D:
+		textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(
+			metadata.format,
+			static_cast<UINT64>(metadata.width),
+			static_cast<UINT>(metadata.height),
+			static_cast<UINT16>(metadata.arraySize),
+			static_cast<UINT16>(metadata.mipLevels)
+		);
+		break;
+	case DX::TEX_DIMENSION_TEXTURE1D:
+	case DX::TEX_DIMENSION_TEXTURE3D:
+	default:
+		assert(false);
+		return nullptr;
+	}
+
+	auto pSharedDevice = getDevice().lock();
+	WRL::ComPtr<ID3D12Resource> pTextureResource;
+	ThrowIfFailed(pSharedDevice->getD3DDevice()->CreateCommittedResource(
+		RVPtr(CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT)),
+		D3D12_HEAP_FLAG_NONE,
+		nullptr,
+		D3D12_RESOURCE_STATE_COMMON,
+		nullptr,
+		IID_PPV_ARGS(&pTextureResource)
+	));
+
+	std::vector<D3D12_SUBRESOURCE_DATA> subResources{ scratchImage.GetImageCount() };
+	const DX::Image *pImages = scratchImage.GetImages();
+	for (size_t i = 0; i < scratchImage.GetImageCount(); ++i) {
+		auto &subResource = subResources[i];
+		subResource.RowPitch = pImages[i].rowPitch;
+		subResource.SlicePitch = pImages[i].slicePitch;
+		subResource.pData = pImages[i].pixels;
+	}
+
+
+	if (subResources.size() < pTextureResource->GetDesc().MipLevels) {
+		// TODO 生成 mipmap
+	}
+
+	auto pUploader = copyTextureSubResource(pTextureResource,
+		0,
+		subResources.size(),
+		subResources.data()
+	);
+
+	switch (metadata.dimension) {
+	case DirectX::TEX_DIMENSION_TEXTURE2D:
+		if (metadata.arraySize == 1) {
+			return std::make_shared<dx12libTool::MakeSamplerTexture2D>(
+				_pDevice,
+				pTextureResource,
+				pUploader,
+				D3D12_RESOURCE_STATE_GENERIC_READ
+				);
+		}
+		else if (metadata.arraySize == 6) {
+			return std::make_shared<dx12libTool::MakeSamplerTextureCube>(
+				_pDevice,
+				pTextureResource,
+				pUploader,
+				D3D12_RESOURCE_STATE_GENERIC_READ
+				);
+		}
+		else {
+			return std::make_shared<dx12libTool::MakeSamplerTexture2DArray>(
+				_pDevice,
+				pTextureResource,
+				pUploader,
+				D3D12_RESOURCE_STATE_GENERIC_READ
+				);
+		}
+	case DirectX::TEX_DIMENSION_TEXTURE3D:
+	case DirectX::TEX_DIMENSION_TEXTURE1D:
+	default:
+		assert(false);
+	}
+	return nullptr;
 }
 
 #define CheckState(ret, message)			\

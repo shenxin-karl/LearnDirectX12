@@ -5,7 +5,7 @@
 #include "dx12lib/Texture/TextureStd.h"
 #include "dx12lib/Buffer/BufferStd.h"
 #include "D3D/Tool/Camera.h"
-#include "D3D/Tool/Mesh.h"
+#include "D3D/Model/Mesh/Mesh.h"
 #include "D3D/Shader/ShaderCommon.h"
 #include "GameTimer/GameTimer.h"
 #include "InputSystem/Mouse.h"
@@ -107,7 +107,7 @@ void BasicTessellationApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) 
 	);
 
 	_pPassCB = pDirectCtx->createFRConstantBuffer<d3d::CBPassType>();
-	_pObjectCB = pDirectCtx->createFRConstantBuffer<float4x4>(MathHelper::identity4x4());
+	_pObjectCB = pDirectCtx->createFRConstantBuffer<float4x4>(float4x4::identity());
 }
 
 void BasicTessellationApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {

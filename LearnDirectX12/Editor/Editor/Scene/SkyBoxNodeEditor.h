@@ -7,7 +7,7 @@ namespace ED {
 class SkyBoxNodeEditor : public core::SkyBoxNode {
 public:
 	explicit SkyBoxNodeEditor(const std::string &name);
-	void showInspector() override;
+	void showInspector();
 private:
 	std::string _skyBoxPath;
 };

@@ -6,7 +6,7 @@
 #include "dx12lib/Device/DeviceStd.h"
 #include "dx12lib/Texture/TextureStd.h"
 #include "dx12lib/Buffer/BufferStd.h"
-#include "D3D/Tool/Mesh.h"
+#include "D3D/Model/Mesh/Mesh.h"
 #include "D3D/Tool/Camera.h"
 #include "GameTimer/GameTimer.h"
 #include "InputSystem/Mouse.h"
@@ -94,7 +94,7 @@ void BezierPatchApp::buildConstantBuffer(dx12lib::CommonContextProxy pCmdCtx) {
 	pGPULightCB->lights[2].initAsDirectionLight(-float3(0.0f, -0.707f, -0.707f), float3(0.15f, 0.15f, 0.15f));
 
 	auto pGPUObjectCb = _pObjectCB->map();
-	pGPUObjectCb->gWorld = Math::MathHelper::identity4x4();
+	pGPUObjectCb->gWorld = float4x4::identity();
 	pGPUObjectCb->gMaterial.diffuseAlbedo = float4(DirectX::Colors::LightSkyBlue);
 	pGPUObjectCb->gMaterial.metallic = 0.5f;
 	pGPUObjectCb->gMaterial.roughness = 0.5f;

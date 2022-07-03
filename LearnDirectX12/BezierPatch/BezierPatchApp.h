@@ -12,7 +12,7 @@ struct PatchVertex {
 };
 
 struct CBObject {
-	float4x4      gWorld;
+	float4x4 gWorld;
 	d3d::MaterialData gMaterial;
 };
 

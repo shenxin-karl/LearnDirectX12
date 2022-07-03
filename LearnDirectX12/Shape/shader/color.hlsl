@@ -38,7 +38,7 @@ VertexOut VS(VertexIn vin) {
 }
 
 TextureCube gCubeMap : register(t0);
-float3 BoxCubeMapLookup(Material material, float3 viewDir, float3 normal) {
+float3 BoxCubeMapLookup(MaterialData material, float3 viewDir, float3 normal) {
 	float cosIncidenceAngle = max(dot(normalize(viewDir), normalize(normal)), 0.0);
 	float3 R0 = lerp(0.04, material.diffuseAlbedo.rgb, material.metallic);
 	float3 specFactor = SchlickFresnelRoughness(cosIncidenceAngle, R0, material.roughness);

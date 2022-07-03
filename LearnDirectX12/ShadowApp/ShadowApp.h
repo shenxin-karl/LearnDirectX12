@@ -30,7 +30,7 @@ private:
 	std::shared_ptr<dx12lib::DepthStencil2D> _pShadowMap;
 	std::shared_ptr<dx12lib::ConstantBuffer> _pLightCb;
 	dx12lib::FRConstantBufferPtr<d3d::CBPassType> _pPassCb;
-	std::unordered_map<std::string, std::shared_ptr<Model>> _modelMap;
-	std::unordered_map<std::string, std::vector<std::shared_ptr<IRenderItem>>> _opaqueRenderItems;
-	std::unordered_map<std::string, std::vector<std::shared_ptr<IRenderItem>>> _shadowRenderItems;
+	std::unordered_map<std::string, std::shared_ptr<d3d::IModel>> _modelMap;
+	std::unordered_map<std::string, std::vector<std::shared_ptr<d3d::RenderItem>>> _opaqueRenderItems;
+	std::unordered_map<std::string, std::vector<std::shared_ptr<d3d::RenderItem>>> _shadowRenderItems;
 };

@@ -27,6 +27,7 @@ public:
 };
 
 struct MaterialData {
+	static MaterialData defaultMaterialData;
 	float4 diffuseAlbedo;   // 反照率
 	float  roughness;       // 粗糙度
 	float  metallic;        // 金属度
@@ -57,12 +58,12 @@ struct CBPassType {
 
 constexpr inline std::size_t kMaxLightCount = 16;
 struct CBLightType {
-	int      directLightCount = 0;
-	int      pointLightCount  = 0;
-	int      spotLightCount   = 0;
-	int      objectPad0       = 0;
-	float4	 ambientLight     = float4(0.f);
-	LightData    lights[kMaxLightCount];
+	int       directLightCount = 0;
+	int       pointLightCount  = 0;
+	int       spotLightCount   = 0;
+	int       objectPad0       = 0;
+	float4	  ambientLight     = float4(0.f);
+	LightData lights[kMaxLightCount];
 };
 
 CD3DX12_STATIC_SAMPLER_DESC getPointWrapStaticSampler(UINT shaderRegister);

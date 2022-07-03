@@ -36,6 +36,11 @@ public:
 	bool isLoad() const;
 	std::vector<ALMesh> parseMesh() const;
 	std::vector<ALSkinnedMesh> parseSkinnedMesh() const;
+	const std::string &getFileName() const;
+	const aiScene *getScene() const;
+	size_t getTextureCount() const;
+	std::string getTextureName(size_t i) const;
+	const aiTexture *getTexture(size_t i) const;
 	static float4x4 convertFloat4x4(const aiMatrix4x4 &m);
 	static float3 convertFloat3(const aiVector3D &v);
 	static float4 convertFloat4(const aiQuaternion &q);

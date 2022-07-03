@@ -2,12 +2,15 @@
 #include <d3d12.h>
 #include <wrl.h>
 #include <string>
+#include <vector>
 #include <DirectXMath.h>
+#include <iterator>
 #include "ComponentStd.h"
 
 
 namespace d3d {
 
+namespace DX = DirectX;
 namespace WRL = Microsoft::WRL;
 using uint32 = std::uint32_t;
 using uint64 = std::uint64_t;
@@ -26,8 +29,13 @@ class Mesh;
 class SkyBox;
 class IBL;
 class AssimpLoader;
-
 class RenderTarget;
+class RenderItem;
+interface IModel;
+interface ISubModel;
+interface IMaterial;
+interface IGeometryInput;
+interface IInstanceInput;
 
 using ::ThrowIfFailed;
 
@@ -63,8 +71,20 @@ public:
 	NonCopyable &operator=(const NonCopyable &) = delete;
 };
 
-namespace DX = DirectX;
-namespace WRL = Microsoft::WRL;
+std::string calcMacroKey(const std::string &name, const std::vector<D3D_SHADER_MACRO> &macros);
+std::string calcMacroKey(const std::string &name, const D3D_SHADER_MACRO *pMacros, size_t size);
+
+template<size_t N>
+std::string calcMacroKey(const std::string &name, const D3D_SHADER_MACRO(&pMacros)[N]) {
+	return calcMacroKey(name, pMacros, N);
+}
+
+class D3DInitializer {
+	static inline std::atomic_bool isInited{ false };
+public:
+	D3DInitializer();
+	~D3DInitializer();
+};
 
 }
 

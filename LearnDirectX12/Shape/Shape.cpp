@@ -18,7 +18,7 @@
 
 #include "D3D/Sky/SkyBox.h"
 #include "D3D/M3dLoader/M3dLoader.h"
-#include "D3D/Tool/Mesh.h"
+#include "D3D/Model/Mesh/Mesh.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>

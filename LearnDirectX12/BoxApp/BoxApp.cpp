@@ -1,7 +1,7 @@
 #include "BoxApp.h"
 
 #include "D3D/d3dutil.h"
-#include "D3D/Tool/Mesh.h"
+#include "D3D/Model/Mesh/Mesh.h"
 #include "D3D/dx12libHelper/RenderTarget.h"
 #include "D3D/Sky/IBL.h"
 
@@ -102,8 +102,8 @@ void BoxApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	pObject->gMatWorld = float4x4(Matrix4::identity());
 	pObject->gMatNormal = float4x4(Matrix4::identity()); //float4x4(rotate);
 	pObject->gSH3 = _pIBL->getIrradianceMapSH3();
-	pObject->gMaterial.roughness = sin(pGameTimer->getTotalTime()) * 0.5f + 0.5f;
-	pObject->gMaterial.metallic = cos(pGameTimer->getTotalTime()) * 0.5f + 0.5f;
+	pObject->gMaterial.roughness = sin(pGameTimer->getTotalTime() / 3.f) * 0.5f + 0.5f;
+	pObject->gMaterial.metallic = cos(pGameTimer->getTotalTime() / 3.f) * 0.5f + 0.5f;
 
 	char buffer[128] = { '\0' };
 	sprintf_s(buffer, "BoxApp roughness: %.2f, metallic: %.2f", 

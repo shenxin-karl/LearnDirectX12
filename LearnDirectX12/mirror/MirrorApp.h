@@ -5,7 +5,7 @@
 #include "GameTimer/GameTimer.h"
 
 #include "D3D/d3dutil.h"
-#include "D3D/Tool/Mesh.h"
+#include "D3D/Model/Mesh/Mesh.h"
 #include "D3D/Tool/Camera.h"
 #include "D3D/Shader/ShaderCommon.h"
 

@@ -1,5 +1,5 @@
 #include <D3D/AssimpLoader/AssimpLoader.h>
-#include <D3D/Tool/Mesh.h>
+#include <D3D/Model/Mesh/Mesh.h>
 #include <stack>
 
 namespace d3d {
@@ -62,6 +62,33 @@ std::vector<AssimpLoader::ALSkinnedMesh> AssimpLoader::parseSkinnedMesh() const 
 	}
 	processBoneHierarchyAndAnimation(meshs, boneInfos);
 	return meshs;
+}
+
+const std::string &AssimpLoader::getFileName() const {
+	return _fileName;
+}
+
+const aiScene *AssimpLoader::getScene() const {
+	return _pScene;
+}
+
+size_t AssimpLoader::getTextureCount() const {
+	return _pScene->mNumTextures;
+}
+
+std::string AssimpLoader::getTextureName(size_t i) const {
+	assert(i < _pScene->mNumTextures);
+	const aiTexture *pTexture = _pScene->mTextures[i];
+	std::string texName{ pTexture->mFilename.C_Str(), pTexture->mFilename.length };
+	assert(!texName.empty());			// 内置的贴图是以 * 号开始的
+	if (texName[0] == '*')
+		texName = _fileName + texName;
+	return texName;
+}
+
+const aiTexture *AssimpLoader::getTexture(size_t i) const {
+	assert(i < _pScene->mNumTextures);
+	return _pScene->mTextures[i];
 }
 
 float4x4 AssimpLoader::convertFloat4x4(const aiMatrix4x4 &m) {

@@ -2,6 +2,7 @@
 #include <dx12lib/dx12libStd.h>
 #include <dx12lib/Context/ContextProxy.hpp>
 #include <dx12lib/Context/CommonContext.h>
+#include <DirectXTex/DirectXTex/DirectXTex.h>
 #include <memory>
 
 namespace dx12lib {
@@ -25,6 +26,7 @@ public:
 	std::shared_ptr<SamplerTextureCube> createDDSTextureCubeFromFile(const std::wstring &fileName) override;
 	std::shared_ptr<SamplerTextureCube> createDDSTextureCubeFromMemory(const void *pData, size_t sizeInByte) override;
 	std::shared_ptr<IShaderResource> createTextureFromFile(const std::wstring &fileName, bool sRGB) override;
+	std::shared_ptr<IShaderResource> createTextureFromMemory(const std::string &extension, const void *pData, size_t sizeInByte, bool sRGB);
 
 	void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, WRL::ComPtr<ID3D12DescriptorHeap> pHeap) override;
 	void setConstantBufferView(const ShaderRegister &sr, const ConstantBufferView &cbv) override;
@@ -81,12 +83,12 @@ private:
 	void bindDescriptorHeaps();
 	void setShouldReset(bool bReset);
 	bool shouldReset() const;
-	void trackResource(WRL::ComPtr<ID3D12Resource> pResource);
 	WRL::ComPtr<ID3D12Resource> copyTextureSubResource(WRL::ComPtr<ID3D12Resource> pDestResource,
 		size_t firstSubResource, 
 		size_t numSubResource, 
 		D3D12_SUBRESOURCE_DATA *pSubResourceData
 	);
+	std::shared_ptr<IShaderResource> createTextureImpl(const DX::TexMetadata &metadata, const DX::ScratchImage &scratchImage);
 private:
 	bool								   _shouldReset = false;
 	D3D12_COMMAND_LIST_TYPE                _cmdListType;

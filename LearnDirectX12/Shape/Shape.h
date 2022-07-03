@@ -5,7 +5,7 @@
 #include "GameTimer/GameTimer.h"
 #include "BaseApp/BaseApp.h"
 #include "D3D/Animation/SkinnedData.h"
-#include "D3D/Tool/Mesh.h"
+#include "D3D/Model/Mesh/Mesh.h"
 
 using namespace Math;
 
