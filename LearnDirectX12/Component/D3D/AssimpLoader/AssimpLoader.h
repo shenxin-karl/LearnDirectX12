@@ -1,10 +1,12 @@
 #pragma once
+#include <optional>
 #include <Geometry/GeometryGenerator.h>
 #include <D3D/d3dutil.h>
 #include <D3D/Animation/SkinnedData.h>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include <dx12lib/Context/ContextProxy.hpp>
 
 namespace d3d {
 
@@ -34,13 +36,14 @@ public:
 	explicit AssimpLoader(const std::string &fileName, bool bLoad = false);
 	bool load();
 	bool isLoad() const;
+	void prepareTexture(dx12lib::CommonContextProxy pCommonCtx);
 	std::vector<ALMesh> parseMesh() const;
 	std::vector<ALSkinnedMesh> parseSkinnedMesh() const;
 	const std::string &getFileName() const;
 	const aiScene *getScene() const;
 	size_t getTextureCount() const;
 	std::string getTextureName(size_t i) const;
-	const aiTexture *getTexture(size_t i) const;
+	std::optional<std::string> getTextureName(const aiMaterial *pAiMaterial, aiTextureType type, size_t index = 0);
 	static float4x4 convertFloat4x4(const aiMatrix4x4 &m);
 	static float3 convertFloat3(const aiVector3D &v);
 	static float4 convertFloat4(const aiQuaternion &q);

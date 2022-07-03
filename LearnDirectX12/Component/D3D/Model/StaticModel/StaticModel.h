@@ -11,7 +11,6 @@ class StaticSubModel : public ISubModel {
 public:
 	StaticSubModel() = default;
 	void initAsALMesh(const AssimpLoader &loader, const AssimpLoader::ALMesh &alMesh);
-	void prepareTexture(dx12lib::CommonContextProxy pCommonCtx) const;
 	MaterialData getMaterialData() const override;
 	std::string getAOMapName() const override;
 	std::string getAlbedoMapName() const override;
@@ -33,7 +32,6 @@ class StaticModel : public IModel {
 public:
 	StaticModel(const std::string &modelName);
 	void initAsAssimpLoader(const AssimpLoader &loader);
-	void prepareTexture(dx12lib::CommonContextProxy pCommonCtx) const;
 	const std::string &getModelName() const override;
 	size_t getSubModelCount() const override;
 	std::shared_ptr<ISubModel> getSubModel(size_t subId) const override;

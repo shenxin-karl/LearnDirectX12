@@ -10,17 +10,17 @@ void StaticSubModel::initAsALMesh(const AssimpLoader &loader, const AssimpLoader
 	auto getTextureName = [&](aiTextureType type) -> std::optional<std::string> {
 		if (pAiMaterial->GetTextureCount(type) == 0) {
 			return std::nullopt;
-		} else {
-			aiString path;
-			pAiMaterial->GetTexture(type, 0, &path);
-			if (path.data[0] == '*') {					// 内嵌贴图,提取出索引
-				size_t index = 0;
-				sscanf_s("*%d", path.data, &index);
-				return loader.getTextureName(index);
-			} else {
-				return std::string{ path.C_Str() };
-			}
 		}
+
+		aiString path;
+		pAiMaterial->GetTexture(type, 0, &path);
+		if (path.data[0] == '*') {					// 内嵌贴图,提取出索引
+			size_t index = 0;
+			sscanf_s("*%d", path.data, &index);
+			return loader.getTextureName(index);
+		}
+
+		return std::string{ path.C_Str() };
 	};
 
 	if (pAiMaterial != nullptr) {
@@ -35,10 +35,6 @@ void StaticSubModel::initAsALMesh(const AssimpLoader &loader, const AssimpLoader
 		if (auto texName = getTextureName(aiTextureType_AMBIENT_OCCLUSION))
 			_aoMapName = *texName;
 	}
-}
-
-void StaticSubModel::prepareTexture(dx12lib::CommonContextProxy pCommonCtx) const {
-	
 }
 
 MaterialData StaticSubModel::getMaterialData() const {

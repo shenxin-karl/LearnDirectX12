@@ -3,7 +3,7 @@
 #include <BaseApp/BaseApp.h>
 #include <D3D/d3dutil.h>
 #include <D3D/Shader/ShaderCommon.h>
-#include "IRenderItem.h"
+#include <D3D/Model/ModelInterface.hpp>
 
 using namespace Math;
 

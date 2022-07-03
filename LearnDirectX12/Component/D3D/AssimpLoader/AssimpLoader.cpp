@@ -2,6 +2,8 @@
 #include <D3D/Model/Mesh/Mesh.h>
 #include <stack>
 
+#include "D3D/TextureManager/TextureManager.h"
+
 namespace d3d {
 
 
@@ -30,6 +32,34 @@ bool AssimpLoader::load() {
 
 bool AssimpLoader::isLoad() const {
 	return _isLoad;
+}
+
+void AssimpLoader::prepareTexture(dx12lib::CommonContextProxy pCommonCtx) const {
+	for (size_t i = 0; i < _pScene->mNumTextures; ++i) {
+		const aiTexture *pAiTexture = _pScene->mTextures[i];
+		std::string textureName;
+		if (pAiTexture->mFilename.data[0] == '*')
+			textureName = _fileName + pAiTexture->mFilename.C_Str();
+		else
+			textureName = std::string{ pAiTexture->mFilename.C_Str(), pAiTexture->mFilename.length };
+
+		if (TextureManager::instance()->exist(textureName))
+			continue;
+
+		assert(pAiTexture->mHeight != 0 && "Embedded maps can only be compressed textures");
+		auto pTexture = pCommonCtx->createTextureFromMemory(pAiTexture->achFormatHint,
+			pAiTexture->pcData, 
+			pAiTexture->mWidth, 
+			false
+		);
+		TextureManager::instance()->set(textureName, pTexture);
+	}
+
+	for (size_t i = 0; i < _pScene->mNumMeshes; ++i) {
+		const aiMesh *pAiMesh = _pScene->mMeshes[i];
+		const aiMaterial *pAiMaterial = _pScene->mMaterials[pAiMesh->mMaterialIndex];
+
+	}
 }
 
 std::vector<AssimpLoader::ALMesh> AssimpLoader::parseMesh() const {
@@ -86,9 +116,17 @@ std::string AssimpLoader::getTextureName(size_t i) const {
 	return texName;
 }
 
-const aiTexture *AssimpLoader::getTexture(size_t i) const {
-	assert(i < _pScene->mNumTextures);
-	return _pScene->mTextures[i];
+std::optional<std::string> AssimpLoader::getTextureName(const aiMaterial *pAiMaterial, aiTextureType type, size_t index) {
+	assert(pAiMaterial != nullptr);
+	if (index >= pAiMaterial->GetTextureCount(type))
+		return std::nullopt;
+
+	aiString path;
+	pAiMaterial->GetTexture(type, index, &path);
+	if (path.data[0] == '*')						// 如果是 * 开头,表示是内嵌的贴图, 这里拼接上一个贴图名
+		return _fileName + path.C_Str();
+
+	return std::string{ path.C_Str() };
 }
 
 float4x4 AssimpLoader::convertFloat4x4(const aiMatrix4x4 &m) {
@@ -110,16 +148,13 @@ float4 AssimpLoader::convertFloat4(const aiQuaternion &q) {
 }
 
 void AssimpLoader::processTriangles(std::vector<uint16_t> &indices, const aiMesh *pAiMesh) {
-	size_t numIndices = 0;
-	for (size_t i = 0; i < pAiMesh->mNumFaces; ++i)
-		numIndices += pAiMesh->mFaces[i].mNumIndices;
-
-	indices.resize(numIndices);
+	indices.reserve(pAiMesh->mNumFaces * 3);
 	auto pDesc = indices.begin();
 	for (size_t i = 0; i < pAiMesh->mNumFaces; ++i) {
 		const aiFace &face = pAiMesh->mFaces[i];
-		copy_n(face.mIndices, face.mNumIndices, pDesc);
-		pDesc += face.mNumIndices;
+		indices.push_back(face.mIndices[0]);
+		indices.push_back(face.mIndices[1]);
+		indices.push_back(face.mIndices[2]);
 	}
 }
 
