@@ -28,9 +28,9 @@ interface IModel : public NonCopyable {
 	virtual std::shared_ptr<ISubModel> getSubModel(size_t subId) const = 0;
 };
 
-
 interface IMaterial {
-	virtual void active(dx12lib::GraphicsContextProxy pGraphicsCtx);
+	virtual const std::string &getPSOName() const = 0;
+	virtual void active(dx12lib::GraphicsContextProxy pGraphicsCtx) = 0;
 };
 
 

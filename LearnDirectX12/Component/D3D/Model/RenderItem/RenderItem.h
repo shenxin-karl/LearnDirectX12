@@ -17,7 +17,6 @@ struct DrawArgs {
 class RenderItem : public NonCopyable {
 public:
 	RenderItem(const std::source_location &sr = std::source_location::current());
-	void setPSOName(const std::string &psoName);
 	void setPassName(const std::string &passName);
 	void setGeometryInput(std::shared_ptr<IGeometryInput> pRenderInput);
 	void setInstanceInput(std::shared_ptr<IInstanceInput> pInstanceInput);
@@ -28,11 +27,10 @@ public:
 	std::shared_ptr<IGeometryInput> getGeometryInput() const;
 	std::shared_ptr<IInstanceInput> getInstanceInput() const;
 	std::shared_ptr<IMaterial> getMaterial() const;
-	DrawArgs getDrawArgs() const;
-	void draw(dx12lib::GraphicsContextProxy pGraphicsCtx);
+	const DrawArgs &getDrawArgs() const;
+	void draw(dx12lib::GraphicsContextProxy pGraphicsCtx) const;
 private:
 	DrawArgs _drawArgs;
-	std::string _psoName;
 	std::string _passName;		
 	std::source_location _sourceLocation;
 	std::shared_ptr<IMaterial> _pMaterial;

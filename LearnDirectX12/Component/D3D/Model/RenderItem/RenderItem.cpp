@@ -6,10 +6,6 @@ namespace d3d {
 RenderItem::RenderItem(const std::source_location &sr) : _sourceLocation(sr) {
 }
 
-void RenderItem::setPSOName(const std::string &psoName) {
-	_psoName = psoName;
-}
-
 void RenderItem::setPassName(const std::string &passName) {
 	_passName = passName;
 }
@@ -31,7 +27,7 @@ void RenderItem::setDrawArgs(const DrawArgs &drawArgs) {
 }
 
 const std::string &RenderItem::getPSOName() const {
-	return _psoName;
+	return _pMaterial->getPSOName();
 }
 
 const std::string &RenderItem::getPassName() const {
@@ -50,11 +46,11 @@ std::shared_ptr<IMaterial> RenderItem::getMaterial() const {
 	return _pMaterial;
 }
 
-DrawArgs RenderItem::getDrawArgs() const {
+const DrawArgs &RenderItem::getDrawArgs() const {
 	return _drawArgs;
 }
 
-void RenderItem::draw(dx12lib::GraphicsContextProxy pGraphicsCtx) {
+void RenderItem::draw(dx12lib::GraphicsContextProxy pGraphicsCtx) const {
 	_pGeometryInput->bind(pGraphicsCtx);
 	_pMaterial->active(pGraphicsCtx);
 	if (_drawArgs.instanceCount > 1)

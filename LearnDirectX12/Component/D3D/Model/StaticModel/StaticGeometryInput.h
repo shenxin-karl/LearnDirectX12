@@ -7,7 +7,7 @@ namespace d3d {
 
 class StaticGeometryInput : public IGeometryInput {
 public:
-	StaticGeometryInput(const AssimpLoader::ALMesh &mesh);
+	StaticGeometryInput(dx12lib::GraphicsContextProxy pGraphicsCtx, const AssimpLoader::ALMesh &mesh);
 	void bind(dx12lib::GraphicsContextProxy pGraphicsCtx) override;
 	std::shared_ptr<dx12lib::IndexBuffer> getIndexBuffer() const;
 	std::shared_ptr<dx12lib::VertexBuffer> getVertexBuffer() const;

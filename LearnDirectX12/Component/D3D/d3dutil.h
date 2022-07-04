@@ -66,9 +66,9 @@ WRL::ComPtr<ID3DBlob> compileShaderParseInclude(
 class NonCopyable {
 public:
 	NonCopyable() = default;
-	~NonCopyable() = default;
 	NonCopyable(const NonCopyable &) = delete;
 	NonCopyable &operator=(const NonCopyable &) = delete;
+	virtual ~NonCopyable() = default;
 };
 
 std::string calcMacroKey(const std::string &name, const std::vector<D3D_SHADER_MACRO> &macros);

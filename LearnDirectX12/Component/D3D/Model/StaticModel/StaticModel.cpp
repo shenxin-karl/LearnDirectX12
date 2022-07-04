@@ -3,38 +3,55 @@
 
 namespace d3d {
 
-void StaticSubModel::initAsALMesh(const AssimpLoader &loader, const AssimpLoader::ALMesh &alMesh) {
-	_pGeometryInput = std::make_shared<StaticGeometryInput>(alMesh);
+void StaticSubModel::initAsALMesh(dx12lib::GraphicsContextProxy pGraphicsCtx, const AssimpLoader &loader, const AssimpLoader::ALMesh &alMesh) {
+	_pGeometryInput = std::make_shared<StaticGeometryInput>(pGraphicsCtx, alMesh);
 	aiMaterial *pAiMaterial = alMesh.pAiMaterial;
+	if (pAiMaterial == nullptr)
+		return;
 
-	auto getTextureName = [&](aiTextureType type) -> std::optional<std::string> {
-		if (pAiMaterial->GetTextureCount(type) == 0) {
+	auto prepareMaterialTexture = [&](aiTextureType type, bool sRGB) -> std::optional<std::string> {
+		if (pAiMaterial->GetTextureCount(type) <= 0)
 			return std::nullopt;
-		}
 
 		aiString path;
 		pAiMaterial->GetTexture(type, 0, &path);
-		if (path.data[0] == '*') {					// 内嵌贴图,提取出索引
-			size_t index = 0;
-			sscanf_s("*%d", path.data, &index);
-			return loader.getTextureName(index);
+		if (path.data[0] == '*') {						// 如果是 * 开头,表示是内嵌的贴图, 这里拼接上一个贴图名
+			int textureIndex = 0;
+			sscanf_s(path.data, "*%d", &textureIndex);
+			const aiScene *pScene = loader.getScene();
+			assert(textureIndex < pScene->mNumTextures);
+			const aiTexture *pAiTexture = pScene->mTextures[textureIndex];
+
+			std::string textureName = loader.getFileName() + pAiTexture->mFilename.C_Str();;
+			if (TextureManager::instance()->exist(textureName))
+				return textureName;
+
+			assert(pAiTexture->mHeight != 0 && "Embedded maps can only be compressed textures");
+			auto pTexture = pGraphicsCtx->createTextureFromMemory(pAiTexture->achFormatHint,
+				pAiTexture->pcData,
+				pAiTexture->mWidth,
+				sRGB
+			);
+			TextureManager::instance()->set(textureName, pTexture);
+			return textureName;
 		}
 
-		return std::string{ path.C_Str() };
+		std::string textureName = path.C_Str();
+		auto pTexture = pGraphicsCtx->createTextureFromFile(std::to_wstring(textureName), sRGB);
+		TextureManager::instance()->set(textureName, pTexture);
+		return textureName;
 	};
 
-	if (pAiMaterial != nullptr) {
-		if (auto texName = getTextureName(aiTextureType_DIFFUSE))
-			_albedoMapName = *texName;
-		if (auto texName = getTextureName(aiTextureType_METALNESS))
-			_metallicMapName = *texName;
-		if (auto texName = getTextureName(aiTextureType_DIFFUSE_ROUGHNESS))
-			_roughnessMapName = *texName;
-		if (auto texName = getTextureName(aiTextureType_NORMALS))
-			_normalMapName = *texName;
-		if (auto texName = getTextureName(aiTextureType_AMBIENT_OCCLUSION))
-			_aoMapName = *texName;
-	}
+	if (auto texName = prepareMaterialTexture(aiTextureType_DIFFUSE, true))
+		_albedoMapName = *texName;
+	if (auto texName = prepareMaterialTexture(aiTextureType_METALNESS, false))
+		_metallicMapName = *texName;
+	if (auto texName = prepareMaterialTexture(aiTextureType_DIFFUSE_ROUGHNESS, false))
+		_roughnessMapName = *texName;
+	if (auto texName = prepareMaterialTexture(aiTextureType_NORMALS, false))
+		_normalMapName = *texName;
+	if (auto texName = prepareMaterialTexture(aiTextureType_AMBIENT_OCCLUSION, false))
+		_aoMapName = *texName;
 }
 
 MaterialData StaticSubModel::getMaterialData() const {
@@ -70,12 +87,12 @@ std::shared_ptr<IGeometryInput> StaticSubModel::getGeometryInput() const {
 StaticModel::StaticModel(const std::string &modelName) : _modelName(modelName) {
 }
 
-void StaticModel::initAsAssimpLoader(const AssimpLoader &loader) {
+void StaticModel::initAsAssimpLoader(dx12lib::GraphicsContextProxy pGraphicsCtx, const AssimpLoader &loader) {
 	_subModels.clear();
 	auto meshs = loader.parseMesh();
 	for (AssimpLoader::ALMesh &mesh : meshs) {
 		auto pSubMesh = std::make_shared<StaticSubModel>();
-		pSubMesh->initAsALMesh(loader, mesh);
+		pSubMesh->initAsALMesh(pGraphicsCtx, loader, mesh);
 		_subModels.push_back(pSubMesh);
 	}
 }

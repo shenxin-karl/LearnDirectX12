@@ -10,7 +10,7 @@ namespace d3d {
 class StaticSubModel : public ISubModel {
 public:
 	StaticSubModel() = default;
-	void initAsALMesh(const AssimpLoader &loader, const AssimpLoader::ALMesh &alMesh);
+	void initAsALMesh(dx12lib::GraphicsContextProxy pGraphicsCtx, const AssimpLoader &loader, const AssimpLoader::ALMesh &alMesh);
 	MaterialData getMaterialData() const override;
 	std::string getAOMapName() const override;
 	std::string getAlbedoMapName() const override;
@@ -19,7 +19,6 @@ public:
 	std::string getRoughnessMapName() const override;
 	std::shared_ptr<IGeometryInput> getGeometryInput() const override;
 private:
-	MaterialData _materialData    = MaterialData::defaultMaterialData;
 	std::string _aoMapName        = TextureManager::defaultAOMap;
 	std::string _albedoMapName    = TextureManager::defaultAlbedoMap;
 	std::string _normalMapName    = TextureManager::defaultNormalMap;
@@ -31,7 +30,7 @@ private:
 class StaticModel : public IModel {
 public:
 	StaticModel(const std::string &modelName);
-	void initAsAssimpLoader(const AssimpLoader &loader);
+	void initAsAssimpLoader(dx12lib::GraphicsContextProxy pGraphicsCtx, const AssimpLoader &loader);
 	const std::string &getModelName() const override;
 	size_t getSubModelCount() const override;
 	std::shared_ptr<ISubModel> getSubModel(size_t subId) const override;

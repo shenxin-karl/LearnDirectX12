@@ -1,8 +1,15 @@
 #include "StaticGeometryInput.h"
 
 namespace d3d {
-StaticGeometryInput::StaticGeometryInput(const AssimpLoader::ALMesh &mesh) {
-
+StaticGeometryInput::StaticGeometryInput(dx12lib::GraphicsContextProxy pGraphicsCtx, const AssimpLoader::ALMesh &mesh) {
+	_pVertexBuffer = pGraphicsCtx->createVertexBuffer(mesh.vertices.data(), 
+		mesh.vertices.size(), 
+		sizeof(com::Vertex)
+	);
+	_pIndexBuffer = pGraphicsCtx->createIndexBuffer(mesh.indices.data(), 
+		mesh.indices.size(), 
+		DXGI_FORMAT_R16_UINT
+	);
 }
 
 void StaticGeometryInput::bind(dx12lib::GraphicsContextProxy pGraphicsCtx) {

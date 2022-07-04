@@ -35,30 +35,42 @@ bool AssimpLoader::isLoad() const {
 }
 
 void AssimpLoader::prepareTexture(dx12lib::CommonContextProxy pCommonCtx) const {
-	for (size_t i = 0; i < _pScene->mNumTextures; ++i) {
-		const aiTexture *pAiTexture = _pScene->mTextures[i];
-		std::string textureName;
-		if (pAiTexture->mFilename.data[0] == '*')
-			textureName = _fileName + pAiTexture->mFilename.C_Str();
-		else
-			textureName = std::string{ pAiTexture->mFilename.C_Str(), pAiTexture->mFilename.length };
 
-		if (TextureManager::instance()->exist(textureName))
-			continue;
+	auto prepareMaterialTexture = [&](const aiMaterial *pAiMaterial, aiTextureType type, bool sRGB) {
+		aiString path;
+		pAiMaterial->GetTexture(type, 0, &path);
+		if (path.data[0] == '*') {						// 如果是 * 开头,表示是内嵌的贴图, 这里拼接上一个贴图名
+			size_t textureIndex = 0;
+			sscanf_s(path.data, "*%d", &textureIndex);
+			assert(textureIndex < _pScene->mNumTextures);
+			const aiTexture *pAiTexture = _pScene->mTextures[textureIndex];
+			std::string textureName = _fileName + pAiTexture->mFilename.C_Str();;
+			if (TextureManager::instance()->exist(textureName))
+				return;
 
-		assert(pAiTexture->mHeight != 0 && "Embedded maps can only be compressed textures");
-		auto pTexture = pCommonCtx->createTextureFromMemory(pAiTexture->achFormatHint,
-			pAiTexture->pcData, 
-			pAiTexture->mWidth, 
-			false
-		);
-		TextureManager::instance()->set(textureName, pTexture);
-	}
+			assert(pAiTexture->mHeight != 0 && "Embedded maps can only be compressed textures");
+			auto pTexture = pCommonCtx->createTextureFromMemory(pAiTexture->achFormatHint,
+				pAiTexture->pcData,
+				pAiTexture->mWidth,
+				sRGB
+			);
+			TextureManager::instance()->set(textureName, pTexture);
+
+		} else {
+			std::string textureName = path.C_Str();
+			auto pTexture = pCommonCtx->createTextureFromFile(std::to_wstring(textureName), sRGB);
+			TextureManager::instance()->set(textureName, pTexture);
+		}
+	};
 
 	for (size_t i = 0; i < _pScene->mNumMeshes; ++i) {
 		const aiMesh *pAiMesh = _pScene->mMeshes[i];
 		const aiMaterial *pAiMaterial = _pScene->mMaterials[pAiMesh->mMaterialIndex];
-
+		prepareMaterialTexture(pAiMaterial, aiTextureType_DIFFUSE, true);
+		prepareMaterialTexture(pAiMaterial, aiTextureType_METALNESS, false);
+		prepareMaterialTexture(pAiMaterial, aiTextureType_DIFFUSE_ROUGHNESS, true);
+		prepareMaterialTexture(pAiMaterial, aiTextureType_NORMALS, false);
+		prepareMaterialTexture(pAiMaterial, aiTextureType_AMBIENT_OCCLUSION, false);
 	}
 }
 
@@ -116,7 +128,7 @@ std::string AssimpLoader::getTextureName(size_t i) const {
 	return texName;
 }
 
-std::optional<std::string> AssimpLoader::getTextureName(const aiMaterial *pAiMaterial, aiTextureType type, size_t index) {
+std::optional<std::string> AssimpLoader::getTextureName(const aiMaterial *pAiMaterial, aiTextureType type, size_t index) const {
 	assert(pAiMaterial != nullptr);
 	if (index >= pAiMaterial->GetTextureCount(type))
 		return std::nullopt;
