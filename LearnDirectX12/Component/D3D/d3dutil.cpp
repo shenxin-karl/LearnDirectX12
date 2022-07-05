@@ -123,9 +123,9 @@ std::string calcMacroKey(const std::string &name, const D3D_SHADER_MACRO *pMacro
 			continue;
 
 		if (shaderMacro.Definition != nullptr && shaderMacro.Name != nullptr)
-			keys.push_back(std::format("_{}#{}", shaderMacro.Definition, shaderMacro.Name));
+			keys.push_back(std::format("_[{}, {}]", shaderMacro.Definition, shaderMacro.Name));
 		else
-			keys.push_back(std::format("_{}", shaderMacro.Definition));
+			keys.push_back(std::format("_[{}]", shaderMacro.Definition));
 	}
 
 	std::string result = name;
@@ -133,6 +133,96 @@ std::string calcMacroKey(const std::string &name, const D3D_SHADER_MACRO *pMacro
 	for (auto &key : keys)
 		result += key;
 	return result;
+}
+
+
+struct SplitMacroKeyHelper {
+	bool handleName(const std::string &key) {
+		if (index == key.length()) {
+			name = key;
+			return false;
+		}
+
+		if (key[index] == '_') {
+			name = key.substr(0, index);
+			pTickFun = &SplitMacroKeyHelper::findMacroBegin;
+			position = index + 1;
+		}
+		return true;
+	}
+
+	// ´Ó _ ¿ªÕÒµ½ [
+	bool findMacroBegin(const std::string &key) {
+		if (index == key.length())
+			return false;
+		
+		if (key[index] == '[') {
+			position = index + 1;
+			pTickFun = &SplitMacroKeyHelper::handleMacroKey;
+		}
+		assert(key[index] == '_' || key[index] == '[');
+		return true;
+	}
+
+	bool handleMacroKey(const std::string &key) {
+		assert(index < key.length());
+		if (key[index] == ',') {
+			macros.push_back(key.substr(position, index - position));
+			position = index + 1;
+			pTickFun = &SplitMacroKeyHelper::handleMacroValue;
+		}
+		if (key[index] == ']') {
+			macros.push_back(key.substr(position, index - position));
+			macros.push_back("");
+			position = index + 1;
+			pTickFun = &SplitMacroKeyHelper::findMacroBegin;
+		}
+		return true;
+	}
+
+	bool handleMacroValue(const std::string &key) {
+		if (index == key.length()) {
+			assert(false && "The macro key is not complete");
+			return false;
+		}
+
+		if (key[index] == ']') {
+			macros.push_back(key.substr(position, index-position));
+			position = index + 1;
+			pTickFun = &SplitMacroKeyHelper::findMacroBegin;
+		}
+		return true;
+	}
+
+	void parse(const std::string &key) {
+		while ((this->*pTickFun)(key))
+			++index;
+	}
+
+public:
+	bool (SplitMacroKeyHelper:: *pTickFun)(const std::string &key) = &SplitMacroKeyHelper::handleName;
+	size_t position = 0;
+	size_t index = 0;
+	std::string name;
+	std::vector<std::string> macros;
+};
+
+void splitMacroKey(const std::string &key, std::string &name, std::vector<MacroPair> &macros) {
+	if (key.empty())
+		return;
+
+
+	SplitMacroKeyHelper helper;
+	helper.parse(key);
+	name = std::move(helper.name);
+
+	for (size_t i = 0; i < helper.macros.size(); i += 2) {
+		MacroPair pair = {
+			std::move(helper.macros[i+0]),
+			std::move(helper.macros[i+1]),
+		};
+		macros.push_back(std::move(pair));
+	}
 }
 
 D3DInitializer::D3DInitializer() {

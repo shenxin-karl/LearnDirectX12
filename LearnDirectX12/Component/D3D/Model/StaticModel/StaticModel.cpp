@@ -54,10 +54,6 @@ void StaticSubModel::initAsALMesh(dx12lib::GraphicsContextProxy pGraphicsCtx, co
 		_aoMapName = *texName;
 }
 
-MaterialData StaticSubModel::getMaterialData() const {
-	return _materialData;
-}
-
 std::string StaticSubModel::getAOMapName() const {
 	return _aoMapName;
 }

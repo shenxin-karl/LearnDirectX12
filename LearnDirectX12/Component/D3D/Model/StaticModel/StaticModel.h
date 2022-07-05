@@ -11,7 +11,6 @@ class StaticSubModel : public ISubModel {
 public:
 	StaticSubModel() = default;
 	void initAsALMesh(dx12lib::GraphicsContextProxy pGraphicsCtx, const AssimpLoader &loader, const AssimpLoader::ALMesh &alMesh);
-	MaterialData getMaterialData() const override;
 	std::string getAOMapName() const override;
 	std::string getAlbedoMapName() const override;
 	std::string getNormalMapName() const override;

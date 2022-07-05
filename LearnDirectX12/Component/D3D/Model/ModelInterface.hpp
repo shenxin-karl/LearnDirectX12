@@ -13,7 +13,6 @@ interface IInstanceInput : public NonCopyable {
 };
 
 interface ISubModel : public NonCopyable {
-	virtual MaterialData getMaterialData() const = 0;
 	virtual std::string getAOMapName() const = 0;
 	virtual std::string getAlbedoMapName() const = 0;
 	virtual std::string getNormalMapName() const = 0;
@@ -28,7 +27,7 @@ interface IModel : public NonCopyable {
 	virtual std::shared_ptr<ISubModel> getSubModel(size_t subId) const = 0;
 };
 
-interface IMaterial {
+interface IMaterial : public NonCopyable {
 	virtual const std::string &getPSOName() const = 0;
 	virtual void active(dx12lib::GraphicsContextProxy pGraphicsCtx) = 0;
 };
