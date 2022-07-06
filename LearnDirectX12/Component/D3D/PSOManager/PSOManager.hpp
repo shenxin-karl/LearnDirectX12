@@ -21,6 +21,8 @@ public:
 	void erase(const std::string &key);
 	bool exist(const std::string &key);
 private:
+	using PSOCreator = std::function<std::shared_ptr<T>(const std::vector<MacroPair> &)>;
+	std::unordered_map<std::string, PSOCreator> _psoCreatorMap;
 	std::unordered_map<std::string, std::shared_ptr<dx12lib::PSO>> _psoMap;
 };
 
@@ -29,6 +31,17 @@ inline std::shared_ptr<T> PSOManager<T>::get(const std::string &key) {
 	auto iter = _psoMap.find(key);
 	if (iter != _psoMap.end())
 		return std::static_pointer_cast<T>(iter->second);
+
+	std::string name;
+	std::vector<MacroPair> macros;
+	splitMacroKey(key, name, macros);
+	if (auto iter = _psoCreatorMap.find(name); iter != _psoCreatorMap.end()) {
+		std::shared_ptr<T> pso = iter->second(macros);
+		if (pso != nullptr) {
+			_psoMap[key] = pso;
+			return pso;
+		}
+	}
 	return nullptr;
 }
 

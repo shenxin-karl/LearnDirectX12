@@ -2,6 +2,7 @@
 #include <unordered_map>
 #include <Singleton/Singleton.hpp>
 #include <d3d12.h>
+#include <functional>
 #include <D3D/d3dutil.h>
 
 namespace d3d {
@@ -50,7 +51,9 @@ public:
 	bool exist(const std::string &key) const;
 	void erase(const std::string &key);
 private:
+	using ShaderCreator = std::function<Shader(const std::vector<MacroPair> &)>;
 	std::unordered_map<std::string, Shader> _shaders;
+	std::unordered_map<std::string, ShaderCreator> _shaderCreatorMap;
 };
 
 template<ShaderType Type>
@@ -65,7 +68,7 @@ template<ShaderType Type>
 inline void ShaderManager<Type>::set(const std::string &key, WRL::ComPtr<ID3DBlob> pByteCode) {
 	assert(!key.empty());
 	assert(pByteCode != nullptr);
-	_shaders[key] = pByteCode;
+	_shaders[key] = Shader(Type, pByteCode);
 }
 
 template<ShaderType Type>
