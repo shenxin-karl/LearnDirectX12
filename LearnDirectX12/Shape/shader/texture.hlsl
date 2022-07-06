@@ -102,9 +102,11 @@ float4 PS(VertexOut pin) : SV_Target {
     };
 
     float3 normal = NormalSampleToWorldSpace(pin);
-    result += ComputeDirectionLight(gLight.lights[0], mat, normal, viewDir);
-    result += ComputePointLight(gLight.lights[1], mat, normal, viewDir, pin.position);
-    result += ComputeSpotLight(gLight.lights[2], mat, normal, viewDir, pin.position);
+    float3 N = normalize(normal);
+    float3 V = normalize(viewDir);
+    result += ComputeDirectionLight(gLight.lights[0], mat, N, V);
+    result += ComputePointLight(gLight.lights[1], mat, N, V, pin.position);
+    result += ComputeSpotLight(gLight.lights[2], mat, N, V, pin.position);
     result += (diffAlbedo * gLight.ambientLight).rgb;
     return float4(result, diffAlbedo.a);
 }

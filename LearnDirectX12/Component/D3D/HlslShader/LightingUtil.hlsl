@@ -2,9 +2,24 @@
 #define __LIGHTING_UTIL_HLSL__
 
 /*
-开启卡通着色
-#define USE_CARTOON_SHADING  
+#define USE_CARTOON_SHADING
+#define NUM_DIRECTION_LIGHT 0          
+#define NUM_POINT_LIGHT     0
+#define NUM_SPOT_LIGHT      0
+
 */
+
+#ifndef NUM_DIRECTION_LIGHT
+	#define NUM_DIRECTION_LIGHT 0
+#endif
+
+#ifndef NUM_POINT_LIGHT
+	#define NUM_POINT_LIGHT 0
+#endif
+
+#ifndef NUM_SPOT_LIGHT
+	#define NUM_SPOT_LIGHT 0
+#endif
 
 #ifndef USE_CARTOON_SHADING
     #define DIFF_SHADING_FACTOR(NdotL) (NdotL)
@@ -88,23 +103,19 @@ float3 BlinnPhong(float3 lightStrength, float3 L, float3 N, float3 V, MaterialDa
     return (diffAlbedo + specAlbedo) * lightStrength;
 }
 
-float3 ComputeDirectionLight(LightData light, MaterialData mat, float3 normal, float3 viewDir) {
-    float3 V = normalize(viewDir);
-    float3 N = normalize(normal);
+float3 ComputeDirectionLight(LightData light, MaterialData mat, float3 N, float3 V) {
     float3 L = light.direction;
     float NdotL = DIFF_SHADING_FACTOR(saturate(dot(N, L)));
     float3 lightStrength = light.strength * NdotL;
     return BlinnPhong(lightStrength, L, N, V, mat);
 }
 
-float3 ComputePointLight(LightData light, MaterialData mat, float3 normal, float3 viewDir, float3 worldPosition) {
+float3 ComputePointLight(LightData light, MaterialData mat, float3 N, float3 V, float3 worldPosition) {
     float3 lightVec = light.position - worldPosition;
     float dis = length(lightVec);
     if (dis > light.falloffEnd)
         return 0.f;
     
-    float3 V = normalize(viewDir);
-    float3 N = normalize(normal);
     float3 L = lightVec / dis;
     float NdotL = DIFF_SHADING_FACTOR(saturate(dot(N, L)));
     float attenuation = CalcAttenuation(dis, light.falloffStart, light.falloffEnd);
@@ -112,14 +123,12 @@ float3 ComputePointLight(LightData light, MaterialData mat, float3 normal, float
     return BlinnPhong(lightStrength, L, N, V, mat);
 }
 
-float3 ComputeSpotLight(LightData light, MaterialData mat, float3 normal, float3 viewDir, float3 worldPosition) {
+float3 ComputeSpotLight(LightData light, MaterialData mat, float3 N, float3 V, float3 worldPosition) {
     float3 lightVec = light.position - worldPosition;
     float dis = length(lightVec);
     if (dis > light.falloffEnd)
         return 0.f;
         
-    float3 V = normalize(viewDir);
-    float3 N = normalize(normal);
     float3 L = lightVec / dis;
     float NdotL = DIFF_SHADING_FACTOR(saturate(dot(N, L)));
     float3 lightStrength = light.strength * NdotL;
@@ -131,6 +140,36 @@ float3 ComputeSpotLight(LightData light, MaterialData mat, float3 normal, float3
     lightStrength *= spotFactor;
 
     return BlinnPhong(lightStrength, L, N, V, mat);
+}
+
+#ifndef kMaxLightCount 
+	#define kMaxLightCount 16
+#endif
+
+float3 ComputeLight(LightData lights[kMaxLightCount], 
+					float shadows[kMaxLightCount], 
+					MaterialData mat, 
+					float3 N, 
+					float3 V, 
+					float3 worldPosition)
+{
+#define DIRECTION__LIGHT_END   (NUM_DIRECTION_LIGHT)
+#define POINT_LIGHT_END        (NUM_DIRECTION_LIGHT + NUM_POINT_LIGHT)
+#define SPOT_LIGHT_END         (NUM_DIRECTION_LIGHT + NUM_POINT_LIGHT + NUM_SPOT_LIGHT)
+
+    uint index = 0;
+	float3 result = 0.0;
+    for ( ;index < DIRECTION__LIGHT_END; ++index)
+        result += shadows[index] * ComputeDirectionLight(lights[index], mat, N, V);
+    for ( ;index < POINT_LIGHT_END; ++index) 	
+        result += shadows[index] * ComputePointLight(lights[index], mat, N, V, worldPosition);
+    for ( ;index < SPOT_LIGHT_END; ++index)
+		result += shadows[index] * ComputeSpotLight(lights[index], mat, N, V, worldPosition);
+	return result;
+
+#undef DIRECTION__LIGHT_END
+#undef POINT_LIGHT_END
+#undef SPOT_LIGHT_END
 }
 
 /**
@@ -194,5 +233,7 @@ float3 CalcIBLAmbient(float3 V, float3 N, MaterialData material, IBLParam param)
 
     return diffuse + specular;
 }
+
+
 
 #endif

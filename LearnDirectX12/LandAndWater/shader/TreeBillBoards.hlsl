@@ -88,10 +88,13 @@ float4 PS(GeometryOut pin) : SV_Target {
     clip(diffuseAlbedo.a - 0.1);
     float3 result = float3(0.0, 0.0, 0.0);
     float3 viewDir = gPass.eyePos - pin.position;
+
+    float3 N = normalize(N);
+    float3 V = normalize(viewDir);
     MaterialData mat = { diffuseAlbedo, gMaterial.roughness, gMaterial.metallic, 0.0, 0.0 };
-    result += ComputeDirectionLight(gLight.lights[0], mat, pin.normal, viewDir);
-    result += ComputeDirectionLight(gLight.lights[1], mat, pin.normal, viewDir);
-    result += ComputeDirectionLight(gLight.lights[2], mat, pin.normal, viewDir);
+    result += ComputeDirectionLight(gLight.lights[0], mat, N, V);
+    result += ComputeDirectionLight(gLight.lights[1], mat, N, V);
+    result += ComputeDirectionLight(gLight.lights[2], mat, N, V);
     result += (gLight.ambientLight * diffuseAlbedo).xyz;
     
     // FOG

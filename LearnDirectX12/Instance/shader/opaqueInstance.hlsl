@@ -68,11 +68,13 @@ float4 PS(VertexOut pin) : SV_Target {
 	mat.diffuseAlbedo *= albedo;
 
 	float3 viewDir = gPass.eyePos - pin.PosW;
+	float3 N = normalize(pin.NrmW);
+	float3 V = normalize(viewDir);
 
 	float3 result = float3(0.0, 0.0, 0.0);
 	result += (gLight.ambientLight * mat.diffuseAlbedo).xyz;
-	result += ComputeDirectionLight(gLight.lights[0], mat, pin.NrmW, viewDir);
-	result += ComputeDirectionLight(gLight.lights[1], mat, pin.NrmW, viewDir);
-	result += ComputeDirectionLight(gLight.lights[2], mat, pin.NrmW, viewDir);
+	result += ComputeDirectionLight(gLight.lights[0], mat, N, V);
+	result += ComputeDirectionLight(gLight.lights[1], mat, N, V);
+	result += ComputeDirectionLight(gLight.lights[2], mat, N, V);
 	return float4(result, mat.diffuseAlbedo.a);
 }

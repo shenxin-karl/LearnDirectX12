@@ -115,23 +115,25 @@ std::string calcMacroKey(const std::string &name, const std::vector<D3D_SHADER_M
 }
 
 std::string calcMacroKey(const std::string &name, const D3D_SHADER_MACRO *pMacros, size_t size) {
-	std::vector<std::string> keys;
-	keys.reserve(size);
+	std::map<std::string, std::string> macros;
 	for (size_t i = 0; i < size; ++i) {
-		D3D_SHADER_MACRO shaderMacro = pMacros[i];
-		if (shaderMacro.Definition == nullptr)
-			continue;
-
-		if (shaderMacro.Definition != nullptr && shaderMacro.Name != nullptr)
-			keys.push_back(std::format("_[{}, {}]", shaderMacro.Definition, shaderMacro.Name));
+#if defined(_DEBUG) || defined(DEBUG)
+		auto iter = macros.find(pMacros[i].Definition);
+		assert(iter == macros.end());
+#endif
+		if (pMacros[i].Name != nullptr)
+			macros[pMacros[i].Definition] = pMacros[i].Name;
 		else
-			keys.push_back(std::format("_[{}]", shaderMacro.Definition));
+			macros[pMacros[i].Definition] = std::string();
 	}
 
 	std::string result = name;
-	std::stable_sort(keys.begin(), keys.end());
-	for (auto &key : keys)
-		result += key;
+	for (auto &&[key, value] : macros) {
+		if (value.empty())
+			result += std::format("_[{}]", key);
+		else
+			result += std::format("_[{},{}]", key, value);
+	}
 	return result;
 }
 

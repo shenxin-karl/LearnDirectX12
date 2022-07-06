@@ -38,12 +38,12 @@ VertexOut VS(VertexIn vin) {
 }
 
 TextureCube gCubeMap : register(t0);
-float3 BoxCubeMapLookup(MaterialData material, float3 viewDir, float3 normal) {
-	float cosIncidenceAngle = max(dot(normalize(viewDir), normalize(normal)), 0.0);
+float3 BoxCubeMapLookup(MaterialData material, float3 N, float3 V) {
+	float cosIncidenceAngle = saturate(dot(N, V));
 	float3 R0 = lerp(0.04, material.diffuseAlbedo.rgb, material.metallic);
 	float3 specFactor = SchlickFresnelRoughness(cosIncidenceAngle, R0, material.roughness);
 
-	float3 R = reflect(-viewDir, normal);
+	float3 R = reflect(-V, N);
 	float3 spec = gCubeMap.Sample(gSamLinearWrap, R).rgb * specFactor;
 	spec *= (1.0 - material.roughness);
 	return spec;
@@ -52,11 +52,13 @@ float3 BoxCubeMapLookup(MaterialData material, float3 viewDir, float3 normal) {
 float4 PS(VertexOut pin) : SV_Target { 
     float3 viewDir = gPassCB.eyePos - pin.wpos;
     float3 result = float3(0, 0, 0);
-	result += ComputeDirectionLight(gLight.lights[0], gMaterial, pin.wnrm, viewDir);
-    result += ComputePointLight(gLight.lights[1], gMaterial, pin.wnrm, viewDir, pin.wpos);
-    result += ComputeSpotLight(gLight.lights[2], gMaterial, pin.wnrm, viewDir, pin.wpos);
+	float3 N = normalize(pin.wnrm);
+	float3 V = normalize(viewDir);
+	result += ComputeDirectionLight(gLight.lights[0], gMaterial, N, V);
+    result += ComputePointLight(gLight.lights[1], gMaterial, N, V, pin.wpos);
+    result += ComputeSpotLight(gLight.lights[2], gMaterial, N, V, pin.wpos);
     result += gMaterial.diffuseAlbedo.rgb * gLight.ambientLight.rgb;
     result += (gMaterial.diffuseAlbedo * gLight.ambientLight).rgb;
-	result += BoxCubeMapLookup(gMaterial, viewDir, pin.wnrm);
+	result += BoxCubeMapLookup(gMaterial, N, V);
 	return float4(result, gMaterial.diffuseAlbedo.a);
 }

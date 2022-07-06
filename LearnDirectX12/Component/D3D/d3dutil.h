@@ -71,6 +71,11 @@ public:
 	virtual ~NonCopyable() = default;
 };
 
+struct MacroPair {
+	std::string key;
+	std::string value;
+};
+
 std::string calcMacroKey(const std::string &name, const std::vector<D3D_SHADER_MACRO> &macros);
 std::string calcMacroKey(const std::string &name, const D3D_SHADER_MACRO *pMacros, size_t size);
 
@@ -79,10 +84,6 @@ std::string calcMacroKey(const std::string &name, const D3D_SHADER_MACRO(&pMacro
 	return calcMacroKey(name, pMacros, N);
 }
 
-struct MacroPair {
-	std::string key;
-	std::string value;
-};
 
 void splitMacroKey(const std::string &key, std::string &name, std::vector<MacroPair> &macros);
 

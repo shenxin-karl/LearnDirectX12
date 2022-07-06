@@ -92,9 +92,12 @@ VertexOut VS(VertexIn vin) {
 float4 PS(VertexOut pin) : SV_Target {
     float3 result  = { 0.0, 0.0, 0.0 };
     float3 viewDir = gPass.eyePos - pin.wpos;
-    result += ComputeDirectionLight(gLight.lights[0], gMaterial, pin.wnrm, viewDir);
-    result += ComputeDirectionLight(gLight.lights[1], gMaterial, pin.wnrm, viewDir);
-    result += ComputeDirectionLight(gLight.lights[2], gMaterial, pin.wnrm, viewDir);
+
+    float3 N = normalize(pin.wnrm);
+    float3 V = normalize(viewDir);
+    result += ComputeDirectionLight(gLight.lights[0], gMaterial, N, V);
+    result += ComputeDirectionLight(gLight.lights[1], gMaterial, N, V);
+    result += ComputeDirectionLight(gLight.lights[2], gMaterial, N, V);
     result += gMaterial.diffuseAlbedo * gLight.ambientLight;
     float dis = distance(pin.wpos, gPass.eyePos);
     float fogFactor = CalcFogAttenuation(dis, gPass.fogStart, gPass.fogEnd);

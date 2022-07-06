@@ -54,7 +54,10 @@ struct CBPassType {
 	float2   cbPerPassPad1;
 };
 
-#define kMaxLightCount 16
+#ifndef kMaxLightCount 
+	#define kMaxLightCount 16
+#endif
+
 struct CBLightType {
 	int       directLightCount;
 	int       pointLightCount;
