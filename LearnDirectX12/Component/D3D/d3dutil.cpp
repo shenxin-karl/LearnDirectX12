@@ -16,6 +16,9 @@
 #define STB_INCLUDE_IMPLEMENTATION
 #include <iostream>
 #include <stb/stb_include.h>
+#include <Script/LuaConfigLoader/LuaConfigLoader.h>
+
+#include "Shader/D3DShaderResource.h"
 
 namespace d3d {
 
@@ -243,6 +246,9 @@ D3DInitializer::D3DInitializer() {
 	GraphicsPSOManager::emplace();
 	ComputePSOManager::emplace();
 	TextureManager::emplace();
+
+	loadShaderDefineConfig();
+
 }
 
 D3DInitializer::~D3DInitializer() {
@@ -261,6 +267,36 @@ D3DInitializer::~D3DInitializer() {
 	GSShaderManager::destroy();
 	PSShaderManager::destroy();
 	VSShaderManager::destroy();
+}
+
+void D3DInitializer::loadShaderDefineConfig() {
+	auto file = getD3DResource("config/ShaderDefine.lua");
+	scr::LuaConfigLoader luaConfigLoader(file.begin(), file.size());
+
+	if (luaConfigLoader.beginTable("shaderList")) {
+		for (luaConfigLoader.beginNext(); luaConfigLoader.next();) {
+			auto key = luaConfigLoader.getKey();
+			//assert(luaConfigLoader.getValueType() == scr::LuaValueType::Table);
+			bool b = luaConfigLoader.isTable("file");
+			if (luaConfigLoader.beginTable()) {
+				std::string file = *luaConfigLoader.getString("file");
+				if (auto vs = luaConfigLoader.getString("vs"))
+					VSShaderManager::instance()->initShaderCreator(file, *vs, "VS_5_0");
+				if (auto ps = luaConfigLoader.getString("ps"))
+					PSShaderManager::instance()->initShaderCreator(file, *ps, "PS_5_0");
+				if (auto gs = luaConfigLoader.getString("gs"))
+					GSShaderManager::instance()->initShaderCreator(file, *gs, "GS_5_0");
+				if (auto hs = luaConfigLoader.getString("hs"))
+					GSShaderManager::instance()->initShaderCreator(file, *hs, "HS_5_0");
+				if (auto ds = luaConfigLoader.getString("ds"))
+					GSShaderManager::instance()->initShaderCreator(file, *ds, "DS_5_0");
+				if (auto cs = luaConfigLoader.getString("cs"))
+					GSShaderManager::instance()->initShaderCreator(file, *cs, "CS_5_0");
+			}
+			luaConfigLoader.endTable();
+		}
+	}
+	luaConfigLoader.endTable();
 }
 
 }

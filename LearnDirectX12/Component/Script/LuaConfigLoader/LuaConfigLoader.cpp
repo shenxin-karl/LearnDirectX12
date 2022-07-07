@@ -4,9 +4,22 @@
 
 namespace scr {
 
-LuaConfigLoader::LuaConfigLoader(const std::string &fileName) : _fileName(fileName), _pLuaState(luaL_newstate()) {
+LuaConfigLoader::LuaConfigLoader(const std::string &fileName) : _pLuaState(luaL_newstate()) {
 	luaL_openlibs(_pLuaState);
-	if (luaL_loadfile(_pLuaState, _fileName.c_str()) || lua_pcall(_pLuaState, 0, 0, 0)) {
+	if (luaL_loadfile(_pLuaState, fileName.c_str()) || lua_pcall(_pLuaState, 0, 0, 0)) {
+		std::cerr << lua_tostring(_pLuaState, -1) << std::endl;
+		lua_close(_pLuaState);
+		_pLuaState = nullptr;
+		return;
+	}
+}
+
+LuaConfigLoader::LuaConfigLoader(const void *pData, size_t sizeInByte, const std::source_location &sr)
+: _pLuaState(luaL_newstate())
+{
+	luaL_openlibs(_pLuaState);
+	const char *pCharBuffer = static_cast<const char *>(pData);
+	if (luaL_loadbuffer(_pLuaState, pCharBuffer, sizeInByte, sr.function_name()) || lua_pcall(_pLuaState, 0, 0, 0)) {
 		std::cerr << lua_tostring(_pLuaState, -1) << std::endl;
 		lua_close(_pLuaState);
 		_pLuaState = nullptr;
@@ -100,11 +113,11 @@ void LuaConfigLoader::endTable() {
 	--_numNested;
 }
 
-std::variant<std::monostate, std::string, double> LuaConfigLoader::getKey() {
+LuaConfigLoader::TableKey LuaConfigLoader::getKey() {
 	if (lua_isstring(_pLuaState, -2))
-		return std::string(lua_tostring(_pLuaState, -2));
+		return TableKey(lua_tostring(_pLuaState, -2));
 	else if (lua_isnumber(_pLuaState, -2))
-		return lua_tonumber(_pLuaState, -2);
+		return TableKey(lua_tonumber(_pLuaState, -2));
 	return {};
 }
 
@@ -113,7 +126,7 @@ void LuaConfigLoader::beginNext() {
 }
 
 bool LuaConfigLoader::next() {
-	if (lua_next(_pLuaState, -1)) {
+	if (lua_next(_pLuaState, -2)) {
 		lua_pushvalue(_pLuaState, -2);
 		return true;
 	}
@@ -121,7 +134,7 @@ bool LuaConfigLoader::next() {
 }
 
 LuaValueType LuaConfigLoader::getValueType() const {
-	return static_cast<LuaValueType>(lua_type(_pLuaState, -1));
+	return static_cast<LuaValueType>(lua_type(_pLuaState, -2));
 }
 
 auto LuaConfigLoader::getString() -> std::optional<std::string> {
@@ -180,10 +193,30 @@ size_t LuaConfigLoader::getTableLength() const {
 }
 
 void LuaConfigLoader::getKey(const std::string &key) const {
-	if (_numNested == 0)
-		std::cout << lua_getglobal(_pLuaState, key.c_str()) << std::endl;
-	else
-		lua_getfield(_pLuaState, -1, key.c_str());
+	if (_numNested == 0) {
+		lua_getglobal(_pLuaState, key.c_str());
+	} else {
+		lua_pushstring(_pLuaState, key.c_str());
+		lua_gettable(_pLuaState, -2);
+	}
+}
+
+LuaConfigLoader::TableKey::TableKey(const std::string &str) : _strKey(str), _numKey(std::atof(str.c_str())) {
+}
+
+LuaConfigLoader::TableKey::TableKey(double num) : _strKey(std::to_string(num)), _numKey(num) {
+}
+
+const std::string &LuaConfigLoader::TableKey::toString() const {
+	return _strKey;
+}
+
+double LuaConfigLoader::TableKey::toNumber() const {
+	return _numKey;
+}
+
+LuaConfigLoader::TableKey::operator bool() const {
+	return !_strKey.empty();
 }
 
 }

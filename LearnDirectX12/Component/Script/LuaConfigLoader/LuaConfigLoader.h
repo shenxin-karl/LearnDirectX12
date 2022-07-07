@@ -2,6 +2,7 @@
 #include <string>
 #include <optional>
 #include <variant>
+#include <source_location>
 
 extern "C" {
 
@@ -27,6 +28,7 @@ enum class LuaValueType {
 class LuaConfigLoader {
 public:
 	LuaConfigLoader(const std::string &fileName);
+	LuaConfigLoader(const void *pData, size_t sizeInByte, const std::source_location &sr = std::source_location::current());
 	~LuaConfigLoader();
 	bool isLoad() const;
 	auto getString(const std::string &key) -> std::optional<std::string>;
@@ -51,15 +53,29 @@ public:
 	bool beginTable();
 	void discard();
 	size_t getTableLength() const;
-	std::variant<std::monostate, std::string, double> getKey();
+	struct TableKey;
+	TableKey getKey();
 	void beginNext();
 	bool next();
 private:
 	void getKey(const std::string &key) const;
 private:
 	size_t _numNested = 0;
-	std::string _fileName;
 	mutable lua_State *_pLuaState;
+};
+
+struct LuaConfigLoader::TableKey {
+public:
+	TableKey() = default;
+	explicit TableKey(const std::string &str);
+	explicit TableKey(double num);
+	TableKey &operator=(const TableKey &) = default;
+	const std::string &toString() const;
+	double toNumber() const;
+	explicit operator bool() const;
+private:
+	std::string _strKey;
+	double _numKey;
 };
 
 }

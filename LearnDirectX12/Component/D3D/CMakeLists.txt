@@ -64,6 +64,7 @@ cmrc_add_resource_library(D3D-resources ALIAS D3D::rc
 	"resources/DefaultMetallicMap.dds"
 	"resources/DefaultNormalMap.dds"
 	"resources/DefaultRoughnessMap.dds"
+	"config/ShaderDefine.lua"
 )
 
 set_target_properties(D3D-resources PROPERTIES FOLDER "CmrcResource")

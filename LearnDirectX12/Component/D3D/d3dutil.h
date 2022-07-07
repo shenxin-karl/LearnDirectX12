@@ -92,6 +92,7 @@ class D3DInitializer {
 public:
 	D3DInitializer();
 	~D3DInitializer();
+	static void loadShaderDefineConfig();
 };
 
 }

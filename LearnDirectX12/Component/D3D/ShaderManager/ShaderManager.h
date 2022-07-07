@@ -5,6 +5,11 @@
 #include <functional>
 #include <D3D/d3dutil.h>
 
+#include "D3D/Shader/D3DShaderResource.h"
+
+CMRC_DECLARE(D3D);
+
+
 namespace d3d {
 
 enum class ShaderType {
@@ -50,6 +55,7 @@ public:
 	void set(const std::string &key, WRL::ComPtr<ID3DBlob> pByteCode);
 	bool exist(const std::string &key) const;
 	void erase(const std::string &key);
+	void initShaderCreator(const std::string &path, const std::string &entryPoint, const std::string &target);
 private:
 	using ShaderCreator = std::function<Shader(const std::vector<MacroPair> &)>;
 	std::unordered_map<std::string, Shader> _shaders;
@@ -80,6 +86,51 @@ inline bool ShaderManager<Type>::exist(const std::string &key) const {
 template<ShaderType Type>
 inline void ShaderManager<Type>::erase(const std::string &key) {
 	_shaders.erase(key);
+}
+
+template <ShaderType Type>
+void ShaderManager<Type>::initShaderCreator(const std::string &path, const std::string &entryPoint, const std::string &target) {
+	std::string name;
+	size_t end = path.find_last_not_of(".");
+	size_t begin = path.find_last_of("/");
+	if (begin == std::string::npos)
+		begin = path.find_last_of("\\");
+
+	if (begin < end &&begin != std::string::npos && end != std::string::npos) {
+		assert(false && "Invalid shader path name");
+		return;
+	}
+
+	std::string fileName = path.substr(begin, end - begin);
+	if (auto iter = _shaderCreatorMap.find(fileName); iter != _shaderCreatorMap.end()) {
+		assert(false && "Duplicate shader Creator");
+		return;
+	}
+
+	_shaderCreatorMap[fileName] = [=](const std::vector<MacroPair> &macros) {
+		std::vector<D3D_SHADER_MACRO> defines(macros.size() + 1);
+		defines.back().Definition = nullptr;
+		defines.back().Name = nullptr;
+		for (size_t i = 0; i < macros.size(); ++i) {
+			defines[i].Definition = macros[i].key.c_str();
+			defines[i].Name = (macros[i].value.empty()) ? nullptr : macros[i].value.c_str();
+		}
+	
+		auto fs = cmrc::D3D::get_filesystem();
+		if (!fs.exists(path)) {
+			auto file = fs.open(path);
+			auto pByteCode = d3d::compileShader(file.begin(), 
+				file.size(), 
+				defines.data(), 
+				entryPoint, 
+				target
+			);
+			return Shader(Type, pByteCode);
+		}
+
+		auto pByteCode = d3d::compileShader(std::to_wstring(path), defines.data(), entryPoint, target);
+		return Shader(Type, pByteCode);
+	};
 }
 
 }
