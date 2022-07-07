@@ -5,6 +5,7 @@ LIST(APPEND LibraiesSubDir "cmrc")
 LIST(APPEND LibraiesSubDir "stb")
 LIST(APPEND LibraiesSubDir "DirectXTex")
 LIST(APPEND LibraiesSubDir "Imgui")
+LIST(APPEND LibraiesSubDir "lua")
 #LIST(APPEND LibraiesSubDir "assimp")
 
 foreach(dirname ${LibraiesSubDir}) 

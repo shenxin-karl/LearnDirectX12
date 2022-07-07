@@ -4,6 +4,11 @@ set(CMAKE_CXX_STANDARD 20)
 
 # 开启多线程编译 和 使用 c++latest 版本
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /std:c++latest")
+if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.12.25835)
+	set(CMAKE_CXX20_STANDARD_COMPILE_OPTION "-std:c++latest")
+	set(CMAKE_CXX20_EXTENSION_COMPILE_OPTION "-std:c++latest")
+endif()
+
 
 project(LearnDirectX12)
 
