@@ -14,6 +14,7 @@ LIST(APPEND ComponentAllSubDir "Geometry")
 LIST(APPEND ComponentAllSubDir "dx12lib")
 LIST(APPEND ComponentAllSubDir "VoxelTerrain")
 LIST(APPEND ComponentAllSubDir "Script")
+LIST(APPEND ComponentAllSubDir "RenderGraph")
 
 if (MSVC)
 	add_definitions(-D_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING)	## enable wstring_convert
