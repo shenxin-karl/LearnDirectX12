@@ -40,9 +40,9 @@ void AssimpLoader::prepareTexture(dx12lib::CommonContextProxy pCommonCtx) const 
 		aiString path;
 		pAiMaterial->GetTexture(type, 0, &path);
 		if (path.data[0] == '*') {						// 如果是 * 开头,表示是内嵌的贴图, 这里拼接上一个贴图名
-			size_t textureIndex = 0;
+			int textureIndex = 0;
 			sscanf_s(path.data, "*%d", &textureIndex);
-			assert(textureIndex < _pScene->mNumTextures);
+			assert(static_cast<size_t>(textureIndex) < _pScene->mNumTextures);
 			const aiTexture *pAiTexture = _pScene->mTextures[textureIndex];
 			std::string textureName = _fileName + pAiTexture->mFilename.C_Str();;
 			if (TextureManager::instance()->exist(textureName))
@@ -134,7 +134,7 @@ std::optional<std::string> AssimpLoader::getTextureName(const aiMaterial *pAiMat
 		return std::nullopt;
 
 	aiString path;
-	pAiMaterial->GetTexture(type, index, &path);
+	pAiMaterial->GetTexture(type, static_cast<unsigned>(index), &path);
 	if (path.data[0] == '*')						// 如果是 * 开头,表示是内嵌的贴图, 这里拼接上一个贴图名
 		return _fileName + path.C_Str();
 

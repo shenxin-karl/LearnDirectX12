@@ -412,7 +412,7 @@ void CommandList::setGraphics32BitConstants(const ShaderRegister &sr, size_t num
 		assert(location.has_value());
 		return;
 	}
-	assert(destOffset + numConstants <= location->offset);
+	assert(destOffset + numConstants <= location->num32BitValues);
 	_pCommandList->SetGraphicsRoot32BitConstants(
 		static_cast<UINT>(location->rootParamIndex),
 		static_cast<UINT>(numConstants), 
@@ -426,6 +426,15 @@ void CommandList::setRenderTarget(const RenderTargetView &rtv, const DepthStenci
 		1, 
 		RVPtr(rtv.getCPUDescriptorHandle()), 
 		false, 
+		RVPtr(dsv.getCPUDescriptorHandle())
+	);
+}
+
+void CommandList::setRenderTarget(const DepthStencilView &dsv) {
+	_pCommandList->OMSetRenderTargets(
+		0,
+		nullptr,
+		1,
 		RVPtr(dsv.getCPUDescriptorHandle())
 	);
 }
@@ -676,8 +685,8 @@ WRL::ComPtr<ID3D12Resource> CommandList::copyTextureSubResource(WRL::ComPtr<ID3D
 		pDestResource.Get(), 
 		pSrcResource.Get(),
 		0,
-		firstSubResource,
-		numSubResource,
+		static_cast<UINT>(firstSubResource),
+		static_cast<UINT>(numSubResource),
 		pSubResourceData
 	);
 

@@ -1,6 +1,7 @@
 #include "Step.h"
 #include "RenderGraph/Bindable/Bindable.h"
 #include "RenderGraph/Drawable/Drawable.h"
+#include "RenderGraph/Pass/RenderQueuePass.h"
 
 namespace rg {
 
@@ -14,7 +15,7 @@ void Step::addBindable(std::shared_ptr<Bindable> pBindable) {
 
 void Step::submit(const Drawable &drawable) const {
 	assert(_pTargetPass != nullptr);
-	// todo
+	_pTargetPass->accept(Job{ &drawable, this });
 }
 
 void Step::bind(dx12lib::GraphicsContextProxy pGraphicsCtx) const {

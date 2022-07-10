@@ -15,6 +15,7 @@ public:
 private:
 	std::shared_ptr<RenderQueuePass> _pTargetPass;
 	std::vector<std::shared_ptr<Bindable>> _bindables;
+	std::shared_ptr<GraphicsPSOBindable> _pGraphicsPSO;
 };
 
 }

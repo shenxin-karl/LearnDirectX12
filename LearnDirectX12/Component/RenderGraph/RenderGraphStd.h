@@ -7,14 +7,16 @@ namespace rg {
 #endif
 
 class Technique;
-class DrawArgs;
 class Drawable;
 class Bindable;
 class Step;
 class RenderQueuePass;
 class Job;
 
+class GraphicsPSOBindable;
+
 struct TechniqueType;
+struct DrawArgs;
 
 class NonCopyable {
 public:

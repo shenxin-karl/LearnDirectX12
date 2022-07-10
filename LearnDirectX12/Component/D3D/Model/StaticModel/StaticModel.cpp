@@ -19,7 +19,7 @@ void StaticSubModel::initAsALMesh(dx12lib::GraphicsContextProxy pGraphicsCtx, co
 			int textureIndex = 0;
 			sscanf_s(path.data, "*%d", &textureIndex);
 			const aiScene *pScene = loader.getScene();
-			assert(textureIndex < pScene->mNumTextures);
+			assert(static_cast<size_t>(textureIndex) < pScene->mNumTextures);
 			const aiTexture *pAiTexture = pScene->mTextures[textureIndex];
 
 			std::string textureName = loader.getFileName() + pAiTexture->mFilename.C_Str();;

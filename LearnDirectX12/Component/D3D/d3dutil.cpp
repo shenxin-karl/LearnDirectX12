@@ -247,7 +247,7 @@ D3DInitializer::D3DInitializer() {
 	ComputePSOManager::emplace();
 	TextureManager::emplace();
 
-	loadShaderDefineConfig();
+	//loadShaderDefineConfig();
 
 }
 

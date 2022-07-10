@@ -22,8 +22,15 @@ public:
 };
 
 struct ShaderParamLocation {
+	ShaderParamLocation() = default;
+	ShaderParamLocation(size_t rootParamIndex, size_t offsetOrNum32BitValues)
+	: rootParamIndex(rootParamIndex), offset(offsetOrNum32BitValues) {}
+public:
 	size_t rootParamIndex;			// 根参数
-	size_t offset;					// 在根描述符表中的位置
+	union {
+		size_t offset;				// 在根参数的描述符表中的偏移
+		size_t num32BitValues;		// 有多少个根常量	
+	};
 };
 
 class RootSignature {

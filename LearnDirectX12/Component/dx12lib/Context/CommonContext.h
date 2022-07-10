@@ -103,7 +103,7 @@ interface ICommonContext : IContext {
 		);
 	}
 
-	template<typename T> requires(std::is_base_of_v<IConstantBuffer, T>)
+	template<typename T> requires(std::is_base_of_v<IConstantBuffer, T> || std::is_same_v<IConstantBuffer, T>)
 	void setConstantBuffer(const ShaderRegister &sr, std::shared_ptr<T> pBuffer) {
 		auto pConstantBuffer = std::static_pointer_cast<IConstantBuffer>(pBuffer);
 		this->setConstantBufferView(sr, pConstantBuffer->getCBV());
@@ -202,6 +202,7 @@ interface IGraphicsContext : virtual ICommonContext {
 	virtual void setStencilRef(UINT stencilRef) = 0;
 	virtual void setGraphics32BitConstants(const ShaderRegister &sr, size_t numConstants, const void *pData, size_t destOffset = 0) = 0;
 	virtual void setRenderTarget(const RenderTargetView &rtv, const DepthStencilView &dsv) = 0;
+	virtual void setRenderTarget(const DepthStencilView &dsv) = 0;
 	virtual void setRenderTargets(const std::vector<RenderTargetView> &rtvs, const DepthStencilView &dsv) = 0;
 
 	virtual void drawInstanced(size_t vertCount, size_t instanceCount, size_t baseVertexLocation, size_t startInstanceLocation = 0) = 0;

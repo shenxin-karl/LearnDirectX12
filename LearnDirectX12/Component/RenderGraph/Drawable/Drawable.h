@@ -7,7 +7,7 @@
 
 namespace rg {
 
-class DrawArgs {
+struct DrawArgs {
 	size_t vertexCount = 0;
 	size_t baseVertexLocation = 0;
 	size_t indexCount = 0;
