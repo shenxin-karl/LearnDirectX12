@@ -19,6 +19,7 @@ public:
 	void initAsDescriptorTable(size_t rangeCount, D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_ALL);
 	void initAsDescriptorTable(const std::initializer_list<std::pair<ShaderRegister, size_t>> &initList, D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_ALL);
 	void setTableRange(size_t index, ShaderRegister shaderRegister, UINT count = 1);
+	friend bool operator==(const RootParameter &lhs, const RootParameter &rhs);
 };
 
 struct ShaderParamLocation {

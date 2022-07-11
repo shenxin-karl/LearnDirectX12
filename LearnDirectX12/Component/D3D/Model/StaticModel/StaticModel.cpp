@@ -1,10 +1,9 @@
 #include "StaticModel.h"
-#include "StaticGeometryInput.h"
+#include "dx12lib/Pipeline/PipelineStateObject.h"
 
 namespace d3d {
 
 void StaticSubModel::initAsALMesh(dx12lib::GraphicsContextProxy pGraphicsCtx, const AssimpLoader &loader, const AssimpLoader::ALMesh &alMesh) {
-	_pGeometryInput = std::make_shared<StaticGeometryInput>(pGraphicsCtx, alMesh);
 	aiMaterial *pAiMaterial = alMesh.pAiMaterial;
 	if (pAiMaterial == nullptr)
 		return;
@@ -43,40 +42,39 @@ void StaticSubModel::initAsALMesh(dx12lib::GraphicsContextProxy pGraphicsCtx, co
 	};
 
 	if (auto texName = prepareMaterialTexture(aiTextureType_DIFFUSE, true))
-		_albedoMapName = *texName;
+		_material.setalbedoMapName(*texName);
 	if (auto texName = prepareMaterialTexture(aiTextureType_METALNESS, false))
-		_metallicMapName = *texName;
+		_material.setmetallicMapName(*texName);
 	if (auto texName = prepareMaterialTexture(aiTextureType_DIFFUSE_ROUGHNESS, false))
-		_roughnessMapName = *texName;
+		_material.setroughnessMapName(*texName);
 	if (auto texName = prepareMaterialTexture(aiTextureType_NORMALS, false))
-		_normalMapName = *texName;
+		_material.setnormalMapName(*texName);
 	if (auto texName = prepareMaterialTexture(aiTextureType_AMBIENT_OCCLUSION, false))
-		_aoMapName = *texName;
+		_material.setaoMapName(*texName);
 }
 
-std::string StaticSubModel::getAOMapName() const {
-	return _aoMapName;
+const d3d::Material & StaticSubModel::getMaterial() const {
+	return _material;
 }
 
-std::string StaticSubModel::getAlbedoMapName() const {
-	return _albedoMapName;
+std::shared_ptr<dx12lib::VertexBuffer> StaticSubModel::getVertexBuffer() const {
+	return _pVertexBuffer;
 }
 
-std::string StaticSubModel::getNormalMapName() const {
-	return _normalMapName;
+std::shared_ptr<dx12lib::IndexBuffer> StaticSubModel::getIndexBuffer() const {
+	return _pIndexBuffer;
 }
 
-std::string StaticSubModel::getMetallicMapName() const {
-	return _metallicMapName;
+const std::vector<D3D12_INPUT_ELEMENT_DESC> & StaticSubModel::getInputLayout() const {
+	static std::vector<D3D12_INPUT_ELEMENT_DESC> inputElementDescs = {
+		dx12lib::VInputLayoutDescHelper(&com::Vertex::position, "POSITION", DXGI_FORMAT_R32G32B32_FLOAT),
+		dx12lib::VInputLayoutDescHelper(&com::Vertex::texcoord, "TEXCOORD", DXGI_FORMAT_R32G32_FLOAT),
+		dx12lib::VInputLayoutDescHelper(&com::Vertex::normal, "NORMAL", DXGI_FORMAT_R32G32B32_FLOAT),
+		dx12lib::VInputLayoutDescHelper(&com::Vertex::tangent, "TANGENT", DXGI_FORMAT_R32G32B32_FLOAT),
+	};
+	return inputElementDescs;
 }
 
-std::string StaticSubModel::getRoughnessMapName() const {
-	return _roughnessMapName;
-}
-
-std::shared_ptr<IGeometryInput> StaticSubModel::getGeometryInput() const {
-	return _pGeometryInput;
-}
 
 ///************************************************************************************************
 

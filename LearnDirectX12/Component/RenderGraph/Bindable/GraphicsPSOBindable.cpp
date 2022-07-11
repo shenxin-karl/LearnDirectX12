@@ -1,16 +1,12 @@
 #include "GraphicsPSOBindable.h"
 #include "dx12lib/Pipeline/PipelineStateObject.h"
-#include "D3D/PSOManager/PSOManager.h"
+#include "D3D/PSOManager/PSOManager.hpp"
 
 namespace rg {
 
-GraphicsPSOBindable::GraphicsPSOBindable(const Pass *pPass, const std::string &psoName) : Bindable(BindableType::PipelineStateObject) {
-	auto *pGraphicsPSOManager = d3d::GraphicsPSOManager::instance();
-	if (pGraphicsPSOManager->exist(psoName)) {
-		_pso = pGraphicsPSOManager->get(psoName);
-		return;
-	}
-
+GraphicsPSOBindable::GraphicsPSOBindable(std::shared_ptr<dx12lib::GraphicsPSO> pso)
+: Bindable(BindableType::PipelineStateObject), _pso(pso)
+{
 }
 
 void GraphicsPSOBindable::bind(dx12lib::GraphicsContextProxy pGraphicsCtx) const {

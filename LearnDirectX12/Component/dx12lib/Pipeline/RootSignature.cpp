@@ -86,6 +86,10 @@ void RootParameter::setTableRange(size_t index, ShaderRegister shaderRegister, U
 	range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 }
 
+bool operator==(const RootParameter &lhs, const RootParameter &rhs) {
+	return std::memcmp(&lhs, &rhs, sizeof(RootParameter));
+}
+
 ////////////////////////////////////////RootSignature/////////////////////////////////////////////////
 
 RootSignature::RootSignature(std::weak_ptr<Device> pDevice, size_t numRootParams, size_t numStaticSamplers) : _pDevice(pDevice) {
@@ -279,5 +283,6 @@ size_t RootSignature::getPerTableIndexByRangeType(D3D12_DESCRIPTOR_RANGE_TYPE ty
 	assert(false);
 	throw std::runtime_error("invalid D3D12_DESCRIPTOR_RANGE_TYPE");
 }
+
 
 }
