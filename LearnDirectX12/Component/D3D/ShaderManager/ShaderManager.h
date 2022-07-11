@@ -96,11 +96,12 @@ void ShaderManager<Type>::initShaderCreator(const std::string &path, const std::
 	if (begin == std::string::npos)
 		begin = path.find_last_of("\\");
 
-	if (begin < end &&begin != std::string::npos && end != std::string::npos) {
+	begin += 1;		// Ìø¹ý /
+	if (begin >= end || begin == std::string::npos || end == std::string::npos) {
 		assert(false && "Invalid shader path name");
 		return;
 	}
-
+	
 	std::string fileName = path.substr(begin, end - begin);
 	if (auto iter = _shaderCreatorMap.find(fileName); iter != _shaderCreatorMap.end()) {
 		assert(false && "Duplicate shader Creator");

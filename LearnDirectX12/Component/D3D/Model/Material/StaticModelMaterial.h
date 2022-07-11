@@ -18,7 +18,9 @@ public:
 	StaticModelMaterial() = default;
 	const std::string &getPSOName() const override;
 	void active(dx12lib::GraphicsContextProxy pGraphicsCtx) override;
+	static void initPSOCreator();
 private:
+	static inline std::string psoName = "StaticModel";
 	std::shared_ptr<dx12lib::IShaderResource> _pAoMap;
 	std::shared_ptr<dx12lib::IShaderResource> _pAlbedoMap;
 	std::shared_ptr<dx12lib::IShaderResource> _pNormalMap;

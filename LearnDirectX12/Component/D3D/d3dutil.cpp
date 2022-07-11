@@ -274,24 +274,21 @@ void D3DInitializer::loadShaderDefineConfig() {
 	scr::LuaConfigLoader luaConfigLoader(file.begin(), file.size());
 
 	if (luaConfigLoader.beginTable("shaderList")) {
-		for (luaConfigLoader.beginNext(); luaConfigLoader.next();) {
-			auto key = luaConfigLoader.getKey();
-			//assert(luaConfigLoader.getValueType() == scr::LuaValueType::Table);
-			bool b = luaConfigLoader.isTable("file");
+		for (auto key : luaConfigLoader.next()) {
 			if (luaConfigLoader.beginTable()) {
-				std::string file = *luaConfigLoader.getString("file");
-				if (auto vs = luaConfigLoader.getString("vs"))
-					VSShaderManager::instance()->initShaderCreator(file, *vs, "VS_5_0");
-				if (auto ps = luaConfigLoader.getString("ps"))
-					PSShaderManager::instance()->initShaderCreator(file, *ps, "PS_5_0");
-				if (auto gs = luaConfigLoader.getString("gs"))
-					GSShaderManager::instance()->initShaderCreator(file, *gs, "GS_5_0");
-				if (auto hs = luaConfigLoader.getString("hs"))
-					GSShaderManager::instance()->initShaderCreator(file, *hs, "HS_5_0");
-				if (auto ds = luaConfigLoader.getString("ds"))
-					GSShaderManager::instance()->initShaderCreator(file, *ds, "DS_5_0");
-				if (auto cs = luaConfigLoader.getString("cs"))
-					GSShaderManager::instance()->initShaderCreator(file, *cs, "CS_5_0");
+				std::string fileName = *luaConfigLoader.tryGetString("file");
+				if (auto vs = luaConfigLoader.tryGetString("vs"))
+					VSShaderManager::instance()->initShaderCreator(fileName, *vs, "VS_5_0");
+				if (auto ps = luaConfigLoader.tryGetString("ps"))
+					PSShaderManager::instance()->initShaderCreator(fileName, *ps, "PS_5_0");
+				if (auto gs = luaConfigLoader.tryGetString("gs"))
+					GSShaderManager::instance()->initShaderCreator(fileName, *gs, "GS_5_0");
+				if (auto hs = luaConfigLoader.tryGetString("hs"))
+					GSShaderManager::instance()->initShaderCreator(fileName, *hs, "HS_5_0");
+				if (auto ds = luaConfigLoader.tryGetString("ds"))
+					GSShaderManager::instance()->initShaderCreator(fileName, *ds, "DS_5_0");
+				if (auto cs = luaConfigLoader.tryGetString("cs"))
+					GSShaderManager::instance()->initShaderCreator(fileName, *cs, "CS_5_0");
 			}
 			luaConfigLoader.endTable();
 		}

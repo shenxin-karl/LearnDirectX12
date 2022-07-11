@@ -74,29 +74,29 @@ public:
 	void setHullShader(const void *pBinary, size_t size);
 	void setDomainShader(const void *pBinary, size_t size);
 
-	void setVertexShader(WRL::ComPtr<ID3DBlob> pBytecode);
-	void setPixelShader(WRL::ComPtr<ID3DBlob> pBytecode);
-	void setGeometryShader(WRL::ComPtr<ID3DBlob> pBytecode);
-	void setHullShader(WRL::ComPtr<ID3DBlob> pBytecode);
-	void setDomainShader(WRL::ComPtr<ID3DBlob> pBytecode);
+	void setVertexShader(WRL::ComPtr<ID3DBlob> pByteCode);
+	void setPixelShader(WRL::ComPtr<ID3DBlob> pByteCode);
+	void setGeometryShader(WRL::ComPtr<ID3DBlob> pByteCode);
+	void setHullShader(WRL::ComPtr<ID3DBlob> pByteCode);
+	void setDomainShader(WRL::ComPtr<ID3DBlob> pByteCode);
 
-	void setVertexShader(const D3D12_SHADER_BYTECODE &bytecode);
-	void setPixelShader(const D3D12_SHADER_BYTECODE &bytecode);
-	void setGeometryShader(const D3D12_SHADER_BYTECODE &bytecode);
-	void setHullShader(const D3D12_SHADER_BYTECODE &bytecode);
-	void setDomainShader(const D3D12_SHADER_BYTECODE &bytecode);
+	void setVertexShader(const D3D12_SHADER_BYTECODE &pByteCode);
+	void setPixelShader(const D3D12_SHADER_BYTECODE &pByteCode);
+	void setGeometryShader(const D3D12_SHADER_BYTECODE &pByteCode);
+	void setHullShader(const D3D12_SHADER_BYTECODE &pByteCode);
+	void setDomainShader(const D3D12_SHADER_BYTECODE &pByteCode);
 	const D3D12_GRAPHICS_PIPELINE_STATE_DESC &getDesc() const;
 	virtual void finalize() override;
-	virtual std::shared_ptr<PSO> clone(const std::string &name) override;
+	virtual std::shared_ptr<PSO> clone(const std::string &name) override; 
 protected:
 	explicit GraphicsPSO(std::weak_ptr<Device> pDevice, const std::string &name);
 private:
-	D3D12_SHADER_BYTECODE cacheBytecode(const std::string &name, const void *pData, size_t size);
-	D3D12_SHADER_BYTECODE cacheBytecode(const std::string &name, WRL::ComPtr<ID3DBlob> pBytecode);
+	D3D12_SHADER_BYTECODE cacheByteCode(const std::string &name, const void *pData, size_t size);
+	D3D12_SHADER_BYTECODE cacheByteCode(const std::string &name, WRL::ComPtr<ID3DBlob> pByteCode);
 private:
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC            _psoDesc;
 	std::shared_ptr<D3D12_INPUT_ELEMENT_DESC[]>   _pInputLayout;
-	std::map<std::string, WRL::ComPtr<ID3DBlob>>  _shaderBytecodeCache;
+	std::map<std::string, WRL::ComPtr<ID3DBlob>>  _shaderByteCodeCache;
 };
 
 

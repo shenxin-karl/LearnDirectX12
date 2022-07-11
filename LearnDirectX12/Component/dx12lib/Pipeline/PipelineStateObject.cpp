@@ -113,55 +113,55 @@ void GraphicsPSO::setPrimitiveRestart(D3D12_INDEX_BUFFER_STRIP_CUT_VALUE IBProps
 	_dirty = true;
 }
 void GraphicsPSO::setVertexShader(const void *pBinary, size_t size) {
-	_psoDesc.VS = cacheBytecode("VS", pBinary, size);
+	_psoDesc.VS = cacheByteCode("VS", pBinary, size);
 }
 void GraphicsPSO::setPixelShader(const void *pBinary, size_t size) {
-	_psoDesc.PS = cacheBytecode("PS", pBinary, size);
+	_psoDesc.PS = cacheByteCode("PS", pBinary, size);
 }
 void GraphicsPSO::setGeometryShader(const void *pBinary, size_t size) {
-	_psoDesc.GS = cacheBytecode("GS", pBinary, size);
+	_psoDesc.GS = cacheByteCode("GS", pBinary, size);
 }
 void GraphicsPSO::setHullShader(const void *pBinary, size_t size) {
-	_psoDesc.HS = cacheBytecode("HS", pBinary, size);
+	_psoDesc.HS = cacheByteCode("HS", pBinary, size);
 }
 void GraphicsPSO::setDomainShader(const void *pBinary, size_t size) {
-	_psoDesc.DS = cacheBytecode("DS", pBinary, size);
+	_psoDesc.DS = cacheByteCode("DS", pBinary, size);
 }
 
 const D3D12_GRAPHICS_PIPELINE_STATE_DESC &GraphicsPSO::getDesc() const {
 	return _psoDesc;
 }
 
-void GraphicsPSO::setVertexShader(WRL::ComPtr<ID3DBlob> pBytecode) {
-	_psoDesc.VS = cacheBytecode("VS", pBytecode);
+void GraphicsPSO::setVertexShader(WRL::ComPtr<ID3DBlob> pByteCode) {
+	_psoDesc.VS = cacheByteCode("VS", pByteCode);
 }
 void GraphicsPSO::setPixelShader(WRL::ComPtr<ID3DBlob> pBytecode) {
-	_psoDesc.PS = cacheBytecode("PS", pBytecode);
+	_psoDesc.PS = cacheByteCode("PS", pBytecode);
 }
-void GraphicsPSO::setGeometryShader(WRL::ComPtr<ID3DBlob> pBytecode) {
-	_psoDesc.GS = cacheBytecode("GS", pBytecode);
+void GraphicsPSO::setGeometryShader(WRL::ComPtr<ID3DBlob> pByteCode) {
+	_psoDesc.GS = cacheByteCode("GS", pByteCode);
 }
-void GraphicsPSO::setHullShader(WRL::ComPtr<ID3DBlob> pBytecode) {
-	_psoDesc.HS = cacheBytecode("HS", pBytecode);
+void GraphicsPSO::setHullShader(WRL::ComPtr<ID3DBlob> pByteCode) {
+	_psoDesc.HS = cacheByteCode("HS", pByteCode);
 }
-void GraphicsPSO::setDomainShader(WRL::ComPtr<ID3DBlob> pBytecode) {
-	_psoDesc.DS = cacheBytecode("DS", pBytecode);
+void GraphicsPSO::setDomainShader(WRL::ComPtr<ID3DBlob> pByteCode) {
+	_psoDesc.DS = cacheByteCode("DS", pByteCode);
 }
 
-void GraphicsPSO::setVertexShader(const D3D12_SHADER_BYTECODE &bytecode) {
-	setVertexShader(bytecode.pShaderBytecode, bytecode.BytecodeLength);
+void GraphicsPSO::setVertexShader(const D3D12_SHADER_BYTECODE &pByteCode) {
+	setVertexShader(pByteCode.pShaderBytecode, pByteCode.BytecodeLength);
 }
-void GraphicsPSO::setPixelShader(const D3D12_SHADER_BYTECODE &bytecode) {
-	setPixelShader(bytecode.pShaderBytecode, bytecode.BytecodeLength);
+void GraphicsPSO::setPixelShader(const D3D12_SHADER_BYTECODE &pByteCode) {
+	setPixelShader(pByteCode.pShaderBytecode, pByteCode.BytecodeLength);
 }
-void GraphicsPSO::setGeometryShader(const D3D12_SHADER_BYTECODE &bytecode) {
-	setGeometryShader(bytecode.pShaderBytecode, bytecode.BytecodeLength);
+void GraphicsPSO::setGeometryShader(const D3D12_SHADER_BYTECODE &pByteCode) {
+	setGeometryShader(pByteCode.pShaderBytecode, pByteCode.BytecodeLength);
 }
-void GraphicsPSO::setHullShader(const D3D12_SHADER_BYTECODE &bytecode) {
-	setHullShader(bytecode.pShaderBytecode, bytecode.BytecodeLength);
+void GraphicsPSO::setHullShader(const D3D12_SHADER_BYTECODE &pByteCode) {
+	setHullShader(pByteCode.pShaderBytecode, pByteCode.BytecodeLength);
 }
-void GraphicsPSO::setDomainShader(const D3D12_SHADER_BYTECODE &bytecode) {
-	setDomainShader(bytecode.pShaderBytecode, bytecode.BytecodeLength);
+void GraphicsPSO::setDomainShader(const D3D12_SHADER_BYTECODE &pByteCode) {
+	setDomainShader(pByteCode.pShaderBytecode, pByteCode.BytecodeLength);
 }
 
 void GraphicsPSO::finalize() {
@@ -184,32 +184,32 @@ std::shared_ptr<PSO> GraphicsPSO::clone(const std::string &name) {
 	pRes->_pPSO = this->_pPSO;
 	pRes->_psoDesc = this->_psoDesc;
 	pRes->_pRootSignature = this->_pRootSignature;
-	pRes->_shaderBytecodeCache = this->_shaderBytecodeCache;
+	pRes->_shaderByteCodeCache = this->_shaderByteCodeCache;
 	pRes->_pInputLayout = this->_pInputLayout;
 	return std::static_pointer_cast<PSO>(pRes);
 }
 
-D3D12_SHADER_BYTECODE GraphicsPSO::cacheBytecode(const std::string &name, const void *pData, size_t size) {
+D3D12_SHADER_BYTECODE GraphicsPSO::cacheByteCode(const std::string &name, const void *pData, size_t size) {
 	if (pData == nullptr) {
-		_shaderBytecodeCache.erase(name);
+		_shaderByteCodeCache.erase(name);
 		return { nullptr, 0 };
 	}
 	_dirty = true;
 	WRL::ComPtr<ID3DBlob> pBuffer;
 	ThrowIfFailed(D3DCreateBlob(size, &pBuffer));
 	std::memcpy(pBuffer->GetBufferPointer(), pData, size);
-	_shaderBytecodeCache[name] = pBuffer;
+	_shaderByteCodeCache[name] = pBuffer;
 	return { pBuffer->GetBufferPointer(), pBuffer->GetBufferSize() };
 }
 
-D3D12_SHADER_BYTECODE GraphicsPSO::cacheBytecode(const std::string &name, WRL::ComPtr<ID3DBlob> pBytecode) {
-	if (pBytecode == nullptr) {
-		_shaderBytecodeCache.erase(name);
+D3D12_SHADER_BYTECODE GraphicsPSO::cacheByteCode(const std::string &name, WRL::ComPtr<ID3DBlob> pByteCode) {
+	if (pByteCode == nullptr) {
+		_shaderByteCodeCache.erase(name);
 		return { nullptr, 0 };
 	}
 	_dirty = true;
-	_shaderBytecodeCache[name] = pBytecode;
-	return { pBytecode->GetBufferPointer(), pBytecode->GetBufferSize() };
+	_shaderByteCodeCache[name] = pByteCode;
+	return { pByteCode->GetBufferPointer(), pByteCode->GetBufferSize() };
 }
 
 /* ****************************************************************************************** */

@@ -31,12 +31,12 @@ public:
 	LuaConfigLoader(const void *pData, size_t sizeInByte, const std::source_location &sr = std::source_location::current());
 	~LuaConfigLoader();
 	bool isLoad() const;
-	auto getString(const std::string &key) -> std::optional<std::string>;
-	auto getBoolean(const std::string &key) -> std::optional<bool>;
-	auto getNumber(const std::string &key) -> std::optional<double>;
-	auto tryGetString(const std::string &key, const std::string &defString = {}) -> std::string;
-	auto tryGetBoolean(const std::string &key, bool defBool = false) -> bool;
-	auto tryGetNumber(const std::string &key, double defNumber = 0.f) -> double;
+	auto tryGetString(const std::string &key) -> std::optional<std::string>;
+	auto tryGetBoolean(const std::string &key) -> std::optional<bool>;
+	auto tryGetNumber(const std::string &key) -> std::optional<double>;
+	auto getString(const std::string &key, const std::string &defString = {}) -> std::string;
+	auto getBoolean(const std::string &key, bool defBool = false) -> bool;
+	auto getNumber(const std::string &key, double defNumber = 0.f) -> double;
 	bool isString(const std::string &key) const;
 	bool isNumber(const std::string &key) const;
 	bool isBoolean(const std::string &key) const;
@@ -44,19 +44,17 @@ public:
 	bool beginTable(const std::string &key);
 	void endTable();
 	LuaValueType getValueType() const;
-	auto getString() -> std::optional<std::string>;
-	auto getBoolean() -> std::optional<bool>;
-	auto getNumber() -> std::optional<double>;
-	auto tryGetString(const std::string &defKey = {}) -> std::string;
-	auto tryGetBoolean(bool defBool = false) -> bool;
-	auto tryGetNumber(double defNumber = 0.0) -> double;
+	auto tryGetString() -> std::optional<std::string>;
+	auto tryGetBoolean() -> std::optional<bool>;
+	auto tryGetNumber() -> std::optional<double>;
+	auto getString(const std::string &defKey = {}) -> std::string;
+	auto getBoolean(bool defBool = false) -> bool;
+	auto getNumber(double defNumber = 0.0) -> double;
 	bool beginTable();
 	void discard();
 	size_t getTableLength() const;
-	struct TableKey;
-	TableKey getKey();
-	void beginNext();
-	bool next();
+	struct NextVisitor;
+	NextVisitor next();
 private:
 	void getKey(const std::string &key) const;
 private:
@@ -64,18 +62,30 @@ private:
 	mutable lua_State *_pLuaState;
 };
 
-struct LuaConfigLoader::TableKey {
+struct LuaConfigLoader::NextVisitor {
+	struct EndTag {};
+	struct TableKey {
+		double numKey;
+		std::string strKey;
+	};
+	struct Iterator {
+		TableKey operator*();
+		Iterator &operator++();
+		friend bool operator!=(const Iterator &, const EndTag &);
+	private:
+		friend struct NextVisitor;
+		int _index;
+		mutable lua_State *_pLuaState;
+		mutable TableKey _tableKey;
+		mutable bool _shouldNext  : 1 = true;		// 是否可以下一次迭代
+		mutable bool _firstIter   : 1 = true;		// 是否第一次迭代
+	};
 public:
-	TableKey() = default;
-	explicit TableKey(const std::string &str);
-	explicit TableKey(double num);
-	TableKey &operator=(const TableKey &) = default;
-	const std::string &toString() const;
-	double toNumber() const;
-	explicit operator bool() const;
+	explicit NextVisitor(lua_State *pLuaState);
+	Iterator begin();
+	EndTag end();
 private:
-	std::string _strKey;
-	double _numKey;
+	lua_State *_pLuaState;
 };
 
 }

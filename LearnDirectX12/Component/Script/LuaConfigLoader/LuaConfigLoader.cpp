@@ -113,33 +113,13 @@ void LuaConfigLoader::endTable() {
 	--_numNested;
 }
 
-LuaConfigLoader::TableKey LuaConfigLoader::getKey() {
-	if (lua_isstring(_pLuaState, -2))
-		return TableKey(lua_tostring(_pLuaState, -2));
-	else if (lua_isnumber(_pLuaState, -2))
-		return TableKey(lua_tonumber(_pLuaState, -2));
-	return {};
-}
-
-void LuaConfigLoader::beginNext() {
-	lua_pushnil(_pLuaState);
-}
-
-bool LuaConfigLoader::next() {
-	if (lua_next(_pLuaState, -2)) {
-		lua_pushvalue(_pLuaState, -2);
-		return true;
-	}
-	return false;
-}
-
 LuaValueType LuaConfigLoader::getValueType() const {
-	return static_cast<LuaValueType>(lua_type(_pLuaState, -2));
+	return static_cast<LuaValueType>(lua_type(_pLuaState, -1));
 }
 
 auto LuaConfigLoader::getString() -> std::optional<std::string> {
 	std::optional<std::string> result;
-	if (lua_isboolean(_pLuaState, -1))
+	if (lua_isstring(_pLuaState, -1))
 		result = lua_tostring(_pLuaState, -1);
 	lua_pop(_pLuaState, 1);
 	return result;
@@ -192,6 +172,10 @@ size_t LuaConfigLoader::getTableLength() const {
 	return luaL_len(_pLuaState, -1);
 }
 
+LuaConfigLoader::NextVisitor LuaConfigLoader::next() {
+	return NextVisitor(_pLuaState);
+}
+
 void LuaConfigLoader::getKey(const std::string &key) const {
 	if (_numNested == 0) {
 		lua_getglobal(_pLuaState, key.c_str());
@@ -201,22 +185,49 @@ void LuaConfigLoader::getKey(const std::string &key) const {
 	}
 }
 
-LuaConfigLoader::TableKey::TableKey(const std::string &str) : _strKey(str), _numKey(std::atof(str.c_str())) {
+LuaConfigLoader::NextVisitor::TableKey LuaConfigLoader::NextVisitor::Iterator::operator*() {
+	return _tableKey;
 }
 
-LuaConfigLoader::TableKey::TableKey(double num) : _strKey(std::to_string(num)), _numKey(num) {
+LuaConfigLoader::NextVisitor::Iterator &LuaConfigLoader::NextVisitor::Iterator::operator++() {
+	//lua_pop(_pLuaState, 1);
+	return *this;
 }
 
-const std::string &LuaConfigLoader::TableKey::toString() const {
-	return _strKey;
+LuaConfigLoader::NextVisitor::NextVisitor(lua_State *pLuaState) : _pLuaState(pLuaState) {
 }
 
-double LuaConfigLoader::TableKey::toNumber() const {
-	return _numKey;
+LuaConfigLoader::NextVisitor::Iterator LuaConfigLoader::NextVisitor::begin() {
+	Iterator iter;
+	iter._index = lua_gettop(_pLuaState);
+	iter._pLuaState = _pLuaState;
+	lua_pushnil(_pLuaState);
+	return iter;
 }
 
-LuaConfigLoader::TableKey::operator bool() const {
-	return !_strKey.empty();
+LuaConfigLoader::NextVisitor::EndTag LuaConfigLoader::NextVisitor::end() {
+	return EndTag();
+}
+
+bool operator!=(const LuaConfigLoader::NextVisitor::Iterator &iterator, const LuaConfigLoader::NextVisitor::EndTag &endTag) {
+	iterator._shouldNext = lua_next(iterator._pLuaState, iterator._index);
+	if (iterator._shouldNext) {
+		lua_pushvalue(iterator._pLuaState, -2);		// 复制一个 key 到栈顶
+		// 从栈中取出 key, 并弹出
+		if (lua_isstring(iterator._pLuaState, -1)) {
+			iterator._tableKey.strKey = lua_tostring(iterator._pLuaState, -1);
+			iterator._tableKey.numKey = std::atof(iterator._tableKey.strKey.c_str());
+		}
+		else if (lua_isnumber(iterator._pLuaState, -1)) {
+			iterator._tableKey.numKey = lua_tonumber(iterator._pLuaState, -1);
+			iterator._tableKey.strKey = std::to_string(iterator._tableKey.numKey);
+		}
+		else {
+			assert(false);
+		}
+		lua_pop(iterator._pLuaState, 1);			// 把 key 弹出
+	}
+	return iterator._shouldNext;
 }
 
 }
