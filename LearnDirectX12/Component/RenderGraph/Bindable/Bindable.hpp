@@ -14,7 +14,8 @@ enum class BindableType {
 
 class Bindable : public	NonCopyable {
 public:
-	virtual void bind(dx12lib::GraphicsContextProxy pGraphicsCtx) const = 0;
+	Bindable(BindableType bindableType) : _bindableType(bindableType) {}
+	virtual void bind(dx12lib::IGraphicsContext &graphicsCtx) const = 0;
 	~Bindable() override = default;
 	BindableType getBindableType() const {
 		return _bindableType;

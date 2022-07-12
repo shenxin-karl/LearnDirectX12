@@ -8,9 +8,9 @@ ViewportScissorBindable::ViewportScissorBindable(const D3D12_VIEWPORT &viewport,
 {
 }
 
-void ViewportScissorBindable::bind(dx12lib::GraphicsContextProxy pGraphicsCtx) const {
-	pGraphicsCtx->setViewport(_viewport);
-	pGraphicsCtx->setScissorRect(_scissorRect);
+void ViewportScissorBindable::bind(dx12lib::IGraphicsContext &graphicsCtx) const {
+	graphicsCtx.setViewport(_viewport);
+	graphicsCtx.setScissorRect(_scissorRect);
 }
 
 }

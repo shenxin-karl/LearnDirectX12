@@ -23,8 +23,6 @@ private:
 private:
 	void loadModel(dx12lib::DirectContextProxy pDirectCtx);
 	void buildRenderItem() const;
-	void opaquePass();
-	void shadowPass();
 private:
 	std::shared_ptr<d3d::FirstPersonCamera> _pCamera;
 	std::shared_ptr<dx12lib::DepthStencil2D> _pShadowMap;

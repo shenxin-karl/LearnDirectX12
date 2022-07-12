@@ -1,12 +1,12 @@
 #include "Step.h"
-#include "RenderGraph/Bindable/Bindable.h"
+#include "RenderGraph/Bindable/Bindable.hpp"
 #include "RenderGraph/Drawable/Drawable.h"
 #include "RenderGraph/Pass/RenderQueuePass.h"
 
 namespace rg {
 
-Step::Step(std::shared_ptr<RenderQueuePass> pTargetPass) : _pTargetPass(std::move(pTargetPass)) {
-	assert(_pTargetPass != nullptr);
+Step::Step(std::shared_ptr<SubPass> pTargetSubPass) : _pTargetSubPass(std::move(pTargetSubPass)) {
+	assert(_pTargetSubPass != nullptr);
 }
 
 void Step::addBindable(std::shared_ptr<Bindable> pBindable) {
@@ -14,13 +14,13 @@ void Step::addBindable(std::shared_ptr<Bindable> pBindable) {
 }
 
 void Step::submit(const Drawable &drawable) const {
-	assert(_pTargetPass != nullptr);
-	_pTargetPass->accept(Job{ &drawable, this });
+	assert(_pTargetSubPass != nullptr);
+	_pTargetSubPass->accept(Job{ this, &drawable });
 }
 
-void Step::bind(dx12lib::GraphicsContextProxy pGraphicsCtx) const {
+void Step::bind(dx12lib::IGraphicsContext &graphicsCtx) const {
 	for (auto &pBindable : _bindables)
-		pBindable->bind(pGraphicsCtx);
+		pBindable->bind(graphicsCtx);
 }
 
 }

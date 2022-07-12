@@ -8,12 +8,12 @@ namespace rg {
 
 class Step {
 public:
-	explicit Step(std::shared_ptr<RenderQueuePass> pTargetPass);
+	explicit Step(std::shared_ptr<SubPass> pTargetSubPass);
 	void addBindable(std::shared_ptr<Bindable> pBindable);
 	void submit(const Drawable &drawable) const;
-	void bind(dx12lib::GraphicsContextProxy pGraphicsCtx) const;
+	void bind(dx12lib::IGraphicsContext &graphicsCtx) const;
 private:
-	std::shared_ptr<RenderQueuePass> _pTargetPass;
+	std::shared_ptr<SubPass> _pTargetSubPass;
 	std::vector<std::shared_ptr<Bindable>> _bindables;
 	std::shared_ptr<GraphicsPSOBindable> _pGraphicsPSO;
 };

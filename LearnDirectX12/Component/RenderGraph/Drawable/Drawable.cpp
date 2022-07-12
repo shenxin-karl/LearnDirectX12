@@ -3,13 +3,13 @@
 
 namespace rg {
 
-void Drawable::bind(dx12lib::GraphicsContextProxy &pGraphicsCtx) {
+void Drawable::bind(dx12lib::IGraphicsContext &graphicsCtx) {
 	assert(_topology != D3D_PRIMITIVE_TOPOLOGY_UNDEFINED);
-	pGraphicsCtx->setPrimitiveTopology(_topology);
+	graphicsCtx.setPrimitiveTopology(_topology);
 	if (_pVertexBuffer != nullptr)
-		pGraphicsCtx->setVertexBuffer(_pVertexBuffer);
+		graphicsCtx.setVertexBuffer(_pVertexBuffer);
 	if (_pIndexBuffer != nullptr)
-		pGraphicsCtx->setIndexBuffer(_pIndexBuffer);
+		graphicsCtx.setIndexBuffer(_pIndexBuffer);
 }
 
 void Drawable::submit(TechniqueType filter) {

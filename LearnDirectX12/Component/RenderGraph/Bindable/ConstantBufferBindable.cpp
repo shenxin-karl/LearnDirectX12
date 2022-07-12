@@ -11,8 +11,8 @@ ConstantBufferBindable::ConstantBufferBindable(const dx12lib::ShaderRegister &sr
 	assert(pConstantBuffer != nullptr);
 }
 
-void ConstantBufferBindable::bind(dx12lib::GraphicsContextProxy pGraphicsCtx) const {
-	pGraphicsCtx->setConstantBuffer(_shaderRegister, _pConstantBuffer);
+void ConstantBufferBindable::bind(dx12lib::IGraphicsContext &graphicsCtx) const {
+	graphicsCtx.setConstantBuffer(_shaderRegister, _pConstantBuffer);
 }
 
 }

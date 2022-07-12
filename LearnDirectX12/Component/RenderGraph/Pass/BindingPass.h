@@ -9,8 +9,8 @@ class BindingPass : public Pass {
 public:
 	using Pass::Pass;
 	void addBind(std::shared_ptr<Bindable> pBindable);
-	void bindAll(dx12lib::GraphicsContextProxy pGraphicsCtx) const;
-	void bindRenderTarget(dx12lib::GraphicsContextProxy pGraphicsCtx) const;
+	void bindAll(dx12lib::IGraphicsContext &graphicsCtx) const;
+	void bindRenderTarget(dx12lib::IGraphicsContext &graphicsCtx) const;
 public:
 	size_t renderTargetMipmap = 0;
 	std::shared_ptr<dx12lib::RenderTarget2D> pRenderTarget;
