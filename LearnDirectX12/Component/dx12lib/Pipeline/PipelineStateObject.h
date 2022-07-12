@@ -3,12 +3,9 @@
 
 namespace dx12lib {
 
-enum class InputLayoutType {
-	VertexData,
-	InstanceData,
-};
 
-template<InputLayoutType type>
+
+template<D3D12_INPUT_CLASSIFICATION SlotClass>
 struct InputLayoutDescHelper : public D3D12_INPUT_ELEMENT_DESC {
 public:
 	template<typename Class, typename Member>
@@ -18,21 +15,20 @@ public:
 		UINT semanticIndex = 0, 
 		UINT slot = 0) 
 	{
-		constexpr bool isInstance = type == InputLayoutType::InstanceData;
 		static_assert(std::is_member_pointer_v<decltype(pMember)>, "Pmember must be a member pointer");
+		constexpr bool isInstance = SlotClass == D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA;
 		this->SemanticName = name.data();
 		this->SemanticIndex = semanticIndex;
 		this->Format = format;
 		this->InputSlot = slot;
-		this->AlignedByteOffset = (UINT)(std::size_t)((&(static_cast<Class *>(nullptr)->*pMember)));
-		this->InputSlotClass = isInstance ? D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA :
-			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+		this->AlignedByteOffset = static_cast<UINT>(static_cast<std::size_t>((&(static_cast<Class*>(nullptr)->*pMember))));
+		this->InputSlotClass = SlotClass;
 		this->InstanceDataStepRate = isInstance ? 1 : 0;
 	}
 };
 
-using VInputLayoutDescHelper = InputLayoutDescHelper<InputLayoutType::VertexData>;
-using IInputLayoutDescHelper = InputLayoutDescHelper<InputLayoutType::InstanceData>;
+using VInputLayoutDescHelper = InputLayoutDescHelper<D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA>;
+using IInputLayoutDescHelper = InputLayoutDescHelper<D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA>;
 
 class PSO {
 public:
