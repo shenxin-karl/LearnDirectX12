@@ -20,7 +20,7 @@ class Drawable : public NonCopyable {
 public:
 	Drawable() = default;
 	~Drawable() override = default;
-	virtual void bind(dx12lib::GraphicsContextProxy &pGraphicsCtx) const;
+	virtual void bind(dx12lib::IGraphicsContext &graphicsCtx) const;
 	void submit(TechniqueType filter);
 	void addTechnique(std::unique_ptr<Technique> pTechnique);
 	void remoteTechnique(const std::string &techniqueName);

@@ -6,12 +6,11 @@ namespace rg {
 
 class Job {
 public:
-	Job(const Step *pStep, const Drawable *pDrawable, const GraphicsPSOBindable *pGraphicsPSO);
-	void execute(dx12lib::GraphicsContextProxy pGraphicsCtx) const;
+	Job(const Step *pStep, const Drawable *pDrawable);
+	void execute(dx12lib::IGraphicsContext &graphicsCtx) const;
 private:
 	const Step *_pStep;
 	const Drawable *_pDrawable;
-	const GraphicsPSOBindable *_pGraphicsPSO;
 };
 
 }

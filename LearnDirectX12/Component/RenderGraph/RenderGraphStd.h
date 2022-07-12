@@ -10,6 +10,7 @@ class Technique;
 class Drawable;
 class Bindable;
 class Step;
+class SubPass;
 class RenderQueuePass;
 class Job;
 

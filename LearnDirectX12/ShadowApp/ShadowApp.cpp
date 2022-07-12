@@ -1,6 +1,4 @@
 #include "ShadowApp.h"
-
-#include "Model.h"
 #include "Context/CommandQueue.h"
 #include "D3D/AssimpLoader/AssimpLoader.h"
 #include "D3D/dx12libHelper/RenderTarget.h"
@@ -71,7 +69,6 @@ void ShadowApp::loadModel(dx12lib::DirectContextProxy pDirectCtx) {
 	auto loadModelImpl = [&](const std::string &name, const std::string &path) {
 		d3d::AssimpLoader loader(path, true);
 		assert(loader.isLoad());
-		_modelMap[name] = std::make_shared<Model>(pDirectCtx, loader);
 	};
 	loadModelImpl("Cathedral", "resources/Cathedral.glb");
 	loadModelImpl("QuaintVillag", "resources/Quaint Village.glb");

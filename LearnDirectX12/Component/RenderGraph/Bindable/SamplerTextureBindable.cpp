@@ -12,9 +12,9 @@ SamplerTextureBindable::SamplerTextureBindable(dx12lib::ShaderRegister shaderReg
 {
 }
 
-void SamplerTextureBindable::bind(dx12lib::GraphicsContextProxy pGraphicsCtx) const {
+void SamplerTextureBindable::bind(dx12lib::IGraphicsContext &graphicsCtx) const {
 	const auto &srv = _pShaderResource->getSRV(_mipMap);
-	pGraphicsCtx->setShaderResourceView(_shaderRegister, srv);
+	graphicsCtx.setShaderResourceView(_shaderRegister, srv);
 }
 
 }

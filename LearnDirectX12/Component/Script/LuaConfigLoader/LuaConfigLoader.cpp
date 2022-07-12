@@ -38,38 +38,51 @@ bool LuaConfigLoader::isLoad() const {
 	return _pLuaState != nullptr;
 }
 
-auto LuaConfigLoader::getString(const std::string &key) -> std::optional<std::string> {
+auto LuaConfigLoader::tryGetString(const std::string &key) -> std::optional<std::string> {
 	getKey(key);
-	return getString();
+	std::optional<std::string> result;
+	if (lua_isstring(_pLuaState, -1))
+		result = lua_tostring(_pLuaState, -1);
+	lua_pop(_pLuaState, 1);
+	return result;
 }
 
-auto LuaConfigLoader::getBoolean(const std::string &key) -> std::optional<bool> {
+auto LuaConfigLoader::tryGetBoolean(const std::string &key) -> std::optional<bool> {
 	getKey(key);
-	return getBoolean();
+	std::optional<bool> result;
+	if (lua_isboolean(_pLuaState, -1))
+		result = lua_toboolean(_pLuaState, -1);
+	lua_pop(_pLuaState, 1);
+	return result;
 }
 
-auto LuaConfigLoader::getNumber(const std::string &key) -> std::optional<double> {
+auto LuaConfigLoader::tryGetNumber(const std::string &key) -> std::optional<double> {
 	getKey(key);
-	return getNumber();
+	std::optional<double> result;
+	if (lua_isnumber(_pLuaState, -1))
+		result = lua_tonumber(_pLuaState, -1);
+	lua_pop(_pLuaState, 1);
+	return result;
 }
 
-std::string LuaConfigLoader::tryGetString(const std::string &key, const std::string &defString) {
-	if (auto str = getString(key))
+auto LuaConfigLoader::getString(const std::string &key, const std::string &defString) -> std::string {
+	if (auto str = tryGetString(key))
 		return *str;
 	return defString;
 }
 
-auto LuaConfigLoader::tryGetBoolean(const std::string &key, bool defBool) -> bool {
-	if (auto bCond = getBoolean(key))
-		return *bCond;
+auto LuaConfigLoader::getBoolean(const std::string &key, bool defBool) -> bool {
+	if (auto boolean = tryGetBoolean(key))
+		return *boolean;
 	return defBool;
 }
 
-auto LuaConfigLoader::tryGetNumber(const std::string &key, double defNumber) -> double {
-	if (auto number = getNumber(key))
+auto LuaConfigLoader::getNumber(const std::string &key, double defNumber) -> double {
+	if (auto number = tryGetNumber(key))
 		return *number;
 	return defNumber;
 }
+
 
 bool LuaConfigLoader::isString(const std::string &key) const {
 	getKey(key);
@@ -117,7 +130,7 @@ LuaValueType LuaConfigLoader::getValueType() const {
 	return static_cast<LuaValueType>(lua_type(_pLuaState, -1));
 }
 
-auto LuaConfigLoader::getString() -> std::optional<std::string> {
+auto LuaConfigLoader::tryGetString() -> std::optional<std::string> {
 	std::optional<std::string> result;
 	if (lua_isstring(_pLuaState, -1))
 		result = lua_tostring(_pLuaState, -1);
@@ -125,7 +138,7 @@ auto LuaConfigLoader::getString() -> std::optional<std::string> {
 	return result;
 }
 
-std::optional<bool> LuaConfigLoader::getBoolean() {
+auto LuaConfigLoader::tryGetBoolean() -> std::optional<bool> {
 	std::optional<bool> result;
 	if (lua_isboolean(_pLuaState, -1))
 		result = lua_toboolean(_pLuaState, -1);
@@ -133,7 +146,7 @@ std::optional<bool> LuaConfigLoader::getBoolean() {
 	return result;
 }
 
-std::optional<double> LuaConfigLoader::getNumber() {
+auto LuaConfigLoader::tryGetNumber() -> std::optional<double> {
 	std::optional<double> result;
 	if (lua_isnumber(_pLuaState, -1))
 		result = lua_tonumber(_pLuaState, -1);
@@ -141,20 +154,20 @@ std::optional<double> LuaConfigLoader::getNumber() {
 	return result;
 }
 
-auto LuaConfigLoader::tryGetString(const std::string &defKey) -> std::string {
-	if (auto str = getString())
+auto LuaConfigLoader::getString(const std::string &defKey) -> std::string {
+	if (auto str = tryGetString())
 		return *str;
 	return defKey;
 }
 
-auto LuaConfigLoader::tryGetBoolean(bool defBool) -> bool {
-	if (auto bCond = getBoolean())
-		return *bCond;
+auto LuaConfigLoader::getBoolean(bool defBool) -> bool {
+	if (auto boolean = tryGetBoolean())
+		return *boolean;
 	return defBool;
 }
 
-auto LuaConfigLoader::tryGetNumber(double defNumber) -> double {
-	if (auto number = getNumber())
+auto LuaConfigLoader::getNumber(double defNumber) -> double {
+	if (auto number = tryGetNumber())
 		return *number;
 	return defNumber;
 }

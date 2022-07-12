@@ -9,8 +9,8 @@ GraphicsPSOBindable::GraphicsPSOBindable(std::shared_ptr<dx12lib::GraphicsPSO> p
 {
 }
 
-void GraphicsPSOBindable::bind(dx12lib::GraphicsContextProxy pGraphicsCtx) const {
-	pGraphicsCtx->setGraphicsPSO(_pso);
+void GraphicsPSOBindable::bind(dx12lib::IGraphicsContext &graphicsCtx) const {
+	graphicsCtx.setGraphicsPSO(_pso);
 }
 
 const std::string & GraphicsPSOBindable::getPSOName() const {

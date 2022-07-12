@@ -5,23 +5,20 @@
 
 namespace rg {
 
-Job::Job(const Step *pStep, const Drawable *pDrawable, const GraphicsPSOBindable *pGraphicsPSO)
+Job::Job(const Step *pStep, const Drawable *pDrawable)
 : _pStep(pStep), _pDrawable(pDrawable)
-, _pGraphicsPSO(pGraphicsPSO)
 {
 	assert(pStep != nullptr);
 	assert(pDrawable != nullptr);
-	assert(pGraphicsPSO != nullptr);
 }
 
-void Job::execute(dx12lib::GraphicsContextProxy pGraphicsCtx) const {
-	_pGraphicsPSO->bind(pGraphicsCtx);
-	_pDrawable->bind(pGraphicsCtx);
-	_pStep->bind(pGraphicsCtx);
+void Job::execute(dx12lib::IGraphicsContext &graphicsCtx) const {
+	_pDrawable->bind(graphicsCtx);
+	_pStep->bind(graphicsCtx);
 
 	const auto &drawArgs = _pDrawable->getDrawArgs();
 	if (drawArgs.indexCount > 0) {
-		pGraphicsCtx->drawIndexedInstanced(
+		graphicsCtx.drawIndexedInstanced(
 			drawArgs.indexCount,
 			drawArgs.instanceCount,
 			drawArgs.startIndexLocation,
@@ -29,7 +26,7 @@ void Job::execute(dx12lib::GraphicsContextProxy pGraphicsCtx) const {
 			drawArgs.startInstanceLocation
 		);
 	} else {
-		pGraphicsCtx->drawInstanced(
+		graphicsCtx.drawInstanced(
 			drawArgs.vertexCount,
 			drawArgs.instanceCount,
 			drawArgs.baseVertexLocation,
