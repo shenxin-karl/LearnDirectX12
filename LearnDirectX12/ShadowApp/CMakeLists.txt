@@ -39,4 +39,5 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 	D3D
 	dx12lib
 	assimp
+	RenderGraph
 )

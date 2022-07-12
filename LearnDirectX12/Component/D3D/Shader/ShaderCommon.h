@@ -54,6 +54,7 @@ struct CBPassType {
 	float    fogStart;
 	float    fogEnd;
 	float2   cbPerPassPad1;
+	float4x4 lightSpaceMatrix;
 };
 
 constexpr inline std::size_t kMaxLightCount = 16;

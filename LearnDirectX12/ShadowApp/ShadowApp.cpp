@@ -2,9 +2,16 @@
 #include "Context/CommandQueue.h"
 #include "D3D/AssimpLoader/AssimpLoader.h"
 #include "D3D/dx12libHelper/RenderTarget.h"
+#include "D3D/Model/StaticModel/StaticModel.h"
 #include "D3D/Tool/Camera.h"
+#include "Device/SwapChain.h"
 #include "InputSystem/Mouse.h"
 #include "dx12lib/Buffer/BufferStd.h"
+#include "Pipeline/PipelineStateObject.h"
+#include "Pipeline/RootSignature.h"
+#include "RenderGraph/Bindable/ConstantBufferBindable.h"
+#include "RenderGraph/Bindable/GraphicsPSOBindable.h"
+#include "RenderGraph/Pass/RenderQueuePass.h"
 
 
 ShadowApp::ShadowApp() {
@@ -14,6 +21,7 @@ ShadowApp::ShadowApp() {
 }
 
 void ShadowApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
+	_pd3dInitializer = std::make_unique<d3d::D3DInitializer>();
 	d3d::CameraDesc cameraDesc {
 		float3(0, 0, 0),
 		float3(0, 1, 0),
@@ -27,11 +35,19 @@ void ShadowApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 	_pPassCb = pDirectCtx->createFRConstantBuffer<d3d::CBPassType>();
 	_pLightCb = pDirectCtx->createConstantBuffer<d3d::CBLightType>();
 
+	D3D12_CLEAR_VALUE shadowMapClearValue;
+	shadowMapClearValue.Format = DXGI_FORMAT_D16_UNORM;
+	shadowMapClearValue.DepthStencil.Depth = 0.f;
+	shadowMapClearValue.DepthStencil.Stencil = 0;
+	_pShadowMap = pDirectCtx->createDepthStencil2D(1024, 1024, &shadowMapClearValue, DXGI_FORMAT_D16_UNORM);
+
 	loadModel(pDirectCtx);
+	buildPass();
+	buildPSOAndSubPass();
 }
 
 void ShadowApp::onDestroy() {
-
+	_pd3dInitializer.reset();
 }
 
 void ShadowApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
@@ -41,6 +57,9 @@ void ShadowApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 
 	auto pPassCbVisitor = _pPassCb->visit();
 	_pCamera->updatePassCB(*pPassCbVisitor);
+
+	_pOpaquePass->pRenderTarget = _pSwapChain->getRenderTarget2D();
+	_pOpaquePass->pDepthStencil = _pSwapChain->getDepthStencil2D();
 }
 
 void ShadowApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
@@ -49,7 +68,8 @@ void ShadowApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	{
 		d3d::RenderTarget renderTarget(_pSwapChain);
 		renderTarget.bind(pDirectCtx);
-		renderTarget.clear(pDirectCtx);
+		////renderTarget.clear(pDirectCtx);
+		////_pOpaquePass->execute(pDirectCtx);
 		renderTarget.unbind(pDirectCtx);
 	}
 	pCmdQueue->executeCommandList(pDirectCtx);
@@ -67,14 +87,100 @@ void ShadowApp::onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int 
 
 void ShadowApp::loadModel(dx12lib::DirectContextProxy pDirectCtx) {
 	auto loadModelImpl = [&](const std::string &name, const std::string &path) {
-		d3d::AssimpLoader loader(path, true);
+		d3d::AssimpLoader loader(path);
+		loader.load();
 		assert(loader.isLoad());
+		auto pModel = std::make_shared<d3d::StaticModel>(name);
+		pModel->initAsAssimpLoader(pDirectCtx, loader);
+		_modelMap[name] = std::move(pModel);
 	};
 	loadModelImpl("Cathedral", "resources/Cathedral.glb");
 	loadModelImpl("QuaintVillag", "resources/Quaint Village.glb");
 	loadModelImpl("TreeHouse", "resources/Tree House.glb");
 }
 
-void ShadowApp::buildRenderItem() const {
-
+void ShadowApp::buildPass() {
+	const auto &initDesc = _pDevice->getDesc();
+	{
+		_pOpaquePass = std::make_shared<rg::RenderQueuePass>("OpaquePass");
+		_pOpaquePass->setDSVFormat(initDesc.depthStencilFormat);
+		_pOpaquePass->setRTVFormats({ initDesc.backBufferFormat });
+	}
+	{
+		_pShadowPass = std::make_shared<rg::RenderQueuePass>("ShadowPass");
+		_pShadowPass->pDepthStencil = _pShadowMap;
+		_pShadowPass->setDSVFormat(_pShadowMap->getFormat());
+	}
 }
+
+void ShadowApp::buildPSOAndSubPass() {
+	auto pPassCbBindable = std::make_shared<rg::ConstantBufferBindable>(
+		dx12lib::RegisterSlot::CBV1,
+		_pPassCb
+	); 
+
+	{	/// Build Opaque SubPass
+		auto pRootSignature = _pDevice->createRootSignature(2, 6);
+		pRootSignature->initStaticSampler(0, d3d::getStaticSamplers());
+		pRootSignature->at(0).initAsDescriptorTable({
+			{ dx12lib::RegisterSlot::CBV0, 1 },		// CbObject
+			{ dx12lib::RegisterSlot::SRV0, 1 },		// gAlbedoMap
+		});
+		pRootSignature->at(1).initAsDescriptorTable({
+			{ dx12lib::RegisterSlot::CBV1, 1 },		// CbPass
+			{ dx12lib::RegisterSlot::CBV2, 1 },		// CbLight
+		});
+		pRootSignature->finalize();
+
+		auto blinnPhongPSO = _pDevice->createGraphicsPSO("BlinnPhongPSO");
+		blinnPhongPSO->setRootSignature(pRootSignature);
+		blinnPhongPSO->setVertexShader(d3d::compileShader(L"shaders/BlinnPhong.hlsl", nullptr, "VS", "vs_5_0"));
+		blinnPhongPSO->setPixelShader(d3d::compileShader(L"shaders/BlinnPhong.hlsl", nullptr, "PS", "ps_5_0"));
+		blinnPhongPSO->setBlendState(_pOpaquePass->getBlendDesc());
+		blinnPhongPSO->setRasterizerState(_pOpaquePass->getRasterizerState());
+		blinnPhongPSO->setDepthStencilState(_pOpaquePass->getDepthStencilDesc());
+		blinnPhongPSO->setRenderTargetFormats(_pOpaquePass->getRTVFormats(), _pOpaquePass->getDSVFormat());
+		blinnPhongPSO->setPrimitiveTopologyType(_pOpaquePass->getPrimitiveTopologyType());
+		blinnPhongPSO->setInputLayout(d3d::StaticSubModel::getInputLayout());
+		blinnPhongPSO->finalize();
+
+		auto pLightCbBindable = std::make_shared<rg::ConstantBufferBindable>(
+			dx12lib::RegisterSlot::CBV2,
+			_pLightCb
+		);
+
+		auto pBlinnPhongPsoBindable = std::make_shared<rg::GraphicsPSOBindable>(blinnPhongPSO);
+		auto pSubPass = _pOpaquePass->getOrCreateSubPass(pBlinnPhongPsoBindable);
+		pSubPass->addBindable(pLightCbBindable);
+		pSubPass->addBindable(pPassCbBindable);
+	}
+
+	{	/// Build Shadow SubPass
+		auto pRootSignature = _pDevice->createRootSignature(2, 0);
+		pRootSignature->at(0).initAsDescriptorTable({
+			{ dx12lib::RegisterSlot::CBV0, 1 },		// CbObject
+		});
+		pRootSignature->at(1).initAsDescriptorTable({
+			{ dx12lib::RegisterSlot::CBV1, 1 },		// CbPass
+		});
+		pRootSignature->finalize();
+
+
+		auto shadowPSO = _pDevice->createGraphicsPSO("ShadowPSO");
+		shadowPSO->setRootSignature(pRootSignature);
+		shadowPSO->setVertexShader(d3d::compileShader(L"shaders/Shadows.hlsl", nullptr, "VS", "vs_5_0"));
+		shadowPSO->setPixelShader(d3d::compileShader(L"shaders/Shadows.hlsl", nullptr, "PS", "ps_5_0"));
+		shadowPSO->setBlendState(_pOpaquePass->getBlendDesc());
+		shadowPSO->setRasterizerState(_pOpaquePass->getRasterizerState());
+		shadowPSO->setDepthStencilState(_pOpaquePass->getDepthStencilDesc());
+		shadowPSO->setRenderTargetFormats(_pOpaquePass->getRTVFormats(), _pOpaquePass->getDSVFormat());
+		shadowPSO->setPrimitiveTopologyType(_pOpaquePass->getPrimitiveTopologyType());
+		shadowPSO->setInputLayout(d3d::StaticSubModel::getInputLayout());
+		shadowPSO->finalize();
+
+		auto pShadowPsoBindable = std::make_shared<rg::GraphicsPSOBindable>(shadowPSO);
+		auto pSubPass = _pShadowPass->getOrCreateSubPass(pShadowPsoBindable);
+		pSubPass->addBindable(pPassCbBindable);
+	}
+}
+

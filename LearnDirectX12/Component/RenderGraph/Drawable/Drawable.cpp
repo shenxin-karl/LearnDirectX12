@@ -3,7 +3,7 @@
 
 namespace rg {
 
-void Drawable::bind(dx12lib::IGraphicsContext &graphicsCtx) {
+void Drawable::bind(dx12lib::IGraphicsContext &graphicsCtx) const {
 	assert(_topology != D3D_PRIMITIVE_TOPOLOGY_UNDEFINED);
 	graphicsCtx.setPrimitiveTopology(_topology);
 	if (_pVertexBuffer != nullptr)
@@ -18,13 +18,23 @@ void Drawable::submit(TechniqueType filter) {
 }
 
 void Drawable::addTechnique(std::unique_ptr<Technique> pTechnique) {
-	
+	_techniques.push_back(std::move(pTechnique));
 }
 
 void Drawable::remoteTechnique(const std::string &techniqueName) {
+	auto iter = _techniques.begin();
+	while (iter != _techniques.end()) {
+		if ((* iter)->getTechniqueName() == techniqueName)
+			iter = _techniques.erase(iter);
+	}
 }
 
-TechniqueType * Drawable::getTechnique(const std::string &techniqueName) const {
+Technique * Drawable::getTechnique(const std::string &techniqueName) const {
+	for (auto &pTechnique : _techniques) {
+		if (pTechnique->getTechniqueName() == techniqueName)
+			return pTechnique.get();
+	}
+	return nullptr;
 }
 
 void Drawable::setDrawArgs(const DrawArgs &drawArgs) {

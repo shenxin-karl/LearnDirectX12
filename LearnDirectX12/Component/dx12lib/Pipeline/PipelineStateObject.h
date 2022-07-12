@@ -21,7 +21,7 @@ public:
 		this->SemanticIndex = semanticIndex;
 		this->Format = format;
 		this->InputSlot = slot;
-		this->AlignedByteOffset = static_cast<UINT>(static_cast<std::size_t>((&(static_cast<Class*>(nullptr)->*pMember))));
+		this->AlignedByteOffset = static_cast<UINT>(reinterpret_cast<std::size_t>((&(static_cast<Class*>(nullptr)->*pMember))));
 		this->InputSlotClass = SlotClass;
 		this->InstanceDataStepRate = isInstance ? 1 : 0;
 	}
@@ -61,6 +61,7 @@ public:
 	void setDepthTargetFormat(DXGI_FORMAT DSVFormat);
 	void setRenderTargetFormat(DXGI_FORMAT RTVFormat, DXGI_FORMAT DSVFormat);
 	void setRenderTargetFormats(UINT numRTVFormat, const DXGI_FORMAT *pRTVFormat, DXGI_FORMAT DSVFormat);
+	void setRenderTargetFormats(const std::vector<DXGI_FORMAT> &RTVFormats, DXGI_FORMAT DSVFormat);
 	void setInputLayout(const std::vector<D3D12_INPUT_ELEMENT_DESC> &inputLayout);
 	void setPrimitiveRestart(D3D12_INDEX_BUFFER_STRIP_CUT_VALUE IBProps);
 	

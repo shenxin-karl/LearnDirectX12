@@ -4,10 +4,18 @@
 #include <D3D/d3dutil.h>
 #include <D3D/Shader/ShaderCommon.h>
 #include <D3D/Model/ModelInterface.hpp>
+#include <RenderGraph/RenderGraphStd.h>
 
 using namespace Math;
 
-class Model;
+class Node {
+public:
+	void buildOpaqueTechnique(std::shared_ptr<rg::SubPass> pSubPass) const;
+	void buildShadowTechnique(std::shared_ptr<rg::SubPass> pSubPass) const;
+private:
+	std::shared_ptr<dx12lib::IShaderResource2D> _pAlbedoMap;
+	std::shared_ptr<rg::Drawable> _pDrawable;
+};
 
 class ShadowApp : public com::BaseApp {
 public:
@@ -22,13 +30,18 @@ private:
 	void onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int height) override;
 private:
 	void loadModel(dx12lib::DirectContextProxy pDirectCtx);
-	void buildRenderItem() const;
+	void buildPass();
+	void buildPSOAndSubPass();
+	void buildNodes();
 private:
+	std::unique_ptr<d3d::D3DInitializer> _pd3dInitializer;
 	std::shared_ptr<d3d::FirstPersonCamera> _pCamera;
 	std::shared_ptr<dx12lib::DepthStencil2D> _pShadowMap;
 	std::shared_ptr<dx12lib::ConstantBuffer> _pLightCb;
 	dx12lib::FRConstantBufferPtr<d3d::CBPassType> _pPassCb;
 	std::unordered_map<std::string, std::shared_ptr<d3d::IModel>> _modelMap;
-	std::unordered_map<std::string, std::vector<std::shared_ptr<d3d::RenderItem>>> _opaqueRenderItems;
-	std::unordered_map<std::string, std::vector<std::shared_ptr<d3d::RenderItem>>> _shadowRenderItems;
+
+	std::vector<std::unique_ptr<Node>> _nodes;
+	std::shared_ptr<rg::RenderQueuePass> _pShadowPass;
+	std::shared_ptr<rg::RenderQueuePass> _pOpaquePass;
 };

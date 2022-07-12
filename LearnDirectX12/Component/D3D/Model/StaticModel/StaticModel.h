@@ -14,7 +14,7 @@ public:
 	const d3d::Material &getMaterial() const override;
 	std::shared_ptr<dx12lib::VertexBuffer> getVertexBuffer() const override;
 	std::shared_ptr<dx12lib::IndexBuffer> getIndexBuffer() const override;
-	const std::vector<D3D12_INPUT_ELEMENT_DESC> &getInputLayout() const override;
+	static const std::vector<D3D12_INPUT_ELEMENT_DESC> &getInputLayout();
 private:
 	d3d::Material _material;
 	std::shared_ptr<dx12lib::VertexBuffer> _pVertexBuffer;

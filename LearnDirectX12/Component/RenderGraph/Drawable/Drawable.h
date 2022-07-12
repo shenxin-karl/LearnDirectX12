@@ -24,7 +24,7 @@ public:
 	void submit(TechniqueType filter);
 	void addTechnique(std::unique_ptr<Technique> pTechnique);
 	void remoteTechnique(const std::string &techniqueName);
-	TechniqueType *getTechnique(const std::string &techniqueName) const;
+	Technique *getTechnique(const std::string &techniqueName) const;
 	void setDrawArgs(const DrawArgs &drawArgs);
 	void setTopology(D3D_PRIMITIVE_TOPOLOGY topology);
 	void setIndexBuffer(std::shared_ptr<dx12lib::IndexBuffer> pIndexBuffer);

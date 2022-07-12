@@ -2,6 +2,7 @@
 #include <RenderGraph/RenderGraphStd.h>
 #include <RenderGraph/Pass/Pass.h>
 #include <dx12lib/Context/ContextProxy.hpp>
+#include <RenderGraph/Bindable/Bindable.hpp>
 
 namespace rg {
 
@@ -11,6 +12,7 @@ public:
 	void addBind(std::shared_ptr<Bindable> pBindable);
 	void bindAll(dx12lib::IGraphicsContext &graphicsCtx) const;
 	void bindRenderTarget(dx12lib::IGraphicsContext &graphicsCtx) const;
+	std::shared_ptr<Bindable> getBindableByType(BindableType bindableType) const;
 public:
 	size_t renderTargetMipmap = 0;
 	std::shared_ptr<dx12lib::RenderTarget2D> pRenderTarget;

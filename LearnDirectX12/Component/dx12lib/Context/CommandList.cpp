@@ -718,7 +718,7 @@ std::shared_ptr<IShaderResource> CommandList::createTextureImpl(const DX::TexMet
 	ThrowIfFailed(pSharedDevice->getD3DDevice()->CreateCommittedResource(
 		RVPtr(CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT)),
 		D3D12_HEAP_FLAG_NONE,
-		nullptr,
+		&textureDesc,
 		D3D12_RESOURCE_STATE_COMMON,
 		nullptr,
 		IID_PPV_ARGS(&pTextureResource)

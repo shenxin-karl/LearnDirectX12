@@ -74,6 +74,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 	Exception
 	stb
 	dx12lib
+	Script
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE

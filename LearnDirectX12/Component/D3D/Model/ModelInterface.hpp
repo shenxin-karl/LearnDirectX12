@@ -9,7 +9,6 @@ interface ISubModel : NonCopyable {
 	virtual const d3d::Material &getMaterial() const = 0;
 	virtual std::shared_ptr<dx12lib::VertexBuffer> getVertexBuffer() const = 0;
 	virtual std::shared_ptr<dx12lib::IndexBuffer> getIndexBuffer() const = 0;
-	virtual const std::vector<D3D12_INPUT_ELEMENT_DESC> &getInputLayout() const = 0;
 };
 
 interface IModel : NonCopyable {

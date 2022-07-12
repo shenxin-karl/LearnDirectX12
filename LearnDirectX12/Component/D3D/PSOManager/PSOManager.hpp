@@ -4,6 +4,7 @@
 #include <dx12lib/dx12libStd.h>
 #include <dx12lib/Pipeline/PipelineStateObject.h>
 #include <Singleton/Singleton.hpp>
+#include <D3D/d3dutil.h>
 
 namespace d3d {
 

@@ -21,11 +21,11 @@ void StaticSubModel::initAsALMesh(dx12lib::GraphicsContextProxy pGraphicsCtx, co
 			assert(static_cast<size_t>(textureIndex) < pScene->mNumTextures);
 			const aiTexture *pAiTexture = pScene->mTextures[textureIndex];
 
-			std::string textureName = loader.getFileName() + pAiTexture->mFilename.C_Str();;
+			std::string textureName = loader.getFileName() + path.C_Str();
 			if (TextureManager::instance()->exist(textureName))
 				return textureName;
 
-			assert(pAiTexture->mHeight != 0 && "Embedded maps can only be compressed textures");
+			assert(pAiTexture->mHeight == 0 && "Embedded maps can only be compressed textures");
 			auto pTexture = pGraphicsCtx->createTextureFromMemory(pAiTexture->achFormatHint,
 				pAiTexture->pcData,
 				pAiTexture->mWidth,
@@ -65,7 +65,7 @@ std::shared_ptr<dx12lib::IndexBuffer> StaticSubModel::getIndexBuffer() const {
 	return _pIndexBuffer;
 }
 
-const std::vector<D3D12_INPUT_ELEMENT_DESC> & StaticSubModel::getInputLayout() const {
+const std::vector<D3D12_INPUT_ELEMENT_DESC> & StaticSubModel::getInputLayout() {
 	static std::vector<D3D12_INPUT_ELEMENT_DESC> inputElementDescs = {
 		dx12lib::VInputLayoutDescHelper(&com::Vertex::position, "POSITION", DXGI_FORMAT_R32G32B32_FLOAT),
 		dx12lib::VInputLayoutDescHelper(&com::Vertex::texcoord, "TEXCOORD", DXGI_FORMAT_R32G32_FLOAT),

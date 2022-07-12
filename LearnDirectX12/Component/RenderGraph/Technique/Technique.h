@@ -4,6 +4,7 @@
 #include <vector>
 #include <RenderGraph/RenderGraphStd.h>
 #include <RenderGraph/Technique/TechniqueType.hpp>
+#include <RenderGraph/Technique/Step.h>
 
 namespace rg {
 

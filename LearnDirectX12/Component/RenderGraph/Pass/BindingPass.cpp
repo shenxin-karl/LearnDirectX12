@@ -1,5 +1,4 @@
 #include "BindingPass.h"
-
 #include "dx12lib/Texture/DepthStencilTexture.h"
 #include "dx12lib/Texture/RenderTargetTexture.h"
 #include "RenderGraph/Bindable/Bindable.hpp"
@@ -24,6 +23,14 @@ void BindingPass::bindRenderTarget(dx12lib::IGraphicsContext &graphicsCtx) const
 	} else {
 		graphicsCtx.setRenderTarget(pDepthStencil->getDSV());
 	}
+}
+
+std::shared_ptr<Bindable> BindingPass::getBindableByType(::rg::BindableType bindableType) const {
+	for (auto &pBindable : _bindables) {
+		if (pBindable->getBindableType() == bindableType)
+			return pBindable;
+	}
+	return nullptr;
 }
 
 }

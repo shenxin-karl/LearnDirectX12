@@ -12,6 +12,18 @@ public:
 	virtual void reset() {}
 	void setPassName(const std::string &passName);
 	const std::string &getPassName() const;
+	const DXGI_FORMAT &getDSVFormat() const;
+	const std::vector<DXGI_FORMAT> &getRTVFormats() const;
+	const D3D12_BLEND_DESC &getBlendDesc();
+	const D3D12_RASTERIZER_DESC &getRasterizerState() const;
+	const D3D12_DEPTH_STENCIL_DESC &getDepthStencilDesc() const;
+	const D3D12_PRIMITIVE_TOPOLOGY_TYPE &getPrimitiveTopologyType() const;
+	void setDSVFormat(const DXGI_FORMAT &DSVFormat);
+	void setRTVFormats(const std::vector<DXGI_FORMAT> &RTVFormats);
+	void setBlendDesc(const D3D12_BLEND_DESC &blendDesc);
+	void setRasterizerState(const D3D12_RASTERIZER_DESC &rasterizerDesc);
+	void setDepthStencilDesc(const D3D12_DEPTH_STENCIL_DESC &depthStencilDesc);
+	void setPrimitiveTopologyType(const D3D12_PRIMITIVE_TOPOLOGY_TYPE &primitiveTopologyType);
 private:
 	std::string _passName;
 	DXGI_FORMAT _DSVFormat;

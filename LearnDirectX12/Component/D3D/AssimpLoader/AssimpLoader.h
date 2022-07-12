@@ -32,9 +32,19 @@ public:
 		size_t index;
 		float4x4 nodeTransform;
 	};
+
+	constexpr static int kDefaultLoadFlag = (
+		aiProcess_Triangulate		  |
+		aiProcess_FixInfacingNormals  |
+		aiProcess_CalcTangentSpace    |
+		aiProcess_ConvertToLeftHanded |
+		aiProcess_LimitBoneWeights    |
+		aiProcess_OptimizeMeshes      |
+		aiProcess_OptimizeGraph
+	);
 public:
-	explicit AssimpLoader(const std::string &fileName, bool bLoad = false);
-	bool load();
+	explicit AssimpLoader(const std::string &fileName);
+	bool load(const int flag = kDefaultLoadFlag);
 	bool isLoad() const;
 	void prepareTexture(dx12lib::CommonContextProxy pCommonCtx) const;
 	std::vector<ALMesh> parseMesh() const;

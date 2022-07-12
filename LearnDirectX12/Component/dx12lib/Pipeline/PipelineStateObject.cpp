@@ -92,6 +92,19 @@ void GraphicsPSO::setRenderTargetFormats(UINT numRTVFormat, const DXGI_FORMAT *p
 	_dirty = true;
 }
 
+void GraphicsPSO::setRenderTargetFormats(const std::vector<DXGI_FORMAT> &RTVFormats, DXGI_FORMAT DSVFormat) {
+	if (RTVFormats.empty()) {
+		setDepthTargetFormat(DSVFormat);
+		return;
+	}
+
+	setRenderTargetFormats(
+		static_cast<UINT>(RTVFormats.size()),
+		RTVFormats.data(),
+		DSVFormat
+	);
+}
+
 void GraphicsPSO::setInputLayout(const std::vector<D3D12_INPUT_ELEMENT_DESC> &inputLayout) {
 	_dirty = true;
 	if (inputLayout.empty()) {

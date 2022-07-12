@@ -7,21 +7,13 @@
 namespace d3d {
 
 
-AssimpLoader::AssimpLoader(const std::string &fileName, bool bLoad) : _fileName(fileName) {
-	if (!bLoad)
-		return;
-	load();
+AssimpLoader::AssimpLoader(const std::string &fileName) : _fileName(fileName) {
 }
 
-bool AssimpLoader::load() {
+bool AssimpLoader::load(int flag) {
 	if (_isLoad)
 		return true;
 
-	int flag = 0;
-	flag |= aiProcess_Triangulate;
-	flag |= aiProcess_FixInfacingNormals;
-	flag |= aiProcess_CalcTangentSpace;
-	flag |= aiProcess_ConvertToLeftHanded;
 	_pScene = _importer.ReadFile(_fileName, flag);
 	if (_pScene == nullptr || _pScene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || _pScene->mRootNode == nullptr)
 		return false;

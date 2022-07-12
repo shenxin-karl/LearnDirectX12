@@ -2,10 +2,6 @@
 
 namespace rg {
 
-#ifndef interface
-#define interface
-#endif
-
 class Technique;
 class Drawable;
 class Bindable;
