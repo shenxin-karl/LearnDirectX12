@@ -33,6 +33,7 @@ public:
 	D3D_PRIMITIVE_TOPOLOGY getTopology() const;
 	std::shared_ptr<dx12lib::IndexBuffer> getIndexBuffer() const;
 	std::shared_ptr<dx12lib::VertexBuffer> getVertexBuffer() const;
+	void genDrawArgs();
 private:
 	DrawArgs _drawArgs;
 	D3D_PRIMITIVE_TOPOLOGY _topology = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;

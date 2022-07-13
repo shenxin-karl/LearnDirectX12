@@ -664,8 +664,11 @@ WRL::ComPtr<ID3D12Resource> CommandList::copyTextureSubResource(WRL::ComPtr<ID3D
 	if (pDestResource == nullptr) 
 		return nullptr;
 
-	_pResourceStateTracker->transitionResource(pDestResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST);
-	flushResourceBarriers();
+	_pCommandList->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
+		pDestResource.Get(),
+		D3D12_RESOURCE_STATE_COMMON,
+		D3D12_RESOURCE_STATE_COPY_DEST
+	)));
 
 	size_t requiredSize = GetRequiredIntermediateSize(
 		pDestResource.Get(), 
@@ -681,6 +684,7 @@ WRL::ComPtr<ID3D12Resource> CommandList::copyTextureSubResource(WRL::ComPtr<ID3D
 		nullptr,
 		IID_PPV_ARGS(&pSrcResource)
 	));
+
 	UpdateSubresources(_pCommandList.Get(), 
 		pDestResource.Get(), 
 		pSrcResource.Get(),
@@ -690,7 +694,12 @@ WRL::ComPtr<ID3D12Resource> CommandList::copyTextureSubResource(WRL::ComPtr<ID3D
 		pSubResourceData
 	);
 
-	_pResourceStateTracker->transitionResource(pDestResource.Get(), D3D12_RESOURCE_STATE_GENERIC_READ);
+	_pCommandList->ResourceBarrier(1, RVPtr(CD3DX12_RESOURCE_BARRIER::Transition(
+		pDestResource.Get(),
+		D3D12_RESOURCE_STATE_COPY_DEST,
+		D3D12_RESOURCE_STATE_GENERIC_READ
+	)));
+
 	return pSrcResource;
 }
 

@@ -1,6 +1,9 @@
 #include "Drawable.h"
 #include <RenderGraph/Technique/Technique.h>
 
+#include "dx12lib/Buffer/IndexBuffer.h"
+#include "dx12lib/Buffer/VertexBuffer.h"
+
 namespace rg {
 
 void Drawable::bind(dx12lib::IGraphicsContext &graphicsCtx) const {
@@ -67,6 +70,13 @@ std::shared_ptr<dx12lib::IndexBuffer> Drawable::getIndexBuffer() const {
 
 std::shared_ptr<dx12lib::VertexBuffer> Drawable::getVertexBuffer() const {
 	return _pVertexBuffer;
+}
+
+void Drawable::genDrawArgs() {
+	assert(_pVertexBuffer != nullptr);
+	_drawArgs.vertexCount = _pVertexBuffer->getVertexCount();
+	if (_pIndexBuffer != nullptr)
+		_drawArgs.indexCount = _pIndexBuffer->getIndexCount();
 }
 
 }

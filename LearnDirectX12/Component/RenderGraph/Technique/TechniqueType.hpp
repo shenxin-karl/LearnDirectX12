@@ -4,8 +4,9 @@ namespace rg {
 
 struct TechniqueType {
 	enum Type : size_t {
-		None  = (0 << 0),
-		Color = (1 << 0),
+		None   = (0 << 0),
+		Color  = (1 << 0),
+		Shadow = (1 << 1),
 	};
 public:
 	TechniqueType(Type type) : _type(type) {}

@@ -11,8 +11,65 @@
 #include "Pipeline/RootSignature.h"
 #include "RenderGraph/Bindable/ConstantBufferBindable.h"
 #include "RenderGraph/Bindable/GraphicsPSOBindable.h"
+#include "RenderGraph/Bindable/SamplerTextureBindable.h"
+#include "RenderGraph/Drawable/Drawable.h"
 #include "RenderGraph/Pass/RenderQueuePass.h"
+#include "RenderGraph/Technique/Technique.h"
 
+
+Node::Node(dx12lib::IGraphicsContext &graphicsCtx, std::shared_ptr<d3d::StaticModel> pStaticModel)
+: _pStaticModel(std::move(pStaticModel))
+{
+	_pCbObject = graphicsCtx.createFRConstantBuffer<CbObjectType>(CbObjectType());
+	for (size_t i = 0; i < _pStaticModel->getSubModelCount(); ++i) {
+		auto pSubModel = std::static_pointer_cast<d3d::StaticSubModel>(_pStaticModel->getSubModel(i));
+		auto pDrawable = std::make_unique<rg::Drawable>();
+		pDrawable->setVertexBuffer(pSubModel->getVertexBuffer());
+		pDrawable->setIndexBuffer(pSubModel->getIndexBuffer());
+		pDrawable->setTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		pDrawable->genDrawArgs();
+		_drawables.push_back(std::move(pDrawable));
+	}
+}
+
+void Node::buildOpaqueTechnique(std::shared_ptr<rg::SubPass> pSubPass) const {
+	auto pCbv0Bindable = std::make_shared<rg::ConstantBufferBindable>(
+		dx12lib::RegisterSlot::CBV0,
+		_pCbObject
+	);
+
+	for (size_t i = 0; i < _drawables.size(); ++i) {
+		const auto &material = _pStaticModel->getSubModel(i)->getMaterial();
+		const auto &albedoMapName = material.getalbedoMapName();
+		auto pAlbedoMap = d3d::TextureManager::instance()->get(albedoMapName);
+		auto pSrv1Bindable = std::make_shared<rg::SamplerTextureBindable>(
+			dx12lib::RegisterSlot::SRV1,
+			pAlbedoMap
+		);
+
+		auto pTechnique = std::make_unique<rg::Technique>("OpaqueTechnique", rg::TechniqueType::Color);
+		auto pStep = std::make_unique<rg::Step>(pSubPass);
+		pStep->addBindable(pCbv0Bindable);
+		pStep->addBindable(pSrv1Bindable);
+		pTechnique->addStep(std::move(pStep));
+		_drawables[i]->addTechnique(std::move(pTechnique));
+	}
+}
+
+void Node::buildShadowTechnique(std::shared_ptr<rg::SubPass> pSubPass) const {
+	auto pCbv0Bindable = std::make_shared<rg::ConstantBufferBindable>(
+		dx12lib::RegisterSlot::CBV0,
+		_pCbObject
+	);
+
+	for (size_t i = 0; i < _drawables.size(); ++i) {
+		auto pTechnique = std::make_unique<rg::Technique>("ShadowTechnique", rg::TechniqueType::Shadow);
+		auto pStep = std::make_unique<rg::Step>(pSubPass);
+		pStep->addBindable(pCbv0Bindable);
+		pTechnique->addStep(std::move(pStep));
+		_drawables[i]->addTechnique(std::move(pTechnique));
+	}
+}
 
 ShadowApp::ShadowApp() {
 	_title = "ShadowApp";
@@ -68,8 +125,8 @@ void ShadowApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	{
 		d3d::RenderTarget renderTarget(_pSwapChain);
 		renderTarget.bind(pDirectCtx);
-		////renderTarget.clear(pDirectCtx);
-		////_pOpaquePass->execute(pDirectCtx);
+		renderTarget.clear(pDirectCtx);
+		_pOpaquePass->execute(pDirectCtx);
 		renderTarget.unbind(pDirectCtx);
 	}
 	pCmdQueue->executeCommandList(pDirectCtx);
@@ -182,5 +239,9 @@ void ShadowApp::buildPSOAndSubPass() {
 		auto pSubPass = _pShadowPass->getOrCreateSubPass(pShadowPsoBindable);
 		pSubPass->addBindable(pPassCbBindable);
 	}
+}
+
+void ShadowApp::buildNodes() {
+
 }
 

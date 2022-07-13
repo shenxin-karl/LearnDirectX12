@@ -6,15 +6,28 @@
 #include <D3D/Model/ModelInterface.hpp>
 #include <RenderGraph/RenderGraphStd.h>
 
+namespace d3d {
+class StaticModel;
+}
+
 using namespace Math;
+
+struct CbObjectType {
+	float4x4 matWorld = float4x4::identity();
+	float4x4 matNormal = float4x4::identity();;
+	float4x4 matTexCoord = float4x4::identity();;
+	d3d::MaterialData materialData = d3d::MaterialData::defaultMaterialData;
+};
 
 class Node {
 public:
+	explicit Node(dx12lib::IGraphicsContext &graphicsCtx, std::shared_ptr<d3d::StaticModel> pStaticModel);
 	void buildOpaqueTechnique(std::shared_ptr<rg::SubPass> pSubPass) const;
 	void buildShadowTechnique(std::shared_ptr<rg::SubPass> pSubPass) const;
 private:
-	std::shared_ptr<dx12lib::IShaderResource2D> _pAlbedoMap;
-	std::shared_ptr<rg::Drawable> _pDrawable;
+	std::shared_ptr<d3d::StaticModel> _pStaticModel;
+	dx12lib::FRConstantBufferPtr<CbObjectType> _pCbObject;
+	std::vector<std::unique_ptr<rg::Drawable>> _drawables;
 };
 
 class ShadowApp : public com::BaseApp {

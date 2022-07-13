@@ -8,7 +8,7 @@ namespace rg {
 
 class SamplerTextureBindable : public Bindable {
 public:
-	SamplerTextureBindable(dx12lib::ShaderRegister shaderRegister, std::shared_ptr<dx12lib::IShaderResource> pShaderResource, size_t mipMap);
+	SamplerTextureBindable(dx12lib::ShaderRegister shaderRegister, std::shared_ptr<dx12lib::IShaderResource> pShaderResource, size_t mipMap = 0);
 	void bind(dx12lib::IGraphicsContext &graphicsCtx) const override;
 private:
 	size_t _mipMap = 0;

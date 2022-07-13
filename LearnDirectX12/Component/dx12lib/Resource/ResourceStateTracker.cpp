@@ -107,8 +107,10 @@ UINT ResourceStateTracker::flushPendingResourceBarriers(std::shared_ptr<CommandL
 		if (pendingBarrier.Type == D3D12_RESOURCE_BARRIER_TYPE_TRANSITION) {
 			const auto &pendingTransition = pendingBarrier.Transition;
 			auto iter = _globalResourceState.find(pendingTransition.pResource);
-			if (iter == _globalResourceState.end())
+			if (iter == _globalResourceState.end()) {
+				assert(false && "Unknown resource status");
 				continue;
+			}
 
 			const auto &currResourceState = iter->second;
 			if (pendingTransition.Subresource == D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES &&
