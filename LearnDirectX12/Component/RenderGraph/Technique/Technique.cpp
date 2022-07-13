@@ -12,8 +12,8 @@ void Technique::addStep(std::unique_ptr<Step> pStep) {
 	_steps.push_back(std::move(pStep));
 }
 
-void Technique::submit(const Drawable &drawable, TechniqueType filter) const {
-	if (!isActive() || (_techniqueType & filter))
+void Technique::submit(const Drawable &drawable, const TechniqueFlag &techniqueFlag) const {
+	if (!isActive() || !techniqueFlag.test(_techniqueType))
 		return;
 
 	for (auto &pStep : _steps)

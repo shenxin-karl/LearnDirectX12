@@ -68,9 +68,19 @@ D3D12_CLEAR_VALUE RenderTarget2D::getClearValue() const {
 
 RenderTarget2D::RenderTarget2D(std::weak_ptr<Device> 
                                pDevice, WRL::ComPtr<ID3D12Resource> pResource,
-                               D3D12_RESOURCE_STATES state)
+                               D3D12_RESOURCE_STATES state, 
+								const D3D12_CLEAR_VALUE *pClearValue)
 : _pDevice(pDevice), _pResource(pResource)
 {
+	if (pClearValue != nullptr) {
+		_clearValue = *pClearValue;
+	} else {
+		_clearValue.Format = pResource->GetDesc().Format;
+		_clearValue.Color[0] = 0.f;
+		_clearValue.Color[1] = 0.f;
+		_clearValue.Color[2] = 0.f;
+		_clearValue.Color[3] = 1.f;
+	}
 	ResourceStateTracker::addGlobalResourceState(_pResource.Get(), state);
 }
 

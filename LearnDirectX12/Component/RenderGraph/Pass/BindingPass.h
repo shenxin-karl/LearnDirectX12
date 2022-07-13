@@ -12,6 +12,7 @@ public:
 	void addBind(std::shared_ptr<Bindable> pBindable);
 	void bindAll(dx12lib::IGraphicsContext &graphicsCtx) const;
 	void bindRenderTarget(dx12lib::IGraphicsContext &graphicsCtx) const;
+	void reset() override;
 	std::shared_ptr<Bindable> getBindableByType(BindableType bindableType) const;
 public:
 	size_t renderTargetMipmap = 0;

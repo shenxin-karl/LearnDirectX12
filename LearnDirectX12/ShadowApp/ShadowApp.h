@@ -6,6 +6,8 @@
 #include <D3D/Model/ModelInterface.hpp>
 #include <RenderGraph/RenderGraphStd.h>
 
+#include "RenderGraph/Technique/TechniqueType.hpp"
+
 namespace d3d {
 class StaticModel;
 }
@@ -24,6 +26,7 @@ public:
 	explicit Node(dx12lib::IGraphicsContext &graphicsCtx, std::shared_ptr<d3d::StaticModel> pStaticModel);
 	void buildOpaqueTechnique(std::shared_ptr<rg::SubPass> pSubPass) const;
 	void buildShadowTechnique(std::shared_ptr<rg::SubPass> pSubPass) const;
+	void submit(const rg::TechniqueFlag &techniqueFlag) const;
 private:
 	std::shared_ptr<d3d::StaticModel> _pStaticModel;
 	dx12lib::FRConstantBufferPtr<CbObjectType> _pCbObject;
@@ -33,7 +36,7 @@ private:
 class ShadowApp : public com::BaseApp {
 public:
 	ShadowApp();
-	~ShadowApp() override = default;
+	~ShadowApp() override;
 private:
 	void onInitialize(dx12lib::DirectContextProxy pDirectCtx) override;
 	void onDestroy() override;
@@ -45,8 +48,9 @@ private:
 	void loadModel(dx12lib::DirectContextProxy pDirectCtx);
 	void buildPass();
 	void buildPSOAndSubPass();
-	void buildNodes();
+	void buildNodes(dx12lib::DirectContextProxy pDirectCtx);
 private:
+	bool _bMouseLeftPress = false;
 	std::unique_ptr<d3d::D3DInitializer> _pd3dInitializer;
 	std::shared_ptr<d3d::FirstPersonCamera> _pCamera;
 	std::shared_ptr<dx12lib::DepthStencil2D> _pShadowMap;

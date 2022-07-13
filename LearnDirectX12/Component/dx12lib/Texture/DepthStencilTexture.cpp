@@ -70,8 +70,17 @@ DepthStencil2D::DepthStencil2D(std::weak_ptr<Device> pDevice,
 
 DepthStencil2D::DepthStencil2D(std::weak_ptr<Device> pDevice, 
 	WRL::ComPtr<ID3D12Resource> pResource, 
-	D3D12_RESOURCE_STATES state) 
+	D3D12_RESOURCE_STATES state, 
+	const D3D12_CLEAR_VALUE *pClearValue)
 {
+	if (pClearValue != nullptr) {
+		_clearValue = *pClearValue;
+	} else {
+		_clearValue.Format = pResource->GetDesc().Format;
+		_clearValue.DepthStencil.Depth = 1.f;
+		_clearValue.DepthStencil.Stencil = 0;
+	}
+
 	_pResource = pResource;
 	createViews(pDevice);
 	ResourceStateTracker::addGlobalResourceState(pResource.Get(), state);

@@ -25,6 +25,12 @@ void BindingPass::bindRenderTarget(dx12lib::IGraphicsContext &graphicsCtx) const
 	}
 }
 
+void BindingPass::reset() {
+	Pass::reset();
+	pRenderTarget = nullptr;
+	pDepthStencil = nullptr;
+}
+
 std::shared_ptr<Bindable> BindingPass::getBindableByType(::rg::BindableType bindableType) const {
 	for (auto &pBindable : _bindables) {
 		if (pBindable->getBindableType() == bindableType)

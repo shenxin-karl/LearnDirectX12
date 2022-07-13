@@ -15,9 +15,9 @@ void Drawable::bind(dx12lib::IGraphicsContext &graphicsCtx) const {
 		graphicsCtx.setIndexBuffer(_pIndexBuffer);
 }
 
-void Drawable::submit(TechniqueType filter) {
+void Drawable::submit(const TechniqueFlag &techniqueFlag) const {
 	for (auto &pTechnique : _techniques)
-		pTechnique->submit(*this, filter);
+		pTechnique->submit(*this, techniqueFlag);
 }
 
 void Drawable::addTechnique(std::unique_ptr<Technique> pTechnique) {

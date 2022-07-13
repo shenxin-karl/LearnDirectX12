@@ -108,9 +108,10 @@ public:
 };
 
 struct ShaderRegister {
-	RegisterSlot  slot;
-	RegisterSpace space;
+	RegisterSlot  slot   = RegisterSlot::NONE;
+	RegisterSpace space  = RegisterSpace::Space0;
 public:
+	constexpr ShaderRegister() = default;
 	constexpr ShaderRegister(const ShaderRegister &) = default;
 	constexpr ShaderRegister(ShaderRegister &&) noexcept = default;
 	constexpr ShaderRegister &operator=(const ShaderRegister &) = default;

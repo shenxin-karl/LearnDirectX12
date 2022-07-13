@@ -12,7 +12,8 @@ public:
 protected:
 	RenderTarget2D(std::weak_ptr<Device> pDevice, 
 		WRL::ComPtr<ID3D12Resource> pResource, 
-		D3D12_RESOURCE_STATES state
+		D3D12_RESOURCE_STATES state,
+		const D3D12_CLEAR_VALUE *pClearValue = nullptr
 	);
 	RenderTarget2D(std::weak_ptr<Device> pDevice,
 		size_t width, 

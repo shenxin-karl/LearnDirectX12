@@ -21,7 +21,7 @@ public:
 	Drawable() = default;
 	~Drawable() override = default;
 	virtual void bind(dx12lib::IGraphicsContext &graphicsCtx) const;
-	void submit(TechniqueType filter);
+	void submit(const TechniqueFlag &techniqueFlag) const;
 	void addTechnique(std::unique_ptr<Technique> pTechnique);
 	void remoteTechnique(const std::string &techniqueName);
 	Technique *getTechnique(const std::string &techniqueName) const;

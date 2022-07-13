@@ -2,13 +2,13 @@
 
 namespace rg {
 
-ConstantBufferBindable::ConstantBufferBindable(const dx12lib::ShaderRegister &sr,
-	std::shared_ptr<dx12lib::IConstantBuffer> pConstantBuffer)
-: Bindable(BindableType::ConstantBuffer)
-, _shaderRegister(sr)
-, _pConstantBuffer(pConstantBuffer)
+std::shared_ptr<ConstantBufferBindable> ConstantBufferBindable::make(const dx12lib::ShaderRegister &sr,
+	std::shared_ptr<dx12lib::IConstantBuffer> pConstantBuffer, const std::source_location &sourceLocation)
 {
-	assert(pConstantBuffer != nullptr);
+	auto pBindable = std::make_shared<ConstantBufferBindable>(sourceLocation);
+	pBindable->_pConstantBuffer = pConstantBuffer;
+	pBindable->_shaderRegister = sr;
+	return pBindable;
 }
 
 void ConstantBufferBindable::bind(dx12lib::IGraphicsContext &graphicsCtx) const {

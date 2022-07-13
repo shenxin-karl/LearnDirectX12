@@ -2,14 +2,16 @@
 
 namespace rg {
 
-SamplerTextureBindable::SamplerTextureBindable(dx12lib::ShaderRegister shaderRegister,
-	std::shared_ptr<dx12lib::IShaderResource> pShaderResource,
-	size_t mipMap)
-: Bindable(BindableType::SamplerTexture)
-, _mipMap(mipMap)
-, _shaderRegister(shaderRegister)
-, _pShaderResource(pShaderResource)
+std::shared_ptr<SamplerTextureBindable> SamplerTextureBindable::make(dx12lib::ShaderRegister shaderRegister,
+	std::shared_ptr<dx12lib::IShaderResource> pShaderResource, 
+	size_t mipMap,
+	const std::source_location &sourceLocation)
 {
+	auto pBindable = std::make_shared<SamplerTextureBindable>(sourceLocation);
+	pBindable->_mipMap = mipMap;
+	pBindable->_shaderRegister = shaderRegister;
+	pBindable->_pShaderResource = pShaderResource;
+	return pBindable;
 }
 
 void SamplerTextureBindable::bind(dx12lib::IGraphicsContext &graphicsCtx) const {

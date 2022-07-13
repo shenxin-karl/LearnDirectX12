@@ -4,9 +4,12 @@
 
 namespace rg {
 
-GraphicsPSOBindable::GraphicsPSOBindable(std::shared_ptr<dx12lib::GraphicsPSO> pso)
-: Bindable(BindableType::PipelineStateObject), _pso(pso)
+std::shared_ptr<GraphicsPSOBindable> GraphicsPSOBindable::make(std::shared_ptr<dx12lib::GraphicsPSO> pso,
+	const std::source_location &sourceLocation)
 {
+	auto pBindable = std::make_shared<GraphicsPSOBindable>(sourceLocation);
+	pBindable->_pso = pso;
+	return pBindable;
 }
 
 void GraphicsPSOBindable::bind(dx12lib::IGraphicsContext &graphicsCtx) const {

@@ -1,38 +1,74 @@
 #pragma once
+#include <bitset>
 
 namespace rg {
 
-struct TechniqueType {
-	enum Type : size_t {
-		None   = (0 << 0),
-		Color  = (1 << 0),
-		Shadow = (1 << 1),
-	};
-public:
-	TechniqueType(Type type) : _type(type) {}
-	TechniqueType(const TechniqueType &) = default;
-	TechniqueType(TechniqueType &&) = default;
-	TechniqueType &operator=(const TechniqueType &) = default;
-	TechniqueType &operator=(TechniqueType &&) = default;
-	~TechniqueType() = default;
+enum class TechniqueType : size_t {
+	None,
+	Color,
+	Shadow,
+	Count,
+	AllSet = Count,
+};
 
-	operator Type() const noexcept {
-		return _type;
+constexpr TechniqueType operator|(const TechniqueType &lhs, const TechniqueType &rhs) {
+	return static_cast<TechniqueType>(static_cast<size_t>(lhs) | static_cast<size_t>(rhs));
+}
+
+constexpr TechniqueType operator&(const TechniqueType &lhs, const TechniqueType &rhs) {
+	return static_cast<TechniqueType>(static_cast<size_t>(lhs) & static_cast<size_t>(rhs));
+}
+
+constexpr TechniqueType operator~(const TechniqueType &tt) {
+	return static_cast<TechniqueType>(~static_cast<size_t>(tt));
+}
+
+constexpr TechniqueType operator^(const TechniqueType &lhs, const TechniqueType &rhs) {
+	return static_cast<TechniqueType>(static_cast<size_t>(lhs) ^ static_cast<size_t>(rhs));
+}
+
+struct TechniqueFlag {
+	TechniqueFlag(TechniqueType techniqueType) : _bits(0) {
+		if (techniqueType == TechniqueType::AllSet)
+			_bits.flip();
+		else
+			_bits.set(static_cast<size_t>(techniqueType));
 	}
 
-	operator bool() const {
-		return _type != None;
+	TechniqueFlag &operator=(TechniqueType techniqueType) {
+		TechniqueFlag tmp(techniqueType);
+		swap(*this, tmp);
+		return *this;
 	}
 
-	friend TechniqueType operator|(const TechniqueType &lhs, const TechniqueType &rhs) {
-		return static_cast<Type>(lhs._type | rhs._type);
+	TechniqueFlag(const TechniqueFlag &) = default;
+	TechniqueFlag(TechniqueFlag &&) = default;
+	TechniqueFlag &operator=(const TechniqueFlag &) = default;
+	TechniqueFlag &operator=(TechniqueFlag &&) = default;
+
+	bool test(TechniqueType techniqueType) const {
+		return _bits.test(static_cast<size_t>(techniqueType));
 	}
 
-	friend TechniqueType operator&(const TechniqueType &lhs, const TechniqueType &rhs) {
-		return static_cast<Type>(lhs._type & rhs._type);
+	void reset() {
+		_bits.reset();
+	}
+
+	void set(TechniqueType techniqueType) {
+		_bits.set(static_cast<size_t>(techniqueType));
+	}
+
+	void flip() {
+		_bits.flip();
+	}
+
+	friend void swap(TechniqueFlag &lhs, TechniqueFlag &rhs) {
+		using std::swap;
+		swap(lhs._bits, rhs._bits);
 	}
 private:
-	Type _type = None;
+	constexpr static size_t kBitCount = static_cast<size_t>(TechniqueType::Count);
+	std::bitset<kBitCount> _bits;
 };
 
 }

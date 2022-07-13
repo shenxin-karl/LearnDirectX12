@@ -59,6 +59,10 @@ public:
 	float3 _lookAt;
 	float  _nearClip;
 	float  _farClip;
+#if defined(_DEBUG) || defined(DEBUG)
+	bool   _isDirty = false;
+#endif
+
 };
 
 
@@ -128,7 +132,6 @@ public:
 	};
 	void setMotionState(MotionState ms);
 public:
-
 	float _mouseWheelSensitivity = 1.f;		
 	float _mouseMoveSensitivity = 0.2f;		// degrees
 	float _rollSensitivity = 15.f;			// degrees

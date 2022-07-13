@@ -12,7 +12,7 @@ class Job;
 
 class GraphicsPSOBindable;
 
-struct TechniqueType;
+enum class TechniqueType : size_t;
 struct DrawArgs;
 
 class NonCopyable {

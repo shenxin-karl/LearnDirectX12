@@ -40,7 +40,6 @@ void SubPass::execute(dx12lib::IGraphicsContext &graphicsCtx) const {
 
 void SubPass::reset() {
 	_jobs.clear();
-	_bindables.clear();
 }
 
 std::shared_ptr<SubPass> RenderQueuePass::getSubPassByName(const std::string &subPassName) const {

@@ -13,7 +13,7 @@ public:
 	Technique(const std::string &techniqueName, TechniqueType type, bool active = true);
 	Technique(const Technique &) = delete;
 	void addStep(std::unique_ptr<Step> pStep);
-	void submit(const Drawable &drawable, TechniqueType filter) const;
+	void submit(const Drawable &drawable, const TechniqueFlag &techniqueFlag) const;
 	void setActive(bool bActive);
 	bool isActive() const;
 	TechniqueType getTechniqueType() const;

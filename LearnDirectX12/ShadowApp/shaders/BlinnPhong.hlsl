@@ -1,5 +1,6 @@
 #include "../../Component/D3D/HlslShader/ShaderCommon.hlsl"
 #include "../../Component/D3D/HlslShader/LightingUtil.hlsl"
+#include "../../Component/D3D/HlslShader/ColorGrading.hlsl"
 
 cbuffer CbObject : register(b0) {
 	float4x4	 gMatWorld;
@@ -41,9 +42,9 @@ VertexOut VS(VertexIn vin) {
 
 Texture2D gAlbedoMap : register(t0);
 float4 PS(VertexOut pin) : SV_Target{
-	float3 textureAlbedo = gAlbedoMap.Sample(gSamLinearClamp, pin.texcoord).rgb;
+	float4 textureAlbedo = gAlbedoMap.Sample(gSamLinearClamp, pin.texcoord);
 	MaterialData materialData = {
-		gMaterialData.diffuseAlbedo * float4(textureAlbedo, 1.0),
+		gMaterialData.diffuseAlbedo * textureAlbedo,
 		gMaterialData.roughness,
 		gMaterialData.metallic,
 		0.0, 0.0,
@@ -56,7 +57,8 @@ float4 PS(VertexOut pin) : SV_Target{
 	result += ComputeDirectionLight(gLight.lights[0], materialData, N, V);
 	result += ComputeDirectionLight(gLight.lights[1], materialData, N, V);
 	result += ComputeDirectionLight(gLight.lights[2], materialData, N, V);
-	result += (gLight.ambientLight * gMaterialData.diffuseAlbedo).rgb;
+	result += (gLight.ambientLight * materialData.diffuseAlbedo).rgb;
+	result = GammaCorrection(result);
 	return float4(result, gMaterialData.diffuseAlbedo.a);
 }
 

@@ -155,7 +155,7 @@ void SwapChain::updateBuffer(DirectContextProxy pDirectContext) {
 		IID_PPV_ARGS(&pDepthStencil)
 	));
 
-	_pDepthStencil2D = pDirectContext->createDepthStencil2D(pDepthStencil, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+	_pDepthStencil2D = pDirectContext->createDepthStencil2D(pDepthStencil, D3D12_RESOURCE_STATE_DEPTH_WRITE, &optClear);
 	_pDepthStencil2D->setResourceName(L"DepthStencil2D");
 }
 

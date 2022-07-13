@@ -4,6 +4,18 @@
 namespace d3d {
 
 void StaticSubModel::initAsALMesh(dx12lib::GraphicsContextProxy pGraphicsCtx, const AssimpLoader &loader, const AssimpLoader::ALMesh &alMesh) {
+	_pVertexBuffer = pGraphicsCtx->createVertexBuffer(alMesh.vertices.data(), 
+		alMesh.vertices.size(), 
+		sizeof(com::Vertex)
+	);
+
+	if (!alMesh.indices.empty()) {
+		_pIndexBuffer = pGraphicsCtx->createIndexBuffer(alMesh.indices.data(),
+			alMesh.indices.size(),
+			DXGI_FORMAT_R16_UINT
+		);
+	}
+
 	aiMaterial *pAiMaterial = alMesh.pAiMaterial;
 	if (pAiMaterial == nullptr)
 		return;
@@ -100,7 +112,7 @@ size_t StaticModel::getSubModelCount() const {
 }
 
 std::shared_ptr<ISubModel> StaticModel::getSubModel(size_t subId) const {
-	assert(subId > 0 && subId < getSubModelCount());
+	assert(subId >= 0 && subId < getSubModelCount());
 	auto &pSubModel = _subModels[subId];
 	return std::static_pointer_cast<ISubModel>(pSubModel);
 }

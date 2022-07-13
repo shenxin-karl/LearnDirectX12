@@ -8,6 +8,14 @@
 
 namespace d3d {
 
+#if defined(_DEBUG) || defined(DEBUG)
+	#define DEBUG_MAKE_DIRTY  _isDirty = true
+	#define DEBUG_CLEAR_DIRTY _isDirty = false
+#else
+	#define DEBUG_MAKE_DIRTY  (void)
+	#define DEBUG_CLEAR_DIRTY (void)
+#endif
+
 CameraBase::CameraBase(const CameraDesc &desc) {
 	Vector3 w = normalize(Vector3(desc.lookAt) - Vector3(desc.lookFrom));
 	Vector3 u = normalize(cross(Vector3(desc.lookUp), w));
@@ -53,6 +61,7 @@ Matrix4 CameraBase::getMatInvViewProj() const {
 }
 
 void CameraBase::updatePassCB(d3d::CBPassType &passCB) const {
+	assert(!_isDirty);
 	passCB.view = getView();
 	passCB.invView = getInvView();
 	passCB.proj = getProj();
@@ -65,10 +74,12 @@ void CameraBase::updatePassCB(d3d::CBPassType &passCB) const {
 }
 
 void CameraBase::setFov(float fov) {
+	DEBUG_MAKE_DIRTY;
 	_fov = std::clamp(fov, 1.f, 89.f);
 }
 
 void CameraBase::setAspect(float aspect) {
+	DEBUG_MAKE_DIRTY;
 	_aspect = aspect;
 }
 
@@ -168,6 +179,7 @@ void CoronaCamera::update(std::shared_ptr<com::GameTimer> pGameTimer) {
 	_invView = float4x4(invView);
 	_invProj = float4x4(invProj);
 	_invViewProj = float4x4(invViewProj);
+	DEBUG_CLEAR_DIRTY;
 }
 
 float CoronaCamera::getPhi() const {
@@ -183,14 +195,17 @@ float CoronaCamera::getRadius() const {
 }
 
 void CoronaCamera::setPhi(float phi) {
+	DEBUG_MAKE_DIRTY;
 	_phi = std::clamp(phi, -89.f, +89.f);
 }
 
 void CoronaCamera::setTheta(float theta) {
+	DEBUG_MAKE_DIRTY;
 	_theta = theta;
 }
 
 void CoronaCamera::setRadius(float radius) {
+	DEBUG_MAKE_DIRTY;
 	_radius = std::clamp(radius, 0.001f, std::numeric_limits<float>::infinity());
 }
 
@@ -200,6 +215,7 @@ void CoronaCamera::pollEvent(const com::MouseEvent &event) {
 		_isMouseLeftPress = true;
 		_lastMousePosition.x = event.x;
 		_lastMousePosition.y = event.y;
+		DEBUG_MAKE_DIRTY;
 		break;
 	}
 	case com::MouseState::LRelease: {
@@ -304,6 +320,7 @@ void FirstPersonCamera::update(std::shared_ptr<com::GameTimer> pGameTimer) {
 	_invView = float4x4(invView);
 	_invProj = float4x4(invProj);
 	_invViewProj = float4x4(invViewProj);
+	DEBUG_CLEAR_DIRTY;
 }
 
 void FirstPersonCamera::pollEvent(const com::MouseEvent &event) {
@@ -326,39 +343,49 @@ void FirstPersonCamera::pollEvent(const com::KeyEvent &event) {
 	bool isPressed = event.getState() == com::KeyState::Pressed;
 	switch (event.getKey()) {
 	case 'W':
+		_isDirty = true;
 		_moveState[Forward] = isPressed;
 		break;
 	case 'S':
+		_isDirty = true;
 		_moveState[backward] = isPressed;
 		break;
 	case 'A':
+		_isDirty = true;
 		_moveState[Left] = isPressed;
 		break;
 	case 'D':
+		_isDirty = true;
 		_moveState[Right] = isPressed;
 		break;
 	case 'Q':
+		_isDirty = true;
 		_moveState[LeftRotate] = isPressed;
 		break;
 	case 'E':
+		_isDirty = true;
 		_moveState[RightRotate] = isPressed;
 		break;
 	}
 }
 
 void FirstPersonCamera::setPitch(float pitch) {
+	DEBUG_MAKE_DIRTY;
 	_pitch = std::clamp(pitch, -89.9f, +89.9f);
 }
 
 void FirstPersonCamera::setYaw(float yaw) {
+	DEBUG_MAKE_DIRTY;
 	_yaw = yaw;
 }
 
 void FirstPersonCamera::setRoll(float roll) {
+	DEBUG_MAKE_DIRTY;
 	_roll = roll;
 }
 
 void FirstPersonCamera::setLastMousePosition(POINT pos) {
+	DEBUG_MAKE_DIRTY;
 	_lastMousePosition = pos;
 }
 
@@ -379,6 +406,7 @@ POINT FirstPersonCamera::getLastMousePosition() const {
 }
 
 void FirstPersonCamera::setMotionState(MotionState ms) {
+	DEBUG_MAKE_DIRTY;
 	_moveState[ms] = true;
 }
 

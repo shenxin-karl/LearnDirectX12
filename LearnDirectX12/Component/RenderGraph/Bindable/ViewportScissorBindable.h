@@ -8,8 +8,12 @@ namespace rg {
 
 class ViewportScissorBindable : public Bindable {
 public:
-	ViewportScissorBindable(const D3D12_VIEWPORT &viewport, const D3D12_RECT &scissorRect);
+	std::shared_ptr<ViewportScissorBindable> make(const D3D12_VIEWPORT &viewport, 
+		const D3D12_RECT &scissorRect,
+		DECLARE_SOURCE_LOCATION_ARG
+	);
 	void bind(dx12lib::IGraphicsContext &graphicsCtx) const override;
+	ViewportScissorBindable(const std::source_location &sr) : Bindable(BindableType::ViewportScissor, sr) {}
 private:
 	D3D12_RECT _scissorRect;
 	D3D12_VIEWPORT _viewport;

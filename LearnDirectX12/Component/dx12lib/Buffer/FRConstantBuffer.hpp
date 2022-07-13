@@ -145,13 +145,15 @@ ConstantBufferView FRConstantBuffer<T>::getCBV() const {
 	size_t frameIndex = FrameIndexProxy::getConstantFrameIndexRef();
 	if (_bufferDirty.test(frameIndex)) {
 		_pUploadBuffer->copyData(frameIndex, &_object, sizeof(T), 0);
-		_bufferDirty.set(frameIndex, true);
+		_bufferDirty.set(frameIndex, false);
 	}
 	return ConstantBufferView(_descriptor, this, frameIndex);
 }
 
 template <typename T>
 T *FRConstantBuffer<T>::map() {
+	size_t frameIndex = FrameIndexProxy::getConstantFrameIndexRef();
+	_bufferDirty.set(frameIndex);
 	return &_object;
 }
 
