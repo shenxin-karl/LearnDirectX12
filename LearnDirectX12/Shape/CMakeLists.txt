@@ -19,20 +19,20 @@ foreach(fileItem ${AllFile})
 	source_group("${GROUP}" FILES "${fileItem}")
 endforeach()
 
-add_executable("Shape" ${AllFile})
+add_executable(${PROJECT_NAME} ${AllFile})
 
 set_property(SOURCE ${SHADER_FILES} PROPERTY VS_TOOL_OVERRIDE "shader")	# 设置 hlsl 为 shader 资源文件
 # 设置 Shape 工作目录为 cmake 目录
-set_property(TARGET "Shape" PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
-target_include_directories(BoxApp PUBLIC
+target_include_directories(${PROJECT_NAME} PUBLIC
 	${CMAKE_CURRENT_SOURCE_DIR}/..
 	${PROJECT_LIBRAIES_DIR}/assimp/include
 	${PROJECT_BUILD_DIR}/Libraies/assimp/include/
 )
 
 
-target_link_libraries("Shape" PUBLIC 
+target_link_libraries(${PROJECT_NAME} PUBLIC 
 	BaseApp
 	Math
 	Geometry

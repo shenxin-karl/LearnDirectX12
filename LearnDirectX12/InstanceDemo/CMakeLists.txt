@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)	
-project("ShadowApp")
+project("InstanceDemo")
 
 # 开启多线程编译 和 使用 c++latest 版本
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /std:c++latest")
@@ -27,17 +27,11 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CM
 
 target_include_directories(${PROJECT_NAME} PUBLIC
 	${CMAKE_CURRENT_SOURCE_DIR}/..
-	${PROJECT_LIBRAIES_DIR}/assimp/include
-	${PROJECT_BUILD_DIR}/Libraies/assimp/include/
 )
-
 
 target_link_libraries(${PROJECT_NAME} PUBLIC 
 	BaseApp
 	Math
 	Geometry
 	D3D
-	dx12lib
-	assimp
-	RenderGraph
 )

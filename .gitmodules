@@ -1,3 +1,6 @@
 [submodule "LearnDirectX12/Libraies/assimp"]
 	path = LearnDirectX12/Libraies/assimp
 	url = https://github.com/assimp/assimp.git
+[submodule "LearnDirectX12/Libraies/Dx12Renderer"]
+	path = LearnDirectX12/Libraies/Dx12Renderer
+	url = https://github.com/shenxin-karl/Dx12Renderer.git

@@ -5,16 +5,12 @@ option(GROUP_BY_EXPLORER ON)
 
 LIST(APPEND ComponentAllSubDir "BaseApp")
 LIST(APPEND ComponentAllSubDir "D3D")
-LIST(APPEND ComponentAllSubDir "Exception")
 LIST(APPEND ComponentAllSubDir "GameTimer")
 LIST(APPEND ComponentAllSubDir "InputSystem")
-LIST(APPEND ComponentAllSubDir "Math")
 LIST(APPEND ComponentAllSubDir "Singleton")
 LIST(APPEND ComponentAllSubDir "Geometry")
-LIST(APPEND ComponentAllSubDir "dx12lib")
 LIST(APPEND ComponentAllSubDir "VoxelTerrain")
 LIST(APPEND ComponentAllSubDir "Script")
-LIST(APPEND ComponentAllSubDir "RenderGraph")
 
 if (MSVC)
 	add_definitions(-D_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING)	## enable wstring_convert

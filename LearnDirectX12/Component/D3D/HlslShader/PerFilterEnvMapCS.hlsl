@@ -72,7 +72,7 @@ float3 ImportanceSampleGGX(float2 Xi, float roughness, float3x3 TBN) {
     return mul(H, TBN);
 }
 
-static const uint kSampleCount = 1024;
+static const uint kSampleCount = 512;
 SamplerState gSamLinearWrap          : register(s0);
 TextureCube<float4>      gEnvMap     : register(t0);
 RWTexture2DArray<float4> gOutputMip0 : register(u0);

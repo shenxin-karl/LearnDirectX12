@@ -1,12 +1,11 @@
 cmake_minimum_required(VERSION 3.8)	
 project("Libraies")
 
-LIST(APPEND LibraiesSubDir "cmrc")
-LIST(APPEND LibraiesSubDir "stb")
-LIST(APPEND LibraiesSubDir "DirectXTex")
-LIST(APPEND LibraiesSubDir "Imgui")
-LIST(APPEND LibraiesSubDir "lua")
-#LIST(APPEND LibraiesSubDir "assimp")
+list(APPEND LibraiesSubDir "cmrc")
+list(APPEND LibraiesSubDir "stb")
+list(APPEND LibraiesSubDir "Imgui")
+list(APPEND LibraiesSubDir "lua")
+list(APPEND LibraiesSubDir "Dx12Renderer")
 
 foreach(dirname ${LibraiesSubDir}) 
 	add_subdirectory(${dirname})

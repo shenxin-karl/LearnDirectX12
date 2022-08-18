@@ -43,6 +43,7 @@ target_include_directories(D3D PUBLIC
 	${PROJECT_LIBRAIES_DIR}
 	${PROJECT_LIBRAIES_DIR}/assimp/include
 	${PROJECT_BUILD_DIR}/Libraies/assimp/include/
+	${PROJECT_LIBRAIES_DIR}/Dx12Renderer/
 )
 
 
@@ -71,9 +72,8 @@ set_target_properties(D3D-resources PROPERTIES FOLDER "CmrcResource")
 
 target_link_libraries(${PROJECT_NAME} PRIVATE 
 	GameTimer
-	Exception
 	stb
-	dx12lib
+	Dx12lib
 	Script
 )
 

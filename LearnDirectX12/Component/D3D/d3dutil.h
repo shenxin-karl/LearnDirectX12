@@ -6,6 +6,7 @@
 #include <DirectXMath.h>
 #include <iterator>
 #include "ComponentStd.h"
+#include <Dx12lib/Common/Common.h>
 
 
 namespace d3d {

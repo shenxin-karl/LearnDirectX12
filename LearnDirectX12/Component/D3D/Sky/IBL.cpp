@@ -143,7 +143,7 @@ void IBL::buildConvolutionIrradianceMap(dx12lib::ComputeContextProxy pComputeCtx
 	size_t height = pPannoEnvMap->getHeight();
 	size_t size = 128;
 	float fSize = static_cast<float>(size);
-	float fStep = 0.025f;
+	float fStep = 0.075f;
 
 	_pTest = pComputeCtx->createUnorderedAccessCube(size, size, 1);
 	size_t groupX = static_cast<size_t>(std::ceil(static_cast<float>(size) / 8));

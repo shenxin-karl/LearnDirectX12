@@ -6,7 +6,6 @@
 #include <format>
 #include "d3dutil.h"
 #include "D3D/Tool/D3Dx12.h"
-#include "D3D/Exception/D3DException.h"
 #include "D3D/TextureManager/TextureManager.h"
 #include "D3D/PSOManager/PSOManager.hpp"
 #include "D3D/ShaderManager/ShaderManager.h"
