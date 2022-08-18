@@ -15,7 +15,7 @@ class SceneNode;
 
 class SceneManager {
 public:
-	SceneManager() = default;
+	SceneManager();
 	SceneManager(const SceneManager &) = delete;
 	bool addNode(std::shared_ptr<SceneNode> pSceneNode);
 	void eraseNode(const std::string &name);

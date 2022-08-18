@@ -90,8 +90,9 @@ void SceneManagerEditor::drawHierarchyWindow() {
 		}
 	}
 
+	Log::info("1111");
 	if (isRightMouseButton && ImGui::BeginPopupContextWindow()) {
-		if (ImGui::Selectable("111")) Log::debug("1111");
+		//if (ImGui::Selectable("111")) 
 		ImGui::EndPopup();
 	}
 

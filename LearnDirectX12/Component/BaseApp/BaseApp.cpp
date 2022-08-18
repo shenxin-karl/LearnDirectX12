@@ -36,6 +36,8 @@ void BaseApp::initialize() {
 }
 
 void BaseApp::destroy() {
+	auto pCmdQueue = _pDevice->getCommandQueue();
+	pCmdQueue->flushCommandQueue();
 	onDestroy();
 	_pInputSystem->destroy();
 	_pDevice->destroy();

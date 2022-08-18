@@ -16,8 +16,6 @@ namespace Log {
         Warning = 2,
         Error = 3,
     };
-    template<LogLevel Level, typename ...Args>
-    struct LogOutputHelper;
 }
 
 
@@ -29,10 +27,8 @@ public:
     void clear();
     void setShowWindow(bool bShow);
     void updateCurrentTime();
+    void output(const std::source_location &location, Log::LogLevel level, const std::string &output);
 private:
-    template<Log::LogLevel, typename...Args>
-    friend struct Log::LogOutputHelper;
-
     ImGuiTextBuffer     _buf;
     ImGuiTextFilter     _filter;
     ImVector<int>       _lineOffsets; // Index to lines offset. We maintain this with AddLog() calls.
@@ -45,72 +41,36 @@ private:
 namespace Log {
 
     struct FormatWithLocation {
-        FormatWithLocation(const char *fmt, const std::source_location &sl = std::source_location::current()) : _fmt(fmt), _location(sl) {}
-        FormatWithLocation(std::string_view fmt, const std::source_location &sl = std::source_location::current()) : _fmt(fmt), _location(sl) {}
+        template<size_t N>
+        constexpr FormatWithLocation(const char (&fmt)[N], const std::source_location &sl = std::source_location::current()) : _fmt(fmt), _location(sl) {}
+        constexpr FormatWithLocation(std::string_view fmt, const std::source_location &sl = std::source_location::current()) : _fmt(fmt), _location(sl) {}
     public:
-	    std::string_view     _fmt;
-        std::source_location _location;
-    };
-
-    template<LogLevel Level, typename ...Args>
-    struct LogOutputHelper {
-        LogOutputHelper(FormatWithLocation fmt, Args&&...args) {
-	        constexpr std::string_view sPrefixMessage[] = {
-                "[-Info--]",
-                "[-Debug-]",
-                "[Warning]",
-                "[-Error-]",
-	        };
-
-            thread_local static std::string msg;
-            msg.clear();
-
-            std::string shortFileName = fmt._location.file_name();
-            auto pos = shortFileName.find_last_of("\\\\");
-            if (pos != std::string::npos)
-                shortFileName = shortFileName.substr(pos+1);
-
-            auto pEditorLog = static_cast<LogSystemEditor *>(LogSystemEditor::instance());
-            msg += std::format(" {}:{} ", shortFileName, fmt._location.line());
-            msg += std::format(fmt._fmt, std::forward<Args>(args)...);
-            msg += '\n';
-            LogSystemEditor::instance()->append(msg);
-
-	        {
-				static std::mutex mutex;
-                std::unique_lock lock(mutex);
-                pEditorLog->_buf.append(pEditorLog->_currentTime.c_str());
-                pEditorLog->_buf.append(sPrefixMessage[Level].data());
-                int oldSize = pEditorLog->_buf.size();
-                pEditorLog->_buf.append(msg.c_str());
-                for (size_t i = 0; i < msg.length(); ++i) {
-                    if (msg[i] == '\n') {
-	                    int offset = oldSize + static_cast<int>(i) + 1;
-						pEditorLog->_lineOffsets.push_back(offset);
-                    }
-                }
-	        }
-        }
+	    std::string_view     _fmt{};
+        std::source_location _location{};
     };
 
     template<typename ...Args>
-    auto info(FormatWithLocation fmt, Args&&...args) -> LogOutputHelper<Log::Info, Args...> {
-        return { fmt, std::forward<Args>(args)... };
+    void info(FormatWithLocation fmt, Args&&...args) {
+        std::string output = std::vformat(fmt._fmt, std::make_format_args(args...));
+        static_cast<LogSystemEditor *>(core::LogSystem::instance())->output(fmt._location, Info, output);
     }
 
     template<typename ...Args>
-    auto debug(FormatWithLocation fmt, Args&&...args) -> LogOutputHelper<Log::Debug, Args...> {
-        return { fmt, std::forward<Args>(args)... };
+    void debug(FormatWithLocation fmt, Args&&...args) {
+        std::string output = std::vformat(fmt._fmt, std::make_format_args(args...));
+        static_cast<LogSystemEditor *>(core::LogSystem::instance())->output(fmt._location, Debug, output);
     }
 
     template<typename ...Args>
-    auto warning(FormatWithLocation fmt, Args&&...args) -> LogOutputHelper<Log::Warning, Args...> {
-        return { fmt, std::forward<Args>(args)... };
+    void warning(FormatWithLocation fmt, Args&&...args) {
+        std::string output = std::vformat(fmt._fmt, std::make_format_args(args...));
+        static_cast<LogSystemEditor *>(core::LogSystem::instance())->output(fmt._location, Warning, output);
     }
 
     template<typename ...Args>
-    auto error(FormatWithLocation fmt, Args&&...args) -> LogOutputHelper<Log::Error, Args...> {
-        return { fmt, std::forward<Args>(args)... };
+    void error(FormatWithLocation fmt, Args&&...args) {
+        std::string output = std::vformat(fmt._fmt, std::make_format_args(args...));
+        static_cast<LogSystemEditor *>(core::LogSystem::instance())->output(fmt._location, Error, output);
     }
 
 }

@@ -29,9 +29,9 @@ public:
 	std::shared_ptr<dx12lib::Device> getDevice() const;
 	std::shared_ptr<dx12lib::SwapChain> getSwapChain() const;
 
-	std::shared_ptr<EditorMenuBar>	     pMainMenuBar;
-	std::shared_ptr<ImGui::ImGuiProxy>   pImGuiProxy;
-	std::shared_ptr<SceneManagerEditor>	 pSceneMgr;
+	std::unique_ptr<EditorMenuBar>	     pMainMenuBar;
+	std::unique_ptr<ImGui::ImGuiProxy>   pImGuiProxy;
+	std::unique_ptr<SceneManagerEditor>	 pSceneMgr;
 };
 
 }

@@ -166,4 +166,41 @@ void LogSystemEditor::updateCurrentTime() {
     _currentTime = std::format("[{}]", sbuf.str());
 }
 
+void LogSystemEditor::output(const std::source_location &location, Log::LogLevel level, const std::string &output) {
+    constexpr std::string_view sPrefixMessage[] = {
+	    "[-Info--]",
+	    "[-Debug-]",
+	    "[Warning]",
+	    "[-Error-]",
+    };
+
+    thread_local static std::string msg;
+    msg.clear();
+
+    std::string shortFileName = location.file_name();
+    auto pos = shortFileName.find_last_of("\\\\");
+    if (pos != std::string::npos)
+        shortFileName = shortFileName.substr(pos + 1);
+
+    msg += std::format(" {}:{} ", shortFileName, location.line());
+    msg += output;
+    msg += '\n';
+    LogSystemEditor::instance()->append(msg);
+
+    {
+        static std::mutex mutex;
+        std::unique_lock lock(mutex);
+        _buf.append(_currentTime.c_str());
+        _buf.append(sPrefixMessage[level].data());
+        int oldSize = _buf.size();
+        _buf.append(msg.c_str());
+        for (size_t i = 0; i < msg.length(); ++i) {
+            if (msg[i] == '\n') {
+                int offset = oldSize + static_cast<int>(i) + 1;
+                _lineOffsets.push_back(offset);
+            }
+        }
+    }
+}
+
 }

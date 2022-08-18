@@ -10,6 +10,10 @@
 
 namespace core {
 
+SceneManager::SceneManager() {
+
+}
+
 bool SceneManager::addNode(std::shared_ptr<SceneNode> pSceneNode) {
 	auto iter = _nodeMap.find(pSceneNode->getName());
 	if (iter != _nodeMap.end()) {

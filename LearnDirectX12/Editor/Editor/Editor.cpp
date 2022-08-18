@@ -18,8 +18,8 @@ Editor::Editor() {
     _width = 1280;
     _height = 760;
     _canPause = false;
-    pImGuiProxy = std::make_shared<ImGui::ImGuiProxy>();
-    pMainMenuBar = std::make_shared<EditorMenuBar>();
+    pImGuiProxy = std::make_unique<ImGui::ImGuiProxy>();
+    pMainMenuBar = std::make_unique<EditorMenuBar>();
     assert(pEditor == nullptr);
     pEditor = this;
 }
@@ -30,15 +30,17 @@ Editor::~Editor() {
 
 void Editor::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
     pImGuiProxy->initialize();
-    pSceneMgr = std::make_shared<SceneManagerEditor>();
+    pSceneMgr = std::make_unique<SceneManagerEditor>();
     _pInputSystem->pWindow->setCanPause(false);
     LogSystemEditor::emplace(std::make_shared<LogSystemEditor>("EditorLog.txt"));
-    core::initDefaultSkyBox(pDirectCtx);
 }
 
 void Editor::onDestroy() {
     LogSystemEditor::destroy();
+    pSceneMgr = nullptr;
     pImGuiProxy->destroy();
+    pImGuiProxy = nullptr;
+    pMainMenuBar = nullptr;
 }
 
 void Editor::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
