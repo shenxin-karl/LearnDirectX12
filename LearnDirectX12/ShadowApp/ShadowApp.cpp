@@ -1,15 +1,16 @@
 #include "ShadowApp.h"
-#include "Context/CommandQueue.h"
+#include "Dx12lib/Context/CommandQueue.h"
 #include "D3D/AssimpLoader/AssimpLoader.h"
 #include "D3D/dx12libHelper/RenderTarget.h"
 #include "D3D/Model/StaticModel/StaticModel.h"
 #include "D3D/Tool/Camera.h"
-#include "Device/SwapChain.h"
+#include "Dx12lib/Device/SwapChain.h"
 #include "InputSystem/Mouse.h"
 #include "dx12lib/Buffer/BufferStd.h"
+#include "Dx12lib/Pipeline/RootSignature.h"
 #include "InputSystem/Keyboard.h"
-#include "Pipeline/PipelineStateObject.h"
-#include "Pipeline/RootSignature.h"
+#include "Dx12lib/Pipeline/PipelineStateObject.h"
+#include "Dx12lib/Pipeline/RootSignature.h"
 #include "RenderGraph/Bindable/ConstantBufferBindable.h"
 #include "RenderGraph/Bindable/GraphicsPSOBindable.h"
 #include "RenderGraph/Bindable/SamplerTextureBindable.h"
@@ -147,9 +148,6 @@ void ShadowApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pPassCbVisitor = _pPassCb->visit();
 	_pCamera->updatePassCB(*pPassCbVisitor);
 
-	_pOpaquePass->pRenderTarget = _pSwapChain->getRenderTarget2D();
-	_pOpaquePass->pDepthStencil = _pSwapChain->getDepthStencil2D();
-
 	rg::TechniqueFlag flag = rg::TechniqueType::Color;
 	for (auto &pNode : _nodes)
 		pNode->submit(flag);
@@ -196,16 +194,14 @@ void ShadowApp::loadModel(dx12lib::DirectContextProxy pDirectCtx) {
 }
 
 void ShadowApp::buildPass() {
-	const auto &initDesc = _pDevice->getDesc();
-	{
-		_pOpaquePass = std::make_shared<rg::RenderQueuePass>("OpaquePass");
-		_pOpaquePass->setDSVFormat(initDesc.depthStencilFormat);
-		_pOpaquePass->setRTVFormats({ initDesc.backBufferFormat });
+	{ // clear Pass
+		
 	}
-	{
-		_pShadowPass = std::make_shared<rg::RenderQueuePass>("ShadowPass");
-		_pShadowPass->pDepthStencil = _pShadowMap;
-		_pShadowPass->setDSVFormat(_pShadowMap->getFormat());
+	{ // shadow pass
+		
+	}
+	{ // opaque pass
+		_pOpaquePass = std::make_shared<rg::RenderQueuePass>("OpaquePass");
 	}
 }
 
@@ -232,11 +228,7 @@ void ShadowApp::buildPSOAndSubPass() {
 		blinnPhongPSO->setRootSignature(pRootSignature);
 		blinnPhongPSO->setVertexShader(d3d::compileShader(L"shaders/BlinnPhong.hlsl", nullptr, "VS", "vs_5_0"));
 		blinnPhongPSO->setPixelShader(d3d::compileShader(L"shaders/BlinnPhong.hlsl", nullptr, "PS", "ps_5_0"));
-		blinnPhongPSO->setBlendState(_pOpaquePass->getBlendDesc());
-		blinnPhongPSO->setRasterizerState(_pOpaquePass->getRasterizerState());
-		blinnPhongPSO->setDepthStencilState(_pOpaquePass->getDepthStencilDesc());
-		blinnPhongPSO->setRenderTargetFormats(_pOpaquePass->getRTVFormats(), _pOpaquePass->getDSVFormat());
-		blinnPhongPSO->setPrimitiveTopologyType(_pOpaquePass->getPrimitiveTopologyType());
+
 		blinnPhongPSO->setInputLayout(d3d::StaticSubModel::getInputLayout());
 		blinnPhongPSO->finalize();
 
@@ -266,11 +258,6 @@ void ShadowApp::buildPSOAndSubPass() {
 		shadowPSO->setRootSignature(pRootSignature);
 		shadowPSO->setVertexShader(d3d::compileShader(L"shaders/Shadows.hlsl", nullptr, "VS", "vs_5_0"));
 		shadowPSO->setPixelShader(d3d::compileShader(L"shaders/Shadows.hlsl", nullptr, "PS", "ps_5_0"));
-		shadowPSO->setBlendState(_pOpaquePass->getBlendDesc());
-		shadowPSO->setRasterizerState(_pOpaquePass->getRasterizerState());
-		shadowPSO->setDepthStencilState(_pOpaquePass->getDepthStencilDesc());
-		shadowPSO->setRenderTargetFormats(_pOpaquePass->getRTVFormats(), _pOpaquePass->getDSVFormat());
-		shadowPSO->setPrimitiveTopologyType(_pOpaquePass->getPrimitiveTopologyType());
 		shadowPSO->setInputLayout(d3d::StaticSubModel::getInputLayout());
 		shadowPSO->finalize();
 
