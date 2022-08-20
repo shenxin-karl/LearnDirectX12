@@ -1,6 +1,9 @@
 #define NOMINMAX
 #include <algorithm>
 #include "Camera.h"
+
+#include <iostream>
+
 #include "D3D/Shader/ShaderCommon.h"
 #include "GameTimer/GameTimer.h"
 #include "InputSystem/Mouse.h"
@@ -294,8 +297,7 @@ void FirstPersonCamera::update(std::shared_ptr<com::GameTimer> pGameTimer) {
 	};
 
 	Vector3 lookFrom = Vector3(_lookFrom);
-	Vector3 lookAt = Vector3(_lookAt);
-	lookAt = normalize(target) + lookFrom;
+	Vector3 lookAt = normalize(target) + lookFrom;
 
 	float radianRoll = DirectX::XMConvertToRadians(_roll);
 	float sinRoll = std::sin(radianRoll);

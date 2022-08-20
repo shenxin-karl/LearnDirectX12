@@ -72,7 +72,9 @@ static com::MeshData createLandMesh() {
 }
 
 LandAndWater::LandAndWater() {
-	_title = "LandAndWater";
+	_title = "LandAndWater Ctrl: show mouse";
+	_width = 1280;
+	_height = 760;
 }
 
 LandAndWater::~LandAndWater() {

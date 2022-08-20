@@ -18,6 +18,8 @@
 
 BoxApp::BoxApp() {
 	_title = "BoxApp";
+	_width = 1280;
+	_height = 760;
 }
 
 void BoxApp::onInitialize(dx12lib::DirectContextProxy pDirectContext) {

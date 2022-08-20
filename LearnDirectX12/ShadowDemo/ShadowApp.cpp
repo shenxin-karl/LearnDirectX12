@@ -2,7 +2,6 @@
 #include "Dx12lib/Context/CommandQueue.h"
 #include "D3D/AssimpLoader/AssimpLoader.h"
 #include "D3D/dx12libHelper/RenderTarget.h"
-#include "D3D/Model/StaticModel/StaticModel.h"
 #include "D3D/Tool/Camera.h"
 #include "Dx12lib/Device/SwapChain.h"
 #include "InputSystem/Mouse.h"
@@ -18,65 +17,6 @@
 #include "RenderGraph/Pass/RenderQueuePass.h"
 #include "RenderGraph/Technique/Technique.h"
 
-
-Node::Node(dx12lib::IGraphicsContext &graphicsCtx, std::shared_ptr<d3d::StaticModel> pStaticModel)
-: _pStaticModel(std::move(pStaticModel))
-{
-	_pCbObject = graphicsCtx.createFRConstantBuffer<CbObjectType>(CbObjectType());
-	for (size_t i = 0; i < _pStaticModel->getSubModelCount(); ++i) {
-		auto pSubModel = std::static_pointer_cast<d3d::StaticSubModel>(_pStaticModel->getSubModel(i));
-		auto pDrawable = std::make_unique<rg::Drawable>();
-		pDrawable->setVertexBuffer(pSubModel->getVertexBuffer());
-		pDrawable->setIndexBuffer(pSubModel->getIndexBuffer());
-		pDrawable->setTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		pDrawable->genDrawArgs();
-		_drawables.push_back(std::move(pDrawable));
-	}
-}
-
-void Node::buildOpaqueTechnique(std::shared_ptr<rg::SubPass> pSubPass) const {
-	auto pCbv0Bindable = rg::ConstantBufferBindable::make(
-		dx12lib::RegisterSlot::CBV0,
-		_pCbObject
-	);
-
-	for (size_t i = 0; i < _drawables.size(); ++i) {
-		const auto &material = _pStaticModel->getSubModel(i)->getMaterial();
-		const auto &albedoMapName = material.getalbedoMapName();
-		auto pAlbedoMap = d3d::TextureManager::instance()->get(albedoMapName);
-		auto pSrv0Bindable = rg::SamplerTextureBindable::make(
-			dx12lib::RegisterSlot::SRV0,
-			pAlbedoMap
-		);
-
-		auto pTechnique = std::make_unique<rg::Technique>("OpaqueTechnique", rg::TechniqueType::Color);
-		auto pStep = std::make_unique<rg::Step>(pSubPass);
-		pStep->addBindable(pCbv0Bindable);
-		pStep->addBindable(pSrv0Bindable);
-		pTechnique->addStep(std::move(pStep));
-		_drawables[i]->addTechnique(std::move(pTechnique));
-	}
-}
-
-void Node::buildShadowTechnique(std::shared_ptr<rg::SubPass> pSubPass) const {
-	auto pCbv0Bindable = rg::ConstantBufferBindable::make(
-		dx12lib::RegisterSlot::CBV0,
-		_pCbObject
-	);
-
-	for (size_t i = 0; i < _drawables.size(); ++i) {
-		auto pTechnique = std::make_unique<rg::Technique>("ShadowTechnique", rg::TechniqueType::Shadow);
-		auto pStep = std::make_unique<rg::Step>(pSubPass);
-		pStep->addBindable(pCbv0Bindable);
-		pTechnique->addStep(std::move(pStep));
-		_drawables[i]->addTechnique(std::move(pTechnique));
-	}
-}
-
-void Node::submit(const rg::TechniqueFlag &techniqueFlag) const {
-	for (auto &pDrawable : _drawables)
-		pDrawable->submit(techniqueFlag);
-}
 
 ShadowApp::ShadowApp() {
 	_title = "ShadowApp";
@@ -180,17 +120,7 @@ void ShadowApp::onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int 
 }
 
 void ShadowApp::loadModel(dx12lib::DirectContextProxy pDirectCtx) {
-	auto loadModelImpl = [&](const std::string &name, const std::string &path) {
-		d3d::AssimpLoader loader(path);
-		loader.load();
-		assert(loader.isLoad());
-		auto pModel = std::make_shared<d3d::StaticModel>(name);
-		pModel->initAsAssimpLoader(pDirectCtx, loader);
-		_modelMap[name] = std::move(pModel);
-	};
-	loadModelImpl("Cathedral", "resources/Cathedral.glb");
-	loadModelImpl("QuaintVillag", "resources/Quaint Village.glb");
-	loadModelImpl("TreeHouse", "resources/Tree House.glb");
+	
 }
 
 void ShadowApp::buildPass() {
@@ -229,7 +159,7 @@ void ShadowApp::buildPSOAndSubPass() {
 		blinnPhongPSO->setVertexShader(d3d::compileShader(L"shaders/BlinnPhong.hlsl", nullptr, "VS", "vs_5_0"));
 		blinnPhongPSO->setPixelShader(d3d::compileShader(L"shaders/BlinnPhong.hlsl", nullptr, "PS", "ps_5_0"));
 
-		blinnPhongPSO->setInputLayout(d3d::StaticSubModel::getInputLayout());
+		//blinnPhongPSO->setInputLayout(d3d::StaticSubModel::getInputLayout());
 		blinnPhongPSO->finalize();
 
 		auto pLightCbBindable = rg::ConstantBufferBindable::make(

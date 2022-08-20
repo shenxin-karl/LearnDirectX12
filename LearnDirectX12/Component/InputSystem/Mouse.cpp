@@ -33,12 +33,11 @@ void Mouse::handleMsg(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		if (!_showCursor) {
 			int dx = x - _lastCursorPos.x;
 			int dy = y - _lastCursorPos.y;
-			if (x == _windowCenter.x && y == _windowCenter.y) {
+			if (x == _windowCenter.x && y == _windowCenter.y)
 				isEvent = false;
-			} else if (dx != 0 || dy != 0) {
-				mouseEvent.x = (_virtualCursorPos.x += dx);
-				mouseEvent.y = (_virtualCursorPos.y += dy);
-			}
+
+			mouseEvent.x = (_virtualCursorPos.x += dx);
+			mouseEvent.y = (_virtualCursorPos.y += dy);
 		}
 		_lastCursorPos.x = x;
 		_lastCursorPos.y = y;
@@ -91,6 +90,10 @@ void Mouse::setShowCursor(bool bShow) {
 	} else {
 		ClipCursor(nullptr);
 	}
+
+	// clear _events
+	std::queue<MouseEvent> temp = {};
+	std::swap(_events, temp);
 }
 
 void Mouse::adjustCursorPosition() {

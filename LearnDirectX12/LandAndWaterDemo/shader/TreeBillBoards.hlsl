@@ -89,7 +89,7 @@ float4 PS(GeometryOut pin) : SV_Target {
     float3 result = float3(0.0, 0.0, 0.0);
     float3 viewDir = gPass.eyePos - pin.position;
 
-    float3 N = normalize(N);
+    float3 N = normalize(pin.normal);
     float3 V = normalize(viewDir);
     MaterialData mat = { diffuseAlbedo, gMaterial.roughness, gMaterial.metallic, 0.0, 0.0 };
     result += ComputeDirectionLight(gLight.lights[0], mat, N, V);

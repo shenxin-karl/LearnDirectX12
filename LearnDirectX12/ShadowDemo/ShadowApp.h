@@ -3,7 +3,6 @@
 #include <BaseApp/BaseApp.h>
 #include <D3D/d3dutil.h>
 #include <D3D/Shader/ShaderCommon.h>
-#include <D3D/Model/ModelInterface.hpp>
 #include <RenderGraph/RenderGraphStd.h>
 
 #include "RenderGraph/Technique/TechniqueType.hpp"

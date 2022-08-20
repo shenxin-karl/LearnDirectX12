@@ -26,15 +26,10 @@
 #include "D3D/AssimpLoader/AssimpLoader.h"
 
 
-void test() {
-	d3d::AssimpLoader loader{ "resource/Flying bee.glb" };
-	assert(loader.load());
-	auto vec = loader.parseSkinnedMesh();
-}
-
 Shape::Shape() {
 	_title = "Shape";
-	test();
+	_width = 1280;
+	_height = 760;
 }
 
 Shape::~Shape() {

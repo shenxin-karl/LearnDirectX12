@@ -7,6 +7,7 @@
 #include <iterator>
 #include "ComponentStd.h"
 #include <Dx12lib/Common/Common.h>
+#include <Dx12lib/Context/ContextStd.h>
 
 
 namespace d3d {
@@ -93,7 +94,7 @@ class D3DInitializer {
 public:
 	D3DInitializer();
 	~D3DInitializer();
-	static void loadShaderDefineConfig();
+	void loading(dx12lib::DirectContextProxy pDirectCtx);
 };
 
 }

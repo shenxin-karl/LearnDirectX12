@@ -7,8 +7,6 @@
 #include "d3dutil.h"
 #include "D3D/Tool/D3Dx12.h"
 #include "D3D/TextureManager/TextureManager.h"
-#include "D3D/PSOManager/PSOManager.hpp"
-#include "D3D/ShaderManager/ShaderManager.h"
 #define SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
 #include <locale>
 
@@ -236,16 +234,7 @@ D3DInitializer::D3DInitializer() {
 		std::abort();
 	}
 	
-	VSShaderManager::emplace();
-	PSShaderManager::emplace();
-	GSShaderManager::emplace();
-	HSShaderManager::emplace();
-	DSShaderManager::emplace();
-	CDShaderManager::emplace();
-	GraphicsPSOManager::emplace();
-	ComputePSOManager::emplace();
 	TextureManager::emplace();
-	loadShaderDefineConfig();
 }
 
 D3DInitializer::~D3DInitializer() {
@@ -256,41 +245,10 @@ D3DInitializer::~D3DInitializer() {
 	}
 
 	TextureManager::destroy();
-	ComputePSOManager::destroy();
-	GraphicsPSOManager::destroy();
-	CDShaderManager::destroy();
-	DSShaderManager::destroy();
-	HSShaderManager::destroy();
-	GSShaderManager::destroy();
-	PSShaderManager::destroy();
-	VSShaderManager::destroy();
 }
 
-void D3DInitializer::loadShaderDefineConfig() {
-	auto file = getD3DResource("config/ShaderDefine.lua");
-	scr::LuaConfigLoader luaConfigLoader(file.begin(), file.size());
-
-	if (luaConfigLoader.beginTable("shaderList")) {
-		for (auto key : luaConfigLoader.next()) {
-			if (luaConfigLoader.beginTable()) {
-				std::string fileName = *luaConfigLoader.tryGetString("file");
-				if (auto vs = luaConfigLoader.tryGetString("vs"))
-					VSShaderManager::instance()->initShaderCreator(fileName, *vs, "VS_5_0");
-				if (auto ps = luaConfigLoader.tryGetString("ps"))
-					PSShaderManager::instance()->initShaderCreator(fileName, *ps, "PS_5_0");
-				if (auto gs = luaConfigLoader.tryGetString("gs"))
-					GSShaderManager::instance()->initShaderCreator(fileName, *gs, "GS_5_0");
-				if (auto hs = luaConfigLoader.tryGetString("hs"))
-					GSShaderManager::instance()->initShaderCreator(fileName, *hs, "HS_5_0");
-				if (auto ds = luaConfigLoader.tryGetString("ds"))
-					GSShaderManager::instance()->initShaderCreator(fileName, *ds, "DS_5_0");
-				if (auto cs = luaConfigLoader.tryGetString("cs"))
-					GSShaderManager::instance()->initShaderCreator(fileName, *cs, "CS_5_0");
-			}
-			luaConfigLoader.endTable();
-		}
-	}
-	luaConfigLoader.endTable();
+void D3DInitializer::loading(dx12lib::DirectContextProxy pDirectCtx) {
+	TextureManager::initDefaultTexture(pDirectCtx);
 }
 
 }
