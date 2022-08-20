@@ -188,7 +188,7 @@ void ShadowApp::buildPSOAndSubPass() {
 		shadowPSO->setRootSignature(pRootSignature);
 		shadowPSO->setVertexShader(d3d::compileShader(L"shaders/Shadows.hlsl", nullptr, "VS", "vs_5_0"));
 		shadowPSO->setPixelShader(d3d::compileShader(L"shaders/Shadows.hlsl", nullptr, "PS", "ps_5_0"));
-		shadowPSO->setInputLayout(d3d::StaticSubModel::getInputLayout());
+		//shadowPSO->setInputLayout(d3d::StaticSubModel::getInputLayout());
 		shadowPSO->finalize();
 
 		auto pShadowPsoBindable = rg::GraphicsPSOBindable::make(shadowPSO);
@@ -201,11 +201,11 @@ void ShadowApp::buildNodes(dx12lib::DirectContextProxy pDirectCtx) {
 	auto pBlinnPhongSubPass = _pOpaquePass->getSubPassByName("BlinnPhongPSO");
 	auto pShadowSubPass = _pShadowPass->getSubPassByName("ShadowPSO");
 	for (auto &&[name, pModel] : _modelMap) {
-		auto pStaticModel = std::static_pointer_cast<d3d::StaticModel>(pModel);
-		auto pNode = std::make_unique<Node>(*pDirectCtx, pStaticModel);
-		pNode->buildOpaqueTechnique(pBlinnPhongSubPass);
-		pNode->buildShadowTechnique(pShadowSubPass);
-		_nodes.push_back(std::move(pNode));
+		//auto pStaticModel = std::static_pointer_cast<d3d::StaticModel>(pModel);
+		//auto pNode = std::make_unique<Node>(*pDirectCtx, pStaticModel);
+		//pNode->buildOpaqueTechnique(pBlinnPhongSubPass);
+		//pNode->buildShadowTechnique(pShadowSubPass);
+		//_nodes.push_back(std::move(pNode));
 	}
 }
 

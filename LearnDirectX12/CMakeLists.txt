@@ -42,7 +42,6 @@ list(APPEND allSubDir "MirrorDemo")
 list(APPEND allSubDir "BasicTessellationDemo")
 list(APPEND allSubDir "BezierPatchDemo")
 list(APPEND allSubDir "InstanceDemo")
-list(APPEND allSubDir "Editor")
 list(APPEND allSubDir "ShadowDemo")
 
 set(PROJECT_COMPONENT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Component)
