@@ -3,7 +3,6 @@
 #include "BaseApp.h"
 #include "D3D/d3dutil.h"
 #include "D3D/dx12libHelper/RenderTarget.h"
-#include "Exception/ExceptionBase.h"
 #include "GameTimer/GameTimer.h"
 #include "dx12lib/Context/ContextStd.h"
 #include "dx12lib/Pipeline/PipelineStd.h"
@@ -44,7 +43,7 @@ int main() {
 			app.endTick(pGameTimer);
 		}
 		app.destroy();
-	} catch (const com::ExceptionBase &e) {
+	} catch (const std::exception &e) {
 		std::cerr << e.what() << std::endl;
 		OutputDebugStringA(e.what());
 	}

@@ -13,7 +13,6 @@
 #define STB_INCLUDE_IMPLEMENTATION
 #include <iostream>
 #include <stb/stb_include.h>
-#include <Script/LuaConfigLoader/LuaConfigLoader.h>
 
 #include "Shader/D3DShaderResource.h"
 

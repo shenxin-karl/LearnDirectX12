@@ -74,7 +74,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 	GameTimer
 	stb
 	Dx12lib
-	Script
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE

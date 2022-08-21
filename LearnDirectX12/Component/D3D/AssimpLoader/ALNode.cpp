@@ -1,0 +1,149 @@
+#include "ALNode.h"
+#include <format>
+
+
+namespace d3d {
+
+ALMesh::ALMesh(std::string_view modelPath, size_t nodeIdx, size_t meshIdx, const aiMesh *pAiMesh)
+: _materialIdx(pAiMesh->mMaterialIndex), _meshIdx(meshIdx)
+, _meshName(std::format("{}_{}_{}", modelPath, nodeIdx, meshIdx))
+{
+	_positions.reserve(pAiMesh->mNumVertices);
+	if (pAiMesh->mNormals)
+		_normals.reserve(pAiMesh->mNumVertices);
+	if (pAiMesh->mTangents)
+		_tangents.reserve(pAiMesh->mNumVertices);
+	if (pAiMesh->mTextureCoords[0])
+		_texcoord0.reserve(pAiMesh->mNumVertices);
+	if (pAiMesh->mTextureCoords[1])
+		_texcoord1.reserve(pAiMesh->mNumVertices);
+
+	for (unsigned j = 0; pAiMesh->mNumVertices; ++j) {
+		const aiVector3D &pos = pAiMesh->mVertices[j];
+		_positions.emplace_back(pos.x, pos.y, pos.z, 1.0);
+		if (pAiMesh->mNormals) {
+			const aiVector3D &nrm = pAiMesh->mNormals[j];
+			_normals.emplace_back(nrm.x, nrm.y, nrm.z);
+		}
+		if (pAiMesh->mTangents) {
+			const aiVector3D &tan = pAiMesh->mTangents[j];
+			_tangents.emplace_back(tan.x, tan.y, tan.z);
+		}
+		if (pAiMesh->mTextureCoords[0]) {
+			const aiVector3D &tex0 = pAiMesh->mTextureCoords[0][j];
+			_texcoord0.emplace_back(tex0.x, tex0.y);
+		}
+		if (pAiMesh->mTextureCoords[1]) {
+			const aiVector3D &tex1 = pAiMesh->mTextureCoords[1][j];
+			_texcoord1.emplace_back(tex1.x, tex1.y);
+		}
+	}
+
+	for (unsigned j = 0; j < pAiMesh->mNumFaces; ++j) {
+		_indices.push_back(pAiMesh->mFaces[j].mIndices[0]);
+		_indices.push_back(pAiMesh->mFaces[j].mIndices[1]);
+		_indices.push_back(pAiMesh->mFaces[j].mIndices[2]);
+	}
+}
+
+size_t ALMesh::getMaterialIdx() const {
+	return _materialIdx;
+}
+
+size_t ALMesh::getMeshIdx() const {
+	return _meshIdx;
+}
+
+const std::string & ALMesh::getMeshName() const {
+	return _meshName;
+}
+
+const std::vector<float4> & ALMesh::getPositions() const {
+	return _positions;
+}
+
+const std::vector<float3> & ALMesh::getNormals() const {
+	return _normals;
+}
+
+const std::vector<float3> & ALMesh::getTangents() const {
+	return _tangents;
+}
+
+const std::vector<float2> & ALMesh::getTexcoord0() const {
+	return _texcoord0;
+}
+
+const std::vector<float2> & ALMesh::getTexcoord1() const {
+	return _texcoord1;
+}
+
+const std::vector<ALMesh::BoneIndex> & ALMesh::getBoneIndices() const {
+	return _boneIndices;
+}
+
+const std::vector<float3> & ALMesh::getBoneWeight() const {
+	return _boneWeight;
+}
+
+const std::vector<uint32_t> & ALMesh::getIndices() const {
+	return _indices;
+}
+
+ALNode::ALNode(std::string_view modelPath, int id, const aiScene *pAiScene, const aiNode *pAiNode) : _nodeId(id) {
+	for (size_t i = 0; i < pAiNode->mNumMeshes; ++i) {
+		unsigned int meshIdx = pAiNode->mMeshes[i];
+		_meshs.push_back(std::make_shared<ALMesh>(modelPath, _nodeId, meshIdx, pAiScene->mMeshes[meshIdx]));
+	}
+
+	aiVector3D scale;
+	aiVector3D position;
+	aiQuaternion rotate;
+	pAiNode->mTransformation.Decompose(scale, rotate, position);
+
+	_nodeTransform = float4x4(Matrix4(DX::XMMatrixAffineTransformation(
+		Vector3(scale.x, scale.y, scale.z),
+		Vector3(0.f),
+		Quaternion(rotate.x, rotate.y, rotate.z, rotate.w),
+		Vector3(position.x, position.y, position.z)
+	)));
+
+	for (size_t i = 0; i < pAiNode->mNumChildren; ++i) {
+		++id;
+		_children.push_back(std::make_unique<ALNode>(
+			modelPath,
+			id,
+			pAiScene,
+			pAiNode->mChildren[i]
+		));
+	}
+}
+
+int ALNode::getNodeId() const {
+	return _nodeId;
+}
+
+size_t ALNode::getNumChildren() const {
+	return _numChild;
+}
+
+const ALNode * ALNode::getChildren(size_t idx) const {
+	return _children[idx].get();
+}
+
+const float4x4 & ALNode::getNodeTransform() const {
+	return _nodeTransform;
+}
+
+size_t ALNode::getNumMesh() const {
+	return _meshs.size();
+}
+
+std::shared_ptr<ALMesh> ALNode::getMesh(size_t idx) const {
+	if (idx >= getNumMesh()) {
+		assert(false);
+		return nullptr;
+	}
+	return _meshs[idx];
+}
+}

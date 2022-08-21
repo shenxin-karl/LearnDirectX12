@@ -88,9 +88,9 @@ void ShadowApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pPassCbVisitor = _pPassCb->visit();
 	_pCamera->updatePassCB(*pPassCbVisitor);
 
-	rg::TechniqueFlag flag = rg::TechniqueType::Color;
-	for (auto &pNode : _nodes)
-		pNode->submit(flag);
+	//rg::TechniqueFlag flag = rg::TechniqueType::Color;
+	//for (auto &pNode : _nodes)
+		//pNode->submit(flag);
 }
 
 void ShadowApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
