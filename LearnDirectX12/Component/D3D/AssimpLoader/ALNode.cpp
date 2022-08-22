@@ -20,7 +20,7 @@ ALMesh::ALMesh(ALTree *pTree, std::string_view modelPath, size_t nodeIdx, size_t
 	if (pAiMesh->mTextureCoords[1])
 		_texcoord1.reserve(pAiMesh->mNumVertices);
 
-	for (unsigned j = 0; pAiMesh->mNumVertices; ++j) {
+	for (unsigned j = 0; j < pAiMesh->mNumVertices; ++j) {
 		const aiVector3D &pos = pAiMesh->mVertices[j];
 		_positions.emplace_back(pos.x, pos.y, pos.z, 1.0);
 		if (pAiMesh->mNormals) {
@@ -92,7 +92,8 @@ const std::vector<uint32_t> & ALMesh::getIndices() const {
 	return _indices;
 }
 
-ALNode::ALNode(ALTree *pTree, std::string_view modelPath, int id, const aiScene *pAiScene, const aiNode *pAiNode) : _nodeId(id) {
+ALNode::ALNode(ALTree *pTree, std::string_view modelPath, int id, const aiScene *pAiScene, const aiNode *pAiNode)
+: _nodeId(id), _numChildren(pAiNode->mNumChildren) {
 	for (size_t i = 0; i < pAiNode->mNumMeshes; ++i) {
 		unsigned int meshIdx = pAiNode->mMeshes[i];
 		_meshs.push_back(std::make_shared<ALMesh>(pTree, modelPath, _nodeId, meshIdx, pAiScene->mMeshes[meshIdx]));
@@ -127,7 +128,7 @@ int ALNode::getNodeId() const {
 }
 
 size_t ALNode::getNumChildren() const {
-	return _numChild;
+	return _numChildren;
 }
 
 const ALNode * ALNode::getChildren(size_t idx) const {

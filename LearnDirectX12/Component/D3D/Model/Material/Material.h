@@ -6,10 +6,11 @@
 
 namespace d3d {
 
+struct INode;
 class RenderItem;
 class Material : public NonCopyable {
 public:
-	Material(const std::string &name, const RenderItem *pRenderItem);
+	Material(const std::string &name, d3d::INode *pNode, d3d::RenderItem *pRenderItem);
 	const std::string &getMaterialName() const;
 	size_t getNumTechnique() const;
 	std::shared_ptr<rg::Technique> getTechnique(size_t idx) const;

@@ -10,6 +10,8 @@ MeshModel::MeshModel(dx12lib::IDirectContext &directCtx, std::shared_ptr<ALTree>
 	_pALTree = std::move(pALTree);
 }
 
+MeshModel::~MeshModel() = default;
+
 void MeshModel::submit(const rg::TechniqueFlag &techniqueFlag) const {
 	if (_modelTransformDirty) {
 		_pRootNode->setParentTransform(Matrix4(_modelTransform));

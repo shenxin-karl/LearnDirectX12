@@ -10,6 +10,7 @@ class Material;
 class MeshModel : public IModel {
 public:
 	MeshModel(dx12lib::IDirectContext &directCtx, std::shared_ptr<ALTree> pALTree);
+	~MeshModel() override;
 	void submit(const rg::TechniqueFlag &techniqueFlag) const override ;
 	INode *getRootNode() const override;
 	void setModelTransform(const float4x4 &matWorld) override;

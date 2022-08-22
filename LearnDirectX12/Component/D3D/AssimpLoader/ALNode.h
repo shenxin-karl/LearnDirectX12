@@ -54,9 +54,8 @@ public:
 	std::shared_ptr<ALMesh> getMesh(size_t idx) const;
 private:
 	int _nodeId;
-	int _numChild;
+	unsigned int _numChildren;
 	float4x4 _nodeTransform;
-	unsigned _materialIndex;
 	std::vector<std::shared_ptr<ALMesh>> _meshs;
 	std::vector<std::unique_ptr<ALNode>> _children;
 };

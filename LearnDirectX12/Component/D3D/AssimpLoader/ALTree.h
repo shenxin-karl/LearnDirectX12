@@ -19,7 +19,7 @@ public:
 
 class ALMaterial {
 public:
-	void init(const aiScene *pAiScene, const aiMaterial *pAiMaterial);
+	void init(const std::string &direction, const aiScene *pAiScene, const aiMaterial *pAiMaterial);
 	const ALTexture &getDiffuseMap() const;
 	const ALTexture &getNormalMap() const;
 	const ALTexture &getSpecularMap() const;
@@ -27,7 +27,12 @@ public:
 	const ALTexture &getMetallicMap() const;
 	const ALTexture &getAmbientOcclusionMap() const;
 private:
-	static void processTexture(ALTexture &texture, const aiScene *pAiScene, const aiMaterial *pAiMaterial, aiTextureType type);
+	static void processTexture(ALTexture &texture, 
+		const std::string &direction,
+		const aiScene *pAiScene, 
+		const aiMaterial *pAiMaterial, 
+		aiTextureType type
+	);
 private:
 	ALTexture _diffuseMap;
 	ALTexture _normalMap;

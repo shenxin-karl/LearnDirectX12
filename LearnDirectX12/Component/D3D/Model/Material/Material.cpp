@@ -3,7 +3,7 @@
 
 namespace d3d {
 
-Material::Material(const std::string &name, const RenderItem *pRenderItem) : _materialName(name) {
+Material::Material(const std::string &name, d3d::INode *pNode, d3d::RenderItem *pRenderItem) : _materialName(name) {
 	// todo: 在派生类中初始化 _techniques
 }
 
