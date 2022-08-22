@@ -1,4 +1,5 @@
 #include "ShadowApp.h"
+#include "D3D/AssimpLoader/ALTree.h"
 #include "Dx12lib/Context/CommandQueue.h"
 #include "D3D/AssimpLoader/AssimpLoader.h"
 #include "D3D/dx12libHelper/RenderTarget.h"
@@ -16,6 +17,7 @@
 #include "RenderGraph/Drawable/Drawable.h"
 #include "RenderGraph/Pass/RenderQueuePass.h"
 #include "RenderGraph/Technique/Technique.h"
+#include "D3D/AssimpLoader/ALTree.h"
 
 
 ShadowApp::ShadowApp() {
@@ -58,7 +60,6 @@ void ShadowApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 	loadModel(pDirectCtx);
 	buildPass();
 	buildPSOAndSubPass();
-	buildNodes(pDirectCtx);
 }
 
 void ShadowApp::onDestroy() {
@@ -118,7 +119,7 @@ void ShadowApp::onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int 
 }
 
 void ShadowApp::loadModel(dx12lib::DirectContextProxy pDirectCtx) {
-	
+	std::shared_ptr<d3d::ALTree> pALTree = std::make_shared<d3d::ALTree>("./resources/powerplant/powerplant.gltf");
 }
 
 void ShadowApp::buildPass() {
@@ -194,16 +195,3 @@ void ShadowApp::buildPSOAndSubPass() {
 		pSubPass->addBindable(pPassCbBindable);
 	}
 }
-
-void ShadowApp::buildNodes(dx12lib::DirectContextProxy pDirectCtx) {
-	auto pBlinnPhongSubPass = _pOpaquePass->getSubPassByName("BlinnPhongPSO");
-	auto pShadowSubPass = _pShadowPass->getSubPassByName("ShadowPSO");
-	for (auto &&[name, pModel] : _modelMap) {
-		//auto pStaticModel = std::static_pointer_cast<d3d::StaticModel>(pModel);
-		//auto pNode = std::make_unique<Node>(*pDirectCtx, pStaticModel);
-		//pNode->buildOpaqueTechnique(pBlinnPhongSubPass);
-		//pNode->buildShadowTechnique(pShadowSubPass);
-		//_nodes.push_back(std::move(pNode));
-	}
-}
-

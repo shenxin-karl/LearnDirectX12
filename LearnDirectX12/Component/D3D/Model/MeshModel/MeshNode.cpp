@@ -60,4 +60,14 @@ FRConstantBufferPtr<NodeTransform> MeshNode::getNodeTransform() const {
 	return _pNodeTransform;
 }
 
+void MeshNode::createMaterial(const MeshModel::MaterialCreator &creator) {
+	for (auto &pRenderItem : _renderItems) {
+		auto pMaterial = creator(this, pRenderItem.get());
+		pRenderItem->setMaterial(pMaterial);
+		pRenderItem->rebuildTechnique();
+	}
+	for (auto &pChild : _children)
+		pChild->createMaterial(creator);
+}
+
 }

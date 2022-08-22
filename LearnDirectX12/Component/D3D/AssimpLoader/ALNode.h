@@ -11,10 +11,12 @@ namespace d3d {
 
 using namespace Math;
 
+class ALMaterial;
+class ALTree;
 struct ALMesh {
 	using BoneIndex = std::array<uint8_t, 4>;
-	ALMesh(std::string_view modelPath, size_t nodeIdx, size_t meshIdx, const aiMesh *pAiMesh);
-	size_t getMaterialIdx() const;
+	ALMesh(ALTree *pTree, std::string_view modelPath, size_t nodeIdx, size_t meshIdx, const aiMesh *pAiMesh);
+	const ALMaterial *getMaterial() const;
 	size_t getMeshIdx() const;
 	const std::string &getMeshName() const;
 	const std::vector<float4>    &getPositions() const;
@@ -27,7 +29,7 @@ struct ALMesh {
 	const std::vector<uint32_t>  &getIndices() const;
 private:
 	using BoneIndex = std::array<uint8_t, 4>;
-	size_t				   _materialIdx;
+	const ALMaterial	  *_pMaterial;
 	size_t				   _meshIdx;
 	std::string			   _meshName;
 	std::vector<float4>    _positions;
@@ -42,7 +44,7 @@ private:
 
 class ALNode {
 public:
-	ALNode(std::string_view modelPath, int id, const aiScene *pAiScene, const aiNode *pAiNode);
+	ALNode(ALTree *pTree, std::string_view modelPath, int id, const aiScene *pAiScene, const aiNode *pAiNode);
 	ALNode(const ALNode &) = delete;
 	int getNodeId() const;
 	size_t getNumChildren() const;

@@ -12,6 +12,7 @@ public:
 	RenderItem *getRenderItem(size_t idx) const override;
 	void setParentTransform(const Matrix4 &matWorld) override;
 	FRConstantBufferPtr<NodeTransform> getNodeTransform() const override;
+	void createMaterial(const MeshModel::MaterialCreator &creator);
 private:
 	mutable bool _transformDirty = true;
 	float4x4 _applyTransform;

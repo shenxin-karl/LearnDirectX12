@@ -40,7 +40,6 @@ RenderItem::RenderItem(dx12lib::IDirectContext &directCtx, std::shared_ptr<ALMes
 			MeshManager::instance()->setIndexBuffer(key, pIndexBuffer);
 		}
 	}
-
 	setIndexBuffer(pIndexBuffer);
 }
 
@@ -53,7 +52,7 @@ std::shared_ptr<ALMesh> RenderItem::getMesh() const {
 }
 
 void RenderItem::setMaterial(std::shared_ptr<Material> pMaterial) {
-	_pMaterial = pMaterial;
+	_pMaterial = std::move(pMaterial);
 }
 
 void RenderItem::rebuildTechnique() {

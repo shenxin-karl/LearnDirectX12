@@ -14,12 +14,13 @@ public:
 	INode *getRootNode() const override;
 	void setModelTransform(const float4x4 &matWorld) override;
 
-	using MaterialCreator = std::function<std::shared_ptr<Material>(MeshNode *, RenderItem *)>;
+	using MaterialCreator = std::function<std::shared_ptr<Material>(INode *, RenderItem *)>;
 	void createMaterial(const MaterialCreator &creator);
 private:
 	mutable bool _modelTransformDirty = true;
 	float4x4 _modelTransform;
 	std::unique_ptr<MeshNode> _pRootNode;
+	std::shared_ptr<ALTree> _pALTree;
 };
 
 }

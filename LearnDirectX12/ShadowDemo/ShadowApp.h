@@ -13,24 +13,6 @@ class StaticModel;
 
 using namespace Math;
 
-struct CbObjectType {
-	float4x4 matWorld = float4x4::identity();
-	float4x4 matNormal = float4x4::identity();;
-	float4x4 matTexCoord = float4x4::identity();;
-	d3d::MaterialData materialData = d3d::MaterialData::defaultMaterialData;
-};
-
-class Node {
-public:
-	explicit Node(dx12lib::IGraphicsContext &graphicsCtx, std::shared_ptr<d3d::StaticModel> pStaticModel);
-	void buildOpaqueTechnique(std::shared_ptr<rg::SubPass> pSubPass) const;
-	void buildShadowTechnique(std::shared_ptr<rg::SubPass> pSubPass) const;
-	void submit(const rg::TechniqueFlag &techniqueFlag) const;
-private:
-	std::shared_ptr<d3d::StaticModel> _pStaticModel;
-	dx12lib::FRConstantBufferPtr<CbObjectType> _pCbObject;
-	std::vector<std::unique_ptr<rg::Drawable>> _drawables;
-};
 
 class ShadowApp : public com::BaseApp {
 public:
@@ -47,7 +29,6 @@ private:
 	void loadModel(dx12lib::DirectContextProxy pDirectCtx);
 	void buildPass();
 	void buildPSOAndSubPass();
-	void buildNodes(dx12lib::DirectContextProxy pDirectCtx);
 private:
 	bool _bMouseLeftPress = false;
 	std::shared_ptr<d3d::FirstPersonCamera> _pCamera;
@@ -56,7 +37,6 @@ private:
 	dx12lib::FRConstantBufferPtr<d3d::CBPassType> _pPassCb;
 	std::unordered_map<std::string, std::shared_ptr<d3d::IModel>> _modelMap;
 
-	std::vector<std::unique_ptr<Node>> _nodes;
 	std::shared_ptr<rg::RenderQueuePass> _pShadowPass;
 	std::shared_ptr<rg::RenderQueuePass> _pOpaquePass;
 };

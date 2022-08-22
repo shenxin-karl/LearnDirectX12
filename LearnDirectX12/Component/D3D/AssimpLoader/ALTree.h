@@ -50,6 +50,7 @@ public:
 		aiProcess_GenUVCoords
 	);
 	ALTree(const std::string &path, int flag = kDefaultLoadFlag);
+	~ALTree();
 	ALTree(const ALTree &) = delete;
 	size_t getNumMaterial() const;
 	const ALMaterial *getMaterial(size_t idx) const;

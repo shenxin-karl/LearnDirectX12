@@ -38,13 +38,18 @@ const ALTexture & ALMaterial::getAmbientOcclusionMap() const {
 
 void ALMaterial::processTexture(ALTexture &texture, const aiScene *pAiScene, const aiMaterial *pAiMaterial, aiTextureType type) {
 	aiString path;
+	pAiMaterial->GetTexture(type, 0, &path);
 	const aiTexture *pAiTexture = pAiScene->GetEmbeddedTexture(path.C_Str());
-	texture.path = path.C_Str();
-	texture.textureDataSize = pAiTexture->mWidth;
-	texture.textureExtName = pAiTexture->achFormatHint;
-	if (pAiTexture->pcData != nullptr) {
-		texture.pTextureData = std::make_shared<char[]>(pAiTexture->mWidth);
-		std::memcpy(texture.pTextureData.get(), pAiTexture->pcData, pAiTexture->mWidth);
+	if (pAiTexture != nullptr) {
+		texture.path = path.C_Str();
+		texture.textureDataSize = pAiTexture->mWidth;
+		texture.textureExtName = pAiTexture->achFormatHint;
+		if (pAiTexture->pcData != nullptr) {
+			texture.pTextureData = std::make_shared<char[]>(pAiTexture->mWidth);
+			std::memcpy(texture.pTextureData.get(), pAiTexture->pcData, pAiTexture->mWidth);
+		}
+	} else {
+		texture.path = path.C_Str();
 	}
 }
 
@@ -56,15 +61,18 @@ ALTree::ALTree(const std::string &path, int flag) {
 		return;
 	}
 
-	std::string_view modelPath(path.c_str(), path.length());
-	_pRootNode = std::make_unique<ALNode>(modelPath, 0, pAiScene, pAiScene->mRootNode);
 	_materials.resize(pAiScene->mNumMaterials);
 	for (size_t i = 0; i < pAiScene->mNumMeshes; ++i) {
 		const aiMesh *pAiMesh = pAiScene->mMeshes[i];
 		const aiMaterial *pAiMaterial = pAiScene->mMaterials[pAiMesh->mMaterialIndex];
 		_materials[i].init(pAiScene, pAiMaterial);
 	}
+
+	std::string_view modelPath(path.c_str(), path.length());
+	_pRootNode = std::make_unique<ALNode>(this, modelPath, 0, pAiScene, pAiScene->mRootNode);
 }
+
+ALTree::~ALTree() = default;
 
 size_t ALTree::getNumMaterial() const {
 	return _materials.size();

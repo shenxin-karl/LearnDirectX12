@@ -1,11 +1,13 @@
 #include "ALNode.h"
 #include <format>
 
+#include "ALTree.h"
+
 
 namespace d3d {
 
-ALMesh::ALMesh(std::string_view modelPath, size_t nodeIdx, size_t meshIdx, const aiMesh *pAiMesh)
-: _materialIdx(pAiMesh->mMaterialIndex), _meshIdx(meshIdx)
+ALMesh::ALMesh(ALTree *pTree, std::string_view modelPath, size_t nodeIdx, size_t meshIdx, const aiMesh *pAiMesh)
+: _pMaterial(pTree->getMaterial(pAiMesh->mMaterialIndex)), _meshIdx(meshIdx)
 , _meshName(std::format("{}_{}_{}", modelPath, nodeIdx, meshIdx))
 {
 	_positions.reserve(pAiMesh->mNumVertices);
@@ -46,8 +48,8 @@ ALMesh::ALMesh(std::string_view modelPath, size_t nodeIdx, size_t meshIdx, const
 	}
 }
 
-size_t ALMesh::getMaterialIdx() const {
-	return _materialIdx;
+const ALMaterial *ALMesh::getMaterial() const {
+	return _pMaterial;
 }
 
 size_t ALMesh::getMeshIdx() const {
@@ -90,10 +92,10 @@ const std::vector<uint32_t> & ALMesh::getIndices() const {
 	return _indices;
 }
 
-ALNode::ALNode(std::string_view modelPath, int id, const aiScene *pAiScene, const aiNode *pAiNode) : _nodeId(id) {
+ALNode::ALNode(ALTree *pTree, std::string_view modelPath, int id, const aiScene *pAiScene, const aiNode *pAiNode) : _nodeId(id) {
 	for (size_t i = 0; i < pAiNode->mNumMeshes; ++i) {
 		unsigned int meshIdx = pAiNode->mMeshes[i];
-		_meshs.push_back(std::make_shared<ALMesh>(modelPath, _nodeId, meshIdx, pAiScene->mMeshes[meshIdx]));
+		_meshs.push_back(std::make_shared<ALMesh>(pTree, modelPath, _nodeId, meshIdx, pAiScene->mMeshes[meshIdx]));
 	}
 
 	aiVector3D scale;
@@ -111,6 +113,7 @@ ALNode::ALNode(std::string_view modelPath, int id, const aiScene *pAiScene, cons
 	for (size_t i = 0; i < pAiNode->mNumChildren; ++i) {
 		++id;
 		_children.push_back(std::make_unique<ALNode>(
+			pTree,
 			modelPath,
 			id,
 			pAiScene,
