@@ -89,5 +89,4 @@ private:
 	std::unordered_map<std::string, std::vector<RenderItem>> _renderItems;
 	std::unordered_map<std::string, std::shared_ptr<dx12lib::GraphicsPSO>> _PSOMap;
 	std::unordered_map<std::string, std::shared_ptr<dx12lib::SamplerTexture2D>> _textureMap;
-	std::unique_ptr<d3d::D3DInitializer> _pD3dInitializer;
 };

@@ -50,7 +50,6 @@ private:
 	void buildNodes(dx12lib::DirectContextProxy pDirectCtx);
 private:
 	bool _bMouseLeftPress = false;
-	std::unique_ptr<d3d::D3DInitializer> _pd3dInitializer;
 	std::shared_ptr<d3d::FirstPersonCamera> _pCamera;
 	std::shared_ptr<dx12lib::DepthStencil2D> _pShadowMap;
 	std::shared_ptr<dx12lib::ConstantBuffer> _pLightCb;

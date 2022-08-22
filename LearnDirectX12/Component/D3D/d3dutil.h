@@ -86,7 +86,6 @@ std::string calcMacroKey(const std::string &name, const D3D_SHADER_MACRO(&pMacro
 	return calcMacroKey(name, pMacros, N);
 }
 
-
 void splitMacroKey(const std::string &key, std::string &name, std::vector<MacroPair> &macros);
 
 class D3DInitializer {

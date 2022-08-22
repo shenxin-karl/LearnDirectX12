@@ -14,6 +14,7 @@
 #include <iostream>
 #include <stb/stb_include.h>
 
+#include "Model/Mesh/MeshManager.h"
 #include "Shader/D3DShaderResource.h"
 
 namespace d3d {
@@ -234,6 +235,7 @@ D3DInitializer::D3DInitializer() {
 	}
 	
 	TextureManager::emplace();
+	MeshManager::emplace();
 }
 
 D3DInitializer::~D3DInitializer() {
@@ -243,6 +245,7 @@ D3DInitializer::~D3DInitializer() {
 		std::abort();
 	}
 
+	MeshManager::destroy();
 	TextureManager::destroy();
 }
 

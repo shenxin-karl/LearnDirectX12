@@ -36,7 +36,6 @@ Shape::~Shape() {
 }
 
 void Shape::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
-	_pD3dInitializer = std::make_unique<d3d::D3DInitializer>();
 	d3d::CameraDesc cameraDesc = {
 		float3(10, 10, 10),
 		float3(0, 1, 0),

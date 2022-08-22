@@ -1,5 +1,5 @@
 #pragma once
-#include "D3D/Model/IModel.hpp"
+#include "D3D/Model/MeshModel/MeshModel.h"
 
 namespace d3d {
 

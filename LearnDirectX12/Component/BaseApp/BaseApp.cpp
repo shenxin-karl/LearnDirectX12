@@ -3,6 +3,8 @@
 #include <dx12lib/Device/DeviceStd.h>
 #include <dx12lib/Context/ContextStd.h>
 
+#include "D3D/d3dutil.h"
+
 namespace com {
 
 void BaseApp::initialize() {
@@ -29,6 +31,7 @@ void BaseApp::initialize() {
 	auto pCmdQueue = _pDevice->getCommandQueue();
 	auto pDirectContext = pCmdQueue->createDirectContextProxy();
 	_pSwapChain->resize(pDirectContext, _width, _height);
+	_pD3dInitializer = std::make_unique<d3d::D3DInitializer>();
 	onInitialize(pDirectContext);
 	pCmdQueue->executeCommandList(pDirectContext);
 	pCmdQueue->signal(_pSwapChain);
@@ -39,6 +42,7 @@ void BaseApp::destroy() {
 	auto pCmdQueue = _pDevice->getCommandQueue();
 	pCmdQueue->flushCommandQueue();
 	onDestroy();
+	_pD3dInitializer.reset();
 	_pInputSystem->destroy();
 	_pDevice->destroy();
 }

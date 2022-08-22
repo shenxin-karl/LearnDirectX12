@@ -28,7 +28,6 @@ ShadowApp::~ShadowApp() {
 }
 
 void ShadowApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
-	_pd3dInitializer = std::make_unique<d3d::D3DInitializer>();
 	d3d::CameraDesc cameraDesc {
 		float3(0, 0, 200),
 		float3(0, 1, 0),
@@ -63,7 +62,6 @@ void ShadowApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 }
 
 void ShadowApp::onDestroy() {
-	_pd3dInitializer.reset();
 }
 
 void ShadowApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {

@@ -8,6 +8,10 @@
 #include "InputSystem/InputSystem.h"
 
 
+namespace d3d {
+	class D3DInitializer;
+}
+
 namespace com {
 
 namespace DX  = DirectX;
@@ -43,11 +47,12 @@ protected:
 	bool _canPause = true;
 	size_t _fps    = 120;
 	std::string _title = "BaseApp";
-	std::shared_ptr<dx12lib::Adapter>   _pAdapter;
-	std::shared_ptr<dx12lib::Device>    _pDevice;
-	std::shared_ptr<dx12lib::SwapChain> _pSwapChain;
-	std::shared_ptr<InputSystem>        _pInputSystem;
-	std::shared_ptr<com::GameTimer>		_pGameTimer;
+	std::shared_ptr<dx12lib::Adapter>    _pAdapter;
+	std::shared_ptr<dx12lib::Device>     _pDevice;
+	std::shared_ptr<dx12lib::SwapChain>  _pSwapChain;
+	std::shared_ptr<InputSystem>         _pInputSystem;
+	std::shared_ptr<com::GameTimer>		 _pGameTimer;
+	std::unique_ptr<d3d::D3DInitializer> _pD3dInitializer;
 };
 
 }

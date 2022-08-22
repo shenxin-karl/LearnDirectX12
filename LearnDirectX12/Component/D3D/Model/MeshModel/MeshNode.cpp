@@ -9,7 +9,7 @@ MeshNode::MeshNode(dx12lib::IDirectContext &directCtx, const ALNode *pALNode) {
 	_nodeLocalTransform = pALNode->getNodeTransform();
 
 	for (size_t i = 0; i < pALNode->getNumMesh(); ++i) 
-		_renderItems.emplace_back(std::make_unique<RenderItem>(pALNode->getMesh(i)));
+		_renderItems.emplace_back(std::make_unique<RenderItem>(directCtx, pALNode->getMesh(i)));
 
 	for (size_t i = 0; i < pALNode->getNumChildren(); ++i)
 		_children.push_back(std::make_unique<MeshNode>(directCtx, pALNode->getChildren(i)));
