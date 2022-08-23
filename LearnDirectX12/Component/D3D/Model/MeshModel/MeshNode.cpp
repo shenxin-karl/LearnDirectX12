@@ -17,7 +17,7 @@ MeshNode::MeshNode(dx12lib::IDirectContext &directCtx, const ALNode *pALNode) {
 	_pNodeTransform = directCtx.createFRConstantBuffer<NodeTransform>();
 }
 
-void MeshNode::submit(const rg::TechniqueFlag &techniqueFlag) const {
+void MeshNode::submit(const Frustum &frustum, const rg::TechniqueFlag &techniqueFlag) const {
 	if (_renderItems.empty())
 		return;
 
@@ -28,11 +28,16 @@ void MeshNode::submit(const rg::TechniqueFlag &techniqueFlag) const {
 		_transformDirty = false;
 	}
 
-	for (auto &pRenderItem : _renderItems)
+	for (auto &pRenderItem : _renderItems) {
+		auto pMesh = pRenderItem->getMesh();
+		auto worldAABB = pMesh->getBoundingBox().transform(static_cast<Matrix4>(_applyTransform));
+		if (frustum.contains(worldAABB) == DX::ContainmentType::DISJOINT)
+			continue;
 		pRenderItem->submit(techniqueFlag);
+	}
 
 	for (auto &pChild : _children)
-		pChild->submit(techniqueFlag);
+		pChild->submit(frustum, techniqueFlag);
 }
 
 size_t MeshNode::getNumRenderItem() const {

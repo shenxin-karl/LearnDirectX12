@@ -27,10 +27,12 @@ struct ALMesh {
 	const std::vector<BoneIndex> &getBoneIndices() const;
 	const std::vector<float3>    &getBoneWeight() const;
 	const std::vector<uint32_t>  &getIndices() const;
+	const AxisAlignedBox		 &getBoundingBox() const;
 private:
 	using BoneIndex = std::array<uint8_t, 4>;
 	const ALMaterial	  *_pMaterial;
 	size_t				   _meshIdx;
+	AxisAlignedBox		   _boundingBox;
 	std::string			   _meshName;
 	std::vector<float4>    _positions;
 	std::vector<float3>    _normals;

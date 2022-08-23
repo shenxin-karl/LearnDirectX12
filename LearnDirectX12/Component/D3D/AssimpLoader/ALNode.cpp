@@ -46,6 +46,12 @@ ALMesh::ALMesh(ALTree *pTree, std::string_view modelPath, size_t nodeIdx, size_t
 		_indices.push_back(pAiMesh->mFaces[j].mIndices[1]);
 		_indices.push_back(pAiMesh->mFaces[j].mIndices[2]);
 	}
+
+	const auto &aabb = pAiMesh->mAABB;
+	_boundingBox = AxisAlignedBox(
+		Vector3(aabb.mMin.x, aabb.mMin.y, aabb.mMin.z),
+		Vector3(aabb.mMax.x, aabb.mMax.y, aabb.mMax.z)
+	);
 }
 
 const ALMaterial *ALMesh::getMaterial() const {
@@ -90,6 +96,10 @@ const std::vector<float3> & ALMesh::getBoneWeight() const {
 
 const std::vector<uint32_t> & ALMesh::getIndices() const {
 	return _indices;
+}
+
+const AxisAlignedBox & ALMesh::getBoundingBox() const {
+	return _boundingBox;
 }
 
 ALNode::ALNode(ALTree *pTree, std::string_view modelPath, int id, const aiScene *pAiScene, const aiNode *pAiNode)

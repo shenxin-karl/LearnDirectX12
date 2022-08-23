@@ -14,7 +14,7 @@ struct NodeTransform {
 };
 
 interface INode : protected NonCopyable {
-	virtual void submit(const rg::TechniqueFlag &techniqueFlag) const = 0;
+	virtual void submit(const Frustum &frustum, const rg::TechniqueFlag &techniqueFlag) const = 0;
 	virtual size_t getNumRenderItem() const = 0;
 	virtual RenderItem *getRenderItem(size_t idx) const = 0;
 	virtual void setParentTransform(const Matrix4 &matWorld) = 0;
@@ -22,7 +22,7 @@ interface INode : protected NonCopyable {
 };
 
 interface IModel : protected NonCopyable {
-	virtual void submit(const rg::TechniqueFlag &techniqueFlag) const = 0;
+	virtual void submit(const Frustum &frustum, const rg::TechniqueFlag &techniqueFlag) const = 0;
 	virtual INode *getRootNode() const = 0;
 	virtual void setModelTransform(const float4x4 &matWorld) = 0;
 };
