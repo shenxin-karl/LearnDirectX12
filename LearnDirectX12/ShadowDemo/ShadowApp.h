@@ -14,7 +14,11 @@
 using namespace Math;
 
 struct OpaquePass : public rg::RenderQueuePass {
-	using rg::RenderQueuePass::RenderQueuePass;
+	OpaquePass(const std::string &passName)
+	: RenderQueuePass(passName)
+	, pShadowMap(this, "ShadowMap")
+	{
+	}
 	void link(dx12lib::ICommonContext &commonCtx) const override;
 	void reset() override;
 public:
