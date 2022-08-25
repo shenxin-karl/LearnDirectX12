@@ -8,7 +8,7 @@ namespace d3d {
 
 struct INode;
 class Material;
-class RenderItem : public rg::Drawable {
+class RenderItem : public rgph::Drawable {
 public:
 	RenderItem(dx12lib::IDirectContext &directCtx, std::shared_ptr<ALMesh> pALMesh);
 	std::shared_ptr<Material> getMaterial() const;

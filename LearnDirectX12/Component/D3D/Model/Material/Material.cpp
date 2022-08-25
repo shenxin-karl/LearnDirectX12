@@ -15,7 +15,7 @@ size_t Material::getNumTechnique() const {
 	return _techniques.size();
 }
 
-std::shared_ptr<rg::Technique> Material::getTechnique(size_t idx) const {
+std::shared_ptr<rgph::Technique> Material::getTechnique(size_t idx) const {
 	if (idx >= _techniques.size()) {
 		assert(false);
 		return nullptr;

@@ -141,11 +141,11 @@ void ShadowApp::loadModel(dx12lib::DirectContextProxy pDirectCtx) {
 }
 
 void ShadowApp::buildPass() {
-	auto pClearPass = std::make_shared<rg::ClearPass>("ClearRTAndDS");
-	auto pClearShadowMap = std::make_shared<rg::ClearDsPass>("ClearShadowMap");
-	auto pShadowPass = std::make_shared<rg::RenderQueuePass>("ShadowPass");
+	auto pClearPass = std::make_shared<rgph::ClearPass>("ClearRTAndDS");
+	auto pClearShadowMap = std::make_shared<rgph::ClearDsPass>("ClearShadowMap");
+	auto pShadowPass = std::make_shared<rgph::RenderQueuePass>("ShadowPass");
 	auto pOpaquePass = std::make_shared<OpaquePass>("OpaquePass");
-	auto pPresentPass = std::make_shared<rg::PresentPass>("PresentPass");
+	auto pPresentPass = std::make_shared<rgph::PresentPass>("PresentPass");
 
 	{ // clear RenderTarget and DepthStencil Pass
 		auto getRenderTarget = [&]() {
@@ -176,7 +176,6 @@ void ShadowApp::buildPass() {
 		_passes.push_back(pOpaquePass);
 	}
 	{ // Present Pass
-		pPresentPass = std::make_shared<rg::PresentPass>("PresentPass");
 		pOpaquePass->pRenderTarget >> pPresentPass->pRenderTarget;
 		_passes.push_back(pPresentPass);
 	}

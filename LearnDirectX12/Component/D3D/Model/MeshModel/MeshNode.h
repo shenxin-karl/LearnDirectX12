@@ -7,7 +7,7 @@ class ALNode;
 class MeshNode : public INode {
 public:
 	MeshNode(dx12lib::IDirectContext &directCtx, const ALNode *pALNode);
-	void submit(const Frustum &frustum, const rg::TechniqueFlag &techniqueFlag) const override;
+	void submit(const Frustum &frustum, const rgph::TechniqueFlag &techniqueFlag) const override;
 	size_t getNumRenderItem() const override;
 	RenderItem *getRenderItem(size_t idx) const override;
 	void setParentTransform(const Matrix4 &matWorld) override;

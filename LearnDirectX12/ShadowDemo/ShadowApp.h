@@ -13,7 +13,7 @@
 
 using namespace Math;
 
-struct OpaquePass : public rg::RenderQueuePass {
+struct OpaquePass : public rgph::RenderQueuePass {
 	OpaquePass(const std::string &passName)
 	: RenderQueuePass(passName)
 	, pShadowMap(this, "ShadowMap")
@@ -22,7 +22,7 @@ struct OpaquePass : public rg::RenderQueuePass {
 	void link(dx12lib::ICommonContext &commonCtx) const override;
 	void reset() override;
 public:
-	rg::PassResourcePtr<dx12lib::IShaderResource2D> pShadowMap;
+	rgph::PassResourcePtr<dx12lib::IShaderResource2D> pShadowMap;
 };
 
 
@@ -60,6 +60,6 @@ private:
 	dx12lib::FRConstantBufferPtr<d3d::CBPassType> _pPassCb;
 	std::unordered_map<std::string, std::shared_ptr<dx12lib::GraphicsPSO>> _psoMap;
 
-	std::vector<std::shared_ptr<rg::Pass>> _passes;
+	std::vector<std::shared_ptr<rgph::Pass>> _passes;
 	std::shared_ptr<d3d::MeshModel> _pMeshModel;
 };

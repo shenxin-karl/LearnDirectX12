@@ -17,7 +17,7 @@ MeshNode::MeshNode(dx12lib::IDirectContext &directCtx, const ALNode *pALNode) {
 	_pNodeTransform = directCtx.createFRConstantBuffer<NodeTransform>();
 }
 
-void MeshNode::submit(const Frustum &frustum, const rg::TechniqueFlag &techniqueFlag) const {
+void MeshNode::submit(const Frustum &frustum, const rgph::TechniqueFlag &techniqueFlag) const {
 	if (_renderItems.empty())
 		return;
 

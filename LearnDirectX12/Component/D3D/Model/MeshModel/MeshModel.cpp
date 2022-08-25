@@ -12,7 +12,7 @@ MeshModel::MeshModel(dx12lib::IDirectContext &directCtx, std::shared_ptr<ALTree>
 
 MeshModel::~MeshModel() = default;
 
-void MeshModel::submit(const Frustum &frustum, const rg::TechniqueFlag &techniqueFlag) const {
+void MeshModel::submit(const Frustum &frustum, const rgph::TechniqueFlag &techniqueFlag) const {
 	if (_modelTransformDirty) {
 		_pRootNode->setParentTransform(Matrix4(_modelTransform));
 		_modelTransformDirty = false;
