@@ -12,7 +12,6 @@
 #include "Dx12lib/Pipeline/PipelineStateObject.h"
 #include "Dx12lib/Pipeline/RootSignature.h"
 #include "RenderGraph/Bindable/ConstantBufferBindable.h"
-#include "RenderGraph/Bindable/GraphicsPSOBindable.h"
 #include "RenderGraph/Bindable/SamplerTextureBindable.h"
 #include "RenderGraph/Drawable/Drawable.h"
 #include "RenderGraph/Pass/RenderQueuePass.h"
@@ -20,29 +19,13 @@
 #include "D3D/AssimpLoader/ALTree.h"
 
 
-void OpaquePass::link(dx12lib::ICommonContext &commonCtx) const {
-	RenderQueuePass::link(commonCtx);
-	pShadowMap.link(commonCtx);
+ShadowPass::ShadowPass(const std::string &passName) : RenderQueuePass(passName, false, true) {
 }
 
-void OpaquePass::reset() {
-	RenderQueuePass::reset();
-	pShadowMap.reset();;
-}
-
-ShadowMaterial::ShadowMaterial(const std::string &name, d3d::INode *pNode, d3d::RenderItem *pRenderItem)
-: Material(name, pNode, pRenderItem)
+OpaquePass::OpaquePass(const std::string &passName)
+	: RenderQueuePass(passName)
+	, pShadowMap(this, "ShadowMap")
 {
-
-}
-
-void ShadowMaterial::initializePso(dx12lib::DirectContextProxy pDirectCtx) {
-
-}
-
-void ShadowMaterial::destroyPso() {
-	pOpaquePSO = nullptr;
-	pShadowPSO = nullptr;
 }
 
 ShadowApp::ShadowApp() {
@@ -84,11 +67,9 @@ void ShadowApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 
 	loadModel(pDirectCtx);
 	buildPass();
-	ShadowMaterial::initializePso(pDirectCtx);
 }
 
 void ShadowApp::onDestroy() {
-	ShadowMaterial::destroyPso();
 }
 
 void ShadowApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
@@ -113,21 +94,20 @@ void ShadowApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pPassCbVisitor = _pPassCb->visit();
 	_pCamera->updatePassCB(*pPassCbVisitor);
 
+
 }
 
 void ShadowApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pCmdQueue = _pDevice->getCommandQueue();
 	auto pDirectCtx = pCmdQueue->createDirectContextProxy();
-	for (auto &pass : _passes)
-		pass->execute(pDirectCtx);
+	_graph.execute(pDirectCtx);
 	pCmdQueue->executeCommandList(pDirectCtx);
 }
 
 void ShadowApp::onEndTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	std::shared_ptr<dx12lib::CommandQueue> pCmdQueue = _pDevice->getCommandQueue();
 	pCmdQueue->signal(_pSwapChain);
-	for (auto &pass : _passes)
-		pass->reset();
+	_graph.reset();
 }
 
 void ShadowApp::onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int height) {
@@ -143,7 +123,7 @@ void ShadowApp::loadModel(dx12lib::DirectContextProxy pDirectCtx) {
 void ShadowApp::buildPass() {
 	auto pClearPass = std::make_shared<rgph::ClearPass>("ClearRTAndDS");
 	auto pClearShadowMap = std::make_shared<rgph::ClearDsPass>("ClearShadowMap");
-	auto pShadowPass = std::make_shared<rgph::RenderQueuePass>("ShadowPass");
+	auto pShadowPass = std::make_shared<ShadowPass>("ShadowPass");
 	auto pOpaquePass = std::make_shared<OpaquePass>("OpaquePass");
 	auto pPresentPass = std::make_shared<rgph::PresentPass>("PresentPass");
 
@@ -157,26 +137,27 @@ void ShadowApp::buildPass() {
 
 		getRenderTarget >> pClearPass->pRenderTarget;
 		getDepthStencil >> pClearPass->pDepthStencil;
-		_passes.push_back(pClearPass);
+		_graph.addPass(pClearPass);
 	}
 	{ // clear Shadow Map
 		pClearShadowMap->pDepthStencil.preExecuteState = D3D12_RESOURCE_STATE_DEPTH_WRITE;
 		_pShadowMap >> pClearShadowMap->pDepthStencil;
-		_passes.push_back(pClearShadowMap);
+		_graph.addPass(pClearShadowMap);
 	}
 	{ // shadow pass
-		pShadowPass->pDepthStencil >> pShadowPass->pDepthStencil;
-		_passes.push_back(pShadowPass);
+		pClearShadowMap->pDepthStencil >> pShadowPass->pDepthStencil;
+		_graph.addPass(pShadowPass);
 	}
 	{ // opaque pass
 		pOpaquePass->pShadowMap.preExecuteState = D3D12_RESOURCE_STATE_DEPTH_READ;
 		pClearPass->pRenderTarget >> pOpaquePass->pRenderTarget;
 		pClearPass->pDepthStencil >> pOpaquePass->pDepthStencil;
-		pClearPass->pDepthStencil >> pOpaquePass->pShadowMap;
-		_passes.push_back(pOpaquePass);
+		pShadowPass->pDepthStencil >> pOpaquePass->pShadowMap;
+		_graph.addPass(pOpaquePass);
 	}
 	{ // Present Pass
 		pOpaquePass->pRenderTarget >> pPresentPass->pRenderTarget;
-		_passes.push_back(pPresentPass);
+		_graph.addPass(pPresentPass);
 	}
+	_graph.finalize();
 }

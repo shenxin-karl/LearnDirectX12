@@ -29,6 +29,8 @@ Vertex::Vertex(const float3 &position, const float3 &normal, const float2 &texco
 
 MirrorApp::MirrorApp() {
 	_title = "Mirror";
+	_width = 1280;
+	_height = 760;
 }
 
 MirrorApp::~MirrorApp() {

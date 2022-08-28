@@ -12,7 +12,6 @@
 
 #include "D3D/d3dutil.h"
 #include "D3D/Shader/ShaderCommon.h"
-#include "dx12lib/Buffer/ConsumeStructuredBuffer.h"
 #include "Geometry/GeometryGenerator.h"
 
 namespace d3d {

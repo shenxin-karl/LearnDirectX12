@@ -29,8 +29,8 @@ void MeshModel::setModelTransform(const float4x4 &matWorld) {
 	_modelTransformDirty = true;
 }
 
-void MeshModel::createMaterial(const MaterialCreator &creator) {
-	_pRootNode->createMaterial(creator);
+void MeshModel::createMaterial(rgph::RenderGraph &graph, const MaterialCreator &creator) {
+	_pRootNode->createMaterial(graph, creator);
 }
 
 

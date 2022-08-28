@@ -19,7 +19,7 @@ public:
 
 struct RenderItem {
 	float4x4 matWorld;
-	AxisAlignedBox bounds;
+	BoundingBox bounds;
 	size_t diffuseMapIdx;
 	size_t materialIdx;
 };

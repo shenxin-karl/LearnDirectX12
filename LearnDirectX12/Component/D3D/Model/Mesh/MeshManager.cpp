@@ -16,11 +16,11 @@ std::shared_ptr<dx12lib::IndexBuffer> MeshManager::getIndexBuffer(const std::str
 	return nullptr;
 }
 
-void MeshManager::setVertexBuffer(const std::string &key, std::weak_ptr<dx12lib::VertexBuffer> pVertexBuffer) {
+void MeshManager::cacheVertexBuffer(const std::string &key, std::weak_ptr<dx12lib::VertexBuffer> pVertexBuffer) {
 	_vertexBufferCache[key] = std::move(pVertexBuffer);
 }
 
-void MeshManager::setIndexBuffer(const std::string &key, std::weak_ptr<dx12lib::IndexBuffer> pIndexBuffer) {
+void MeshManager::cacheIndexBuffer(const std::string &key, std::weak_ptr<dx12lib::IndexBuffer> pIndexBuffer) {
 	_indexBufferCache[key] = std::move(pIndexBuffer);
 }
 

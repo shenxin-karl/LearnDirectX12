@@ -1,6 +1,6 @@
 #include "ALNode.h"
 #include <format>
-
+#include <DirectXMath.h>
 #include "ALTree.h"
 
 
@@ -114,7 +114,7 @@ ALNode::ALNode(ALTree *pTree, std::string_view modelPath, int id, const aiScene 
 	aiQuaternion rotate;
 	pAiNode->mTransformation.Decompose(scale, rotate, position);
 
-	_nodeTransform = float4x4(Matrix4(DX::XMMatrixAffineTransformation(
+	_nodeTransform = float4x4(Matrix4(DirectX::XMMatrixAffineTransformation(
 		Vector3(scale.x, scale.y, scale.z),
 		Vector3(0.f),
 		Quaternion(rotate.x, rotate.y, rotate.z, rotate.w),

@@ -1,5 +1,6 @@
 #pragma once
 #include "D3D/Model/MeshModel/MeshModel.h"
+#include "RenderGraph/Job/TransformCBufferPtr.h"
 
 namespace d3d {
 
@@ -11,15 +12,17 @@ public:
 	size_t getNumRenderItem() const override;
 	RenderItem *getRenderItem(size_t idx) const override;
 	void setParentTransform(const Matrix4 &matWorld) override;
-	FRConstantBufferPtr<NodeTransform> getNodeTransform() const override;
-	void createMaterial(const MeshModel::MaterialCreator &creator);
+	const rgph::TransformCBufferPtr &getNodeTransformCBuffer() const override;
+	std::shared_ptr<rgph::IMesh> getMesh(size_t idx) const override;
+	void createMaterial(rgph::RenderGraph &graph, const MeshModel::MaterialCreator &creator);
 private:
 	mutable bool _transformDirty = true;
 	float4x4 _applyTransform;
 	float4x4 _nodeLocalTransform;
+	std::vector<std::shared_ptr<ALMesh>> _alMeshes;
 	std::vector<std::unique_ptr<RenderItem>> _renderItems;
 	std::vector<std::unique_ptr<MeshNode>> _children;
-	FRConstantBufferPtr<NodeTransform> _pNodeTransform;
+	mutable rgph::TransformCBufferPtr _nodeTransformCBuffer;
 };
 
 }

@@ -7,14 +7,15 @@ namespace d3d {
 MeshNode::MeshNode(dx12lib::IDirectContext &directCtx, const ALNode *pALNode) {
 	_applyTransform = pALNode->getNodeTransform();
 	_nodeLocalTransform = pALNode->getNodeTransform();
+	_nodeTransformCBuffer.setTransformCBuffer(directCtx.createFRConstantBuffer<rgph::TransformStore>());
 
-	for (size_t i = 0; i < pALNode->getNumMesh(); ++i) 
-		_renderItems.emplace_back(std::make_unique<RenderItem>(directCtx, pALNode->getMesh(i)));
+	for (size_t i = 0; i < pALNode->getNumMesh(); ++i) {
+		_alMeshes.push_back(pALNode->getMesh(i));
+		_renderItems.emplace_back(std::make_unique<RenderItem>(directCtx, this, i));
+	}
 
 	for (size_t i = 0; i < pALNode->getNumChildren(); ++i)
 		_children.push_back(std::make_unique<MeshNode>(directCtx, pALNode->getChildren(i)));
-
-	_pNodeTransform = directCtx.createFRConstantBuffer<NodeTransform>();
 }
 
 void MeshNode::submit(const Frustum &frustum, const rgph::TechniqueFlag &techniqueFlag) const {
@@ -22,15 +23,16 @@ void MeshNode::submit(const Frustum &frustum, const rgph::TechniqueFlag &techniq
 		return;
 
 	if (_transformDirty) {
-		auto visitor = _pNodeTransform->visit();
-		visitor->matWorld = _applyTransform;
-		visitor->matNormal = float4x4(transpose(inverse(Matrix4(_applyTransform))));
+		rgph::TransformStore store {
+			.matWorld = _applyTransform,
+			.matNormal = float4x4(transpose(inverse(Matrix4(_applyTransform))))
+		};
+		_nodeTransformCBuffer.setTransformStore(store);
 		_transformDirty = false;
 	}
 
 	for (auto &pRenderItem : _renderItems) {
-		auto pMesh = pRenderItem->getMesh();
-		auto worldAABB = pMesh->getBoundingBox().transform(static_cast<Matrix4>(_applyTransform));
+		const auto &worldAABB = pRenderItem->getWorldAABB();
 		if (frustum.contains(worldAABB) == DX::ContainmentType::DISJOINT)
 			continue;
 		pRenderItem->submit(techniqueFlag);
@@ -59,20 +61,27 @@ void MeshNode::setParentTransform(const Matrix4 &matWorld) {
 	_transformDirty = true;
 	for (auto &pChildren : _children)
 		pChildren->setParentTransform(applyTransform);
+
+	for (auto &pRenderItem : _renderItems)
+		pRenderItem->applyTransform(applyTransform);
 }
 
-FRConstantBufferPtr<NodeTransform> MeshNode::getNodeTransform() const {
-	return _pNodeTransform;
+const rgph::TransformCBufferPtr &MeshNode::getNodeTransformCBuffer() const {
+	return _nodeTransformCBuffer;
 }
 
-void MeshNode::createMaterial(const MeshModel::MaterialCreator &creator) {
+std::shared_ptr<rgph::IMesh> MeshNode::getMesh(size_t idx) const {
+	assert(idx < _alMeshes.size());
+	return _alMeshes[idx];
+}
+
+void MeshNode::createMaterial(rgph::RenderGraph &graph, const MeshModel::MaterialCreator &creator) {
 	for (auto &pRenderItem : _renderItems) {
-		auto pMaterial = creator(this, pRenderItem.get());
-		pRenderItem->setMaterial(pMaterial);
-		pRenderItem->rebuildTechnique();
+		pRenderItem->setMaterial(creator(this, pRenderItem.get()));
+		pRenderItem->rebuildTechniqueFromMaterial();
 	}
 	for (auto &pChild : _children)
-		pChild->createMaterial(creator);
+		pChild->createMaterial(graph, creator);
 }
 
 }

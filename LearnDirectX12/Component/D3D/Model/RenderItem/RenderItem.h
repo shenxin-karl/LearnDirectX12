@@ -4,36 +4,26 @@
 #include "D3D/Model/RenderItem/VertexDataSemantic.h"
 #include "D3D/Model/Mesh/MeshManager.h"
 
+namespace rgph {
+class Material;
+}
+
 namespace d3d {
 
 struct INode;
-class Material;
-class RenderItem : public rgph::Drawable {
+class RenderItem : protected rgph::Drawable {
 public:
-	RenderItem(dx12lib::IDirectContext &directCtx, std::shared_ptr<ALMesh> pALMesh);
-	std::shared_ptr<Material> getMaterial() const;
-	std::shared_ptr<ALMesh> getMesh() const;
-	void setMaterial(std::shared_ptr<Material> pMaterial);
-	void rebuildTechnique();
+	RenderItem(dx12lib::IDirectContext &directCtx,  INode *pNode, size_t meshIdx);
+	std::shared_ptr<rgph::Material> getMaterial() const;
+	void setMaterial(std::shared_ptr<rgph::Material> pMaterial);
+	void rebuildTechniqueFromMaterial();
 	bool buildVertexDataInput(dx12lib::IDirectContext &directCtx, const VertexDataSemantic &semantic);
+
+	using rgph::Drawable::submit;
+	const AxisAlignedBox &getWorldAABB() const;
+	void applyTransform(const Matrix4 &matWorld);
 private:
-	template<typename T>
-	std::shared_ptr<dx12lib::VertexBuffer> buildVertexDataInputImpl(dx12lib::IDirectContext &directCtx,
-		const VertexDataSemantic &semantic, 
-		const std::vector<T> &data)
-	{
-		assert(!data.empty());
-		std::string key = _pMesh->getMeshName() + std::format("_{}", semantic.name);
-		auto pVertexBuffer = MeshManager::instance()->getVertexBuffer(key);
-		if (pVertexBuffer == nullptr) {
-			pVertexBuffer = directCtx.createVertexBuffer(data.data(), data.size(), sizeof(T));
-			MeshManager::instance()->setVertexBuffer(key, pVertexBuffer);
-		}
-		return pVertexBuffer;
-	}
-private:
-	std::shared_ptr<ALMesh> _pMesh;
-	std::shared_ptr<Material> _pMaterial;
+	std::shared_ptr<rgph::Material> _pMaterial;
 };
 
 }

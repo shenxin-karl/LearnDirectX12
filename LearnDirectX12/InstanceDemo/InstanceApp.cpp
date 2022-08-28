@@ -16,6 +16,8 @@
 
 InstanceApp::InstanceApp() {
 	_title = "InstanceApp";
+	_width = 1280;
+	_height = 760;
 }
 
 InstanceApp::~InstanceApp() {

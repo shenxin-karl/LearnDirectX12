@@ -6,36 +6,23 @@
 #include <RenderGraph/RenderGraphStd.h>
 #include "RenderGraph/Technique/TechniqueType.hpp"
 #include <RenderGraph/Pass/RenderQueuePass.h>
-#include "D3D/Model/Material/Material.h"
 #include "D3D/Model/MeshModel/MeshModel.h"
 #include "RenderGraph/Pass/ClearPass.hpp"
 #include "RenderGraph/Pass/PresentPass.hpp"
+#include "RenderGraph/RenderGraph/RenderGraph.h"
 
 using namespace Math;
 
-struct OpaquePass : public rgph::RenderQueuePass {
-	OpaquePass(const std::string &passName)
-	: RenderQueuePass(passName)
-	, pShadowMap(this, "ShadowMap")
-	{
-	}
-	void link(dx12lib::ICommonContext &commonCtx) const override;
-	void reset() override;
+
+struct ShadowPass : rgph::RenderQueuePass {
+	explicit ShadowPass(const std::string &passName);
+};
+
+struct OpaquePass : rgph::RenderQueuePass {
+	OpaquePass(const std::string &passName);
 public:
-	rgph::PassResourcePtr<dx12lib::IShaderResource2D> pShadowMap;
+	rgph::PassResourcePtr<dx12lib::IDepthStencil2D> pShadowMap;
 };
-
-
-
-struct ShadowMaterial : public d3d::Material {
-	ShadowMaterial(const std::string &name, d3d::INode *pNode, d3d::RenderItem *pRenderItem);
-	static void initializePso(dx12lib::DirectContextProxy pDirectCtx);
-	static void destroyPso();
-private:
-	static inline std::shared_ptr<dx12lib::GraphicsPSO> pOpaquePSO;
-	static inline std::shared_ptr<dx12lib::GraphicsPSO> pShadowPSO;
-};
-
 
 
 class ShadowApp : public com::BaseApp {
@@ -60,6 +47,6 @@ private:
 	dx12lib::FRConstantBufferPtr<d3d::CBPassType> _pPassCb;
 	std::unordered_map<std::string, std::shared_ptr<dx12lib::GraphicsPSO>> _psoMap;
 
-	std::vector<std::shared_ptr<rgph::Pass>> _passes;
+	rgph::RenderGraph _graph;
 	std::shared_ptr<d3d::MeshModel> _pMeshModel;
 };
