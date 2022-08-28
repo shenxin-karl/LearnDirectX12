@@ -28,6 +28,38 @@ OpaquePass::OpaquePass(const std::string &passName)
 {
 }
 
+ShadowMaterial::ShadowMaterial(std::shared_ptr<dx12lib::IShaderResource2D> pDiffuseTex)
+: rgph::Material("ShadowMaterial")
+{
+	_vertexInputSlots.set(d3d::PositionSemantic.slot);
+	_vertexInputSlots.set(d3d::Texcoord0Semantic.slot);
+	_vertexInputSlots.set(d3d::NormalSemantic.slot);
+
+	auto pAlbedoBindable = rgph::SamplerTextureBindable::make(dx12lib::RegisterSlot::SRV0, pDiffuseTex);
+
+	// opaque 
+	auto pOpaqueTechnique = std::make_shared<rgph::Technique>("Opaque", TechType::kOpaque);
+	{
+		auto pStep = std::make_unique<rgph::Step>(this, pOpaqueSubPass.get());
+		pStep->addBindable(pAlbedoBindable);
+		pOpaqueTechnique->addStep(std::move(pStep));
+	}
+	_techniques.push_back(pOpaqueTechnique);
+
+	// shadow
+	auto pShadowTechnique = std::make_shared<rgph::Technique>("Shadow", TechType::kShadow);
+	{
+		auto pStep = std::make_unique<rgph::Step>(this, pShadowSubPass.get());
+		pShadowTechnique->addStep(std::move(pStep));
+	}
+	_techniques.push_back(pShadowTechnique);
+}
+
+
+void ShadowMaterial::init(dx12lib::DirectContextProxy pDirectCtx) {
+
+}
+
 ShadowApp::ShadowApp() {
 	_title = "ShadowApp";
 	_width = 1280;

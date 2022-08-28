@@ -2,18 +2,21 @@
 #include "../../Component/D3D/HlslShader/LightingUtil.hlsl"
 #include "../../Component/D3D/HlslShader/ColorGrading.hlsl"
 
-cbuffer CbObject : register(b0) {
+cbuffer CbTransform : register(b0) {
 	float4x4	 gMatWorld;
 	float4x4	 gMatNormal;
-	float4x4	 gMatTexCoord;
-	MaterialData gMaterialData;
 };
 
-cbuffer CbPass : register(b1) {
+cbuffer CbObject : register(b1) {
+	MaterialData gMaterialData;
+	float4x4	 gMatTexCoord;
+};
+
+cbuffer CbPass : register(b2) {
 	CBPassType gPass;
 };
 
-cbuffer CbLight : register(b2) {
+cbuffer CbLight : register(b3) {
 	CBLightType gLight;
 };
 

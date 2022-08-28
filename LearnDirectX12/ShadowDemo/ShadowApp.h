@@ -7,12 +7,18 @@
 #include "RenderGraph/Technique/TechniqueType.hpp"
 #include <RenderGraph/Pass/RenderQueuePass.h>
 #include "D3D/Model/MeshModel/MeshModel.h"
+#include "RenderGraph/Material/Material.h"
 #include "RenderGraph/Pass/ClearPass.hpp"
 #include "RenderGraph/Pass/PresentPass.hpp"
 #include "RenderGraph/RenderGraph/RenderGraph.h"
 
 using namespace Math;
 
+
+namespace TechType {
+	constexpr rgph::TechniqueType kOpaque{ 1 };
+	constexpr rgph::TechniqueType kShadow{ 2 };
+}
 
 struct ShadowPass : rgph::RenderQueuePass {
 	explicit ShadowPass(const std::string &passName);
@@ -22,6 +28,15 @@ struct OpaquePass : rgph::RenderQueuePass {
 	OpaquePass(const std::string &passName);
 public:
 	rgph::PassResourcePtr<dx12lib::IDepthStencil2D> pShadowMap;
+};
+
+
+class ShadowMaterial : rgph::Material {
+	explicit ShadowMaterial(std::shared_ptr<dx12lib::IShaderResource2D> pDiffuseTex);
+public:
+	static inline std::shared_ptr<rgph::SubPass> pOpaqueSubPass;
+	static inline std::shared_ptr<rgph::SubPass> pShadowSubPass;
+	static void init(dx12lib::DirectContextProxy pDirectCtx);
 };
 
 
