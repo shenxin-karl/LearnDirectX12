@@ -94,19 +94,14 @@ float CameraBase::getAspect() const {
 	return _aspect;
 }
 
-DX::BoundingFrustum CameraBase::getProjSpaceFrustum() const {
-	auto proj = XMLoadFloat4x4(&getProj());
-	DX::BoundingFrustum result;
-	DX::BoundingFrustum::CreateFromMatrix(result, proj);
-	return result;
+Frustum CameraBase::getProjSpaceFrustum() const {
+	return { Matrix4(getProj())};
 }
 
-DX::BoundingFrustum CameraBase::getViewSpaceFrustum() const {
-	auto localSpaceFrustum = getProjSpaceFrustum();
-	auto invView = XMLoadFloat4x4(&getInvView());
-	DX::BoundingFrustum result;
-	localSpaceFrustum.Transform(result, invView);
-	return result;
+Frustum CameraBase::getViewSpaceFrustum() const {
+	auto projSpaceFrustum = getProjSpaceFrustum();
+	Matrix4 invView = Matrix4(getInvView());
+	return projSpaceFrustum.transform(invView);;
 }
 
 CoronaCamera::CoronaCamera(const CameraDesc &desc) : CameraBase(desc) {

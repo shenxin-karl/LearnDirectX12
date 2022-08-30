@@ -30,20 +30,26 @@ OpaquePass::OpaquePass(const std::string &passName)
 {
 }
 
-ShadowMaterial::ShadowMaterial(std::shared_ptr<dx12lib::IShaderResource2D> pDiffuseTex)
+ShadowMaterial::ShadowMaterial(dx12lib::IDirectContext &directCtx, std::shared_ptr<dx12lib::IShaderResource2D> pDiffuseTex)
 : rgph::Material("ShadowMaterial")
 {
-	_vertexInputSlots.set(d3d::PositionSemantic.slot);
-	_vertexInputSlots.set(d3d::Texcoord0Semantic.slot);
-	_vertexInputSlots.set(d3d::NormalSemantic.slot);
+	_vertexInputSlots = pOpaqueSubPass->getVertexDataInputSlots() | pShadowSubPass->getVertexDataInputSlots();
 
-	auto pAlbedoBindable = rgph::SamplerTextureBindable::make(dx12lib::RegisterSlot::SRV0, pDiffuseTex);
+	auto pAlbedoBindable = rgph::SamplerTextureBindable::make(
+		dx12lib::RegisterSlot::SRV0, pDiffuseTex
+	);
+
+	auto pCbObjectBindable = rgph::ConstantBufferBindable::make(
+		dx12lib::RegisterSlot::CBV1, _pCbObject
+	);
 
 	// opaque 
 	auto pOpaqueTechnique = std::make_shared<rgph::Technique>("Opaque", TechType::kOpaque);
 	{
 		auto pStep = std::make_unique<rgph::Step>(this, pOpaqueSubPass.get());
 		pStep->addBindable(pAlbedoBindable);
+		pStep->addBindable(pLightCBufferBindable);
+		pStep->addBindable(pCbObjectBindable);
 		pOpaqueTechnique->addStep(std::move(pStep));
 	}
 	_techniques.push_back(pOpaqueTechnique);
@@ -97,6 +103,7 @@ void ShadowApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 
 	buildPass();
 	initPso(pDirectCtx);
+	initSubPass();
 	loadModel(pDirectCtx);
 }
 
@@ -131,6 +138,7 @@ void ShadowApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 void ShadowApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pCmdQueue = _pDevice->getCommandQueue();
 	auto pDirectCtx = pCmdQueue->createDirectContextProxy();
+	_pMeshModel->submit(_pCamera->getViewSpaceFrustum(), TechType::kOpaque);
 	_graph.execute(pDirectCtx);
 	pCmdQueue->executeCommandList(pDirectCtx);
 }
@@ -170,8 +178,7 @@ void ShadowApp::loadModel(dx12lib::DirectContextProxy pDirectCtx) {
 		if (pTex2D == nullptr) {
 			assert(false && "load diffuse Map Error");
 		}
-
-		return std::make_shared<ShadowMaterial>(pTex2D);
+		return std::make_shared<ShadowMaterial>(*pDirectCtx, pTex2D);
 	};
 
 	_pMeshModel->createMaterial(_graph, *pDirectCtx, creator);
@@ -248,12 +255,32 @@ void ShadowApp::initPso(dx12lib::DirectContextProxy pDirectCtx) const {
 	}
 }
 
-void ShadowApp::initSubPass() const {
+void ShadowApp::initSubPass() {
 	/// ShadowMaterial::pOpaqueSubPass
 	{
+		rgph::VertexInputSlots vertexInputSlots;
+		vertexInputSlots.set(d3d::PositionSemantic.slot);
+		vertexInputSlots.set(d3d::Texcoord0Semantic.slot);
+		vertexInputSlots.set(d3d::NormalSemantic.slot);
 		auto pOpaqueSubPass = std::make_shared<rgph::SubPass>(ShadowMaterial::pOpaquePso);
 		pOpaqueSubPass->setPassCBufferShaderRegister(dx12lib::RegisterSlot::CBV2);
-		
+		pOpaqueSubPass->setTransformCBufferShaderRegister(dx12lib::RegisterSlot::CBV0);
+		pOpaqueSubPass->setVertexDataInputSlots(vertexInputSlots);
+		ShadowMaterial::pOpaqueSubPass = pOpaqueSubPass;
+		auto *pOpaquePass = dynamic_cast<rgph::RenderQueuePass *>(_graph.getPass("OpaquePass"));
+		pOpaquePass->addSubPass(pOpaqueSubPass);
+	}
+	/// ShadowMaterial::pShadowSubPass
+	{
+		rgph::VertexInputSlots vertexInputSlots;
+		vertexInputSlots.set(d3d::PositionSemantic.slot);
+		auto pShadowSubPass = std::make_shared<rgph::SubPass>(ShadowMaterial::pShadowPso);
+		pShadowSubPass->setPassCBufferShaderRegister(dx12lib::RegisterSlot::CBV1);
+		pShadowSubPass->setTransformCBufferShaderRegister(dx12lib::RegisterSlot::CBV0);
+		pShadowSubPass->setVertexDataInputSlots(vertexInputSlots);
+		ShadowMaterial::pShadowSubPass = pShadowSubPass;
+		auto *pShadowPass = dynamic_cast<rgph::RenderQueuePass *>(_graph.getPass("ShadowPass"));
+		pShadowPass->addSubPass(pShadowSubPass);
 	}
 }
 
@@ -286,6 +313,7 @@ void ShadowApp::buildPass() {
 		_graph.addPass(pShadowPass);
 	}
 	{ // opaque pass
+		pOpaquePass->setPassCBuffer(_pPassCb);
 		pOpaquePass->pShadowMap.preExecuteState = D3D12_RESOURCE_STATE_DEPTH_READ;
 		pClearPass->pRenderTarget >> pOpaquePass->pRenderTarget;
 		pClearPass->pDepthStencil >> pOpaquePass->pDepthStencil;

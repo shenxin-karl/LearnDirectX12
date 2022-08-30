@@ -11,6 +11,7 @@ void GameTimer::reset() {
 	prevTime_ = baseTime_;
 	stopped_ = false;
 	deltaTime_ = 0.f;
+	totalTime_ = 0.f;
 	pausedTime_ = 0.f;
 	prevFrameTimes_ = 30;
 	currFameTimes_ = 0;
@@ -46,6 +47,8 @@ void GameTimer::startNewFrame() {
 	chrono::duration<float> diff = currTime - prevTime_;
 	prevTime_ = currTime;
 	deltaTime_ = diff.count();
+	diff = currTime - baseTime_;
+	totalTime_ = diff.count() - pausedTime_;
 	++currFameTimes_;
 	time_t sysTime = chrono::system_clock::to_time_t(chrono::system_clock::now());
 	newSeconds_ = false;
@@ -58,8 +61,7 @@ void GameTimer::startNewFrame() {
 }
 
 float GameTimer::getTotalTime() const {
-	chrono::duration<float> diff = chrono::steady_clock::now() - baseTime_;
-	return diff.count() - pausedTime_;
+	return totalTime_;
 }
 
 float GameTimer::getDeltaTime() const {

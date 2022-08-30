@@ -27,18 +27,26 @@ struct ShadowPass : rgph::RenderQueuePass {
 struct OpaquePass : rgph::RenderQueuePass {
 	OpaquePass(const std::string &passName);
 public:
-	rgph::PassResourcePtr<dx12lib::IDepthStencil2D> pShadowMap;
+	rgph::PassResourcePtr<dx12lib::IShaderResource2D> pShadowMap;
 };
 
 
+struct CbObject {
+	d3d::MaterialData gMaterialData = d3d::MaterialData::defaultMaterialData;
+	float4x4	      gMatTexCoord = float4x4::identity();
+};
+
 class ShadowMaterial : public rgph::Material {
 public:
-	explicit ShadowMaterial(std::shared_ptr<dx12lib::IShaderResource2D> pDiffuseTex);
+	explicit ShadowMaterial(dx12lib::IDirectContext &directCtx, std::shared_ptr<dx12lib::IShaderResource2D> pDiffuseTex);
+public:
+	FRConstantBufferPtr<CbObject> _pCbObject;
 public:
 	static inline std::shared_ptr<dx12lib::GraphicsPSO> pOpaquePso;
 	static inline std::shared_ptr<dx12lib::GraphicsPSO> pShadowPso;
 	static inline std::shared_ptr<rgph::SubPass> pOpaqueSubPass;
 	static inline std::shared_ptr<rgph::SubPass> pShadowSubPass;
+	static inline std::shared_ptr<rgph::ConstantBufferBindable> pLightCBufferBindable;
 	static inline rgph::PassResourceBase *pShadowMap;
 };
 
@@ -57,7 +65,7 @@ private:
 private:
 	void loadModel(dx12lib::DirectContextProxy pDirectCtx);
 	void initPso(dx12lib::DirectContextProxy pDirectCtx) const;
-	void initSubPass() const;
+	void initSubPass();
 	void buildPass();
 private:
 	bool _bMouseLeftPress = false;

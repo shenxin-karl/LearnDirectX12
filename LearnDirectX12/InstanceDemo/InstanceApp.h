@@ -22,6 +22,7 @@ struct RenderItem {
 	BoundingBox bounds;
 	size_t diffuseMapIdx;
 	size_t materialIdx;
+	float3 axis;
 };
 
 struct InstanceData {
@@ -51,8 +52,12 @@ private:
 	void buildMaterial(dx12lib::CommonContextProxy pCommonCtx);
 	void buildPSO();
 	void buildRenderItem();
-	std::vector<RenderItem> cullingByFrustum() const;
-	void doDrawInstance(dx12lib::GraphicsContextProxy pGraphicsCtx, std::shared_ptr<d3d::Mesh> pMesh, const std::vector<RenderItem> &renderItems);
+	std::vector<RenderItem> cullingByFrustum(std::shared_ptr<com::GameTimer> pGameTimer) const;
+	void doDrawInstance(dx12lib::GraphicsContextProxy pGraphicsCtx, 
+		std::shared_ptr<d3d::Mesh> pMesh, 
+		const std::vector<RenderItem> &renderItems,
+		std::shared_ptr<com::GameTimer> pGameTimer
+	);
 private:
 	constexpr static inline size_t kMaxInstanceSize = 150;
 	constexpr static inline size_t kMaxTextureArraySize = 5;

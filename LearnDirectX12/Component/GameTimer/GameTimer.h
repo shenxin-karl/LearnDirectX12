@@ -22,6 +22,7 @@ private:
 	chrono::steady_clock::time_point stoppedTime_;
 	float	      deltaTime_;
 	float	      pausedTime_;
+	float		  totalTime_;
 	std::uint32_t prevFrameTimes_;
 	std::uint32_t currFameTimes_;
 	std::time_t	  nextTime_;

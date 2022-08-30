@@ -70,8 +70,8 @@ void InstanceApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 		for (size_t idx = 0; idx < srvCount; ++idx)
 			pDirectCtx->setShaderResourceView(baseRegister + idx, _textures[idx]->getSRV());
 
-		std::vector<RenderItem> renderItems = cullingByFrustum();
-		doDrawInstance(pDirectCtx, _geometryMap["skull"], renderItems);
+		std::vector<RenderItem> renderItems = cullingByFrustum(pGameTimer);
+		doDrawInstance(pDirectCtx, _geometryMap["skull"], renderItems, pGameTimer);
 		_pSkyBox->render(pDirectCtx, _pCamera);
 		renderTarget.unbind(pDirectCtx);
 	}
@@ -218,6 +218,7 @@ void InstanceApp::buildRenderItem() {
 	std::mt19937 gen(rd());
 	std::uniform_int_distribution<size_t> disMat(0, _materials.size()-1);
 	std::uniform_int_distribution<size_t> disMap(0, _textures.size()-1);
+	std::uniform_real_distribution<float> disVec(-1.f, 1.f);
 
 	float width = 100.0f;
 	float height = 100.0f;
@@ -239,25 +240,29 @@ void InstanceApp::buildRenderItem() {
 				auto &item = _opaqueRenderItems[index];
 				item.materialIdx = disMat(gen);
 				item.diffuseMapIdx = disMap(gen);
-
+				item.axis = static_cast<float3>(normalize(Vector3(disVec(gen), disVec(gen), disVec(gen))));
 				item.matWorld = float4x4(
 					1.0f, 0.0f, 0.0f, 0.0f,
 					0.0f, 1.0f, 0.0f, 0.0f,
 					0.0f, 0.0f, 1.0f, 0.0f,
 					x+j*dx, y+i*dy, z+k*dz, 1.0f
 				);
-				auto matWorld = XMLoadFloat4x4(&item.matWorld);
-				pMesh->getBounds().Transform(item.bounds, matWorld);
+				item.bounds = pMesh->getBounds();
 			}
 		}
 	}
 }
 
-std::vector<RenderItem> InstanceApp::cullingByFrustum() const {
+std::vector<RenderItem> InstanceApp::cullingByFrustum(std::shared_ptr<com::GameTimer> pGameTimer) const {
 	std::vector<RenderItem> res;
-	DirectX::BoundingFrustum projSpaceFrustum = _pCamera->getViewSpaceFrustum();
+	Frustum viewSpaceFrustum = _pCamera->getViewSpaceFrustum();
+	float totalTime = pGameTimer->getTotalTime();
+
 	for (const auto &rItem : _opaqueRenderItems) {
-		if (projSpaceFrustum.Contains(rItem.bounds) != DISJOINT)
+		Quaternion q = Quaternion(rItem.axis, totalTime);
+		Matrix4 matWorld = Matrix4(rItem.matWorld) * static_cast<Matrix4>(q);
+		auto bounds = AxisAlignedBox(rItem.bounds).transform(matWorld);
+		if (viewSpaceFrustum.contains(bounds) != DISJOINT)
 			res.push_back(rItem);
 	}
 	return res;
@@ -265,18 +270,24 @@ std::vector<RenderItem> InstanceApp::cullingByFrustum() const {
 
 void InstanceApp::doDrawInstance(dx12lib::GraphicsContextProxy pGraphicsCtx, 
 	std::shared_ptr<d3d::Mesh> pMesh, 
-	const std::vector<RenderItem> &renderItems)
+	const std::vector<RenderItem> &renderItems,
+	std::shared_ptr<com::GameTimer> pGameTimer)
 {
+
+	float totalTime = pGameTimer->getTotalTime();
+
 	size_t idx = 0;
 	std::span<InstanceData> bufferVisitor = _pInstanceBuffer->visit();
 	for (const RenderItem &rItem : renderItems) {
 		InstanceData &instData = bufferVisitor[idx++];
 		instData.materialIdx = static_cast<uint32_t>(rItem.materialIdx);
 		instData.diffuseMapIdx = static_cast<uint32_t>(rItem.diffuseMapIdx);
-		instData.matWorld = rItem.matWorld;
-		Matrix4 matWorld = Matrix4(instData.matWorld);
+		Quaternion q = Quaternion(rItem.axis, totalTime);
+
+		Matrix4 matWorld = Matrix4(rItem.matWorld) * static_cast<Matrix4>(q);
 		Matrix4 invWorld = inverse(matWorld);
 		Matrix4 matNormal = transpose(invWorld);
+		instData.matWorld = float4x4(matWorld);
 		instData.matNormal = float4x4(matNormal);
 	}
 
