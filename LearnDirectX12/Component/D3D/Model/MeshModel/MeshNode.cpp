@@ -75,13 +75,19 @@ std::shared_ptr<rgph::IMesh> MeshNode::getMesh(size_t idx) const {
 	return _alMeshes[idx];
 }
 
-void MeshNode::createMaterial(rgph::RenderGraph &graph, const MeshModel::MaterialCreator &creator) {
+void MeshNode::createMaterial(rgph::RenderGraph &graph, 
+	dx12lib::IDirectContext &directCtx, 
+	const MeshModel::MaterialCreator &creator)
+{
+	size_t idx = 0;
 	for (auto &pRenderItem : _renderItems) {
-		pRenderItem->setMaterial(creator(this, pRenderItem.get()));
-		pRenderItem->rebuildTechniqueFromMaterial();
+		const auto *pALMaterial = _alMeshes[idx]->getMaterial();
+		pRenderItem->setMaterial(creator(pALMaterial));
+		pRenderItem->rebuildTechniqueFromMaterial(directCtx);
+		++idx;
 	}
 	for (auto &pChild : _children)
-		pChild->createMaterial(graph, creator);
+		pChild->createMaterial(graph, directCtx, creator);
 }
 
 }

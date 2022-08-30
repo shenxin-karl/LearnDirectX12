@@ -14,7 +14,10 @@ public:
 	void setParentTransform(const Matrix4 &matWorld) override;
 	const rgph::TransformCBufferPtr &getNodeTransformCBuffer() const override;
 	std::shared_ptr<rgph::IMesh> getMesh(size_t idx) const override;
-	void createMaterial(rgph::RenderGraph &graph, const MeshModel::MaterialCreator &creator);
+	void createMaterial(rgph::RenderGraph &graph, 
+		dx12lib::IDirectContext &directCtx, 
+		const MeshModel::MaterialCreator &creator
+	);
 private:
 	mutable bool _transformDirty = true;
 	float4x4 _applyTransform;

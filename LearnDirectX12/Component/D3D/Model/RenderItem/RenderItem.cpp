@@ -59,11 +59,17 @@ void RenderItem::setMaterial(std::shared_ptr<rgph::Material> pMaterial) {
 	_pMaterial = std::move(pMaterial);
 }
 
-void RenderItem::rebuildTechniqueFromMaterial() {
+void RenderItem::rebuildTechniqueFromMaterial(dx12lib::IDirectContext &directCtx) {
 	clearTechnique();
 	assert(_pMaterial != nullptr);
 	for (size_t i = 0; i < _pMaterial->getNumTechnique(); ++i)
 		addTechnique(_pMaterial->getTechnique(i));
+
+	auto vertexInputSlots = _pMaterial->getVertexInputSlots();
+	for (size_t i = 0; i < std::size(d3d::SemanticList); ++i) {
+		if (vertexInputSlots.test(i))
+			buildVertexDataInput(directCtx, d3d::SemanticList[i]);
+	}
 }
 
 template<typename T>

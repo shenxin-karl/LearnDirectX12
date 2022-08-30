@@ -17,6 +17,8 @@
 #include "RenderGraph/Pass/RenderQueuePass.h"
 #include "RenderGraph/Technique/Technique.h"
 #include "D3D/AssimpLoader/ALTree.h"
+#include "D3D/TextureManager/TextureManager.h"
+#include "RenderGraph/Pass/SubPass.h"
 
 
 ShadowPass::ShadowPass(const std::string &passName) : RenderQueuePass(passName, false, true) {
@@ -56,10 +58,6 @@ ShadowMaterial::ShadowMaterial(std::shared_ptr<dx12lib::IShaderResource2D> pDiff
 }
 
 
-void ShadowMaterial::init(dx12lib::DirectContextProxy pDirectCtx) {
-
-}
-
 ShadowApp::ShadowApp() {
 	_title = "ShadowApp";
 	_width = 1280;
@@ -97,8 +95,9 @@ void ShadowApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 	shadowMapClearValue.DepthStencil.Stencil = 0;
 	_pShadowMap = pDirectCtx->createDepthStencil2D(1024, 1024, &shadowMapClearValue, DXGI_FORMAT_D16_UNORM);
 
-	loadModel(pDirectCtx);
 	buildPass();
+	initPso(pDirectCtx);
+	loadModel(pDirectCtx);
 }
 
 void ShadowApp::onDestroy() {
@@ -150,6 +149,112 @@ void ShadowApp::onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int 
 void ShadowApp::loadModel(dx12lib::DirectContextProxy pDirectCtx) {
 	std::shared_ptr<d3d::ALTree> pALTree = std::make_shared<d3d::ALTree>("./resources/powerplant/powerplant.gltf");
 	_pMeshModel = std::make_shared<d3d::MeshModel>(*pDirectCtx, pALTree);
+
+	auto creator = [&](const d3d::ALMaterial *pAlMaterial) -> std::shared_ptr<rgph::Material> {
+		const auto &diffuseMap = pAlMaterial->getDiffuseMap();
+		std::shared_ptr<dx12lib::IShaderResource> pTex = d3d::TextureManager::instance()->get(diffuseMap.path);
+
+		if (pTex == nullptr) {
+			if (diffuseMap.pTextureData != nullptr) {
+				pTex = pDirectCtx->createTextureFromMemory(diffuseMap.textureExtName, 
+					diffuseMap.pTextureData.get(), 
+					diffuseMap.textureDataSize
+				);
+			} else {
+				pTex = pDirectCtx->createTextureFromFile(std::to_wstring(diffuseMap.path));
+			}
+			d3d::TextureManager::instance()->set(diffuseMap.path, pTex);
+		}
+
+		std::shared_ptr<dx12lib::IShaderResource2D> pTex2D = std::dynamic_pointer_cast<dx12lib::IShaderResource2D>(pTex);
+		if (pTex2D == nullptr) {
+			assert(false && "load diffuse Map Error");
+		}
+
+		return std::make_shared<ShadowMaterial>(pTex2D);
+	};
+
+	_pMeshModel->createMaterial(_graph, *pDirectCtx, creator);
+}
+
+void ShadowApp::initPso(dx12lib::DirectContextProxy pDirectCtx) const {
+	/// ShadowMaterial::pOpaquePso
+	auto pSharedDevice = pDirectCtx->getDevice().lock();
+	{
+		auto pRootSignature = pSharedDevice->createRootSignature(2, 6);
+		pRootSignature->at(0).initAsDescriptorTable({
+			{ dx12lib::RegisterSlot::CBV0, 1 }, // cbTransform
+			{ dx12lib::RegisterSlot::CBV1, 1 }, // cbObject
+			{ dx12lib::RegisterSlot::SRV0, 1 }, // gAlbedoMap
+		});
+		pRootSignature->at(1).initAsDescriptorTable({
+			{ dx12lib::RegisterSlot::CBV2, 1 }, // cbPass
+			{ dx12lib::RegisterSlot::CBV3, 1 }, // cbLight
+		});
+		pRootSignature->initStaticSampler(0, d3d::getStaticSamplers());
+		pRootSignature->finalize();
+
+		auto pOpaquePso = pSharedDevice->createGraphicsPSO("OpaquePso");
+		pOpaquePso->setRenderTargetFormat(_pSwapChain->getRenderTargetFormat(), _pSwapChain->getDepthStencilFormat());
+		pOpaquePso->setRootSignature(pRootSignature);
+		pOpaquePso->setInputLayout({
+			d3d::PositionSemantic,
+			d3d::NormalSemantic,
+			d3d::Texcoord0Semantic,
+		});
+		pOpaquePso->setVertexShader(d3d::compileShader(
+			L"shaders/BlinnPhong.hlsl", 
+			nullptr, 
+			"VS", 
+			"vs_5_0")
+		);
+		pOpaquePso->setPixelShader(d3d::compileShader(
+			L"shaders/BlinnPhong.hlsl",
+			nullptr,
+			"PS",
+			"ps_5_0"
+		));
+		pOpaquePso->finalize();
+		ShadowMaterial::pOpaquePso = pOpaquePso;
+	}
+	/// ShadowMaterial::pShadowPso
+	{
+		auto pRootSignature = pSharedDevice->createRootSignature(2);
+		pRootSignature->at(0).initAsDescriptorTable({
+			{ dx12lib::RegisterSlot::CBV0, 1 }, // cbTransform
+		});
+		pRootSignature->at(1).initAsDescriptorTable({
+			{ dx12lib::RegisterSlot::CBV1, 1 }, // cbPass
+		});
+		pRootSignature->finalize();
+		auto pShadowPso = pSharedDevice->createGraphicsPSO("ShadowPSO");
+		pShadowPso->setRootSignature(pRootSignature);
+		pShadowPso->setDepthTargetFormat(_pShadowMap->getFormat());
+		pShadowPso->setInputLayout({ d3d::PositionSemantic });
+		pShadowPso->setVertexShader(d3d::compileShader(
+			L"shaders/Shadows.hlsl",
+			nullptr,
+			"VS",
+			"vs_5_0"
+		));
+		pShadowPso->setPixelShader(d3d::compileShader(
+			L"shaders/Shadows.hlsl",
+			nullptr,
+			"PS",
+			"ps_5_0"
+		));
+		pShadowPso->finalize();
+		ShadowMaterial::pShadowPso = pShadowPso;
+	}
+}
+
+void ShadowApp::initSubPass() const {
+	/// ShadowMaterial::pOpaqueSubPass
+	{
+		auto pOpaqueSubPass = std::make_shared<rgph::SubPass>(ShadowMaterial::pOpaquePso);
+		pOpaqueSubPass->setPassCBufferShaderRegister(dx12lib::RegisterSlot::CBV2);
+		
+	}
 }
 
 void ShadowApp::buildPass() {

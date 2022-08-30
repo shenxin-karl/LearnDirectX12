@@ -31,12 +31,15 @@ public:
 };
 
 
-class ShadowMaterial : rgph::Material {
+class ShadowMaterial : public rgph::Material {
+public:
 	explicit ShadowMaterial(std::shared_ptr<dx12lib::IShaderResource2D> pDiffuseTex);
 public:
+	static inline std::shared_ptr<dx12lib::GraphicsPSO> pOpaquePso;
+	static inline std::shared_ptr<dx12lib::GraphicsPSO> pShadowPso;
 	static inline std::shared_ptr<rgph::SubPass> pOpaqueSubPass;
 	static inline std::shared_ptr<rgph::SubPass> pShadowSubPass;
-	static void init(dx12lib::DirectContextProxy pDirectCtx);
+	static inline rgph::PassResourceBase *pShadowMap;
 };
 
 
@@ -53,6 +56,8 @@ private:
 	void onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int height) override;
 private:
 	void loadModel(dx12lib::DirectContextProxy pDirectCtx);
+	void initPso(dx12lib::DirectContextProxy pDirectCtx) const;
+	void initSubPass() const;
 	void buildPass();
 private:
 	bool _bMouseLeftPress = false;
@@ -60,7 +65,6 @@ private:
 	std::shared_ptr<dx12lib::DepthStencil2D> _pShadowMap;
 	std::shared_ptr<dx12lib::ConstantBuffer> _pLightCb;
 	dx12lib::FRConstantBufferPtr<d3d::CBPassType> _pPassCb;
-	std::unordered_map<std::string, std::shared_ptr<dx12lib::GraphicsPSO>> _psoMap;
 
 	rgph::RenderGraph _graph;
 	std::shared_ptr<d3d::MeshModel> _pMeshModel;

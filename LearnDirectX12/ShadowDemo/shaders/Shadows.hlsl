@@ -20,7 +20,7 @@ cbuffer CbPass : register(b1) {
 VertexOut VS(VertexIn vin) {
 	VertexOut vout;
 	float4 worldPosition = mul(gMatWorld, float4(vin.position, 1.0));
-	vout.SVPosition = mul(gPass.lightSpaceMatrix, worldPosition);
+	vout.SVPosition = mul(gPass.viewProj, worldPosition);
 	return vout;
 }
 

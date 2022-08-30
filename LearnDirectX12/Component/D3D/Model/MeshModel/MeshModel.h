@@ -21,8 +21,11 @@ public:
 	INode *getRootNode() const override;
 	void setModelTransform(const float4x4 &matWorld) override;
 
-	using MaterialCreator = std::function<std::shared_ptr<rgph::Material>(INode *, RenderItem *)>;
-	void createMaterial(rgph::RenderGraph &graph, const MaterialCreator &creator);
+	using MaterialCreator = std::function<std::shared_ptr<rgph::Material>(const ALMaterial *)>;
+	void createMaterial(rgph::RenderGraph &graph, 
+		dx12lib::IDirectContext &directCtx, 
+		const MaterialCreator &creator
+	);
 private:
 	mutable bool _modelTransformDirty = true;
 	float4x4 _modelTransform;
