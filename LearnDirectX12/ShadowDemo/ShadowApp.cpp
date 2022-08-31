@@ -34,7 +34,7 @@ ShadowMaterial::ShadowMaterial(dx12lib::IDirectContext &directCtx, std::shared_p
 : rgph::Material("ShadowMaterial")
 {
 	_vertexInputSlots = pOpaqueSubPass->getVertexDataInputSlots() | pShadowSubPass->getVertexDataInputSlots();
-
+	_pCbObject = directCtx.createFRConstantBuffer<CbObject>(CbObject{});
 	auto pAlbedoBindable = rgph::SamplerTextureBindable::make(
 		dx12lib::RegisterSlot::SRV0, pDiffuseTex
 	);
@@ -48,7 +48,6 @@ ShadowMaterial::ShadowMaterial(dx12lib::IDirectContext &directCtx, std::shared_p
 	{
 		auto pStep = std::make_unique<rgph::Step>(this, pOpaqueSubPass.get());
 		pStep->addBindable(pAlbedoBindable);
-		pStep->addBindable(pLightCBufferBindable);
 		pStep->addBindable(pCbObjectBindable);
 		pOpaqueTechnique->addStep(std::move(pStep));
 	}
@@ -256,6 +255,11 @@ void ShadowApp::initPso(dx12lib::DirectContextProxy pDirectCtx) const {
 }
 
 void ShadowApp::initSubPass() {
+	auto pLightCbBindable = rgph::ConstantBufferBindable::make(
+		dx12lib::RegisterSlot::CBV3,
+		_pLightCb
+	);
+
 	/// ShadowMaterial::pOpaqueSubPass
 	{
 		rgph::VertexInputSlots vertexInputSlots;
@@ -266,6 +270,7 @@ void ShadowApp::initSubPass() {
 		pOpaqueSubPass->setPassCBufferShaderRegister(dx12lib::RegisterSlot::CBV2);
 		pOpaqueSubPass->setTransformCBufferShaderRegister(dx12lib::RegisterSlot::CBV0);
 		pOpaqueSubPass->setVertexDataInputSlots(vertexInputSlots);
+		pOpaqueSubPass->addBindable(pLightCbBindable);
 		ShadowMaterial::pOpaqueSubPass = pOpaqueSubPass;
 		_graph.getRenderQueuePass("OpaquePass")->addSubPass(pOpaqueSubPass);
 	}

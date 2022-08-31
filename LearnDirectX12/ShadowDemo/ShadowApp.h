@@ -46,7 +46,6 @@ public:
 	static inline std::shared_ptr<dx12lib::GraphicsPSO> pShadowPso;
 	static inline std::shared_ptr<rgph::SubPass> pOpaqueSubPass;
 	static inline std::shared_ptr<rgph::SubPass> pShadowSubPass;
-	static inline std::shared_ptr<rgph::ConstantBufferBindable> pLightCBufferBindable;
 	static inline rgph::PassResourceBase *pShadowMap;
 };
 

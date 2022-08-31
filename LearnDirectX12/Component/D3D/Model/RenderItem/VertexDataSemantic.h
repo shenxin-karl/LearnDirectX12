@@ -30,7 +30,7 @@ public:
 	}
 };
 
-static inline VertexDataSemantic PositionSemantic { "POSITION", 0, 0, DXGI_FORMAT_R32G32B32_FLOAT };
+static inline VertexDataSemantic PositionSemantic { "POSITION", 0, 0, DXGI_FORMAT_R32G32B32A32_FLOAT };
 static inline VertexDataSemantic NormalSemantic   { "NORMAL",   0, 1, DXGI_FORMAT_R32G32B32_FLOAT };
 static inline VertexDataSemantic TangentSemantic  { "TANGENT",  0, 2, DXGI_FORMAT_R32G32B32_FLOAT };
 static inline VertexDataSemantic Texcoord0Semantic{ "TEXCOORD", 0, 3, DXGI_FORMAT_R32G32_FLOAT };

@@ -20,31 +20,30 @@ ALMesh::ALMesh(ALTree *pTree, std::string_view modelPath, size_t nodeIdx, size_t
 	if (pAiMesh->mTextureCoords[1])
 		_texcoord1.reserve(pAiMesh->mNumVertices);
 
-	for (unsigned j = 0; j < pAiMesh->mNumVertices; ++j) {
-		const aiVector3D &pos = pAiMesh->mVertices[j];
+	for (unsigned i = 0; i < pAiMesh->mNumVertices; ++i) {
+		const aiVector3D &pos = pAiMesh->mVertices[i];
 		_positions.emplace_back(pos.x, pos.y, pos.z, 1.0);
 		if (pAiMesh->mNormals) {
-			const aiVector3D &nrm = pAiMesh->mNormals[j];
+			const aiVector3D &nrm = pAiMesh->mNormals[i];
 			_normals.emplace_back(nrm.x, nrm.y, nrm.z);
 		}
 		if (pAiMesh->mTangents) {
-			const aiVector3D &tan = pAiMesh->mTangents[j];
+			const aiVector3D &tan = pAiMesh->mTangents[i];
 			_tangents.emplace_back(tan.x, tan.y, tan.z);
 		}
 		if (pAiMesh->mTextureCoords[0]) {
-			const aiVector3D &tex0 = pAiMesh->mTextureCoords[0][j];
+			const aiVector3D &tex0 = pAiMesh->mTextureCoords[0][i];
 			_texcoord0.emplace_back(tex0.x, tex0.y);
 		}
 		if (pAiMesh->mTextureCoords[1]) {
-			const aiVector3D &tex1 = pAiMesh->mTextureCoords[1][j];
+			const aiVector3D &tex1 = pAiMesh->mTextureCoords[1][i];
 			_texcoord1.emplace_back(tex1.x, tex1.y);
 		}
 	}
 
-	for (unsigned j = 0; j < pAiMesh->mNumFaces; ++j) {
-		_indices.push_back(pAiMesh->mFaces[j].mIndices[0]);
-		_indices.push_back(pAiMesh->mFaces[j].mIndices[1]);
-		_indices.push_back(pAiMesh->mFaces[j].mIndices[2]);
+	for (unsigned i = 0; i < pAiMesh->mNumFaces; ++i) {
+		for (size_t j = 0; j < pAiMesh->mFaces[i].mNumIndices; ++j)
+			_indices.push_back(pAiMesh->mFaces[i].mIndices[j]);
 	}
 
 	const auto &aabb = pAiMesh->mAABB;
