@@ -25,8 +25,8 @@ ShadowPass::ShadowPass(const std::string &passName) : RenderQueuePass(passName, 
 }
 
 OpaquePass::OpaquePass(const std::string &passName)
-	: RenderQueuePass(passName)
-	, pShadowMap(this, "ShadowMap")
+: RenderQueuePass(passName)
+, pShadowMap(this, "ShadowMap")
 {
 }
 
@@ -267,8 +267,7 @@ void ShadowApp::initSubPass() {
 		pOpaqueSubPass->setTransformCBufferShaderRegister(dx12lib::RegisterSlot::CBV0);
 		pOpaqueSubPass->setVertexDataInputSlots(vertexInputSlots);
 		ShadowMaterial::pOpaqueSubPass = pOpaqueSubPass;
-		auto *pOpaquePass = dynamic_cast<rgph::RenderQueuePass *>(_graph.getPass("OpaquePass"));
-		pOpaquePass->addSubPass(pOpaqueSubPass);
+		_graph.getRenderQueuePass("OpaquePass")->addSubPass(pOpaqueSubPass);
 	}
 	/// ShadowMaterial::pShadowSubPass
 	{
@@ -279,8 +278,7 @@ void ShadowApp::initSubPass() {
 		pShadowSubPass->setTransformCBufferShaderRegister(dx12lib::RegisterSlot::CBV0);
 		pShadowSubPass->setVertexDataInputSlots(vertexInputSlots);
 		ShadowMaterial::pShadowSubPass = pShadowSubPass;
-		auto *pShadowPass = dynamic_cast<rgph::RenderQueuePass *>(_graph.getPass("ShadowPass"));
-		pShadowPass->addSubPass(pShadowSubPass);
+		_graph.getRenderQueuePass("ShadowPass")->addSubPass(pShadowSubPass);
 	}
 }
 
