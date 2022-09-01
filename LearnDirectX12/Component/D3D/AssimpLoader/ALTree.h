@@ -45,14 +45,10 @@ private:
 class ALTree {
 public:
 	constexpr static int kDefaultLoadFlag = (
-		aiProcess_Triangulate         |
-		aiProcess_FixInfacingNormals  |
-		aiProcess_CalcTangentSpace    |
-		aiProcess_ConvertToLeftHanded |
-		aiProcess_LimitBoneWeights    |
-		aiProcess_OptimizeMeshes      |
-		aiProcess_OptimizeGraph		  |
-		aiProcess_GenUVCoords
+		aiProcessPreset_TargetRealtime_MaxQuality |
+		aiProcess_ConvertToLeftHanded		      | 
+		aiProcess_OptimizeGraph		              |
+		aiProcess_GenBoundingBoxes
 	);
 	ALTree(const std::string &path, int flag = kDefaultLoadFlag);
 	~ALTree();
@@ -60,7 +56,7 @@ public:
 	size_t getNumMaterial() const;
 	const ALMaterial *getMaterial(size_t idx) const;
 	const ALNode *getRootNode() const;
-
+	void saveToObj(const std::string &direction) const;
 private:
 	std::vector<ALMaterial> _materials;
 	std::unique_ptr<ALNode> _pRootNode;

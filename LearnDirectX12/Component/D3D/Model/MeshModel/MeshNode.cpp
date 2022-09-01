@@ -1,18 +1,22 @@
 #include "MeshNode.h"
 #include "D3D/AssimpLoader/ALNode.h"
 #include "D3D/Model/RenderItem/RenderItem.h"
+#include "D3D/AssimpLoader/ALMesh.h"
+#include "RenderGraph/Job/TransformCBufferPtr.h"
 
 namespace d3d {
 
 MeshNode::MeshNode(dx12lib::IDirectContext &directCtx, const ALNode *pALNode) {
 	_applyTransform = pALNode->getNodeTransform();
 	_nodeLocalTransform = pALNode->getNodeTransform();
-	_nodeTransformCBuffer.setTransformCBuffer(directCtx.createFRConstantBuffer<rgph::TransformStore>());
 
 	for (size_t i = 0; i < pALNode->getNumMesh(); ++i) {
 		_alMeshes.push_back(pALNode->getMesh(i));
 		_renderItems.emplace_back(std::make_unique<RenderItem>(directCtx, this, i));
 	}
+
+	if (pALNode->getNumMesh())
+		_nodeTransformCBuffer.setTransformCBuffer(directCtx.createFRConstantBuffer<rgph::TransformStore>());
 
 	for (size_t i = 0; i < pALNode->getNumChildren(); ++i)
 		_children.push_back(std::make_unique<MeshNode>(directCtx, pALNode->getChildren(i)));
@@ -22,7 +26,7 @@ void MeshNode::submit(const Frustum &frustum, const rgph::TechniqueFlag &techniq
 	if (_renderItems.empty())
 		return;
 
-	if (_transformDirty) {
+	if (_transformDirty && _nodeTransformCBuffer != nullptr) {
 		rgph::TransformStore store {
 			.matWorld = _applyTransform,
 			.matNormal = float4x4(transpose(inverse(Matrix4(_applyTransform))))

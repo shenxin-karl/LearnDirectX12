@@ -248,7 +248,7 @@ FirstPersonCamera::FirstPersonCamera(const CameraDesc &desc) : CameraBase(desc) 
 	Vector3 upDir = normalize(lookUp);
 
 	_pitch = std::clamp(DirectX::XMConvertToDegrees(std::asin(target.y)), -89.9f, +89.9f);
-	_yaw = DirectX::XMConvertToDegrees(std::atan2(target.x, target.z));
+	_yaw = DirectX::XMConvertToDegrees(std::atan2(target.z, target.x));
 	_roll = DirectX::XMConvertToDegrees(std::asin(upDir.y));
 }
 
@@ -301,7 +301,6 @@ void FirstPersonCamera::update(std::shared_ptr<com::GameTimer> pGameTimer) {
 
 	_lookAt = lookAt.xyz;
 	_lookUp = lookUp.xyz;
-
 
 	Matrix4 view = DirectX::XMMatrixLookAtLH(lookFrom, lookAt, lookUp);
 	Matrix4 proj = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(_fov), _aspect, _nearClip, _farClip);

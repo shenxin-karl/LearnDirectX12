@@ -45,7 +45,7 @@ VertexOut VS(VertexIn vin) {
 
 Texture2D gAlbedoMap : register(t0);
 float4 PS(VertexOut pin) : SV_Target{
-	float4 textureAlbedo = gAlbedoMap.Sample(gSamLinearClamp, pin.texcoord);
+	float4 textureAlbedo = gAlbedoMap.Sample(gSamLinearWrap, pin.texcoord);
 	MaterialData materialData = {
 		gMaterialData.diffuseAlbedo * textureAlbedo,
 		gMaterialData.roughness,
@@ -60,7 +60,7 @@ float4 PS(VertexOut pin) : SV_Target{
 	result += ComputeDirectionLight(gLight.lights[0], materialData, N, V);
 	result += ComputeDirectionLight(gLight.lights[1], materialData, N, V);
 	result += ComputeDirectionLight(gLight.lights[2], materialData, N, V);
-	result += (gLight.ambientLight * materialData.diffuseAlbedo).rgb;
+	result += (gLight.ambientLight * textureAlbedo).rgb;
 	result = GammaCorrection(result);
 	return float4(result, gMaterialData.diffuseAlbedo.a);
 }

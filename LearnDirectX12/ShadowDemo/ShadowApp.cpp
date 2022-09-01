@@ -74,16 +74,16 @@ ShadowApp::~ShadowApp() {
 
 void ShadowApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 	d3d::CameraDesc cameraDesc {
-		float3(0, 0, 200),
-		float3(0, 1, 0),
-		float3(-20, 0, 0),
+		float3(110.045f, 8.51247f, -0.0528324f),
+		float3(-4.37114e-08, 1, 0),
+		float3(109.05f, 8.41141f, -0.0424141f),
 		45.f,
 		0.1f,
 		1000.f,
 		static_cast<float>(_width) / static_cast<float>(_height),
 	};
 	_pCamera = std::make_shared<d3d::FirstPersonCamera>(cameraDesc);
-	_pCamera->_cameraMoveSpeed = 35.f;
+	_pCamera->_cameraMoveSpeed = 60.f;
 
 	_pPassCb = pDirectCtx->createFRConstantBuffer<d3d::CBPassType>();
 	_pLightCb = pDirectCtx->createConstantBuffer<d3d::CBLightType>();
@@ -157,7 +157,7 @@ void ShadowApp::loadModel(dx12lib::DirectContextProxy pDirectCtx) {
 	std::shared_ptr<d3d::ALTree> pALTree = std::make_shared<d3d::ALTree>("./resources/powerplant/powerplant.gltf");
 	_pMeshModel = std::make_shared<d3d::MeshModel>(*pDirectCtx, pALTree);
 
-	auto creator = [&](const d3d::ALMaterial *pAlMaterial) -> std::shared_ptr<rgph::Material> {
+	auto materialCreator = [&](const d3d::ALMaterial *pAlMaterial) -> std::shared_ptr<rgph::Material> {
 		const auto &diffuseMap = pAlMaterial->getDiffuseMap();
 		std::shared_ptr<dx12lib::IShaderResource> pTex = d3d::TextureManager::instance()->get(diffuseMap.path);
 
@@ -168,7 +168,7 @@ void ShadowApp::loadModel(dx12lib::DirectContextProxy pDirectCtx) {
 					diffuseMap.textureDataSize
 				);
 			} else {
-				pTex = pDirectCtx->createTextureFromFile(std::to_wstring(diffuseMap.path));
+				pTex = pDirectCtx->createTextureFromFile(std::to_wstring(diffuseMap.path), true);
 			}
 			d3d::TextureManager::instance()->set(diffuseMap.path, pTex);
 		}
@@ -180,7 +180,7 @@ void ShadowApp::loadModel(dx12lib::DirectContextProxy pDirectCtx) {
 		return std::make_shared<ShadowMaterial>(*pDirectCtx, pTex2D);
 	};
 
-	_pMeshModel->createMaterial(_graph, *pDirectCtx, creator);
+	_pMeshModel->createMaterial(_graph, *pDirectCtx, materialCreator);
 }
 
 void ShadowApp::initPso(dx12lib::DirectContextProxy pDirectCtx) const {

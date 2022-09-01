@@ -61,6 +61,7 @@ void ALMaterial::processTexture(ALTexture &texture,
 
 ALTree::ALTree(const std::string &path, int flag) {
 	Assimp::Importer importer;
+	importer.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_LINE | aiPrimitiveType_POINT);
 	const aiScene *pAiScene = importer.ReadFile(path, flag);
 	if (pAiScene == nullptr || pAiScene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || pAiScene->mRootNode == nullptr) {
 		assert(false);
@@ -72,10 +73,16 @@ ALTree::ALTree(const std::string &path, int flag) {
 	std::string direction = currPath.remove_filename().string();
 
 	_materials.resize(pAiScene->mNumMaterials);
+	std::vector<bool> flags(pAiScene->mNumMaterials, false);
+
 	for (size_t i = 0; i < pAiScene->mNumMeshes; ++i) {
 		const aiMesh *pAiMesh = pAiScene->mMeshes[i];
 		const aiMaterial *pAiMaterial = pAiScene->mMaterials[pAiMesh->mMaterialIndex];
-		_materials[i].init(direction, pAiScene, pAiMaterial);
+		if (flags[pAiMesh->mMaterialIndex])
+			continue;
+
+		_materials[pAiMesh->mMaterialIndex].init(direction, pAiScene, pAiMaterial);
+		flags[pAiMesh->mMaterialIndex] = true;
 	}
 
 	std::string_view modelPath(path.c_str(), path.length());
@@ -97,6 +104,14 @@ const ALMaterial * ALTree::getMaterial(size_t idx) const {
 
 const ALNode * ALTree::getRootNode() const {
 	return _pRootNode.get();
+}
+
+void ALTree::saveToObj(const std::string &direction) const {
+	assert(!direction.empty());
+	if (direction.back() == '/' || direction.back() == '\\')
+		_pRootNode->saveToObj(direction);
+	else
+		_pRootNode->saveToObj(direction + '/');
 }
 
 }
