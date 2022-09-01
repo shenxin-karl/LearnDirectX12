@@ -10,13 +10,13 @@ MeshNode::MeshNode(dx12lib::IDirectContext &directCtx, const ALNode *pALNode) {
 	_applyTransform = pALNode->getNodeTransform();
 	_nodeLocalTransform = pALNode->getNodeTransform();
 
+	if (pALNode->getNumMesh() > 0)
+		_nodeTransformCBuffer.setTransformCBuffer(directCtx.createFRConstantBuffer<rgph::TransformStore>());
+
 	for (size_t i = 0; i < pALNode->getNumMesh(); ++i) {
 		_alMeshes.push_back(pALNode->getMesh(i));
 		_renderItems.emplace_back(std::make_unique<RenderItem>(directCtx, this, i));
 	}
-
-	if (pALNode->getNumMesh())
-		_nodeTransformCBuffer.setTransformCBuffer(directCtx.createFRConstantBuffer<rgph::TransformStore>());
 
 	for (size_t i = 0; i < pALNode->getNumChildren(); ++i)
 		_children.push_back(std::make_unique<MeshNode>(directCtx, pALNode->getChildren(i)));

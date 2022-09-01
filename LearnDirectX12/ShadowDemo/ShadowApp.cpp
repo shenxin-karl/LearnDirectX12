@@ -19,6 +19,7 @@
 #include "D3D/AssimpLoader/ALTree.h"
 #include "D3D/TextureManager/TextureManager.h"
 #include "RenderGraph/Pass/SubPass.h"
+#include "D3D/Tool/FirstPersonCamera.h"
 
 
 ShadowPass::ShadowPass(const std::string &passName) : RenderQueuePass(passName, false, true) {
@@ -73,6 +74,7 @@ ShadowApp::~ShadowApp() {
 }
 
 void ShadowApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
+	_pSwapChain->setVerticalSync(false);
 	d3d::CameraDesc cameraDesc {
 		float3(110.045f, 8.51247f, -0.0528324f),
 		float3(-4.37114e-08, 1, 0),

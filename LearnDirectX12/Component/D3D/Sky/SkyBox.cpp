@@ -81,7 +81,7 @@ SkyBox::SkyBox(const SkyBoxDesc &desc) : _pCubeMap(desc.pCubeMap) {
 	));
 	_pSkyBoxPSO->finalize();
 
-	buildCubeVertexBuffer(pGraphicsCtx);
+	_pCubeVertexBuffer = buildCubeVertexBuffer(pGraphicsCtx);
 }
 
 void SkyBox::render(dx12lib::GraphicsContextProxy pGraphicsCtx, std::shared_ptr<CameraBase> pCamera) const {
@@ -108,7 +108,7 @@ void SkyBox::setEnvironmentMap(std::shared_ptr<dx12lib::IShaderResourceCube> pCu
 	_pCubeMap = pCubeMap;
 }
 
-void SkyBox::buildCubeVertexBuffer(dx12lib::GraphicsContextProxy pGraphicsCtx) {
+std::shared_ptr<dx12lib::VertexBuffer> SkyBox::buildCubeVertexBuffer(dx12lib::GraphicsContextProxy pGraphicsCtx) {
 	float3 skyboxVertices[] = {
 		{ -1.0f,+1.0f,-1.0f }, { -1.0f,-1.0f,-1.0f }, { +1.0f,-1.0f,-1.0f },
 		{ +1.0f,-1.0f,-1.0f }, { +1.0f,+1.0f,-1.0f }, { -1.0f,+1.0f,-1.0f },
@@ -124,7 +124,7 @@ void SkyBox::buildCubeVertexBuffer(dx12lib::GraphicsContextProxy pGraphicsCtx) {
 		{ +1.0f,-1.0f,-1.0f }, { -1.0f,-1.0f,+1.0f }, { +1.0f,-1.0f,+1.0f },
 	};
 
-	_pCubeVertexBuffer = pGraphicsCtx->createVertexBuffer(
+	return pGraphicsCtx->createVertexBuffer(
 		skyboxVertices, 
 		std::size(skyboxVertices), 
 		sizeof(float3)

@@ -15,6 +15,7 @@
 
 #include "D3D/Sky/SkyBox.h"
 #include "InputSystem/Window.h"
+#include "D3D/Tool/CoronaCamera.h"
 
 BoxApp::BoxApp() {
 	_title = "BoxApp";

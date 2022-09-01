@@ -2,6 +2,8 @@
 #include <DirectXColors.h>
 #include "InstanceApp.h"
 
+#include <iostream>
+
 #include "D3D/dx12libHelper/RenderTarget.h"
 #include "dx12lib/Context/ContextStd.h"
 #include "dx12lib/Pipeline/PipelineStd.h"
@@ -13,6 +15,7 @@
 #include "InputSystem/Mouse.h"
 #include "GameTimer/GameTimer.h"
 #include "D3D/Sky/SkyBox.h"
+#include "D3D/Tool/FirstPersonCamera.h"
 
 InstanceApp::InstanceApp() {
 	_title = "InstanceApp";
@@ -93,6 +96,7 @@ void InstanceApp::pollEvent() {
 			_bMouseLeftPress = false;
 		}
 
+		std::cout << "_bMouseLeftPress " << _bMouseLeftPress << std::endl;
 		if (_bMouseLeftPress || !event.isMove())
 			_pCamera->pollEvent(event);
 	}

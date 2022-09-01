@@ -18,6 +18,7 @@
 #include "D3D/dx12libHelper/D3DDescHelper.h"
 #include "D3D/dx12libHelper/RenderTarget.h"
 #include "D3D/Postprocessing/FXAA.h"
+#include "D3D/Tool/CoronaCamera.h"
 
 Vertex::Vertex(const com::Vertex &vertex)
 	: position(vertex.position), normal(vertex.normal), texcoord(vertex.texcoord) {

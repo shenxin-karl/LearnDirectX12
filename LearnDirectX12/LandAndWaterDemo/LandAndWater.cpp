@@ -18,6 +18,7 @@
 #include "Geometry/GeometryGenerator.h"
 #include <DirectXColors.h>
 #include <random>
+#include "D3D/Tool/FirstPersonCamera.h"
 
 
 void WaterParame::init(const WaterParameDesc &desc) {
