@@ -23,9 +23,6 @@ MeshNode::MeshNode(dx12lib::IDirectContext &directCtx, const ALNode *pALNode) {
 }
 
 void MeshNode::submit(const Frustum &frustum, const rgph::TechniqueFlag &techniqueFlag) const {
-	if (_renderItems.empty())
-		return;
-
 	if (_transformDirty && _nodeTransformCBuffer != nullptr) {
 		rgph::TransformStore store {
 			.matWorld = _applyTransform,

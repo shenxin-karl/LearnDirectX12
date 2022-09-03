@@ -27,7 +27,7 @@ void SobelFilter::tryBuildSobelMap(dx12lib::ComputeContextProxy pComputeList, DX
 	if (_pSobelMap == nullptr || _pSobelMap->getWidth() != _width ||
 		_pSobelMap->getHeight() != _height || _pSobelMap->getFormat() != format) 
 	{
-		_pSobelMap = pComputeList->createUnorderedAccess2D(_width, _height, nullptr, format);
+		_pSobelMap = pComputeList->createUnorderedAccess2D(_width, _height, format);
 	}
 }
 

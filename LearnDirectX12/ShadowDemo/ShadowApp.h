@@ -27,7 +27,7 @@ struct ShadowPass : rgph::RenderQueuePass {
 struct OpaquePass : rgph::RenderQueuePass {
 	OpaquePass(const std::string &passName);
 public:
-	rgph::PassResourcePtr<dx12lib::ITextureResource2D> pShadowMap;
+	rgph::PassResourcePtr<dx12lib::ITextureResource2DArray> pShadowMap;
 };
 
 
@@ -70,8 +70,8 @@ private:
 private:
 	bool _bMouseLeftPress = false;
 	std::shared_ptr<d3d::FirstPersonCamera> _pCamera;
-	std::shared_ptr<dx12lib::DepthStencil2D> _pShadowMap;
 	std::shared_ptr<dx12lib::ConstantBuffer> _pLightCb;
+	std::shared_ptr<dx12lib::IDepthStencil2DArray> _pShadowMapArray;
 	std::shared_ptr<dx12lib::ITextureResourceCube> _pEnvMap;
 	dx12lib::FRConstantBufferPtr<d3d::CBPassType> _pPassCb;
 

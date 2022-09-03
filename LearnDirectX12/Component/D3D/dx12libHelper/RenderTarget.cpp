@@ -2,6 +2,7 @@
 #include "dx12lib/Texture/RenderTargetTexture.h"
 #include "dx12lib/Device/SwapChain.h"
 #include "dx12lib/Texture/DepthStencilTexture.h"
+#include <DirectXColors.h>
 
 namespace d3d {
 
@@ -33,9 +34,20 @@ RenderTarget::RenderTarget(dx12lib::GraphicsContextProxy pGraphicsCtx,
 	size_t height,
 	DXGI_FORMAT renderTargetFormat,
 	DXGI_FORMAT depthStencilFormat)
-	: _width(width), _height(height) {
-	_pRenderTarget2D = pGraphicsCtx->createRenderTarget2D(width, height, nullptr, renderTargetFormat);
-	_pDepthStencil2D = pGraphicsCtx->createDepthStencil2D(width, height, nullptr, depthStencilFormat);
+	: _width(width), _height(height)
+{
+	D3D12_CLEAR_VALUE rtClearValue = {
+		.Format = renderTargetFormat,
+		.Color = { 0.f, 0.f, 0.f, 1.f }
+	};
+
+	D3D12_CLEAR_VALUE dsClearValue = {
+		.Format = depthStencilFormat,
+		.DepthStencil = { .Depth = 1.f, .Stencil = 1 }
+	};
+
+	_pRenderTarget2D = pGraphicsCtx->createRenderTarget2D(width, height, &rtClearValue);
+	_pDepthStencil2D = pGraphicsCtx->createDepthStencil2D(width, height, &dsClearValue);
 }
 
 std::shared_ptr<dx12lib::RenderTarget2D> RenderTarget::getRenderTarget2D() const {

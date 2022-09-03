@@ -119,7 +119,7 @@ void IBL::buildEnvMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<
 	float fWidth = static_cast<float>(width);
 	float fHeight = static_cast<float>(height);
 	float fSize = static_cast<float>(size);
-	_pEnvMap = pComputeCtx->createUnorderedAccessCube(size, size, 1, nullptr, DXGI_FORMAT_R16G16B16A16_FLOAT);
+	_pEnvMap = pComputeCtx->createUnorderedAccessCube(size, size, 1, DXGI_FORMAT_R16G16B16A16_FLOAT);
 	pComputeCtx->setComputePSO(_pPanoToCubeMapPSO);
 	pComputeCtx->setCompute32BitConstants(dx12lib::RegisterSlot::CBV0, 1, &fSize, 0);
 	pComputeCtx->setCompute32BitConstants(dx12lib::RegisterSlot::CBV0, 1, &fSize, 1);
@@ -214,7 +214,7 @@ void IBL::buildPerFilterEnvMap(dx12lib::ComputeContextProxy pComputeCtx) {
 	constexpr size_t kGroupCount = kMapSize / kThreadCount;
 	constexpr float fSize = static_cast<float>(kMapSize);
 
-	_pPerFilterEnvMap = pComputeCtx->createUnorderedAccessCube(kMapSize, kMapSize, 5, nullptr, DXGI_FORMAT_R16G16B16A16_FLOAT);
+	_pPerFilterEnvMap = pComputeCtx->createUnorderedAccessCube(kMapSize, kMapSize, 5, DXGI_FORMAT_R16G16B16A16_FLOAT);
 	pComputeCtx->setComputePSO(_pPerFilterEnvPSO);
 	pComputeCtx->setCompute32BitConstants(dx12lib::RegisterSlot::CBV0, 1, &fSize);
 	pComputeCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV0, _pEnvMap->getSRV());

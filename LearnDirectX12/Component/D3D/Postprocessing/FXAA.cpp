@@ -39,7 +39,7 @@ void FXAA::onResize(dx12lib::ComputeContextProxy pComputeCtx, uint32 width, uint
 	if (_width != width || _height != height) {
 		_width = width;
 		_height = height;
-		_pOutputMap = pComputeCtx->createUnorderedAccess2D(_width, _height, nullptr, _format);
+		_pOutputMap = pComputeCtx->createUnorderedAccess2D(_width, _height, _format);
 	}
 }
 

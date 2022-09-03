@@ -69,8 +69,8 @@ std::shared_ptr<dx12lib::UnorderedAccess2D> BlurFilter::getOutput() const {
 }
 
 void BlurFilter::buildUnorderedAccessResource(dx12lib::ComputeContextProxy pComputeContext) {
-	_pBlurMap0 = pComputeContext->createUnorderedAccess2D(_width, _height, nullptr, _format);
-	_pBlurMap1 = pComputeContext->createUnorderedAccess2D(_width, _height, nullptr, _format);
+	_pBlurMap0 = pComputeContext->createUnorderedAccess2D(_width, _height, _format);
+	_pBlurMap1 = pComputeContext->createUnorderedAccess2D(_width, _height, _format);
 }
 
 void BlurFilter::buildBlurPSO(std::weak_ptr<dx12lib::Device> pDevice) {

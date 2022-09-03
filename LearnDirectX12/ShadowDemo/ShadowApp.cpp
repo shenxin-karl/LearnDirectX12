@@ -101,7 +101,7 @@ void ShadowApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 	shadowMapClearValue.Format = DXGI_FORMAT_D16_UNORM;
 	shadowMapClearValue.DepthStencil.Depth = 0.f;
 	shadowMapClearValue.DepthStencil.Stencil = 0;
-	_pShadowMap = pDirectCtx->createDepthStencil2D(1024, 1024, &shadowMapClearValue, DXGI_FORMAT_D16_UNORM);
+	_pShadowMapArray = pDirectCtx->createDepthStencil2DArray(512, 512, 3, &shadowMapClearValue);
 
 	loadEnvMap(pDirectCtx);
 	buildPass();
@@ -134,8 +134,6 @@ void ShadowApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	_pCamera->update(pGameTimer);
 	auto pPassCbVisitor = _pPassCb->visit();
 	_pCamera->updatePassCB(*pPassCbVisitor);
-
-
 }
 
 void ShadowApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
@@ -243,7 +241,7 @@ void ShadowApp::initPso(dx12lib::DirectContextProxy pDirectCtx) const {
 		pRootSignature->finalize();
 		auto pShadowPso = pSharedDevice->createGraphicsPSO("ShadowPSO");
 		pShadowPso->setRootSignature(pRootSignature);
-		pShadowPso->setDepthTargetFormat(_pShadowMap->getFormat());
+		pShadowPso->setDepthTargetFormat(_pShadowMapArray->getFormat());
 		pShadowPso->setInputLayout({ d3d::PositionSemantic });
 		pShadowPso->setVertexShader(d3d::compileShader(
 			L"shaders/Shadows.hlsl",
@@ -303,7 +301,6 @@ void ShadowApp::buildPass() {
 	auto pSkyBoxPass = std::make_shared<d3d::SkyBoxPass>("SkyBoxPass");
 	auto pPresentPass = std::make_shared<rgph::PresentPass>("PresentPass");
 
-
 	{ // clear RenderTarget and DepthStencil Pass
 		auto getRenderTarget = [&]() {
 			return _pSwapChain->getRenderTarget2D();
@@ -318,7 +315,7 @@ void ShadowApp::buildPass() {
 	}
 	{ // clear Shadow Map
 		pClearShadowMap->pDepthStencil.preExecuteState = D3D12_RESOURCE_STATE_DEPTH_WRITE;
-		_pShadowMap >> pClearShadowMap->pDepthStencil;
+		_pShadowMapArray >> pClearShadowMap->pDepthStencil;
 		_graph.addPass(pClearShadowMap);
 	}
 	{ // shadow pass
