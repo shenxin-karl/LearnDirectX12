@@ -99,11 +99,11 @@ void SkyBox::render(dx12lib::GraphicsContextProxy pGraphicsCtx, std::shared_ptr<
 	pGraphicsCtx->drawInstanced(_pCubeVertexBuffer->getVertexCount(), 1, 0);
 }
 
-std::shared_ptr<dx12lib::IShaderResourceCube> SkyBox::getEnvironmentMap() const {
+std::shared_ptr<dx12lib::ITextureResourceCube> SkyBox::getEnvironmentMap() const {
 	return _pCubeMap;
 }
 
-void SkyBox::setEnvironmentMap(std::shared_ptr<dx12lib::IShaderResourceCube> pCubeMap) {
+void SkyBox::setEnvironmentMap(std::shared_ptr<dx12lib::ITextureResourceCube> pCubeMap) {
 	assert(pCubeMap != nullptr);
 	_pCubeMap = pCubeMap;
 }

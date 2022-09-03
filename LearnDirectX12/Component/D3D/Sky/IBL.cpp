@@ -109,7 +109,7 @@ void IBL::buildConvolutionIrradiancePSO(std::weak_ptr<dx12lib::Device> pDevice) 
 	_pConvolutionIrradiancePSO->finalize();
 }
 
-void IBL::buildEnvMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<dx12lib::IShaderResource2D> pPannoEnvMap) {
+void IBL::buildEnvMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<dx12lib::ITextureResource2D> pPannoEnvMap) {
 	constexpr size_t kThreadCount = 32;
 
 	size_t width = pPannoEnvMap->getWidth();
@@ -137,7 +137,7 @@ struct SH3Coeff {
 	float3 m[9];
 };
 
-void IBL::buildConvolutionIrradianceMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<dx12lib::IShaderResource2D> pPannoEnvMap) {
+void IBL::buildConvolutionIrradianceMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<dx12lib::ITextureResource2D> pPannoEnvMap) {
 	size_t width = pPannoEnvMap->getWidth();
 	size_t height = pPannoEnvMap->getHeight();
 	size_t size = 128;

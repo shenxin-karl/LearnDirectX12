@@ -29,7 +29,7 @@ struct ObjectCBType {
 struct RenderItem {
 	std::shared_ptr<d3d::Mesh> _pMesh;
 	dx12lib::FRConstantBufferPtr<ObjectCBType> _pObjectCB;
-	std::shared_ptr<dx12lib::IShaderResource> _pAlbedoMap;
+	std::shared_ptr<dx12lib::ITextureResource> _pAlbedoMap;
 	d3d::SubMesh _submesh;
 };
 
@@ -69,7 +69,7 @@ private:
 	std::map<std::string, d3d::MaterialData> _materialMap;
 	std::map<std::string, std::shared_ptr<d3d::Mesh>> _meshMap;
 	std::map<RenderLayer, std::shared_ptr<dx12lib::GraphicsPSO>> _psoMap;
-	std::map<std::string, std::shared_ptr<dx12lib::IShaderResource>> _textureMap;
+	std::map<std::string, std::shared_ptr<dx12lib::ITextureResource>> _textureMap;
 	std::vector<RenderItem> _renderItems[RenderLayer::Count];
 
 	float3 _skullTranslation = { 0.0f, 1.0f, -5.0f };

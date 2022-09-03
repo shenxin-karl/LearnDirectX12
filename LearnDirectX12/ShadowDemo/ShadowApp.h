@@ -27,7 +27,7 @@ struct ShadowPass : rgph::RenderQueuePass {
 struct OpaquePass : rgph::RenderQueuePass {
 	OpaquePass(const std::string &passName);
 public:
-	rgph::PassResourcePtr<dx12lib::IShaderResource2D> pShadowMap;
+	rgph::PassResourcePtr<dx12lib::ITextureResource2D> pShadowMap;
 };
 
 
@@ -38,7 +38,7 @@ struct CbObject {
 
 class ShadowMaterial : public rgph::Material {
 public:
-	explicit ShadowMaterial(dx12lib::IDirectContext &directCtx, std::shared_ptr<dx12lib::IShaderResource2D> pDiffuseTex);
+	explicit ShadowMaterial(dx12lib::IDirectContext &directCtx, std::shared_ptr<dx12lib::ITextureResource2D> pDiffuseTex);
 public:
 	FRConstantBufferPtr<CbObject> _pCbObject;
 public:
@@ -63,6 +63,7 @@ private:
 	void onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int height) override;
 private:
 	void loadModel(dx12lib::DirectContextProxy pDirectCtx);
+	void loadEnvMap(dx12lib::DirectContextProxy pDirectCtx);
 	void initPso(dx12lib::DirectContextProxy pDirectCtx) const;
 	void initSubPass();
 	void buildPass();
@@ -71,6 +72,7 @@ private:
 	std::shared_ptr<d3d::FirstPersonCamera> _pCamera;
 	std::shared_ptr<dx12lib::DepthStencil2D> _pShadowMap;
 	std::shared_ptr<dx12lib::ConstantBuffer> _pLightCb;
+	std::shared_ptr<dx12lib::ITextureResourceCube> _pEnvMap;
 	dx12lib::FRConstantBufferPtr<d3d::CBPassType> _pPassCb;
 
 	rgph::RenderGraph _graph;

@@ -1,9 +1,7 @@
 #include <random>
 #include <DirectXColors.h>
 #include "InstanceApp.h"
-
 #include <iostream>
-
 #include "D3D/dx12libHelper/RenderTarget.h"
 #include "dx12lib/Context/ContextStd.h"
 #include "dx12lib/Pipeline/PipelineStd.h"
@@ -96,7 +94,6 @@ void InstanceApp::pollEvent() {
 			_bMouseLeftPress = false;
 		}
 
-		std::cout << "_bMouseLeftPress " << _bMouseLeftPress << std::endl;
 		if (_bMouseLeftPress || !event.isMove())
 			_pCamera->pollEvent(event);
 	}

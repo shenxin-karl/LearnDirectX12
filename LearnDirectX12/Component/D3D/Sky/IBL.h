@@ -16,8 +16,8 @@ private:
 	void buildSphericalHarmonics3(const std::string &fileName);
 	void buildPanoToCubeMapPSO(std::weak_ptr<dx12lib::Device> pDevice);
 	void buildConvolutionIrradiancePSO(std::weak_ptr<dx12lib::Device> pDevice);
-	void buildEnvMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<dx12lib::IShaderResource2D> pPannoEnvMap);
-	void buildConvolutionIrradianceMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<dx12lib::IShaderResource2D> pPannoEnvMap);
+	void buildEnvMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<dx12lib::ITextureResource2D> pPannoEnvMap);
+	void buildConvolutionIrradianceMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<dx12lib::ITextureResource2D> pPannoEnvMap);
 	void buildPerFilterEnvPSO(std::weak_ptr<dx12lib::Device> pDevice);
 	void buildPerFilterEnvMap(dx12lib::ComputeContextProxy pComputeCtx);
 private:

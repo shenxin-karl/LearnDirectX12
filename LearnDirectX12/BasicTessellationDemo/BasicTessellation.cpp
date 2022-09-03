@@ -12,6 +12,7 @@
 #include <DirectXColors.h>
 
 #include "D3D/dx12libHelper/RenderTarget.h"
+#include "D3D/Tool/CoronaCamera.h"
 
 
 namespace DX = DirectX;

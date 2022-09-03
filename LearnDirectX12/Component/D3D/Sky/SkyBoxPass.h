@@ -1,4 +1,5 @@
 #pragma once
+#include <D3D/d3dutil.h>
 #include <RenderGraph/Pass/GraphicsPass.h>
 
 namespace d3d {
@@ -12,11 +13,14 @@ public:
 	bool enableGammaCorrection = false;
 	DXGI_FORMAT renderTargetFormat = DXGI_FORMAT_UNKNOWN;
 	DXGI_FORMAT depthStencilFormat = DXGI_FORMAT_UNKNOWN;
-	std::shared_ptr<dx12lib::IShaderResourceCube> pEnvMap;
+	std::shared_ptr<dx12lib::ITextureResourceCube> pEnvMap;
+	CameraBase *pCamera = nullptr;
 private:
+	void buildGraphicsPso(dx12lib::DirectContextProxy pDirectCtx);
+private:
+	std::shared_ptr<dx12lib::GraphicsPSO> _pGraphicsPso;
 	std::shared_ptr<dx12lib::VertexBuffer> _pCubeVertexBuffer;
 	std::shared_ptr<dx12lib::RootSignature> _pRootSignature;
-	std::map<std::string, std::shared_ptr<dx12lib::GraphicsPSO>> _psoMap;
 };
 
 }

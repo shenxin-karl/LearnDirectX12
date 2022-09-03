@@ -8,6 +8,7 @@
 #include "dx12lib/Buffer/BufferStd.h"
 #include "D3D/Model/Mesh/Mesh.h"
 #include "D3D/Tool/Camera.h"
+#include "D3D/Tool/CoronaCamera.h"
 #include "GameTimer/GameTimer.h"
 #include "InputSystem/Mouse.h"
 

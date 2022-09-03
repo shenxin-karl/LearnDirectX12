@@ -10,12 +10,12 @@ public:
 	SobelFilter(dx12lib::ComputeContextProxy pComputeContext, std::uint32_t width, std::uint32_t height);
 	void onResize(dx12lib::ComputeContextProxy pComputeList, std::uint32_t width, std::uint32_t height);
 
-	template<typename T> requires(std::is_base_of_v<dx12lib::IShaderResource2D, T>)
+	template<typename T> requires(std::is_base_of_v<dx12lib::ITextureResource2D, T>)
 	void produce(dx12lib::ComputeContextProxy pComputeList, std::shared_ptr<T> pInput) {
 		this->produceImpl(pComputeList, pInput);
 	}
 
-	template<typename T> requires(std::is_base_of_v<dx12lib::IShaderResource2D, T>)
+	template<typename T> requires(std::is_base_of_v<dx12lib::ITextureResource2D, T>)
 	void apply(dx12lib::ComputeContextProxy pComputeList, std::shared_ptr<T> pInput) {
 		this->applyImpl(pComputeList, pInput);
 	}
@@ -27,10 +27,10 @@ private:
 	static void tryBuildProducePSO(dx12lib::ComputeContextProxy pComputeList);
 	static void tryBuildApplyPSO(dx12lib::ComputeContextProxy pComputeList);
 	void produceImpl(dx12lib::ComputeContextProxy pComputeList, 
-		std::shared_ptr<dx12lib::IShaderResource2D> pInput
+		std::shared_ptr<dx12lib::ITextureResource2D> pInput
 	);
 	void applyImpl(dx12lib::ComputeContextProxy pComputeList,
-		std::shared_ptr<dx12lib::IShaderResource2D> pInput
+		std::shared_ptr<dx12lib::ITextureResource2D> pInput
 	);
 private:
 	constexpr static std::size_t kMaxSobelThreadCount = 16;

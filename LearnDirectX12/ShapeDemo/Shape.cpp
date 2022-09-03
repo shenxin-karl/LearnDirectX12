@@ -24,6 +24,7 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include "D3D/AssimpLoader/AssimpLoader.h"
+#include "D3D/Tool/CoronaCamera.h"
 
 
 Shape::Shape() {

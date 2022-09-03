@@ -13,16 +13,16 @@ public:
 		DXGI_FORMAT format
 	);
 
-	template<typename T> requires(std::is_base_of_v<dx12lib::IShaderResource2D, T>)
+	template<typename T> requires(std::is_base_of_v<dx12lib::ITextureResource2D, T>)
 	void produce(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<T> pInput) const {
 		_produceImpl(
 			pComputeCtx,
-			std::static_pointer_cast<dx12lib::IShaderResource2D>(pInput)
+			std::static_pointer_cast<dx12lib::ITextureResource2D>(pInput)
 		);
 	}
 
 	void _produceImpl(dx12lib::ComputeContextProxy pComputeCtx, 
-		std::shared_ptr<dx12lib::IShaderResource2D> pInput
+		std::shared_ptr<dx12lib::ITextureResource2D> pInput
 	) const;
 
 	void onResize(dx12lib::ComputeContextProxy pComputeCtx, uint32 width, uint32 height);

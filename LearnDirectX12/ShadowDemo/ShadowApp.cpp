@@ -17,6 +17,7 @@
 #include "RenderGraph/Pass/RenderQueuePass.h"
 #include "RenderGraph/Technique/Technique.h"
 #include "D3D/AssimpLoader/ALTree.h"
+#include "D3D/Sky/SkyBoxPass.h"
 #include "D3D/TextureManager/TextureManager.h"
 #include "RenderGraph/Pass/SubPass.h"
 #include "D3D/Tool/FirstPersonCamera.h"
@@ -31,7 +32,7 @@ OpaquePass::OpaquePass(const std::string &passName)
 {
 }
 
-ShadowMaterial::ShadowMaterial(dx12lib::IDirectContext &directCtx, std::shared_ptr<dx12lib::IShaderResource2D> pDiffuseTex)
+ShadowMaterial::ShadowMaterial(dx12lib::IDirectContext &directCtx, std::shared_ptr<dx12lib::ITextureResource2D> pDiffuseTex)
 : rgph::Material("ShadowMaterial")
 {
 	_vertexInputSlots = pOpaqueSubPass->getVertexDataInputSlots() | pShadowSubPass->getVertexDataInputSlots();
@@ -102,6 +103,7 @@ void ShadowApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 	shadowMapClearValue.DepthStencil.Stencil = 0;
 	_pShadowMap = pDirectCtx->createDepthStencil2D(1024, 1024, &shadowMapClearValue, DXGI_FORMAT_D16_UNORM);
 
+	loadEnvMap(pDirectCtx);
 	buildPass();
 	initPso(pDirectCtx);
 	initSubPass();
@@ -161,7 +163,7 @@ void ShadowApp::loadModel(dx12lib::DirectContextProxy pDirectCtx) {
 
 	auto materialCreator = [&](const d3d::ALMaterial *pAlMaterial) -> std::shared_ptr<rgph::Material> {
 		const auto &diffuseMap = pAlMaterial->getDiffuseMap();
-		std::shared_ptr<dx12lib::IShaderResource> pTex = d3d::TextureManager::instance()->get(diffuseMap.path);
+		std::shared_ptr<dx12lib::ITextureResource> pTex = d3d::TextureManager::instance()->get(diffuseMap.path);
 
 		if (pTex == nullptr) {
 			if (diffuseMap.pTextureData != nullptr) {
@@ -175,7 +177,7 @@ void ShadowApp::loadModel(dx12lib::DirectContextProxy pDirectCtx) {
 			d3d::TextureManager::instance()->set(diffuseMap.path, pTex);
 		}
 
-		std::shared_ptr<dx12lib::IShaderResource2D> pTex2D = std::dynamic_pointer_cast<dx12lib::IShaderResource2D>(pTex);
+		std::shared_ptr<dx12lib::ITextureResource2D> pTex2D = std::dynamic_pointer_cast<dx12lib::ITextureResource2D>(pTex);
 		if (pTex2D == nullptr) {
 			assert(false && "load diffuse Map Error");
 		}
@@ -183,6 +185,10 @@ void ShadowApp::loadModel(dx12lib::DirectContextProxy pDirectCtx) {
 	};
 
 	_pMeshModel->createMaterial(_graph, *pDirectCtx, materialCreator);
+}
+
+void ShadowApp::loadEnvMap(dx12lib::DirectContextProxy pDirectCtx) {
+	_pEnvMap = pDirectCtx->createDDSTextureCubeFromFile(L"resources/grasscube1024.dds");
 }
 
 void ShadowApp::initPso(dx12lib::DirectContextProxy pDirectCtx) const {
@@ -294,7 +300,9 @@ void ShadowApp::buildPass() {
 	auto pClearShadowMap = std::make_shared<rgph::ClearDsPass>("ClearShadowMap");
 	auto pShadowPass = std::make_shared<ShadowPass>("ShadowPass");
 	auto pOpaquePass = std::make_shared<OpaquePass>("OpaquePass");
+	auto pSkyBoxPass = std::make_shared<d3d::SkyBoxPass>("SkyBoxPass");
 	auto pPresentPass = std::make_shared<rgph::PresentPass>("PresentPass");
+
 
 	{ // clear RenderTarget and DepthStencil Pass
 		auto getRenderTarget = [&]() {
@@ -325,8 +333,17 @@ void ShadowApp::buildPass() {
 		pShadowPass->pDepthStencil >> pOpaquePass->pShadowMap;
 		_graph.addPass(pOpaquePass);
 	}
+	{ // SkyBoxPass
+		pSkyBoxPass->renderTargetFormat = _pSwapChain->getRenderTargetFormat();
+		pSkyBoxPass->depthStencilFormat = _pSwapChain->getDepthStencilFormat();
+		pSkyBoxPass->pEnvMap = _pEnvMap;
+		pSkyBoxPass->pCamera = _pCamera.get();
+		pOpaquePass->pRenderTarget >> pSkyBoxPass->pRenderTarget;
+		pOpaquePass->pDepthStencil >> pSkyBoxPass->pDepthStencil;
+		_graph.addPass(pSkyBoxPass);
+	}
 	{ // Present Pass
-		pOpaquePass->pRenderTarget >> pPresentPass->pRenderTarget;
+		pSkyBoxPass->pRenderTarget >> pPresentPass->pRenderTarget;
 		_graph.addPass(pPresentPass);
 	}
 	_graph.finalize();

@@ -12,9 +12,9 @@ namespace d3d {
 
 class TextureManager : public com::Singleton<TextureManager> {
 public:
-	std::shared_ptr<dx12lib::IShaderResource> get(const std::string &fileName) const;
+	std::shared_ptr<dx12lib::ITextureResource> get(const std::string &fileName) const;
 	bool exist(const std::string &fileName) const;
-	void set(const std::string &fileName, std::shared_ptr<dx12lib::IShaderResource> pShaderResource);
+	void set(const std::string &fileName, std::shared_ptr<dx12lib::ITextureResource> pShaderResource);
 	void erase(const std::string &fileName);
 public:
 	static inline std::string defaultAOMap        = "DefaultAlbedoMap.dds";
@@ -24,7 +24,7 @@ public:
 	static inline std::string defaultRoughnessMap = "DefaultRoughnessMap.dds";
 	static void initDefaultTexture(dx12lib::DirectContextProxy pGraphicsCtx);
 private:
-	std::unordered_map<std::string, std::shared_ptr<dx12lib::IShaderResource>> _textureMap;
+	std::unordered_map<std::string, std::shared_ptr<dx12lib::ITextureResource>> _textureMap;
 };
 
 }
