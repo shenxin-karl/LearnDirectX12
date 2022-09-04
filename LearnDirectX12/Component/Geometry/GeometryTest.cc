@@ -235,6 +235,60 @@ bool convertTxtModelToObjFile(const std::string &path, const std::string &output
 	return true;
 }
 
+float lerp(float a, float b, float t) {
+	return a + (b - a) * t;
+}
+
+struct FrustumItem {
+	float near;
+	float far;
+};
+
+
+float lambda = 0.5f;
+std::vector<FrustumItem> CSMFrustumSplit(size_t splitCount, float near, float far) {
+	std::vector<FrustumItem> vec;
+	vec.resize(splitCount);
+
+	float ratio = far / near;
+	for (int i = 1; i < splitCount; ++i) {
+		float si = i / static_cast<float>(splitCount);
+		float z0 = (near * pow(ratio, si));
+		float z1 = (near + (far - near) * si);
+		float tNear = lerp(z0, z1, lambda);
+		float tFar = tNear * 1.005f;
+		vec[i].near = tNear;
+		vec[i-1].far = tFar;
+	}
+	vec[0].near = near;
+	vec[splitCount-1].far = far;
+	return vec;
+}
+
+
+std::vector<FrustumItem> CSMFrustumSplit1(size_t splitCount, float near, float far) {
+	float nd = near;
+	float fd = far;
+	std::vector<FrustumItem> vec;
+	vec.resize(splitCount);
+	float ratio = fd / nd;
+	vec[0].near = nd;
+
+	for (int i = 1; i < splitCount; i++)
+	{
+		float si = i / static_cast<float>(splitCount);
+
+		// Practical Split Scheme: https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch10.html
+		float t_near = lambda * (nd * powf(ratio, si)) + (1 - lambda) * (nd + (fd - nd) * si);
+		float t_far = t_near * 1.005f;
+		vec[i].near = t_near;
+		vec[i - 1].far = t_far;
+	}
+
+	vec[splitCount - 1].far = fd;
+	return vec;
+}
+
 int main() {
 	//halfEdgeTest();
 	//saveObjTest();
@@ -246,5 +300,10 @@ int main() {
 	//createGridTest();
 	//loadObject();
 	//convertTxtModelToObjFile("skull.txt", "skull.obj");
+	size_t splitCount = 4;
+	float near = 0.1f;
+	float far = 1000.f;
+	auto v1 = CSMFrustumSplit(splitCount, near, far);
+	auto v2 = CSMFrustumSplit1(splitCount, near, far);
 	return 0;
 }
