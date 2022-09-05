@@ -1,6 +1,7 @@
 #include "CSMShadowPass.h"
 #include "D3D/Tool/Camera.h"
 #include "Dx12lib/Texture/DepthStencilTexture.h"
+#include "RenderGraph/Pass/SubPass.h"
 
 namespace d3d {
 
@@ -29,8 +30,35 @@ CSMShadowPass::CSMShadowPass(const std::string &name)
 
 void CSMShadowPass::execute(dx12lib::DirectContextProxy pDirectCtx) {
 	assert(_finalized);
+	for (size_t i = 0; i < _numCascaded; ++i) {
+		const auto &dsv = _pShadowMapArray->getPlaneDSV(i);
+		pDirectCtx->setRenderTarget(dsv);
+		Frustum frustum(static_cast<Matrix4>(_subFrustumViewProj[i]));
+		auto iter = _subPasses.begin();
+		while (iter != _subPasses.end()) {
+			if (!(*iter)->valid()) {
+				iter = _subPasses.erase(iter);
+				continue;
+			}
 
+			auto &pSubPass = *iter;
+			std::vector<rgph::Job> jobs;
+			jobs.reserve(pSubPass->getJobCount());
 
+			for (auto &job : pSubPass->getJobs()) {
+				if (frustum.contains(job.pGeometry->getWorldAABB()) != DX::ContainmentType::DISJOINT)
+					jobs.push_back(job);
+			}
+
+			pSubPass->bind(*pDirectCtx);
+			auto passCBufferShaderRegister = pSubPass->getPassCBufferShaderRegister();
+			if (_pPassCBuffer != nullptr && passCBufferShaderRegister.slot && !passCBufferShaderRegister.slot.isSampler())
+				pDirectCtx->setConstantBuffer(passCBufferShaderRegister, _pPassCBuffer);
+
+			pSubPass->execute(*pDirectCtx, jobs);
+			++iter;
+		}
+	}
 }
 
 void CSMShadowPass::setNumCascaded(size_t n) {
@@ -65,7 +93,7 @@ void CSMShadowPass::finalize(dx12lib::DirectContextProxy pDirectCtx) {
 	_finalized = true;
 }
 
-Frustum CSMShadowPass::update(const CameraBase *pCameraBase, Vector3 lightDir) {
+Frustum CSMShadowPass::update(const CameraBase *pCameraBase, std::shared_ptr<com::GameTimer> pGameTimer, Vector3 lightDir) {
 	Frustum cameraViewSpaceFrustum = pCameraBase->getViewSpaceFrustum();
 	return cameraViewSpaceFrustum;
 }

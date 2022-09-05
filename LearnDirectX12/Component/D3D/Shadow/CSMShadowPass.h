@@ -3,6 +3,10 @@
 #include <Dx12lib/Context/ContextProxy.hpp>
 #include "D3D/Shader/ShaderCommon.h"
 
+namespace com {
+class GameTimer;
+}
+
 namespace d3d {
 
 class CameraBase;
@@ -24,7 +28,7 @@ public:
 	void setLightDistance(float distance);
 	auto getShadowMapArray() -> std::shared_ptr<dx12lib::IDepthStencil2DArray>;
 	void finalize(dx12lib::DirectContextProxy pDirectCtx);
-	Frustum update(const CameraBase *pCameraBase, Vector3 lightDir);
+	Frustum update(const CameraBase *pCameraBase, std::shared_ptr<com::GameTimer> pGameTimer, Vector3 lightDir);
 public:
 	constexpr static size_t kMaxNumCascaded = 7;
 	rgph::PassResourcePtr<dx12lib::IDepthStencil2DArray> pShadowMapArray;
