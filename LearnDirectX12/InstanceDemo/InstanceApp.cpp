@@ -15,6 +15,8 @@
 #include "D3D/Sky/SkyBox.h"
 #include "D3D/Tool/FirstPersonCamera.h"
 
+using namespace Math;
+
 InstanceApp::InstanceApp() {
 	_title = "InstanceApp";
 	_width = 1280;
@@ -256,14 +258,14 @@ void InstanceApp::buildRenderItem() {
 
 std::vector<RenderItem> InstanceApp::cullingByFrustum(std::shared_ptr<com::GameTimer> pGameTimer) const {
 	std::vector<RenderItem> res;
-	Frustum viewSpaceFrustum = _pCamera->getViewSpaceFrustum();
+	BoundingFrustum viewSpaceFrustum = _pCamera->getViewSpaceFrustum();
 	float totalTime = pGameTimer->getTotalTime();
 
 	for (const auto &rItem : _opaqueRenderItems) {
 		Quaternion q = Quaternion(rItem.axis, totalTime);
 		Matrix4 matWorld = Matrix4(rItem.matWorld) * static_cast<Matrix4>(q);
-		auto bounds = AxisAlignedBox(rItem.bounds).transform(matWorld);
-		if (viewSpaceFrustum.contains(bounds) != DISJOINT)
+		auto bounds = BoundingBox(rItem.bounds).transform(matWorld);
+		if (viewSpaceFrustum.contains(bounds) != DirectX::DISJOINT)
 			res.push_back(rItem);
 	}
 	return res;

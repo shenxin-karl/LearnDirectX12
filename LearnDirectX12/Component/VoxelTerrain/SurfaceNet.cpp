@@ -5,6 +5,7 @@
 #include <iostream>
 
 namespace voxel {
+using namespace Math;
 
 // 立方体的 12 条边
 constexpr std::size_t kCubeEdges[12][2] = {

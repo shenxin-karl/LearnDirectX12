@@ -6,6 +6,7 @@
 
 namespace loop {
 
+	using namespace Math;
 
 bool operator==(const LoopEdge &lhs, const LoopEdge &rhs) {
 	return lhs.v0 == rhs.v0 && lhs.v1 == rhs.v1 ||

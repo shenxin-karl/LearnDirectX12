@@ -16,6 +16,7 @@
 
 
 namespace DX = DirectX;
+using namespace Math;
 
 BasicTessellationApp::BasicTessellationApp() : BaseApp() {
 	_title = "BasicTessellationApp";

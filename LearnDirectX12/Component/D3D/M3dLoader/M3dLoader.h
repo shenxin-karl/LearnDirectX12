@@ -8,13 +8,13 @@ class M3dLoader {
 public:
 	struct M3dMaterial {
 		std::string name;
-		float4		diffuseAlbedo = float4(0.1f);
-		float3		fresnelR0     = float3(0.01f);
-		float		roughness     = 0.8f;
-		bool		alphaClip     = false;
-		std::string materialTypeName;
-		std::string diffuseMapName;
-		std::string normalMapName;
+		Math::float4		diffuseAlbedo = Math::float4(0.1f);
+		Math::float3		fresnelR0     = Math::float3(0.01f);
+		float		        roughness     = 0.8f;
+		bool		        alphaClip     = false;
+		std::string         materialTypeName;
+		std::string         diffuseMapName;
+		std::string         normalMapName;
 	};
 
 	struct Subset {
@@ -45,7 +45,7 @@ private:
 	static void readVertex(std::ifstream &fin, size_t numVertices, std::vector<com::Vertex> &vertices);
 	static void readSkinnedVertices(std::ifstream &fin, size_t numVertices, std::vector<SkinnedVertex> &vertices);
 	static void readTriangles(std::ifstream &fin, size_t numTriangles, std::vector<uint16_t> &indices);
-	static void readBoneOffsets(std::ifstream &fin, size_t numBones, std::vector<float4x4> &boneOffsets);
+	static void readBoneOffsets(std::ifstream &fin, size_t numBones, std::vector<Math::float4x4> &boneOffsets);
 	static void readBoneHierarchy(std::ifstream &fin, size_t numBones, std::vector<size_t> &boneIndexToParentIndex);
 	static void readAnimationClips(std::ifstream &fin, size_t numBones, size_t numAnimationClips, std::unordered_map<std::string, AnimationClip> &animations);
 	static void readBoneKeyframes(std::ifstream &fin, BoneAnimation &boneAnimation);

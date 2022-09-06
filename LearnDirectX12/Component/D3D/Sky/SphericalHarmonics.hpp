@@ -4,7 +4,6 @@
 
 namespace d3d {
 
-using namespace Math;
 
 template<int L, int M>
 struct SHBasisFunction;
@@ -13,7 +12,7 @@ struct SHBasisFunction;
 template<>														\
 struct SHBasisFunction<L, M> {									\
 	constexpr inline static float PI = 3.141592654f;			\
-	static float eval(const float3 &v) noexcept {				\
+	static float eval(const Math::float3 &v) noexcept {				\
 		using std::sqrt;										\
 		static const float coef = static_cast<float>(COEF);		\
 		[[maybe_unused]] const float x = v.x;					\
@@ -55,11 +54,18 @@ DECLARE_SH_BASIS_FUNCTION( (4), (+4), (3.f / 16.f * sqrt(35.f / PI)), (x * x * (
 
 union SH3 {
 	struct {
-		float4 y0p0;
-		float4 y1n1; float4 y1p0; float4 y1p1;
-		float4 y2n2; float4 y2n1; float4 y2p0; float4 y2p1; float4 y2p2;
+		Math::float4 y0p0;
+		Math::float4 y1n1;
+		Math::float4 y1p0;
+		Math::float4 y1p1;
+		Math::float4 y2n2;
+		Math::float4 y2n1;
+		Math::float4 y2p0;
+		Math::float4 y2p1;
+		Math::float4 y2p2;
 	};
-	float4 _m[9];
+
+	Math::float4 _m[9];
 public:
 	constexpr static auto getSHBasisFunc() noexcept {
 		using BasisFuncType = decltype(&SHBasisFunction<0, 0>::eval);

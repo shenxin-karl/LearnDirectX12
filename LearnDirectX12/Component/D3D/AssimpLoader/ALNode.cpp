@@ -7,6 +7,8 @@
 
 namespace d3d {
 
+using namespace Math;
+
 
 ALNode::ALNode(ALTree *pTree, std::string_view modelPath, int id, const aiScene *pAiScene, const aiNode *pAiNode)
 : _nodeId(id), _numChildren(pAiNode->mNumChildren) {

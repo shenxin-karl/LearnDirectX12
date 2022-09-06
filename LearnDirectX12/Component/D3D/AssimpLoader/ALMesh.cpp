@@ -4,6 +4,8 @@
 
 namespace d3d {
 
+using namespace Math;
+
 ALMesh::ALMesh(ALTree *pTree, std::string_view modelPath, size_t nodeIdx, size_t meshIdx, const aiMesh *pAiMesh)
 : _pMaterial(pTree->getMaterial(pAiMesh->mMaterialIndex)), _meshIdx(meshIdx)
 , _meshName(std::format("{}_{}_{}", modelPath, nodeIdx, meshIdx))
@@ -45,7 +47,7 @@ ALMesh::ALMesh(ALTree *pTree, std::string_view modelPath, size_t nodeIdx, size_t
 	}
 
 	const auto &aabb = pAiMesh->mAABB;
-	_boundingBox = AxisAlignedBox(
+	_boundingBox = BoundingBox(
 		Vector3(aabb.mMin.x, aabb.mMin.y, aabb.mMin.z),
 		Vector3(aabb.mMax.x, aabb.mMax.y, aabb.mMax.z)
 	);
@@ -95,7 +97,7 @@ const std::vector<uint32_t> &ALMesh::getIndices() const {
 	return _indices;
 }
 
-const AxisAlignedBox &ALMesh::getBoundingBox() const {
+const BoundingBox &ALMesh::getBoundingBox() const {
 	return _boundingBox;
 }
 

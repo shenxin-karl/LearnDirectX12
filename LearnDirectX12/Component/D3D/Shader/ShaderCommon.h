@@ -5,21 +5,20 @@
 
 namespace d3d {
 
-using namespace Math;
 
 struct LightData {
-	float3  strength;		// 辐射强度
-	float   falloffStart;	// 点光源/聚光灯衰减开始距离
-	float3  direction;		// 方向光方向
-	float   falloffEnd;		// 点光源/聚光灯衰减结束距离
-	float3  position;		// 点光源位置
-	float   spotPower;		// 聚光灯 pow 指数
+	Math::float3  strength;		// 辐射强度
+	float		  falloffStart;	// 点光源/聚光灯衰减开始距离
+	Math::float3  direction;		// 方向光方向
+	float		  falloffEnd;		// 点光源/聚光灯衰减结束距离
+	Math::float3  position;		// 点光源位置
+	float		  spotPower;		// 聚光灯 pow 指数
 public:
-	void initAsDirectionLight(float3 direction, float3 strength);
-	void initAsPointLight(float3 position, float3 strength, float falloffStart, float falloffEnd);
-	void initAsSpotLight(float3 position, 
-		float3 direction, 
-		float3 strength, 
+	void initAsDirectionLight(Math::float3 direction, Math::float3 strength);
+	void initAsPointLight(Math::float3 position, Math::float3 strength, float falloffStart, float falloffEnd);
+	void initAsSpotLight(Math::float3 position,
+		Math::float3 direction,
+		Math::float3 strength,
 		float falloffStart, 
 		float falloffEnd, 
 		float spotPower
@@ -28,7 +27,7 @@ public:
 
 struct MaterialData {
 	static MaterialData defaultMaterialData;
-	float4 diffuseAlbedo;   // 反照率
+	Math::float4 diffuseAlbedo;   // 反照率
 	float  roughness;       // 粗糙度
 	float  metallic;        // 金属度
 	float  padding0 = 0.f;   // 填充0
@@ -36,34 +35,34 @@ struct MaterialData {
 };
 
 struct CBPassType {
-	float4x4 view;			
-	float4x4 invView;		
-	float4x4 proj;
-	float4x4 invProj;
-	float4x4 viewProj;
-	float4x4 invViewProj;
-	float3	 eyePos;	
-	float	 cbPerPassPad0 = 0.f;			// padding
-	float2	 renderTargetSize;
-	float2	 invRenderTargetSize;
-	float	 nearZ;
-	float	 farZ;
-	float	 totalTime;
-	float	 deltaTime;
-	float4   fogColor;						
-	float    fogStart;
-	float    fogEnd;
-	float2   cbPerPassPad1;
+	Math::float4x4 view;
+	Math::float4x4 invView;
+	Math::float4x4 proj;
+	Math::float4x4 invProj;
+	Math::float4x4 viewProj;
+	Math::float4x4 invViewProj;
+	Math::float3   eyePos;
+	float		   cbPerPassPad0 = 0.f;			// padding
+	Math::float2   renderTargetSize;
+	Math::float2   invRenderTargetSize;
+	float		   nearZ;
+	float		   farZ;
+	float		   totalTime;
+	float		   deltaTime;
+	Math::float4   fogColor;						
+	float          fogStart;
+	float          fogEnd;
+	Math::float2   cbPerPassPad1;
 };
 
 constexpr inline std::size_t kMaxLightCount = 16;
 struct CBLightType {
-	int       directLightCount = 0;
-	int       pointLightCount  = 0;
-	int       spotLightCount   = 0;
-	int       objectPad0       = 0;
-	float4	  ambientLight     = float4(0.f);
-	LightData lights[kMaxLightCount];
+	int          directLightCount = 0;
+	int          pointLightCount  = 0;
+	int          spotLightCount   = 0;
+	int          objectPad0       = 0;
+	Math::float4 ambientLight     = Math::float4(0.f);
+	LightData    lights[kMaxLightCount];
 };
 
 CD3DX12_STATIC_SAMPLER_DESC getPointWrapStaticSampler(UINT shaderRegister);

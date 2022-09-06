@@ -12,6 +12,7 @@
 #include "GameTimer/GameTimer.h"
 #include "InputSystem/Mouse.h"
 
+using namespace Math;
 
 BezierPatchApp::BezierPatchApp() {
 	_title = "BezierPatchApp";

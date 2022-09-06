@@ -3,6 +3,8 @@
 
 namespace d3d {
 
+using namespace Math;
+
 #if defined(_DEBUG) || defined(DEBUG)
 	#define DEBUG_MAKE_DIRTY  _isDirty = true
 	#define DEBUG_CLEAR_DIRTY _isDirty = false

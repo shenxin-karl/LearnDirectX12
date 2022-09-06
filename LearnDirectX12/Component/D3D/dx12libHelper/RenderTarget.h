@@ -6,7 +6,6 @@
 
 namespace d3d {
 
-using namespace Math;
 
 class RenderTarget : public NonCopyable {
 public:
@@ -27,8 +26,8 @@ public:
 	void unbind(dx12lib::CommonContextProxy pCommonCtx);
 	D3D12_VIEWPORT getViewport() const;
 	D3D12_RECT getScissorRect() const;
-	float2 getRenderTargetSize() const;
-	float2 getInvRenderTargetSize() const;
+	Math::float2 getRenderTargetSize() const;
+	Math::float2 getInvRenderTargetSize() const;
 	void setFinalState(D3D12_RESOURCE_STATES finalState);
 	~RenderTarget();
 private:

@@ -1,6 +1,7 @@
 #include <D3D/Animation/SkinnedData.h>
 
 namespace d3d {
+using namespace Math;
 
 float BoneAnimation::getStartTime() const {
 	return keyframes.front().timePoint;

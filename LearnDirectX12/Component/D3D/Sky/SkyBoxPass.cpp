@@ -8,6 +8,8 @@
 #include "Dx12lib/Pipeline/RootSignature.h"
 #include "Dx12lib/Pipeline/ShaderRegister.hpp"
 
+using namespace Math;
+
 namespace d3d {
 
 SkyBoxPass::SkyBoxPass(const std::string &passName) : GraphicsPass(passName, true, true)  {

@@ -7,6 +7,9 @@
 #include <dx12lib/Buffer/VertexBuffer.h>
 
 namespace d3d {
+using namespace Math;
+
+using namespace Math;
 
 SkyBox::SkyBox(const SkyBoxDesc &desc) : _pCubeMap(desc.pCubeMap) {
 	auto pGraphicsCtx = desc.pGraphicsCtx;
@@ -87,8 +90,8 @@ SkyBox::SkyBox(const SkyBoxDesc &desc) : _pCubeMap(desc.pCubeMap) {
 void SkyBox::render(dx12lib::GraphicsContextProxy pGraphicsCtx, std::shared_ptr<CameraBase> pCamera) const {
 	auto matView = pCamera->getView();
 	matView._41 = 0.f; matView._42 = 0.f; matView._43 = 0.f;
-	XMMATRIX view = XMLoadFloat4x4(&matView);
-	XMMATRIX proj = XMLoadFloat4x4(&pCamera->getProj());
+	DirectX::XMMATRIX view = XMLoadFloat4x4(&matView);
+	DirectX::XMMATRIX proj = XMLoadFloat4x4(&pCamera->getProj());
 	XMStoreFloat4x4(_pViewProj->map(), view * proj);
 
 	pGraphicsCtx->setGraphicsPSO(_pSkyBoxPSO);

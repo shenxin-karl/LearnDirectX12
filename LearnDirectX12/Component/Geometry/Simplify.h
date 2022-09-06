@@ -9,11 +9,10 @@
 
 namespace sim {
 
-using namespace Math;
 
 struct SimVertex {
-	float3	position;
-	float2	texcoord;
+	Math::float3	position;
+	Math::float2	texcoord;
 };
 
 struct SimEdge {
@@ -40,8 +39,8 @@ struct SimFace {
 };
 
 struct SimVertAdjustResult {
-	float  cost;
-	float3 point;
+	float        cost;
+	Math::float3 point;
 };
 
 class Simplify {

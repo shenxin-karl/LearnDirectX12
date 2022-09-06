@@ -4,10 +4,9 @@
 #include "dx12lib/dx12libStd.h"
 #include "Math/MathHelper.h"
 
-using namespace Math;
 
 struct PatchVertex {
-	float3 position;
+	Math::float3 position;
 };
 
 class BasicTessellationApp : public com::BaseApp {
@@ -21,7 +20,7 @@ protected:
 	void onResize(dx12lib::DirectContextProxy pCmdList, int width, int height) override;
 private:
 	std::unique_ptr<d3d::CoronaCamera>    _pCamera;
-	FRConstantBufferPtr<float4x4>		  _pObjectCB;
+	FRConstantBufferPtr<Math::float4x4>	  _pObjectCB;
 	FRConstantBufferPtr<d3d::CBPassType>  _pPassCB;
 	std::shared_ptr<dx12lib::GraphicsPSO> _pTessellationPSO;
 	std::shared_ptr<d3d::Mesh>			  _pQuadMesh;

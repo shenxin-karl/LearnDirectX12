@@ -17,6 +17,8 @@
 #include "InputSystem/Window.h"
 #include "D3D/Tool/CoronaCamera.h"
 
+using namespace Math;
+
 BoxApp::BoxApp() {
 	_title = "BoxApp";
 	_width = 1280;

@@ -26,6 +26,7 @@
 #include "D3D/AssimpLoader/AssimpLoader.h"
 #include "D3D/Tool/CoronaCamera.h"
 
+using namespace Math;
 
 Shape::Shape() {
 	_title = "Shape";

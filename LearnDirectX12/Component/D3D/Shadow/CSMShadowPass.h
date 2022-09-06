@@ -28,19 +28,21 @@ public:
 	void setLightDistance(float distance);
 	auto getShadowMapArray() -> std::shared_ptr<dx12lib::IDepthStencil2DArray>;
 	void finalize(dx12lib::DirectContextProxy pDirectCtx);
-	Frustum update(const CameraBase *pCameraBase, std::shared_ptr<com::GameTimer> pGameTimer, Vector3 lightDir);
+	Math::BoundingFrustum update(const CameraBase *pCameraBase, std::shared_ptr<com::GameTimer> pGameTimer, Math::Vector3 lightDir);
 public:
 	constexpr static size_t kMaxNumCascaded = 7;
 	rgph::PassResourcePtr<dx12lib::IDepthStencil2DArray> pShadowMapArray;
 private:
-	void updateSubFrustumViewProj(const CameraBase *pCameraBase, Vector3 lightDir);
+	void updateSubFrustumViewProj(const CameraBase *pCameraBase, Math::Vector3 lightDir);
+	Math::Vector3 calcLightCenter(const Math::BoundingFrustum &cameraSubFrustum);
+
 private:
 	bool _finalized = false;
 	float _lambda = 0.5f;
 	float _lightDistance = 512.f;
 	size_t _numCascaded = 4;
 	size_t _shadowMapSize = 512;
-	std::vector<float4x4> _subFrustumViewProj;
+	std::vector<Math::float4x4> _subFrustumViewProj;
 	std::shared_ptr<dx12lib::IDepthStencil2DArray> _pShadowMapArray;
 	std::vector<FRConstantBufferPtr<d3d::CBPassType>> _subFrustumPassCBuffers;
 };

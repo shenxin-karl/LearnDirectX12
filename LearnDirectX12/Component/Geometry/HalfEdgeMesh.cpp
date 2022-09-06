@@ -3,6 +3,7 @@
 #include <iostream>
 
 namespace HalfEdge {
+	using namespace Math;
 
 std::size_t HEEdgeKeyHasher::operator()(const HEEdgeKey &key) const noexcept {
 	using PointerType = decltype(key.first);

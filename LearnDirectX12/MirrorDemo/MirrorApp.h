@@ -9,7 +9,6 @@
 #include "D3D/Tool/Camera.h"
 #include "D3D/Shader/ShaderCommon.h"
 
-using namespace Math;
 
 enum RenderLayer : std::size_t {
 	Opaque = 0,
@@ -21,8 +20,8 @@ enum RenderLayer : std::size_t {
 };
 
 struct ObjectCBType {
-	float4x4      matWorld;
-	float4x4      matNormal;
+	Math::float4x4      matWorld;
+	Math::float4x4      matNormal;
 	d3d::MaterialData material;
 };
 
@@ -34,12 +33,12 @@ struct RenderItem {
 };
 
 struct Vertex {
-	float3 position;
-	float3 normal;
-	float2 texcoord;
+	Math::float3 position;
+	Math::float3 normal;
+	Math::float2 texcoord;
 public:
 	Vertex(const com::Vertex &vertex);
-	Vertex(const float3 &position, const float3 &normal, const float2 &texcoord);
+	Vertex(const Math::float3 &position, const Math::float3 &normal, const Math::float2 &texcoord);
 };
 
 class MirrorApp : public com::BaseApp {
@@ -72,6 +71,6 @@ private:
 	std::map<std::string, std::shared_ptr<dx12lib::ITextureResource>> _textureMap;
 	std::vector<RenderItem> _renderItems[RenderLayer::Count];
 
-	float3 _skullTranslation = { 0.0f, 1.0f, -5.0f };
+	Math::float3 _skullTranslation = { 0.0f, 1.0f, -5.0f };
 	dx12lib::FRConstantBufferPtr<ObjectCBType> _pSkullObjectCB;
 };

@@ -6,6 +6,7 @@
 
 namespace d3d {
 
+using namespace Math;
 
 AssimpLoader::AssimpLoader(const std::string &fileName) : _fileName(fileName) {
 }

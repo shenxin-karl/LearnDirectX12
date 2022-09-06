@@ -3,16 +3,15 @@
 
 namespace com {
 
-using namespace Math;
 
 struct Box3D {
-	float3 min;
-	float3 max;
+	Math::float3 min;
+	Math::float3 max;
 };
 
 struct Box2D {
-	float2 min;
-	float2 max;
+	Math::float2 min;
+	Math::float2 max;
 };
 
 using AABB = Box3D;

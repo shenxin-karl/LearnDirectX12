@@ -1,6 +1,7 @@
 #include "ShaderCommon.h"
 
 namespace d3d {
+using namespace Math;
 
 MaterialData MaterialData::defaultMaterialData{
 	float4(1.f), 1.f, 1.f

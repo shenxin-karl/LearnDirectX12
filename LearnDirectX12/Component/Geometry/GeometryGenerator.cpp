@@ -11,6 +11,8 @@
 
 namespace com {
 
+using namespace Math;
+
 bool MeshData::save(const std::string &path) const {
 	if (indices.empty())
 		return false;

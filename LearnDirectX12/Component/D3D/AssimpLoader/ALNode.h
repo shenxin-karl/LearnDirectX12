@@ -10,7 +10,6 @@
 
 namespace d3d {
 
-using namespace Math;
 struct ALMesh;
 class ALTree;
 
@@ -22,14 +21,14 @@ public:
 	int getNodeId() const;
 	size_t getNumChildren() const;
 	const ALNode *getChildren(size_t idx) const;
-	const float4x4 &getNodeTransform() const;
+	const Math::float4x4 &getNodeTransform() const;
 	size_t getNumMesh() const;
 	std::shared_ptr<ALMesh> getMesh(size_t idx) const;
 	void saveToObj(const std::string &direction) const;
 private:
 	int _nodeId;
 	unsigned int _numChildren;
-	float4x4 _nodeTransform;
+	Math::float4x4 _nodeTransform;
 	std::vector<std::shared_ptr<ALMesh>> _meshs;
 	std::vector<std::unique_ptr<ALNode>> _children;
 };

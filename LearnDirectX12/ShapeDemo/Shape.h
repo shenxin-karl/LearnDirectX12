@@ -7,30 +7,29 @@
 #include "D3D/Animation/SkinnedData.h"
 #include "D3D/Model/Mesh/Mesh.h"
 
-using namespace Math;
 
 struct ShapeVertex {
-	float3 position;
-	float3 normal;
-	float2 texcoord;
-	float3 tangent;
+	Math::float3 position;
+	Math::float3 normal;
+	Math::float2 texcoord;
+	Math::float3 tangent;
 };
 
 struct SkullVertex {
-	float3 position;
-	float3 normal;
+	Math::float3 position;
+	Math::float3 normal;
 };
 
 struct ObjectCB {
-	float4x4          matWorld    = float4x4::identity();
-	float4x4		  matNormal   = float4x4::identity();
-	float4x4		  matTexCoord = float4x4::identity();
+	Math::float4x4        matWorld    = Math::float4x4::identity();
+	Math::float4x4		  matNormal   = Math::float4x4::identity();
+	Math::float4x4		  matTexCoord = Math::float4x4::identity();
 	d3d::MaterialData	  material;
 };
 
 struct SkinnedBoneCB {
 	constexpr static size_t kMaxCount = 96;
-	float4x4 boneTransforms[kMaxCount];
+	Math::float4x4 boneTransforms[kMaxCount];
 };
 
 struct RenderItem {
@@ -69,7 +68,7 @@ private:
 	void updateSkullAnimationCb(std::shared_ptr<com::GameTimer> pGameTimer);
 	void updateSkinnedAnimationCb(std::shared_ptr<com::GameTimer> pGameTimer);
 private:
-	float4x4 _skullMatWorld;
+	Math::float4x4 _skullMatWorld;
 	d3d::BoneAnimation _skullAnimation;
 	float _skullAnimationTimePoint = 0.f;
 	FRConstantBufferPtr<ObjectCB> _pSkullObjCB;

@@ -10,7 +10,6 @@
 #include "GeometryGenerator.h"
 
 namespace HalfEdge {
-using namespace Math;
 
 struct HEFace;
 struct HEEdge;
@@ -19,8 +18,8 @@ struct HEMesh;
 using com::uint32;
 
 struct HEVertex {
-	float3	position;
-	float2  texcoord;
+	Math::float3	position;
+	Math::float2  texcoord;
 	uint32  index;
 };
 
@@ -81,7 +80,7 @@ public:
 	bool isBoundaryEdge(const HEVertex *pVert1, const HEVertex *pVert2) const;
 	bool isBoundaryEdge(const HEEdge *pEdge) const;
 public:
-	HEVertex *insertVertex(const float3 &position, const float2 &texcoord);
+	HEVertex *insertVertex(const Math::float3 &position, const Math::float2 &texcoord);
 	HEEdge *insertEdge(HEVertex *v1, HEVertex *v2);
 	HEFace *insertFace(const std::array<com::uint32, 3> &indices);
 	friend void swap(HEMesh &lhs, HEMesh &rhs);

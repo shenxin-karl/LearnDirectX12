@@ -20,6 +20,8 @@
 #include "D3D/Postprocessing/FXAA.h"
 #include "D3D/Tool/CoronaCamera.h"
 
+using namespace Math;
+
 Vertex::Vertex(const com::Vertex &vertex)
 	: position(vertex.position), normal(vertex.normal), texcoord(vertex.texcoord) {
 }
@@ -437,12 +439,12 @@ void MirrorApp::buildRenderItems(dx12lib::DirectContextProxy pDirectCtx) {
 	RenderItem shadowedSkullRItem = skullRItem;
 	ObjectCBType shadowSkullCB = skullObjectCB;
 	auto mainLightDirection = _pLightCB->cmap()->lights[0].direction;
-	Vector4 shadowPlane = XMVectorSet(0.0f, 1.0f, 0.0f, 0.f); // xz plane
+	Vector4 shadowPlane = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.f); // xz plane
 	Vector4 toMainLight = Vector4(mainLightDirection, 0.f);
-	Matrix4 S = XMMatrixShadow(shadowPlane, toMainLight);
+	Matrix4 S = DirectX::XMMatrixShadow(shadowPlane, toMainLight);
 	Matrix4 shadowOffsetY = Matrix4::makeTranslation(0.0f, 0.001f, 0.0f);
 	shadowSkullCB.matWorld =  float4x4(shadowOffsetY * S * skullWorld);
-	auto matZero = XMMatrixSet(
+	auto matZero = DirectX::XMMatrixSet(
 		0.f, 0.f, 0.f, 0.f,
 		0.f, 0.f, 0.f, 0.f,
 		0.f, 0.f, 0.f, 0.f,

@@ -21,6 +21,8 @@
 #include "D3D/Tool/FirstPersonCamera.h"
 
 
+using namespace Math;
+
 void WaterParame::init(const WaterParameDesc &desc) {
 	_length = desc.length;
 	_omega = DirectX::XM_2PI / desc.length;

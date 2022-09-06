@@ -6,12 +6,12 @@ namespace d3d {
 class FirstPersonCamera : public CameraBase {
 public:
 	FirstPersonCamera(const CameraDesc &desc);
-	const float4x4 &getView() const override;
-	const float4x4 &getProj() const override;
-	const float4x4 &getViewProj() const override;
-	const float4x4 &getInvView() const override;
-	const float4x4 &getInvProj() const override;
-	const float4x4 &getInvViewProj() const override;
+	const Math::float4x4 &getView() const override;
+	const Math::float4x4 &getProj() const override;
+	const Math::float4x4 &getViewProj() const override;
+	const Math::float4x4 &getInvView() const override;
+	const Math::float4x4 &getInvProj() const override;
+	const Math::float4x4 &getInvViewProj() const override;
 	void update(std::shared_ptr<com::GameTimer> pGameTimer) override;
 	void pollEvent(const com::MouseEvent &event);
 	void pollEvent(const com::KeyEvent &event);
@@ -41,17 +41,17 @@ public:
 private:
 	void responseEvent(std::shared_ptr<com::GameTimer> pGameTimer);
 private:
-	float    _pitch;
-	float    _yaw;
-	float    _roll;
-	float4x4 _view;
-	float4x4 _proj;
-	float4x4 _viewProj;
-	float4x4 _invView;
-	float4x4 _invProj;
-	float4x4 _invViewProj;
-	POINT    _lastMousePosition = POINT(-1, -1);
-	bool     _moveState[6] = { false };
+	float			_pitch;
+	float			_yaw;
+	float			_roll;
+	Math::float4x4	_view;
+	Math::float4x4	_proj;
+	Math::float4x4	_viewProj;
+	Math::float4x4	_invView;
+	Math::float4x4	_invProj;
+	Math::float4x4	_invViewProj;
+	POINT			_lastMousePosition = POINT(-1, -1);
+	bool			_moveState[6] = { false };
 };
 
 }

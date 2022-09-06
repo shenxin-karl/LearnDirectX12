@@ -7,27 +7,25 @@
 #include "dx12lib/Pipeline/ShaderRegister.hpp"
 #include <DirectXCollision.h>
 
-using namespace Math;
-using namespace DirectX;
 
 struct OpaqueVertex {
-	float3 position;
-	float3 normal;
+	Math::float3 position;
+	Math::float3 normal;
 public:
 	OpaqueVertex(const com::Vertex &vert) : position(vert.position), normal(vert.normal) {}
 };
 
 struct RenderItem {
-	float4x4 matWorld;
-	BoundingBox bounds;
+	Math::float4x4 matWorld;
+	DirectX::BoundingBox bounds;
 	size_t diffuseMapIdx;
 	size_t materialIdx;
-	float3 axis;
+	Math::float3 axis;
 };
 
 struct InstanceData {
-	float4x4 matWorld;
-	float4x4 matNormal;
+	Math::float4x4 matWorld;
+	Math::float4x4 matNormal;
 	uint32_t materialIdx;
 	uint32_t diffuseMapIdx;
 	uint32_t pad0 = 0;

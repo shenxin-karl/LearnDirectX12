@@ -8,10 +8,10 @@ class ALNode;
 class MeshNode : public INode {
 public:
 	MeshNode(dx12lib::IDirectContext &directCtx, const ALNode *pALNode);
-	void submit(const Frustum &frustum, const rgph::TechniqueFlag &techniqueFlag) const override;
+	void submit(const Math::BoundingFrustum &frustum, const rgph::TechniqueFlag &techniqueFlag) const override;
 	size_t getNumRenderItem() const override;
 	RenderItem *getRenderItem(size_t idx) const override;
-	void setParentTransform(const Matrix4 &matWorld) override;
+	void setParentTransform(const Math::Matrix4 &matWorld) override;
 	const rgph::TransformCBufferPtr &getNodeTransformCBuffer() const override;
 	std::shared_ptr<rgph::IMesh> getMesh(size_t idx) const override;
 	void createMaterial(rgph::RenderGraph &graph, 
@@ -20,8 +20,8 @@ public:
 	);
 private:
 	mutable bool _transformDirty = true;
-	float4x4 _applyTransform;
-	float4x4 _nodeLocalTransform;
+	Math::float4x4 _applyTransform;
+	Math::float4x4 _nodeLocalTransform;
 	std::vector<std::shared_ptr<ALMesh>> _alMeshes;
 	std::vector<std::unique_ptr<RenderItem>> _renderItems;
 	std::vector<std::unique_ptr<MeshNode>> _children;

@@ -6,6 +6,8 @@
 
 namespace d3d {
 
+using namespace Math;
+
 RenderTarget::RenderTarget(RenderTarget &&other) noexcept
 : _pRenderTarget2D(std::move(other._pRenderTarget2D))
 , _pDepthStencil2D(std::move(other._pDepthStencil2D))

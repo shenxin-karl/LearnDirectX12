@@ -20,8 +20,8 @@ public:
 	bool buildVertexDataInput(dx12lib::IDirectContext &directCtx, const VertexDataSemantic &semantic);
 
 	using rgph::Drawable::submit;
-	const AxisAlignedBox &getWorldAABB() const;
-	void applyTransform(const Matrix4 &matWorld);
+	const Math::BoundingBox &getWorldAABB() const;
+	void applyTransform(const Math::Matrix4 &matWorld);
 private:
 	std::shared_ptr<rgph::Material> _pMaterial;
 };

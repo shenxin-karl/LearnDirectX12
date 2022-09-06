@@ -5,6 +5,8 @@
 
 namespace d3d {
 
+	using namespace Math;
+
 bool M3dLoader::loadM3d(const std::string &fileName, 
 	std::vector<com::Vertex> &vertices,
 	std::vector<uint16_t> &indices, 
@@ -169,7 +171,7 @@ void M3dLoader::readTriangles(std::ifstream &fin, size_t numTriangles, std::vect
 	}
 }
 
-void M3dLoader::readBoneOffsets(std::ifstream &fin, size_t numBones, std::vector<float4x4> &boneOffsets) {
+void M3dLoader::readBoneOffsets(std::ifstream &fin, size_t numBones, std::vector<Math::float4x4> &boneOffsets) {
 	std::string ignore;
 	boneOffsets.resize(numBones);
 

@@ -5,6 +5,7 @@
 #include "Window.h"
 #include "Mouse.h"
 #include "Keyboard.h"
+#include <format>
 
 int main() {
 	std::shared_ptr<com::GameTimer> pGameTimer = std::make_unique<com::GameTimer>();

@@ -5,6 +5,8 @@
 
 namespace d3d {
 
+using namespace Math;
+
 ClearCSMShadowMapPass::ClearCSMShadowMapPass(const std::string &passName)
 : GraphicsPass(passName, false, false)
 , pShadowMapArray(this, "ShadowMapArray")
@@ -33,7 +35,7 @@ void CSMShadowPass::execute(dx12lib::DirectContextProxy pDirectCtx) {
 	for (size_t i = 0; i < _numCascaded; ++i) {
 		const auto &dsv = _pShadowMapArray->getPlaneDSV(i);
 		pDirectCtx->setRenderTarget(dsv);
-		Frustum frustum(static_cast<Matrix4>(_subFrustumViewProj[i]));
+		BoundingFrustum frustum(static_cast<Matrix4>(_subFrustumViewProj[i]));
 		auto iter = _subPasses.begin();
 		while (iter != _subPasses.end()) {
 			if (!(*iter)->valid()) {
@@ -93,11 +95,41 @@ void CSMShadowPass::finalize(dx12lib::DirectContextProxy pDirectCtx) {
 	_finalized = true;
 }
 
-Frustum CSMShadowPass::update(const CameraBase *pCameraBase, std::shared_ptr<com::GameTimer> pGameTimer, Vector3 lightDir) {
-	Frustum cameraViewSpaceFrustum = pCameraBase->getViewSpaceFrustum();
+BoundingFrustum CSMShadowPass::update(const CameraBase *pCameraBase, std::shared_ptr<com::GameTimer> pGameTimer, Vector3 lightDir) {
+	BoundingFrustum cameraViewSpaceFrustum = pCameraBase->getViewSpaceFrustum();
 	return cameraViewSpaceFrustum;
 }
 
+
+static BoundingSphere calcSubFrustumBoundBox(const BoundingFrustum &subFrustum, const Vector3 &lightDir) {
+	// 只有旋转没有平移的矩阵
+	Matrix4 lightView = DX::XMMatrixLookAtLH(
+		Vector3(0.f), 
+		lightDir, 
+		Vector3(0.f, 1.f, 0.f)
+	);
+
+	Vector3 box[2] = { Vector3(std::numeric_limits<float>::max()), Vector3(std::numeric_limits<float>::min()) };
+	for (auto &c : subFrustum.getCorners()) {
+		Vector3 p = Vector3(lightView * Vector4(c, 1.f));
+		box[0] = min(p, box[0]);
+		box[1] = max(p, box[1]);
+	}
+
+	return { BoundingBox(box[0], box[1]) };
+}
+
+Vector3 CSMShadowPass::calcLightCenter(const BoundingFrustum &cameraSubFrustum) {
+	Vector3 center(0.f);
+
+	// 算出视锥体的中心点
+	auto corners = cameraSubFrustum.getCorners();
+	for (auto &c : corners)
+		center += Vector3(c);
+
+	center /= 8.f;
+	return center;
+}
 
 struct FrustumItem {
 	float zNear;
@@ -127,30 +159,17 @@ void CSMShadowPass::updateSubFrustumViewProj(const CameraBase *pCameraBase, Vect
 	for (size_t i = 0; i < _numCascaded; ++i) {
 		FrustumItem &item = split[i];
 		Matrix4 cameraSubProj = DX::XMMatrixPerspectiveFovLH(fov, aspect, item.zNear, item.zFar);
-		Frustum cameraFrustum(cameraSubProj);
-		Vector3 center(0.f);
-
-		auto corners = cameraFrustum.getCorners();
-		Vector3 boxMin(std::numeric_limits<float>::max());
-		Vector3 boxMax(std::numeric_limits<float>::min());
-		for (auto &c : corners) {
-			Vector3 p(c);
-			center += Vector3(p);
-			boxMin = min(p, boxMin);
-			boxMax = max(p, boxMax);
-		}
-
-		center /= 8.f;
-		center += -lightDir * _lightDistance;
-
+		BoundingFrustum cameraSubFrustum(cameraSubProj);
+		Vector3 center = calcLightCenter(cameraSubFrustum);
 		Matrix4 lightView = DX::XMMatrixLookAtLH(
 			center, 
 			center + lightDir, 
 			Vector3(0.f, 1.f, 0.f)
 		);
 
-		AxisAlignedBox boundBox = AxisAlignedBox(boxMin, boxMin).transform(lightView);
-		boundBox.getMinMax(boxMin, boxMax);
+		Vector3 boxMin;
+		Vector3 boxMax;
+		BoundingSphere boundBox = calcSubFrustumBoundBox(cameraSubFrustum, lightDir);
 		Matrix4 lightProj = DX::XMMatrixPerspectiveOffCenterLH(
 			boxMin.x, boxMax.x,
 			boxMin.y, boxMax.y,

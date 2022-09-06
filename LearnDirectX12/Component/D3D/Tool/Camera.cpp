@@ -11,6 +11,8 @@
 
 namespace d3d {
 
+using namespace Math;
+
 #if defined(_DEBUG) || defined(DEBUG)
 	#define DEBUG_MAKE_DIRTY  _isDirty = true
 	#define DEBUG_CLEAR_DIRTY _isDirty = false
@@ -94,11 +96,11 @@ float CameraBase::getAspect() const {
 	return _aspect;
 }
 
-const Frustum &CameraBase::getProjSpaceFrustum() const {
+const BoundingFrustum &CameraBase::getProjSpaceFrustum() const {
 	return _projSpaceFrustum;
 }
 
-const Frustum &CameraBase::getViewSpaceFrustum() const {
+const BoundingFrustum &CameraBase::getViewSpaceFrustum() const {
 	return _viewSpaceFrustum;
 }
 

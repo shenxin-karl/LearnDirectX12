@@ -5,6 +5,8 @@
 
 namespace d3d {
 
+using namespace Math;
+
 RenderItem::RenderItem(dx12lib::IDirectContext &directCtx, INode *pNode, size_t meshIdx) {
 	auto pALMesh = pNode->getMesh(meshIdx);
 	_pGeometry = std::make_shared<rgph::Geometry>();
@@ -112,7 +114,7 @@ bool RenderItem::buildVertexDataInput(dx12lib::IDirectContext &directCtx, const 
 	return true;
 }
 
-const AxisAlignedBox & RenderItem::getWorldAABB() const {
+const BoundingBox & RenderItem::getWorldAABB() const {
 	return _pGeometry->getWorldAABB();
 }
 

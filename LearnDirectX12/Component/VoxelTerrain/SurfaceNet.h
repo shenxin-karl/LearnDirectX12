@@ -8,7 +8,6 @@
 
 namespace voxel {
 
-using namespace Math;
 using uint16 = std::uint16_t;
 
 
@@ -17,7 +16,7 @@ struct int3 {
 	int y;
 	int z;
 public:
-	operator float3 () const {
+	operator Math::float3 () const {
 		return { float(x), float(y), float(z) };
 	}
 };

@@ -6,13 +6,12 @@
 
 namespace loop {
 
-using namespace Math;
 using namespace com;
 
 
 struct LoopVert {
-	float3	position;
-	float2	texcoord;
+	Math::float3	position;
+	Math::float2	texcoord;
 };
 
 struct LoopEdge {

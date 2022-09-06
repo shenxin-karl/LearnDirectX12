@@ -3,6 +3,8 @@
 
 namespace sim {
 
+using namespace Math;
+
 bool operator==(const SimEdge &lhs, const SimEdge &rhs) {
 	return lhs.start == rhs.start && lhs.last == rhs.last ||
 		lhs.last == rhs.start && lhs.start == rhs.last;

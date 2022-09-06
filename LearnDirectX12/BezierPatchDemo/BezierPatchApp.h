@@ -5,14 +5,13 @@
 #include "dx12lib/dx12libStd.h"
 #include "Math/MathHelper.h"
 
-using namespace Math;
 
 struct PatchVertex {
-	float3 position;
+	Math::float3 position;
 };
 
 struct CBObject {
-	float4x4 gWorld;
+	Math::float4x4 gWorld;
 	d3d::MaterialData gMaterial;
 };
 

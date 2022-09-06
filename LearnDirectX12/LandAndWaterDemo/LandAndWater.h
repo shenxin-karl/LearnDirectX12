@@ -7,27 +7,26 @@
 #include "D3D/d3dutil.h"
 #include "D3D/Model/Mesh/Mesh.h"
 
-using namespace Math;
 
 namespace com {
 	struct Vertex;
 }
 
 struct WaterParameDesc {
-	float length;
-	float speed;
-	float amplitude;
-	float3 direction;
-	float steep;
+	float        length;
+	float        speed;
+	float        amplitude;
+	Math::float3 direction;
+	float        steep;
 };
 
 class WaterParame {
-	float  _length;      // 波长
-	float  _omega;       // 角频率
-	float  _speed;       // 波速; 相常数表示法 
-	float  _amplitude;   // 振幅
-	float3 _direction;   // 方向
-	float  _steep;       // 陡峭度
+	float        _length;      // 波长
+	float        _omega;       // 角频率
+	float        _speed;       // 波速; 相常数表示法 
+	float        _amplitude;   // 振幅
+	Math::float3 _direction;   // 方向
+	float        _steep;       // 陡峭度
 public:
 	void init(const WaterParameDesc &desc);
 };
@@ -38,30 +37,30 @@ struct WaterCBType {
 };
 
 struct MeshVertex {
-	float3 position;
-	float3 normal;
-	float2 texcoord;
+	Math::float3 position;
+	Math::float3 normal;
+	Math::float2 texcoord;
 public:
 	MeshVertex(const com::Vertex &vert);
 };
 
 struct BillBoardVertex {
-	float3 position;
-	float2 size;
+	Math::float3 position;
+	Math::float2 size;
 };
 
 struct WaterVertex {
-	float3 position;
-	float3 normal;
+	Math::float3 position;
+	Math::float3 normal;
 public:
 	WaterVertex(const com::Vertex &vert);
 };
 
 struct CBObjectType {
-	float4x4          world;
-	float4x4          normalMat;
-	float4x4          matTransform;
-	d3d::MaterialData	  material;
+	Math::float4x4          world;
+	Math::float4x4          normalMat;
+	Math::float4x4          matTransform;
+	d3d::MaterialData	    material;
 };
 
 struct RenderItem {

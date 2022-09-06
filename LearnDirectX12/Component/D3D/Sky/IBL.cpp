@@ -14,6 +14,8 @@
 #include "D3D/Shader/ShaderCommon.h"
 #include "Geometry/GeometryGenerator.h"
 
+using namespace Math;
+
 namespace d3d {
 
 IBL::IBL(dx12lib::DirectContextProxy pComputeCtx, const std::string &fileName) {

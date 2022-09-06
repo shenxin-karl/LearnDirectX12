@@ -5,15 +5,14 @@
 #include <tuple>
 
 namespace com {
-using namespace Math;
 using uint16 = std::uint16_t;
 using uint32 = std::uint32_t;
 
 struct Vertex {
-	float3	position;
-	float2  texcoord;
-	float3	normal;
-	float3	tangent;
+	Math::float3	position;
+	Math::float2  texcoord;
+	Math::float3	normal;
+	Math::float3	tangent;
 };
 
 struct MeshData {
@@ -39,7 +38,7 @@ public:
 		uint32 sliceCount
 	) const;
 
-	const std::array<float3, 36> &createSkyBoxCube() const;
+	const std::array<Math::float3, 36> &createSkyBoxCube() const;
 	MeshData createBox(float width, float height, float depth, uint32 numSubdivisions) const;
 	MeshData createSphere(float radius, uint32 numSubdivisions) const;
 	MeshData createSphere(float radius, std::size_t sliceCount, std::size_t stackCount) const;

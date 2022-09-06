@@ -4,6 +4,7 @@
 #include "D3D/AssimpLoader/ALMesh.h"
 #include "RenderGraph/Job/TransformCBufferPtr.h"
 
+using namespace Math;
 namespace d3d {
 
 MeshNode::MeshNode(dx12lib::IDirectContext &directCtx, const ALNode *pALNode) {
@@ -22,7 +23,7 @@ MeshNode::MeshNode(dx12lib::IDirectContext &directCtx, const ALNode *pALNode) {
 		_children.push_back(std::make_unique<MeshNode>(directCtx, pALNode->getChildren(i)));
 }
 
-void MeshNode::submit(const Frustum &frustum, const rgph::TechniqueFlag &techniqueFlag) const {
+void MeshNode::submit(const BoundingFrustum &frustum, const rgph::TechniqueFlag &techniqueFlag) const {
 	if (_transformDirty && _nodeTransformCBuffer != nullptr) {
 		rgph::TransformStore store {
 			.matWorld = _applyTransform,

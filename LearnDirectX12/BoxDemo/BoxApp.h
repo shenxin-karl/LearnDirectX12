@@ -7,11 +7,10 @@
 #include "Geometry/GeometryGenerator.h"
 #include "Dx12lib/Pipeline/ShaderRegister.hpp"
 
-using namespace Math;
 
 struct Vertex {
-	float3 position;
-	float3 normal;
+	Math::float3 position;
+	Math::float3 normal;
 public:
 	Vertex(const com::Vertex &vertex) : position(vertex.position), normal(vertex.normal) {}
 };
@@ -24,8 +23,8 @@ struct BoxMesh {
 };
 
 struct CBObject {
-	float4x4          gMatWorld;
-	float4x4	      gMatNormal;
+	Math::float4x4    gMatWorld;
+	Math::float4x4	  gMatNormal;
 	d3d::MaterialData gMaterial;
 	d3d::SH3	      gSH3;
 };
