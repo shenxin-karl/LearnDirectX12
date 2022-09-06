@@ -1,6 +1,7 @@
 #include "CSMShadowPass.h"
 #include "D3D/Tool/Camera.h"
 #include "Dx12lib/Texture/DepthStencilTexture.h"
+#include "GameTimer/GameTimer.h"
 #include "RenderGraph/Pass/SubPass.h"
 
 namespace d3d {
@@ -95,39 +96,37 @@ void CSMShadowPass::finalize(dx12lib::DirectContextProxy pDirectCtx) {
 	_finalized = true;
 }
 
-BoundingFrustum CSMShadowPass::update(const CameraBase *pCameraBase, std::shared_ptr<com::GameTimer> pGameTimer, Vector3 lightDir) {
-	BoundingFrustum cameraViewSpaceFrustum = pCameraBase->getViewSpaceFrustum();
-	return cameraViewSpaceFrustum;
-}
 
-
-static BoundingSphere calcSubFrustumBoundBox(const BoundingFrustum &subFrustum, const Vector3 &lightDir) {
-	// 只有旋转没有平移的矩阵
-	Matrix4 lightView = DX::XMMatrixLookAtLH(
-		Vector3(0.f), 
-		lightDir, 
-		Vector3(0.f, 1.f, 0.f)
-	);
-
+static BoundingSphere calcSubFrustumBoundBox(const Matrix4 &cameraInvView, const BoundingFrustum &subFrustum, const Vector3 &lightDir) {
+	//todo: 避免转动相机时出现抖动, 使用包围球
 	Vector3 box[2] = { Vector3(std::numeric_limits<float>::max()), Vector3(std::numeric_limits<float>::min()) };
 	for (auto &c : subFrustum.getCorners()) {
-		Vector3 p = Vector3(lightView * Vector4(c, 1.f));
+		// viewSpacePos = proj * view * p
+		// viewSpacePos = inverse(view) * proj * p;
+		//todo: 求出世界空间的包围球, 因为相机没有 M 变换, 所以 VP 就是世界空间
+		Vector3 p = cameraInvView * Vector4(c, 1.f);
 		box[0] = min(p, box[0]);
 		box[1] = max(p, box[1]);
 	}
-
 	return { BoundingBox(box[0], box[1]) };
 }
 
-Vector3 CSMShadowPass::calcLightCenter(const BoundingFrustum &cameraSubFrustum) {
-	Vector3 center(0.f);
+Vector3 CSMShadowPass::calcLightCenter(const BoundingSphere &boundingSphere, const Math::Vector3 &lightDir) const {
+	Vector3 center = Vector3(boundingSphere.getCenter());
+	Matrix4 matLightSpace = DX::XMMatrixLookAtLH(
+		center,
+		center + lightDir,
+		Vector3(0.f, 1.f, 0.f)
+	);
 
-	// 算出视锥体的中心点
-	auto corners = cameraSubFrustum.getCorners();
-	for (auto &c : corners)
-		center += Vector3(c);
+	//todo: 避免阴影移动时抖动, 做个对齐处理, 必须对齐 boundingBox.size / shadowMap.size
+	Matrix4 matInvLightSpace = inverse(matLightSpace);
+	center = Vector3(matLightSpace * Vector4(center, 1.f));
+	float aligned = boundingSphere.getRadius() / static_cast<float>(_shadowMapSize);
+	for (size_t i = 0; i < 3; ++i)
+		center[i] = std::floor(center[i] / aligned) * aligned;
 
-	center /= 8.f;
+	center = matInvLightSpace * Vector4(center, 1.f);
 	return center;
 }
 
@@ -135,7 +134,7 @@ struct FrustumItem {
 	float zNear;
 	float zFar;
 };
-void CSMShadowPass::updateSubFrustumViewProj(const CameraBase *pCameraBase, Vector3 lightDir) {
+BoundingFrustum CSMShadowPass::update(const CameraBase *pCameraBase, std::shared_ptr<com::GameTimer> pGameTimer, Vector3 lightDir) {
 	_subFrustumViewProj.resize(_numCascaded);
 	std::vector<FrustumItem> split(_numCascaded);
 
@@ -149,36 +148,58 @@ void CSMShadowPass::updateSubFrustumViewProj(const CameraBase *pCameraBase, Vect
 		float tNear = (1.f - _lambda) * z0 + _lambda * z1;
 		float tFar = tNear * 1.005f;
 		split[i].zNear = tNear;
-		split[i-1].zFar = tFar;
+		split[i - 1].zFar = tFar;
 	}
 	split[0].zNear = zNear;
-	split[_numCascaded-1].zFar = zFar;
+	split[_numCascaded - 1].zFar = zFar;
 
 	float fov = pCameraBase->getFov();
 	float aspect = pCameraBase->getAspect();
+	Matrix4 cameraInvView = inverse(static_cast<Matrix4>(pCameraBase->getView()));
+
+	float2 renderTargetSize(_shadowMapSize);
+	float2 invRenderTargetSize(1.f / _shadowMapSize, 1.f / _shadowMapSize);
+
 	for (size_t i = 0; i < _numCascaded; ++i) {
 		FrustumItem &item = split[i];
 		Matrix4 cameraSubProj = DX::XMMatrixPerspectiveFovLH(fov, aspect, item.zNear, item.zFar);
 		BoundingFrustum cameraSubFrustum(cameraSubProj);
-		Vector3 center = calcLightCenter(cameraSubFrustum);
-		Matrix4 lightView = DX::XMMatrixLookAtLH(
-			center, 
-			center + lightDir, 
-			Vector3(0.f, 1.f, 0.f)
-		);
+		BoundingSphere boundingSphere = calcSubFrustumBoundBox(cameraInvView, cameraSubFrustum, lightDir);
+		Vector3 center = calcLightCenter(boundingSphere, lightDir);
 
-		Vector3 boxMin;
-		Vector3 boxMax;
-		BoundingSphere boundBox = calcSubFrustumBoundBox(cameraSubFrustum, lightDir);
+		BoundingBox boundingBox(boundingSphere);
+		auto &&[vMin, vMax] = boundingBox.getMinMax();
+
 		Matrix4 lightProj = DX::XMMatrixPerspectiveOffCenterLH(
-			boxMin.x, boxMax.x,
-			boxMin.y, boxMax.y,
-			boxMin.z, boxMax.z
+			vMin.x, vMax.x,
+			vMin.y, vMax.y,
+			vMin.z, vMax.z
+		);
+		Matrix4 lightView = DX::XMMatrixLookAtLH(
+			center,
+			center + lightDir,
+			Vector3(0.f, 1.f, 0.f)
 		);
 
 		Matrix4 lightViewProj = lightProj * lightView;
 		_subFrustumViewProj[i] = static_cast<float4x4>(lightViewProj);
+
+		auto pShadowPassCb = _subFrustumPassCBuffers[i];
+		auto cbVisitor = pShadowPassCb->visit();
+		std::memset(cbVisitor.ptr(), 0, sizeof(*cbVisitor));
+		cbVisitor->view = float4x4(lightView);
+		cbVisitor->invView = float4x4(inverse(lightView));
+		cbVisitor->proj = float4x4(lightProj);
+		cbVisitor->invProj = float4x4(inverse(lightProj));
+		cbVisitor->eyePos = center.xyz;
+		cbVisitor->renderTargetSize = renderTargetSize;
+		cbVisitor->invRenderTargetSize = invRenderTargetSize;
+		cbVisitor->nearZ = vMin.z;
+		cbVisitor->farZ = vMax.z;
+		cbVisitor->totalTime = pGameTimer->getTotalTime();
+		cbVisitor->deltaTime = pGameTimer->getDeltaTime();
 	}
+
 }
 
 }
