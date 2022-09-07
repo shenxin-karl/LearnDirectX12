@@ -12,6 +12,10 @@
 #include "RenderGraph/Pass/PresentPass.hpp"
 #include "RenderGraph/RenderGraph/RenderGraph.h"
 
+namespace d3d {
+class CSMShadowPass;
+}
+
 using namespace Math;
 
 
@@ -66,7 +70,7 @@ private:
 	void loadEnvMap(dx12lib::DirectContextProxy pDirectCtx);
 	void initPso(dx12lib::DirectContextProxy pDirectCtx) const;
 	void initSubPass();
-	void buildPass();
+	void buildPass(dx12lib::DirectContextProxy pDirectCtx);
 private:
 	bool _bMouseLeftPress = false;
 	std::shared_ptr<d3d::FirstPersonCamera> _pCamera;
@@ -74,6 +78,8 @@ private:
 	std::shared_ptr<dx12lib::IDepthStencil2DArray> _pShadowMapArray;
 	std::shared_ptr<dx12lib::ITextureResourceCube> _pEnvMap;
 	dx12lib::FRConstantBufferPtr<d3d::CBPassType> _pPassCb;
+	std::shared_ptr<d3d::CSMShadowPass> _pCSMShadowPass;
+	BoundingFrustum _lightFrustum;
 
 	rgph::RenderGraph _graph;
 	std::shared_ptr<d3d::MeshModel> _pMeshModel;

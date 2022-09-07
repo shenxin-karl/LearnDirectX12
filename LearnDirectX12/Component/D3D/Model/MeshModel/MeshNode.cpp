@@ -23,7 +23,7 @@ MeshNode::MeshNode(dx12lib::IDirectContext &directCtx, const ALNode *pALNode) {
 		_children.push_back(std::make_unique<MeshNode>(directCtx, pALNode->getChildren(i)));
 }
 
-void MeshNode::submit(const BoundingFrustum &frustum, const rgph::TechniqueFlag &techniqueFlag) const {
+void MeshNode::submit(const IBounding &bounding, const rgph::TechniqueFlag &techniqueFlag) const {
 	if (_transformDirty && _nodeTransformCBuffer != nullptr) {
 		rgph::TransformStore store {
 			.matWorld = _applyTransform,
@@ -35,13 +35,13 @@ void MeshNode::submit(const BoundingFrustum &frustum, const rgph::TechniqueFlag 
 
 	for (auto &pRenderItem : _renderItems) {
 		const auto &worldAABB = pRenderItem->getWorldAABB();
-		if (frustum.contains(worldAABB) == DX::ContainmentType::DISJOINT)
+		if (bounding.contains(worldAABB) == DX::ContainmentType::DISJOINT)
 			continue;
 		pRenderItem->submit(techniqueFlag);
 	}
 
 	for (auto &pChild : _children)
-		pChild->submit(frustum, techniqueFlag);
+		pChild->submit(bounding, techniqueFlag);
 }
 
 size_t MeshNode::getNumRenderItem() const {

@@ -14,12 +14,12 @@ MeshModel::MeshModel(dx12lib::IDirectContext &directCtx, std::shared_ptr<ALTree>
 
 MeshModel::~MeshModel() = default;
 
-void MeshModel::submit(const BoundingFrustum &frustum, const rgph::TechniqueFlag &techniqueFlag) const {
+void MeshModel::submit(const IBounding &bounding, const rgph::TechniqueFlag &techniqueFlag) const {
 	if (_modelTransformDirty) {
 		_pRootNode->setParentTransform(Matrix4(_modelTransform));
 		_modelTransformDirty = false;
 	}
-	_pRootNode->submit(frustum, techniqueFlag);
+	_pRootNode->submit(bounding, techniqueFlag);
 }
 
 INode * MeshModel::getRootNode() const {

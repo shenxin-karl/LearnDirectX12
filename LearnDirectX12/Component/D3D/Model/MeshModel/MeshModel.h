@@ -17,7 +17,7 @@ class MeshModel : public IModel {
 public:
 	MeshModel(dx12lib::IDirectContext &directCtx, std::shared_ptr<ALTree> pALTree);
 	~MeshModel() override;
-	void submit(const Math::BoundingFrustum &frustum, const rgph::TechniqueFlag &techniqueFlag) const override ;
+	void submit(const IBounding &bounding, const rgph::TechniqueFlag &techniqueFlag) const override ;
 	INode *getRootNode() const override;
 	void setModelTransform(const Math::float4x4 &matWorld) override;
 

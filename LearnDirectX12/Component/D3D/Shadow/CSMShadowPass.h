@@ -33,9 +33,7 @@ public:
 	constexpr static size_t kMaxNumCascaded = 7;
 	rgph::PassResourcePtr<dx12lib::IDepthStencil2DArray> pShadowMapArray;
 private:
-	void updateSubFrustumViewProj(const CameraBase *pCameraBase, Math::Vector3 lightDir);
 	Math::Vector3 calcLightCenter(const Math::BoundingSphere &boundingSphere, const Math::Vector3 &lightDir) const;
-
 private:
 	bool _finalized = false;
 	float _lambda = 0.5f;

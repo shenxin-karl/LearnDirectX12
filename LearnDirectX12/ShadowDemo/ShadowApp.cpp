@@ -17,6 +17,7 @@
 #include "RenderGraph/Pass/RenderQueuePass.h"
 #include "RenderGraph/Technique/Technique.h"
 #include "D3D/AssimpLoader/ALTree.h"
+#include "D3D/Shadow/CSMShadowPass.h"
 #include "D3D/Sky/SkyBoxPass.h"
 #include "D3D/TextureManager/TextureManager.h"
 #include "RenderGraph/Pass/SubPass.h"
@@ -104,7 +105,7 @@ void ShadowApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 	_pShadowMapArray = pDirectCtx->createDepthStencil2DArray(512, 512, 3, &shadowMapClearValue);
 
 	loadEnvMap(pDirectCtx);
-	buildPass();
+	buildPass(pDirectCtx);
 	initPso(pDirectCtx);
 	initSubPass();
 	loadModel(pDirectCtx);
@@ -134,12 +135,17 @@ void ShadowApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	_pCamera->update(pGameTimer);
 	auto pPassCbVisitor = _pPassCb->visit();
 	_pCamera->updatePassCB(*pPassCbVisitor);
+
+	auto pLightCbVisitor = _pLightCb->visit<d3d::CBLightType>();
+	Vector3 lightDir(pLightCbVisitor->lights[0].direction);
+	_lightFrustum = _pCSMShadowPass->update(_pCamera.get(), pGameTimer, -lightDir);
 }
 
 void ShadowApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pCmdQueue = _pDevice->getCommandQueue();
 	auto pDirectCtx = pCmdQueue->createDirectContextProxy();
-	_pMeshModel->submit(_pCamera->getViewSpaceFrustum(), TechType::kOpaque);
+	_pMeshModel->submit(d3d::MakeBoundingWrap(_pCamera->getViewSpaceFrustum()), TechType::kShadow);
+	_pMeshModel->submit(d3d::MakeBoundingWrap(_pCamera->getViewSpaceFrustum()), TechType::kOpaque);
 	_graph.execute(pDirectCtx);
 	pCmdQueue->executeCommandList(pDirectCtx);
 }
@@ -293,13 +299,15 @@ void ShadowApp::initSubPass() {
 	}
 }
 
-void ShadowApp::buildPass() {
+void ShadowApp::buildPass(dx12lib::DirectContextProxy pDirectCtx) {
 	auto pClearPass = std::make_shared<rgph::ClearPass>("ClearRTAndDS");
-	auto pClearShadowMap = std::make_shared<rgph::ClearDsPass>("ClearShadowMap");
-	auto pShadowPass = std::make_shared<ShadowPass>("ShadowPass");
+	auto pClearCSMShadowMap = std::make_shared<d3d::ClearCSMShadowMapPass>("ClearCSMShadowMapPass");
 	auto pOpaquePass = std::make_shared<OpaquePass>("OpaquePass");
 	auto pSkyBoxPass = std::make_shared<d3d::SkyBoxPass>("SkyBoxPass");
 	auto pPresentPass = std::make_shared<rgph::PresentPass>("PresentPass");
+
+	_pCSMShadowPass = std::make_shared<d3d::CSMShadowPass>("ShadowPass");
+	_pCSMShadowPass->finalize(pDirectCtx);
 
 	{ // clear RenderTarget and DepthStencil Pass
 		auto getRenderTarget = [&]() {
@@ -314,20 +322,20 @@ void ShadowApp::buildPass() {
 		_graph.addPass(pClearPass);
 	}
 	{ // clear Shadow Map
-		pClearShadowMap->pDepthStencil.preExecuteState = D3D12_RESOURCE_STATE_DEPTH_WRITE;
-		_pShadowMapArray >> pClearShadowMap->pDepthStencil;
-		_graph.addPass(pClearShadowMap);
+		pClearCSMShadowMap->pShadowMapArray.preExecuteState = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+		_pCSMShadowPass->getShadowMapArray() >> pClearCSMShadowMap->pShadowMapArray;
+		_graph.addPass(pClearCSMShadowMap);
 	}
 	{ // shadow pass
-		pClearShadowMap->pDepthStencil >> pShadowPass->pDepthStencil;
-		_graph.addPass(pShadowPass);
+		pClearCSMShadowMap->pShadowMapArray >> _pCSMShadowPass->pShadowMapArray;
+		_graph.addPass(_pCSMShadowPass);
 	}
 	{ // opaque pass
 		pOpaquePass->setPassCBuffer(_pPassCb);
 		pOpaquePass->pShadowMap.preExecuteState = D3D12_RESOURCE_STATE_DEPTH_READ;
 		pClearPass->pRenderTarget >> pOpaquePass->pRenderTarget;
 		pClearPass->pDepthStencil >> pOpaquePass->pDepthStencil;
-		pShadowPass->pDepthStencil >> pOpaquePass->pShadowMap;
+		_pCSMShadowPass->pShadowMapArray >> pOpaquePass->pShadowMap;
 		_graph.addPass(pOpaquePass);
 	}
 	{ // SkyBoxPass

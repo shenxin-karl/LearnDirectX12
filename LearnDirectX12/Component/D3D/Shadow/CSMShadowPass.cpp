@@ -33,6 +33,10 @@ CSMShadowPass::CSMShadowPass(const std::string &name)
 
 void CSMShadowPass::execute(dx12lib::DirectContextProxy pDirectCtx) {
 	assert(_finalized);
+
+	pDirectCtx->setViewport(*customViewport);
+	pDirectCtx->setScissorRect(*customScissorRect);
+
 	for (size_t i = 0; i < _numCascaded; ++i) {
 		const auto &dsv = _pShadowMapArray->getPlaneDSV(i);
 		pDirectCtx->setRenderTarget(dsv);
@@ -45,9 +49,13 @@ void CSMShadowPass::execute(dx12lib::DirectContextProxy pDirectCtx) {
 			}
 
 			auto &pSubPass = *iter;
+			if (pSubPass->getJobCount() == 0) {
+				++iter;
+				continue;
+			}
+
 			std::vector<rgph::Job> jobs;
 			jobs.reserve(pSubPass->getJobCount());
-
 			for (auto &job : pSubPass->getJobs()) {
 				if (frustum.contains(job.pGeometry->getWorldAABB()) != DX::ContainmentType::DISJOINT)
 					jobs.push_back(job);
@@ -55,8 +63,9 @@ void CSMShadowPass::execute(dx12lib::DirectContextProxy pDirectCtx) {
 
 			pSubPass->bind(*pDirectCtx);
 			auto passCBufferShaderRegister = pSubPass->getPassCBufferShaderRegister();
-			if (_pPassCBuffer != nullptr && passCBufferShaderRegister.slot && !passCBufferShaderRegister.slot.isSampler())
-				pDirectCtx->setConstantBuffer(passCBufferShaderRegister, _pPassCBuffer);
+			auto pPassCb = _subFrustumPassCBuffers[i];
+			if (passCBufferShaderRegister.slot && !passCBufferShaderRegister.slot.isSampler())
+				pDirectCtx->setConstantBuffer(passCBufferShaderRegister, pPassCb);
 
 			pSubPass->execute(*pDirectCtx, jobs);
 			++iter;
@@ -77,7 +86,7 @@ void CSMShadowPass::setLightDistance(float distance) {
 }
 
 auto CSMShadowPass::getShadowMapArray() -> std::shared_ptr<dx12lib::IDepthStencil2DArray> {
-	return pShadowMapArray;
+	return _pShadowMapArray;
 }
 
 void CSMShadowPass::finalize(dx12lib::DirectContextProxy pDirectCtx) {
@@ -88,6 +97,19 @@ void CSMShadowPass::finalize(dx12lib::DirectContextProxy pDirectCtx) {
 	clearValue.Format = DXGI_FORMAT_D16_UNORM;
 	clearValue.DepthStencil.Depth = 1.f;
 	clearValue.DepthStencil.Stencil = 0;
+
+	D3D12_VIEWPORT viewport = {
+		0.f, 0.f,
+		static_cast<float>(_shadowMapSize), static_cast<float>(_shadowMapSize),
+		0.f, 1.f
+	};
+
+	D3D12_RECT rect = {
+		0, 0, static_cast<LONG>(_shadowMapSize), static_cast<LONG>(_shadowMapSize)
+	};
+	customScissorRect = rect;
+	customViewport = viewport;
+
 	_pShadowMapArray = pDirectCtx->createDepthStencil2DArray(_shadowMapSize, _shadowMapSize, _numCascaded, &clearValue);
 
 	for (size_t i = 0; i < _numCascaded; ++i)
@@ -108,7 +130,8 @@ static BoundingSphere calcSubFrustumBoundBox(const Matrix4 &cameraInvView, const
 		box[0] = min(p, box[0]);
 		box[1] = max(p, box[1]);
 	}
-	return { BoundingBox(box[0], box[1]) };
+	BoundingBox boundingBox(box[0], box[1]);
+	return boundingBox;
 }
 
 Vector3 CSMShadowPass::calcLightCenter(const BoundingSphere &boundingSphere, const Math::Vector3 &lightDir) const {
@@ -128,6 +151,39 @@ Vector3 CSMShadowPass::calcLightCenter(const BoundingSphere &boundingSphere, con
 
 	center = matInvLightSpace * Vector4(center, 1.f);
 	return center;
+}
+
+static BoundingFrustum calcLightFrustum(const CameraBase *pCameraBase, Vector3 lightDir) {
+	BoundingFrustum frustum = pCameraBase->getViewSpaceFrustum();
+	Vector3 center(Vector3::identity());
+	Vector3 vMin(std::numeric_limits<float>::max());
+	Vector3 vMax(std::numeric_limits<float>::min());
+	for (auto &c : frustum.getCorners()) {
+		Vector3 p(c);
+		center += p;
+		vMin = min(vMin, p);
+		vMax = max(vMax, p);
+	}
+	center /= 8;
+
+	BoundingBox boundingBox(vMin, vMax);
+	Matrix4 lightView = DX::XMMatrixLookAtLH(
+		center,
+		center + lightDir,
+		Vector3(0.f, 1.f, 0.f)
+	);
+	boundingBox = boundingBox.transform(lightView);
+	boundingBox.getMinMax(vMin, vMax);
+
+	Matrix4 lightProj = DX::XMMatrixOrthographicOffCenterLH(
+		vMin.x, vMax.x,
+		vMin.y, vMax.y,
+		vMin.z, vMax.z
+	);
+
+	frustum = BoundingFrustum(lightProj);
+	frustum = frustum.transform(inverse(lightView));
+	return frustum;
 }
 
 struct FrustumItem {
@@ -153,12 +209,12 @@ BoundingFrustum CSMShadowPass::update(const CameraBase *pCameraBase, std::shared
 	split[0].zNear = zNear;
 	split[_numCascaded - 1].zFar = zFar;
 
-	float fov = pCameraBase->getFov();
+	float fov = DX::XMConvertToRadians(pCameraBase->getFov());
 	float aspect = pCameraBase->getAspect();
 	Matrix4 cameraInvView = inverse(static_cast<Matrix4>(pCameraBase->getView()));
 
 	float2 renderTargetSize(_shadowMapSize);
-	float2 invRenderTargetSize(1.f / _shadowMapSize, 1.f / _shadowMapSize);
+	float2 invRenderTargetSize(1.f / static_cast<float>(_shadowMapSize), 1.f / static_cast<float>(_shadowMapSize));
 
 	for (size_t i = 0; i < _numCascaded; ++i) {
 		FrustumItem &item = split[i];
@@ -170,7 +226,7 @@ BoundingFrustum CSMShadowPass::update(const CameraBase *pCameraBase, std::shared
 		BoundingBox boundingBox(boundingSphere);
 		auto &&[vMin, vMax] = boundingBox.getMinMax();
 
-		Matrix4 lightProj = DX::XMMatrixPerspectiveOffCenterLH(
+		Matrix4 lightProj = DX::XMMatrixOrthographicOffCenterLH(
 			vMin.x, vMax.x,
 			vMin.y, vMax.y,
 			vMin.z, vMax.z
@@ -191,6 +247,8 @@ BoundingFrustum CSMShadowPass::update(const CameraBase *pCameraBase, std::shared
 		cbVisitor->invView = float4x4(inverse(lightView));
 		cbVisitor->proj = float4x4(lightProj);
 		cbVisitor->invProj = float4x4(inverse(lightProj));
+		cbVisitor->viewProj = float4x4(lightViewProj);
+		cbVisitor->invViewProj = float4x4(inverse(lightViewProj));
 		cbVisitor->eyePos = center.xyz;
 		cbVisitor->renderTargetSize = renderTargetSize;
 		cbVisitor->invRenderTargetSize = invRenderTargetSize;
@@ -200,6 +258,7 @@ BoundingFrustum CSMShadowPass::update(const CameraBase *pCameraBase, std::shared
 		cbVisitor->deltaTime = pGameTimer->getDeltaTime();
 	}
 
+	return calcLightFrustum(pCameraBase, lightDir);
 }
 
 }
