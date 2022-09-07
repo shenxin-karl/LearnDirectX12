@@ -85,8 +85,16 @@ void CSMShadowPass::setLightDistance(float distance) {
 	_lightDistance = distance;
 }
 
-auto CSMShadowPass::getShadowMapArray() -> std::shared_ptr<dx12lib::IDepthStencil2DArray> {
+auto CSMShadowPass::getShadowMapArray() const -> std::shared_ptr<dx12lib::IDepthStencil2DArray> {
 	return _pShadowMapArray;
+}
+
+auto CSMShadowPass::getShadowTypeCBuffer() const -> FRConstantBufferPtr<CBShadowType> {
+	return _pLightSpaceMatrix;
+}
+
+auto CSMShadowPass::getShadowMapFormat() const -> DXGI_FORMAT {
+	return _shadowMapFormat;
 }
 
 void CSMShadowPass::finalize(dx12lib::DirectContextProxy pDirectCtx) {
@@ -94,7 +102,7 @@ void CSMShadowPass::finalize(dx12lib::DirectContextProxy pDirectCtx) {
 	assert(_numCascaded < kMaxNumCascaded);
 
 	D3D12_CLEAR_VALUE clearValue;
-	clearValue.Format = DXGI_FORMAT_D16_UNORM;
+	clearValue.Format = _shadowMapFormat;
 	clearValue.DepthStencil.Depth = 1.f;
 	clearValue.DepthStencil.Stencil = 0;
 
@@ -111,6 +119,7 @@ void CSMShadowPass::finalize(dx12lib::DirectContextProxy pDirectCtx) {
 	customViewport = viewport;
 
 	_pShadowMapArray = pDirectCtx->createDepthStencil2DArray(_shadowMapSize, _shadowMapSize, _numCascaded, &clearValue);
+	_pLightSpaceMatrix = pDirectCtx->createFRConstantBuffer<CBShadowType>();
 
 	for (size_t i = 0; i < _numCascaded; ++i)
 		_subFrustumPassCBuffers.push_back(pDirectCtx->createFRConstantBuffer<d3d::CBPassType>());
@@ -153,7 +162,7 @@ Vector3 CSMShadowPass::calcLightCenter(const BoundingSphere &boundingSphere, con
 	return center;
 }
 
-static BoundingFrustum calcLightFrustum(const CameraBase *pCameraBase, Vector3 lightDir) {
+static BoundingBox calcLightFrustum(const CameraBase *pCameraBase, Vector3 lightDir) {
 	BoundingFrustum frustum = pCameraBase->getViewSpaceFrustum();
 	Vector3 center(Vector3::identity());
 	Vector3 vMin(std::numeric_limits<float>::max());
@@ -172,25 +181,14 @@ static BoundingFrustum calcLightFrustum(const CameraBase *pCameraBase, Vector3 l
 		center + lightDir,
 		Vector3(0.f, 1.f, 0.f)
 	);
-	boundingBox = boundingBox.transform(lightView);
-	boundingBox.getMinMax(vMin, vMax);
-
-	Matrix4 lightProj = DX::XMMatrixOrthographicOffCenterLH(
-		vMin.x, vMax.x,
-		vMin.y, vMax.y,
-		vMin.z, vMax.z
-	);
-
-	frustum = BoundingFrustum(lightProj);
-	frustum = frustum.transform(inverse(lightView));
-	return frustum;
+	return boundingBox.transform(lightView);
 }
 
 struct FrustumItem {
 	float zNear;
 	float zFar;
 };
-BoundingFrustum CSMShadowPass::update(const CameraBase *pCameraBase, std::shared_ptr<com::GameTimer> pGameTimer, Vector3 lightDir) {
+BoundingBox CSMShadowPass::update(const CameraBase *pCameraBase, std::shared_ptr<com::GameTimer> pGameTimer, Vector3 lightDir) {
 	_subFrustumViewProj.resize(_numCascaded);
 	std::vector<FrustumItem> split(_numCascaded);
 

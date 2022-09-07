@@ -1,4 +1,6 @@
 #include "ShadowApp.h"
+#include "ShadowRgph.h"
+#include "ShadowMaterial.h"
 #include "D3D/AssimpLoader/ALTree.h"
 #include "Dx12lib/Context/CommandQueue.h"
 #include "D3D/AssimpLoader/AssimpLoader.h"
@@ -7,63 +9,14 @@
 #include "Dx12lib/Device/SwapChain.h"
 #include "InputSystem/Mouse.h"
 #include "dx12lib/Buffer/BufferStd.h"
-#include "Dx12lib/Pipeline/RootSignature.h"
 #include "InputSystem/Keyboard.h"
-#include "Dx12lib/Pipeline/PipelineStateObject.h"
-#include "Dx12lib/Pipeline/RootSignature.h"
-#include "RenderGraph/Bindable/ConstantBufferBindable.h"
 #include "RenderGraph/Bindable/SamplerTextureBindable.h"
 #include "RenderGraph/Drawable/Drawable.h"
-#include "RenderGraph/Pass/RenderQueuePass.h"
 #include "RenderGraph/Technique/Technique.h"
-#include "D3D/AssimpLoader/ALTree.h"
 #include "D3D/Shadow/CSMShadowPass.h"
-#include "D3D/Sky/SkyBoxPass.h"
-#include "D3D/TextureManager/TextureManager.h"
-#include "RenderGraph/Pass/SubPass.h"
 #include "D3D/Tool/FirstPersonCamera.h"
 
-
-ShadowPass::ShadowPass(const std::string &passName) : RenderQueuePass(passName, false, true) {
-}
-
-OpaquePass::OpaquePass(const std::string &passName)
-: RenderQueuePass(passName)
-, pShadowMap(this, "ShadowMap")
-{
-}
-
-ShadowMaterial::ShadowMaterial(dx12lib::IDirectContext &directCtx, std::shared_ptr<dx12lib::ITextureResource2D> pDiffuseTex)
-: rgph::Material("ShadowMaterial")
-{
-	_vertexInputSlots = pOpaqueSubPass->getVertexDataInputSlots() | pShadowSubPass->getVertexDataInputSlots();
-	_pCbObject = directCtx.createFRConstantBuffer<CbObject>(CbObject{});
-	auto pAlbedoBindable = rgph::SamplerTextureBindable::make(
-		dx12lib::RegisterSlot::SRV0, pDiffuseTex
-	);
-
-	auto pCbObjectBindable = rgph::ConstantBufferBindable::make(
-		dx12lib::RegisterSlot::CBV1, _pCbObject
-	);
-
-	// opaque 
-	auto pOpaqueTechnique = std::make_shared<rgph::Technique>("Opaque", TechType::kOpaque);
-	{
-		auto pStep = std::make_unique<rgph::Step>(this, pOpaqueSubPass.get());
-		pStep->addBindable(pAlbedoBindable);
-		pStep->addBindable(pCbObjectBindable);
-		pOpaqueTechnique->addStep(std::move(pStep));
-	}
-	_techniques.push_back(pOpaqueTechnique);
-
-	// shadow
-	auto pShadowTechnique = std::make_shared<rgph::Technique>("Shadow", TechType::kShadow);
-	{
-		auto pStep = std::make_unique<rgph::Step>(this, pShadowSubPass.get());
-		pShadowTechnique->addStep(std::move(pStep));
-	}
-	_techniques.push_back(pShadowTechnique);
-}
+using namespace Math;
 
 
 ShadowApp::ShadowApp() {
@@ -98,17 +51,21 @@ void ShadowApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 	lightVisitor->lights[1].initAsDirectionLight(float3(-3, +6, -3), float3(0.1f));
 	lightVisitor->lights[2].initAsDirectionLight(float3(-3, -6, -3), float3(0.1f));
 
-	D3D12_CLEAR_VALUE shadowMapClearValue;
-	shadowMapClearValue.Format = DXGI_FORMAT_D16_UNORM;
-	shadowMapClearValue.DepthStencil.Depth = 0.f;
-	shadowMapClearValue.DepthStencil.Stencil = 0;
-	_pShadowMapArray = pDirectCtx->createDepthStencil2DArray(512, 512, 3, &shadowMapClearValue);
+	_pEnvMap = pDirectCtx->createDDSTextureCubeFromFile(L"resources/grasscube1024.dds");
+	_pRenderGraph = createShadowRenderGraph(this, pDirectCtx);
+	_pCSMShadowPass = dynamic_cast<d3d::CSMShadowPass *>(
+		_pRenderGraph->getRenderQueuePass(ShadowRgph::ShadowPass)
+	);
+	assert(_pCSMShadowPass != nullptr);
 
-	loadEnvMap(pDirectCtx);
-	buildPass(pDirectCtx);
-	initPso(pDirectCtx);
-	initSubPass();
-	loadModel(pDirectCtx);
+	ShadowMaterial::init(this);
+
+	std::shared_ptr<d3d::ALTree> pALTree = std::make_shared<d3d::ALTree>("./resources/powerplant/powerplant.gltf");
+	_pMeshModel = std::make_shared<d3d::MeshModel>(*pDirectCtx, pALTree);
+	_pMeshModel->createMaterial(*_pRenderGraph,
+		*pDirectCtx,
+		ShadowMaterial::getShadowMaterialCreator(pDirectCtx)
+	);
 }
 
 void ShadowApp::onDestroy() {
@@ -138,218 +95,25 @@ void ShadowApp::onBeginTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 
 	auto pLightCbVisitor = _pLightCb->visit<d3d::CBLightType>();
 	Vector3 lightDir(pLightCbVisitor->lights[0].direction);
-	_lightFrustum = _pCSMShadowPass->update(_pCamera.get(), pGameTimer, -lightDir);
+	_lightBoundingBox = _pCSMShadowPass->update(_pCamera.get(), pGameTimer, -lightDir);
 }
 
 void ShadowApp::onTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	auto pCmdQueue = _pDevice->getCommandQueue();
 	auto pDirectCtx = pCmdQueue->createDirectContextProxy();
-	_pMeshModel->submit(d3d::MakeBoundingWrap(_pCamera->getViewSpaceFrustum()), TechType::kShadow);
-	_pMeshModel->submit(d3d::MakeBoundingWrap(_pCamera->getViewSpaceFrustum()), TechType::kOpaque);
-	_graph.execute(pDirectCtx);
+	_pMeshModel->submit(d3d::MakeBoundingWrap(_lightBoundingBox), ShadowRgph::kShadow);
+	_pMeshModel->submit(d3d::MakeBoundingWrap(_pCamera->getViewSpaceFrustum()), ShadowRgph::kOpaque);
+	_pRenderGraph->execute(pDirectCtx);
 	pCmdQueue->executeCommandList(pDirectCtx);
 }
 
 void ShadowApp::onEndTick(std::shared_ptr<com::GameTimer> pGameTimer) {
 	std::shared_ptr<dx12lib::CommandQueue> pCmdQueue = _pDevice->getCommandQueue();
 	pCmdQueue->signal(_pSwapChain);
-	_graph.reset();
+	_pRenderGraph->reset();
 }
 
 void ShadowApp::onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int height) {
 	float aspect = static_cast<float>(width) / static_cast<float>(height);
 	_pCamera->setAspect(aspect);
-}
-
-void ShadowApp::loadModel(dx12lib::DirectContextProxy pDirectCtx) {
-	std::shared_ptr<d3d::ALTree> pALTree = std::make_shared<d3d::ALTree>("./resources/powerplant/powerplant.gltf");
-	_pMeshModel = std::make_shared<d3d::MeshModel>(*pDirectCtx, pALTree);
-
-	auto materialCreator = [&](const d3d::ALMaterial *pAlMaterial) -> std::shared_ptr<rgph::Material> {
-		const auto &diffuseMap = pAlMaterial->getDiffuseMap();
-		std::shared_ptr<dx12lib::ITextureResource> pTex = d3d::TextureManager::instance()->get(diffuseMap.path);
-
-		if (pTex == nullptr) {
-			if (diffuseMap.pTextureData != nullptr) {
-				pTex = pDirectCtx->createTextureFromMemory(diffuseMap.textureExtName, 
-					diffuseMap.pTextureData.get(), 
-					diffuseMap.textureDataSize
-				);
-			} else {
-				pTex = pDirectCtx->createTextureFromFile(std::to_wstring(diffuseMap.path), true);
-			}
-			d3d::TextureManager::instance()->set(diffuseMap.path, pTex);
-		}
-
-		std::shared_ptr<dx12lib::ITextureResource2D> pTex2D = std::dynamic_pointer_cast<dx12lib::ITextureResource2D>(pTex);
-		if (pTex2D == nullptr) {
-			assert(false && "load diffuse Map Error");
-		}
-		return std::make_shared<ShadowMaterial>(*pDirectCtx, pTex2D);
-	};
-
-	_pMeshModel->createMaterial(_graph, *pDirectCtx, materialCreator);
-}
-
-void ShadowApp::loadEnvMap(dx12lib::DirectContextProxy pDirectCtx) {
-	_pEnvMap = pDirectCtx->createDDSTextureCubeFromFile(L"resources/grasscube1024.dds");
-}
-
-void ShadowApp::initPso(dx12lib::DirectContextProxy pDirectCtx) const {
-	/// ShadowMaterial::pOpaquePso
-	auto pSharedDevice = pDirectCtx->getDevice().lock();
-	{
-		auto pRootSignature = pSharedDevice->createRootSignature(2, 6);
-		pRootSignature->at(0).initAsDescriptorTable({
-			{ dx12lib::RegisterSlot::CBV0, 1 }, // cbTransform
-			{ dx12lib::RegisterSlot::CBV1, 1 }, // cbObject
-			{ dx12lib::RegisterSlot::SRV0, 1 }, // gAlbedoMap
-		});
-		pRootSignature->at(1).initAsDescriptorTable({
-			{ dx12lib::RegisterSlot::CBV2, 1 }, // cbPass
-			{ dx12lib::RegisterSlot::CBV3, 1 }, // cbLight
-		});
-		pRootSignature->initStaticSampler(0, d3d::getStaticSamplers());
-		pRootSignature->finalize();
-
-		auto pOpaquePso = pSharedDevice->createGraphicsPSO("OpaquePso");
-		pOpaquePso->setRenderTargetFormat(_pSwapChain->getRenderTargetFormat(), _pSwapChain->getDepthStencilFormat());
-		pOpaquePso->setRootSignature(pRootSignature);
-		pOpaquePso->setInputLayout({
-			d3d::PositionSemantic,
-			d3d::NormalSemantic,
-			d3d::Texcoord0Semantic,
-		});
-		pOpaquePso->setVertexShader(d3d::compileShader(
-			L"shaders/BlinnPhong.hlsl", 
-			nullptr, 
-			"VS", 
-			"vs_5_0")
-		);
-		pOpaquePso->setPixelShader(d3d::compileShader(
-			L"shaders/BlinnPhong.hlsl",
-			nullptr,
-			"PS",
-			"ps_5_0"
-		));
-		pOpaquePso->finalize();
-		ShadowMaterial::pOpaquePso = pOpaquePso;
-	}
-	/// ShadowMaterial::pShadowPso
-	{
-		auto pRootSignature = pSharedDevice->createRootSignature(2);
-		pRootSignature->at(0).initAsDescriptorTable({
-			{ dx12lib::RegisterSlot::CBV0, 1 }, // cbTransform
-		});
-		pRootSignature->at(1).initAsDescriptorTable({
-			{ dx12lib::RegisterSlot::CBV1, 1 }, // cbPass
-		});
-		pRootSignature->finalize();
-		auto pShadowPso = pSharedDevice->createGraphicsPSO("ShadowPSO");
-		pShadowPso->setRootSignature(pRootSignature);
-		pShadowPso->setDepthTargetFormat(_pShadowMapArray->getFormat());
-		pShadowPso->setInputLayout({ d3d::PositionSemantic });
-		pShadowPso->setVertexShader(d3d::compileShader(
-			L"shaders/Shadows.hlsl",
-			nullptr,
-			"VS",
-			"vs_5_0"
-		));
-		pShadowPso->setPixelShader(d3d::compileShader(
-			L"shaders/Shadows.hlsl",
-			nullptr,
-			"PS",
-			"ps_5_0"
-		));
-		pShadowPso->finalize();
-		ShadowMaterial::pShadowPso = pShadowPso;
-	}
-}
-
-void ShadowApp::initSubPass() {
-	auto pLightCbBindable = rgph::ConstantBufferBindable::make(
-		dx12lib::RegisterSlot::CBV3,
-		_pLightCb
-	);
-
-	/// ShadowMaterial::pOpaqueSubPass
-	{
-		rgph::VertexInputSlots vertexInputSlots;
-		vertexInputSlots.set(d3d::PositionSemantic.slot);
-		vertexInputSlots.set(d3d::Texcoord0Semantic.slot);
-		vertexInputSlots.set(d3d::NormalSemantic.slot);
-		auto pOpaqueSubPass = std::make_shared<rgph::SubPass>(ShadowMaterial::pOpaquePso);
-		pOpaqueSubPass->setPassCBufferShaderRegister(dx12lib::RegisterSlot::CBV2);
-		pOpaqueSubPass->setTransformCBufferShaderRegister(dx12lib::RegisterSlot::CBV0);
-		pOpaqueSubPass->setVertexDataInputSlots(vertexInputSlots);
-		pOpaqueSubPass->addBindable(pLightCbBindable);
-		ShadowMaterial::pOpaqueSubPass = pOpaqueSubPass;
-		_graph.getRenderQueuePass("OpaquePass")->addSubPass(pOpaqueSubPass);
-	}
-	/// ShadowMaterial::pShadowSubPass
-	{
-		rgph::VertexInputSlots vertexInputSlots;
-		vertexInputSlots.set(d3d::PositionSemantic.slot);
-		auto pShadowSubPass = std::make_shared<rgph::SubPass>(ShadowMaterial::pShadowPso);
-		pShadowSubPass->setPassCBufferShaderRegister(dx12lib::RegisterSlot::CBV1);
-		pShadowSubPass->setTransformCBufferShaderRegister(dx12lib::RegisterSlot::CBV0);
-		pShadowSubPass->setVertexDataInputSlots(vertexInputSlots);
-		ShadowMaterial::pShadowSubPass = pShadowSubPass;
-		_graph.getRenderQueuePass("ShadowPass")->addSubPass(pShadowSubPass);
-	}
-}
-
-void ShadowApp::buildPass(dx12lib::DirectContextProxy pDirectCtx) {
-	auto pClearPass = std::make_shared<rgph::ClearPass>("ClearRTAndDS");
-	auto pClearCSMShadowMap = std::make_shared<d3d::ClearCSMShadowMapPass>("ClearCSMShadowMapPass");
-	auto pOpaquePass = std::make_shared<OpaquePass>("OpaquePass");
-	auto pSkyBoxPass = std::make_shared<d3d::SkyBoxPass>("SkyBoxPass");
-	auto pPresentPass = std::make_shared<rgph::PresentPass>("PresentPass");
-
-	_pCSMShadowPass = std::make_shared<d3d::CSMShadowPass>("ShadowPass");
-	_pCSMShadowPass->finalize(pDirectCtx);
-
-	{ // clear RenderTarget and DepthStencil Pass
-		auto getRenderTarget = [&]() {
-			return _pSwapChain->getRenderTarget2D();
-		};
-		auto getDepthStencil = [&]() {
-			return _pSwapChain->getDepthStencil2D();
-		};
-
-		getRenderTarget >> pClearPass->pRenderTarget;
-		getDepthStencil >> pClearPass->pDepthStencil;
-		_graph.addPass(pClearPass);
-	}
-	{ // clear Shadow Map
-		pClearCSMShadowMap->pShadowMapArray.preExecuteState = D3D12_RESOURCE_STATE_DEPTH_WRITE;
-		_pCSMShadowPass->getShadowMapArray() >> pClearCSMShadowMap->pShadowMapArray;
-		_graph.addPass(pClearCSMShadowMap);
-	}
-	{ // shadow pass
-		pClearCSMShadowMap->pShadowMapArray >> _pCSMShadowPass->pShadowMapArray;
-		_graph.addPass(_pCSMShadowPass);
-	}
-	{ // opaque pass
-		pOpaquePass->setPassCBuffer(_pPassCb);
-		pOpaquePass->pShadowMap.preExecuteState = D3D12_RESOURCE_STATE_DEPTH_READ;
-		pClearPass->pRenderTarget >> pOpaquePass->pRenderTarget;
-		pClearPass->pDepthStencil >> pOpaquePass->pDepthStencil;
-		_pCSMShadowPass->pShadowMapArray >> pOpaquePass->pShadowMap;
-		_graph.addPass(pOpaquePass);
-	}
-	{ // SkyBoxPass
-		pSkyBoxPass->renderTargetFormat = _pSwapChain->getRenderTargetFormat();
-		pSkyBoxPass->depthStencilFormat = _pSwapChain->getDepthStencilFormat();
-		pSkyBoxPass->pEnvMap = _pEnvMap;
-		pSkyBoxPass->pCamera = _pCamera.get();
-		pOpaquePass->pRenderTarget >> pSkyBoxPass->pRenderTarget;
-		pOpaquePass->pDepthStencil >> pSkyBoxPass->pDepthStencil;
-		_graph.addPass(pSkyBoxPass);
-	}
-	{ // Present Pass
-		pSkyBoxPass->pRenderTarget >> pPresentPass->pRenderTarget;
-		_graph.addPass(pPresentPass);
-	}
-	_graph.finalize();
 }

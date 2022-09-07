@@ -16,48 +16,17 @@ namespace d3d {
 class CSMShadowPass;
 }
 
-using namespace Math;
-
-
-namespace TechType {
-	constexpr rgph::TechniqueType kOpaque{ 1 };
-	constexpr rgph::TechniqueType kShadow{ 2 };
-}
-
-struct ShadowPass : rgph::RenderQueuePass {
-	explicit ShadowPass(const std::string &passName);
-};
-
-struct OpaquePass : rgph::RenderQueuePass {
-	OpaquePass(const std::string &passName);
-public:
-	rgph::PassResourcePtr<dx12lib::ITextureResource2DArray> pShadowMap;
-};
-
-
-struct CbObject {
-	d3d::MaterialData gMaterialData = d3d::MaterialData::defaultMaterialData;
-	float4x4	      gMatTexCoord = float4x4::identity();
-};
-
-class ShadowMaterial : public rgph::Material {
-public:
-	explicit ShadowMaterial(dx12lib::IDirectContext &directCtx, std::shared_ptr<dx12lib::ITextureResource2D> pDiffuseTex);
-public:
-	FRConstantBufferPtr<CbObject> _pCbObject;
-public:
-	static inline std::shared_ptr<dx12lib::GraphicsPSO> pOpaquePso;
-	static inline std::shared_ptr<dx12lib::GraphicsPSO> pShadowPso;
-	static inline std::shared_ptr<rgph::SubPass> pOpaqueSubPass;
-	static inline std::shared_ptr<rgph::SubPass> pShadowSubPass;
-	static inline rgph::PassResourceBase *pShadowMap;
-};
-
-
 class ShadowApp : public com::BaseApp {
 public:
 	ShadowApp();
 	~ShadowApp() override;
+	auto &getDevice() const { return _pDevice; }
+	auto &getSwapChain() const { return _pSwapChain; }
+	auto &getRenderGraph() const { return _pRenderGraph; }
+	auto &getEnvMap() const { return _pEnvMap; }
+	auto &getCamera() const { return _pCamera; }
+	auto &getPassCb() const { return _pPassCb; }
+	auto &getLightCb() const { return _pLightCb; }
 private:
 	void onInitialize(dx12lib::DirectContextProxy pDirectCtx) override;
 	void onDestroy() override;
@@ -66,21 +35,14 @@ private:
 	void onEndTick(std::shared_ptr<com::GameTimer> pGameTimer) override;
 	void onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int height) override;
 private:
-	void loadModel(dx12lib::DirectContextProxy pDirectCtx);
-	void loadEnvMap(dx12lib::DirectContextProxy pDirectCtx);
-	void initPso(dx12lib::DirectContextProxy pDirectCtx) const;
-	void initSubPass();
-	void buildPass(dx12lib::DirectContextProxy pDirectCtx);
-private:
 	bool _bMouseLeftPress = false;
 	std::shared_ptr<d3d::FirstPersonCamera> _pCamera;
 	std::shared_ptr<dx12lib::ConstantBuffer> _pLightCb;
 	std::shared_ptr<dx12lib::IDepthStencil2DArray> _pShadowMapArray;
 	std::shared_ptr<dx12lib::ITextureResourceCube> _pEnvMap;
 	dx12lib::FRConstantBufferPtr<d3d::CBPassType> _pPassCb;
-	std::shared_ptr<d3d::CSMShadowPass> _pCSMShadowPass;
-	BoundingFrustum _lightFrustum;
-
-	rgph::RenderGraph _graph;
+	d3d::CSMShadowPass *_pCSMShadowPass;
+	Math::BoundingBox _lightBoundingBox;
 	std::shared_ptr<d3d::MeshModel> _pMeshModel;
+	std::shared_ptr<rgph::RenderGraph> _pRenderGraph;
 };
