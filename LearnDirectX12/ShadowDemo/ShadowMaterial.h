@@ -26,5 +26,5 @@ public:
 	static inline std::shared_ptr<dx12lib::GraphicsPSO> pShadowPso;
 	static inline std::shared_ptr<rgph::SubPass> pOpaqueSubPass;
 	static inline std::shared_ptr<rgph::SubPass> pShadowSubPass;
-
+	static void opaqueSubPassOnBindCallback(const rgph::SubPass *pSubPass, dx12lib::IGraphicsContext &graphicsCtx);
 };

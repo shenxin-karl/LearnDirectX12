@@ -49,7 +49,9 @@ void ShadowMaterial::init(ShadowApp *pApp) {
 	auto pSwapChain = pApp->getSwapChain();
 	const auto pRenderGraph = pApp->getRenderGraph();
 
-	auto pCSMShadowPass = dynamic_cast<d3d::CSMShadowPass *>(pRenderGraph->getRenderQueuePass(ShadowRgph::ShadowPass));
+	auto pCSMShadowPass = dynamic_cast<d3d::CSMShadowPass *>(
+		pRenderGraph->getRenderQueuePass(ShadowRgph::ShadowPass)
+	);
 
 	/// ShadowMaterial::pOpaquePso
 	{
@@ -58,22 +60,26 @@ void ShadowMaterial::init(ShadowApp *pApp) {
 			{ dx12lib::RegisterSlot::CBV0, 1 }, // cbTransform
 			{ dx12lib::RegisterSlot::CBV1, 1 }, // cbObject
 			{ dx12lib::RegisterSlot::SRV0, 1 }, // gAlbedoMap
-			});
+		});
 		pRootSignature->at(1).initAsDescriptorTable({
 			{ dx12lib::RegisterSlot::CBV2, 1 }, // cbPass
 			{ dx12lib::RegisterSlot::CBV3, 1 }, // cbLight
-			});
+			{ dx12lib::RegisterSlot::CBV4, 1 }, // cbShadow
+		});
 		pRootSignature->initStaticSampler(0, d3d::getStaticSamplers());
 		pRootSignature->finalize();
 
 		auto pOpaquePso = pSharedDevice->createGraphicsPSO("OpaquePso");
-		pOpaquePso->setRenderTargetFormat(pSwapChain->getRenderTargetFormat(), pSwapChain->getDepthStencilFormat());
+		pOpaquePso->setRenderTargetFormat(
+			pSwapChain->getRenderTargetFormat(), 
+			pSwapChain->getDepthStencilFormat()
+		);
 		pOpaquePso->setRootSignature(pRootSignature);
 		pOpaquePso->setInputLayout({
 			d3d::PositionSemantic,
 			d3d::NormalSemantic,
 			d3d::Texcoord0Semantic,
-			});
+		});
 		pOpaquePso->setVertexShader(d3d::compileShader(
 			L"shaders/BlinnPhong.hlsl",
 			nullptr,
@@ -127,6 +133,11 @@ void ShadowMaterial::init(ShadowApp *pApp) {
 
 	/// ShadowMaterial::pOpaqueSubPass
 	{
+		auto pCbShadowBindable = rgph::ConstantBufferBindable::make(
+			dx12lib::RegisterSlot::CBV4, 
+			pCSMShadowPass->getShadowTypeCBuffer()
+		);
+
 		rgph::VertexInputSlots vertexInputSlots;
 		vertexInputSlots.set(d3d::PositionSemantic.slot);
 		vertexInputSlots.set(d3d::Texcoord0Semantic.slot);
@@ -136,6 +147,7 @@ void ShadowMaterial::init(ShadowApp *pApp) {
 		pOpaqueSubPass->setTransformCBufferShaderRegister(dx12lib::RegisterSlot::CBV0);
 		pOpaqueSubPass->setVertexDataInputSlots(vertexInputSlots);
 		pOpaqueSubPass->addBindable(pLightCbBindable);
+		pOpaqueSubPass->addBindable(pCbShadowBindable);
 		ShadowMaterial::pOpaqueSubPass = pOpaqueSubPass;
 		pRenderGraph->getRenderQueuePass("OpaquePass")->addSubPass(pOpaqueSubPass);
 	}
@@ -155,7 +167,8 @@ void ShadowMaterial::init(ShadowApp *pApp) {
 d3d::MeshModel::MaterialCreator ShadowMaterial::getShadowMaterialCreator(dx12lib::DirectContextProxy pDirectCtx) {
 	return [&](const d3d::ALMaterial *pAlMaterial) -> std::shared_ptr<rgph::Material> {
 		const auto &diffuseMap = pAlMaterial->getDiffuseMap();
-		std::shared_ptr<dx12lib::ITextureResource> pTex = d3d::TextureManager::instance()->get(diffuseMap.path);
+		std::shared_ptr<dx12lib::ITextureResource> pTex = 
+d3d::TextureManager::instance()->get(diffuseMap.path);
 
 		if (pTex == nullptr) {
 			if (diffuseMap.pTextureData != nullptr) {
@@ -170,11 +183,17 @@ d3d::MeshModel::MaterialCreator ShadowMaterial::getShadowMaterialCreator(dx12lib
 			d3d::TextureManager::instance()->set(diffuseMap.path, pTex);
 		}
 
-		std::shared_ptr<dx12lib::ITextureResource2D> pTex2D = std::dynamic_pointer_cast<dx12lib::ITextureResource2D>(pTex);
+		auto pTex2D = std::dynamic_pointer_cast<dx12lib::ITextureResource2D>(pTex);
 		if (pTex2D == nullptr) {
 			assert(false && "load diffuse Map Error");
 		}
 		return std::make_shared<ShadowMaterial>(*pDirectCtx, pTex2D);
 	};
+}
+
+void ShadowMaterial::opaqueSubPassOnBindCallback(const rgph::SubPass *pSubPass, 
+	dx12lib::IGraphicsContext &graphicsCtx)
+{
+
 }
 

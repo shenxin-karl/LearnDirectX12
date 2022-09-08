@@ -25,6 +25,12 @@ public:
 	struct CBShadowType {
 		Math::float4x4 lightSpaceMatrix[kMaxNumCascaded];
 	};
+	struct FrustumItem {
+		float		   zNear;
+		float		   zFar;
+		Math::float4x4 matView;
+		Math::float4x4 matProj;
+	};
 public:
 	CSMShadowPass(const std::string &name);
 	void execute(dx12lib::DirectContextProxy pDirectCtx) override;
@@ -47,7 +53,7 @@ private:
 	size_t _numCascaded = 4;
 	size_t _shadowMapSize = 512;
 	DXGI_FORMAT _shadowMapFormat = DXGI_FORMAT_D16_UNORM;
-	std::vector<Math::float4x4> _subFrustumViewProj;
+	std::vector<FrustumItem> _subFrustumItems;
 	FRConstantBufferPtr<CBShadowType> _pLightSpaceMatrix;
 	std::shared_ptr<dx12lib::IDepthStencil2DArray> _pShadowMapArray;
 	std::vector<FRConstantBufferPtr<d3d::CBPassType>> _subFrustumPassCBuffers;
