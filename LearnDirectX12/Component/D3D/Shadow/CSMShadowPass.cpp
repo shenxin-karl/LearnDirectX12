@@ -283,6 +283,11 @@ BoundingBox CSMShadowPass::update(const CameraBase *pCameraBase, std::shared_ptr
 
 		Matrix4 lightViewProj = lightProj * lightView;
 
+		Matrix4 scale = Matrix4::makeScale(0.5f);
+		Matrix4 translation = Matrix4::makeTranslation(0.5f);
+		Matrix4 ndcToTexcoord = translation * scale;
+		Matrix4 worldToShadowTexcoord = ndcToTexcoord * lightViewProj;
+
 		auto pShadowPassCb = _subFrustumPassCBuffers[i];
 		auto cbVisitor = pShadowPassCb->visit();
 		std::memset(cbVisitor.ptr(), 0, sizeof(*cbVisitor));
@@ -299,7 +304,7 @@ BoundingBox CSMShadowPass::update(const CameraBase *pCameraBase, std::shared_ptr
 		cbVisitor->farZ = vMax.z;
 		cbVisitor->totalTime = pGameTimer->getTotalTime();
 		cbVisitor->deltaTime = pGameTimer->getDeltaTime();
-		pLightSpaceMatrixVisitor->lightSpaceMatrix[i] = cbVisitor->viewProj;
+		pLightSpaceMatrixVisitor->worldToShadowMatrix[i] = float4x4(worldToShadowTexcoord);
 	}
 
 	return calcLightFrustum(pCameraBase, lightDir);

@@ -97,6 +97,7 @@ void ShadowMaterial::init(ShadowApp *pApp) {
 	}
 	/// ShadowMaterial::pShadowPso
 	{
+
 		auto pRootSignature = pSharedDevice->createRootSignature(2);
 		pRootSignature->at(0).initAsDescriptorTable({
 			{ dx12lib::RegisterSlot::CBV0, 1 }, // cbTransform
@@ -110,6 +111,13 @@ void ShadowMaterial::init(ShadowApp *pApp) {
 		pShadowPso->setRootSignature(pRootSignature);
 		pShadowPso->setDepthTargetFormat(pCSMShadowPass->getShadowMapFormat());
 		pShadowPso->setInputLayout({ d3d::PositionSemantic });
+
+		CD3DX12_RASTERIZER_DESC rasterizerDesc(D3D12_DEFAULT);
+		rasterizerDesc.DepthBias = 10000;
+		rasterizerDesc.DepthBiasClamp = 0.f;
+		rasterizerDesc.SlopeScaledDepthBias = 1.f;
+
+		pShadowPso->setRasterizerState(rasterizerDesc);
 		pShadowPso->setVertexShader(d3d::compileShader(
 			L"shaders/Shadows.hlsl",
 			nullptr,

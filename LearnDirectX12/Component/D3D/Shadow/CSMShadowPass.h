@@ -23,7 +23,7 @@ class CSMShadowPass : public rgph::RenderQueuePass {
 public:
 	constexpr static size_t kMaxNumCascaded = 7;
 	struct CBShadowType {
-		Math::float4x4 lightSpaceMatrix[kMaxNumCascaded];
+		Math::float4x4 worldToShadowMatrix[kMaxNumCascaded];
 	};
 	struct FrustumItem {
 		float		   zNear;
@@ -48,7 +48,7 @@ private:
 	Math::Vector3 calcLightCenter(const Math::BoundingSphere &boundingSphere, const Math::Vector3 &lightDir) const;
 private:
 	bool _finalized = false;
-	float _lambda = 0.5f;
+	float _lambda = 0.2f;
 	float _lightDistance = 512.f;
 	size_t _numCascaded = 4;
 	size_t _shadowMapSize = 512;

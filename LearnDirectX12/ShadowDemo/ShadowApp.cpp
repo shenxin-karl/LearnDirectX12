@@ -36,7 +36,7 @@ void ShadowApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 		float3(109.05f, 8.41141f, -0.0424141f),
 		45.f,
 		0.1f,
-		1000.f,
+		1024.f,
 		static_cast<float>(_width) / static_cast<float>(_height),
 	};
 	_pCamera = std::make_shared<d3d::FirstPersonCamera>(cameraDesc);
@@ -66,6 +66,7 @@ void ShadowApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 		*pDirectCtx,
 		ShadowMaterial::getShadowMaterialCreator(pDirectCtx)
 	);
+	_pMeshModel->setModelTransform(static_cast<float4x4>(Matrix4::makeScale(2.f)));
 }
 
 void ShadowApp::onDestroy() {

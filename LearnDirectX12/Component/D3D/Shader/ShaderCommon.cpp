@@ -101,14 +101,29 @@ CD3DX12_STATIC_SAMPLER_DESC getAnisotropicClampStaticSampler(UINT shaderRegister
 	);
 }
 
-const std::array<CD3DX12_STATIC_SAMPLER_DESC, 6> &getStaticSamplers() {
-	static std::array<CD3DX12_STATIC_SAMPLER_DESC, 6> samplers = {
+CD3DX12_STATIC_SAMPLER_DESC getShadowCompareStaticSampler(UINT shaderRegister) {
+	return CD3DX12_STATIC_SAMPLER_DESC(
+		shaderRegister,
+		D3D12_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT,
+		D3D12_TEXTURE_ADDRESS_MODE_BORDER,
+		D3D12_TEXTURE_ADDRESS_MODE_BORDER,
+		D3D12_TEXTURE_ADDRESS_MODE_BORDER,
+		0.f,
+		16,
+		D3D12_COMPARISON_FUNC_LESS_EQUAL,
+		D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE
+	);
+}
+
+const std::array<CD3DX12_STATIC_SAMPLER_DESC, 7> &getStaticSamplers() {
+	static std::array<CD3DX12_STATIC_SAMPLER_DESC, 7> samplers = {
 		getPointWrapStaticSampler(0),
 		getPointClampStaticSampler(1),
 		getLinearWrapStaticSampler(2),
 		getLinearClampStaticSampler(3),
 		getAnisotropicWrapStaticSampler(4),
 		getAnisotropicClampStaticSampler(5),
+		getShadowCompareStaticSampler(6),
 	};
 	return samplers;
 }

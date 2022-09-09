@@ -71,6 +71,7 @@ CD3DX12_STATIC_SAMPLER_DESC getLinearWrapStaticSampler(UINT shaderRegister);
 CD3DX12_STATIC_SAMPLER_DESC getLinearClampStaticSampler(UINT shaderRegister);
 CD3DX12_STATIC_SAMPLER_DESC getAnisotropicWrapStaticSampler(UINT shaderRegister);
 CD3DX12_STATIC_SAMPLER_DESC getAnisotropicClampStaticSampler(UINT shaderRegister);
-const std::array<CD3DX12_STATIC_SAMPLER_DESC, 6> &getStaticSamplers();
+CD3DX12_STATIC_SAMPLER_DESC getShadowCompareStaticSampler(UINT shaderRegister);
+const std::array<CD3DX12_STATIC_SAMPLER_DESC, 7> &getStaticSamplers();
 
 }
