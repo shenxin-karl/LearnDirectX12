@@ -11,6 +11,8 @@
 #include "Dx12lib/Pipeline/PipelineStateObject.h"
 #include "Dx12lib/Pipeline/RootSignature.h"
 #include "RenderGraph/Pass/SubPass.h"
+#include "D3D/Shadow/CSMShadowPass.h"
+
 
 ShadowMaterial::ShadowMaterial(dx12lib::IDirectContext &directCtx, std::shared_ptr<dx12lib::ITextureResource2D> pDiffuseTex)
 	: rgph::Material("ShadowMaterial")
@@ -55,7 +57,7 @@ void ShadowMaterial::init(ShadowApp *pApp) {
 
 	/// ShadowMaterial::pOpaquePso
 	{
-		auto pRootSignature = pSharedDevice->createRootSignature(2, 6);
+		auto pRootSignature = pSharedDevice->createRootSignature(2, 7);
 		pRootSignature->at(0).initAsDescriptorTable({
 			{ dx12lib::RegisterSlot::CBV0, 1 }, // cbTransform
 			{ dx12lib::RegisterSlot::CBV1, 1 }, // cbObject
@@ -65,6 +67,7 @@ void ShadowMaterial::init(ShadowApp *pApp) {
 			{ dx12lib::RegisterSlot::CBV2, 1 }, // cbPass
 			{ dx12lib::RegisterSlot::CBV3, 1 }, // cbLight
 			{ dx12lib::RegisterSlot::CBV4, 1 }, // cbShadow
+			{ dx12lib::RegisterSlot::SRV1, 1 }, // gShadowMapArray
 		});
 		pRootSignature->initStaticSampler(0, d3d::getStaticSamplers());
 		pRootSignature->finalize();
@@ -113,7 +116,7 @@ void ShadowMaterial::init(ShadowApp *pApp) {
 		pShadowPso->setInputLayout({ d3d::PositionSemantic });
 
 		CD3DX12_RASTERIZER_DESC rasterizerDesc(D3D12_DEFAULT);
-		rasterizerDesc.DepthBias = 10000;
+		rasterizerDesc.DepthBias = 10;
 		rasterizerDesc.DepthBiasClamp = 0.f;
 		rasterizerDesc.SlopeScaledDepthBias = 1.f;
 
@@ -156,6 +159,7 @@ void ShadowMaterial::init(ShadowApp *pApp) {
 		pOpaqueSubPass->setVertexDataInputSlots(vertexInputSlots);
 		pOpaqueSubPass->addBindable(pLightCbBindable);
 		pOpaqueSubPass->addBindable(pCbShadowBindable);
+		pOpaqueSubPass->setOnBindCallback(&opaqueSubPassOnBindCallback);
 		ShadowMaterial::pOpaqueSubPass = pOpaqueSubPass;
 		pRenderGraph->getRenderQueuePass("OpaquePass")->addSubPass(pOpaqueSubPass);
 	}
@@ -175,9 +179,7 @@ void ShadowMaterial::init(ShadowApp *pApp) {
 d3d::MeshModel::MaterialCreator ShadowMaterial::getShadowMaterialCreator(dx12lib::DirectContextProxy pDirectCtx) {
 	return [&](const d3d::ALMaterial *pAlMaterial) -> std::shared_ptr<rgph::Material> {
 		const auto &diffuseMap = pAlMaterial->getDiffuseMap();
-		std::shared_ptr<dx12lib::ITextureResource> pTex = 
-d3d::TextureManager::instance()->get(diffuseMap.path);
-
+		auto pTex = d3d::TextureManager::instance()->get(diffuseMap.path);
 		if (pTex == nullptr) {
 			if (diffuseMap.pTextureData != nullptr) {
 				pTex = pDirectCtx->createTextureFromMemory(diffuseMap.textureExtName,
@@ -199,9 +201,13 @@ d3d::TextureManager::instance()->get(diffuseMap.path);
 	};
 }
 
+
 void ShadowMaterial::opaqueSubPassOnBindCallback(const rgph::SubPass *pSubPass, 
 	dx12lib::IGraphicsContext &graphicsCtx)
 {
-
+	auto *pGraphicsPass = pSubPass->getGraphicsPass();
+	auto *pPassResource = pGraphicsPass->getPassResource("ShadowMapArray");
+	auto pShadowMapArray = pPassResource->cast<dx12lib::IDepthStencil2DArray>();
+	graphicsCtx.setShaderResourceView(dx12lib::RegisterSlot::SRV1, pShadowMapArray->getSRV(0));
 }
 

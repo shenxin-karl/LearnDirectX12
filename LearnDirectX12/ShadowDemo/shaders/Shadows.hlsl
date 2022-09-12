@@ -8,7 +8,7 @@ struct VertexOut {
 	float4 SVPosition : SV_Position;
 };
 
-cbuffer CbObject : register(b0) {
+cbuffer cbTransform : register(b0) {
 	float4x4	 gMatWorld;
 	float4x4	 gMatNormal;
 };

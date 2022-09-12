@@ -26,17 +26,16 @@ public:
 		Math::float4x4 worldToShadowMatrix[kMaxNumCascaded];
 	};
 	struct FrustumItem {
-		float		   zNear;
-		float		   zFar;
-		Math::float4x4 matView;
-		Math::float4x4 matProj;
+		float zNear;
+		float zFar;
+		Math::BoundingBox boundingBox;
 	};
 public:
 	CSMShadowPass(const std::string &name);
 	void execute(dx12lib::DirectContextProxy pDirectCtx) override;
 	void setNumCascaded(size_t n);
 	void setSplitLambda(float lambda);
-	void setLightDistance(float distance);
+	void setZMulti(float zMulti);
 	auto getShadowMapArray() const -> std::shared_ptr<dx12lib::IDepthStencil2DArray>;
 	auto getShadowTypeCBuffer() const -> FRConstantBufferPtr<CBShadowType>;
 	auto getShadowMapFormat() const -> DXGI_FORMAT;
@@ -45,13 +44,13 @@ public:
 
 	rgph::PassResourcePtr<dx12lib::IDepthStencil2DArray> pShadowMapArray;
 private:
-	Math::Vector3 calcLightCenter(const Math::BoundingSphere &boundingSphere, const Math::Vector3 &lightDir) const;
-private:
 	bool _finalized = false;
-	float _lambda = 0.2f;
-	float _lightDistance = 512.f;
+	float _lambda = 0.3f;
+	float _zMulti = 1.f;
+	size_t _pcfKernelSize = 3;
 	size_t _numCascaded = 4;
 	size_t _shadowMapSize = 512;
+	mutable Math::float3 _lightDir = Math::float3::zero();
 	DXGI_FORMAT _shadowMapFormat = DXGI_FORMAT_D16_UNORM;
 	std::vector<FrustumItem> _subFrustumItems;
 	FRConstantBufferPtr<CBShadowType> _pLightSpaceMatrix;

@@ -53,9 +53,11 @@ VertexOut VS(VertexIn vin) {
 	vout.lightSpacePos1 = mul(gWorldToShadowMatrix[1], worldPosition);
 	vout.lightSpacePos2 = mul(gWorldToShadowMatrix[2], worldPosition);
 	vout.lightSpacePos3 = mul(gWorldToShadowMatrix[3], worldPosition);
+
 	return vout;
 }
 
+Texture2DArray gShadowMapArray : register(t1);
 float4 getShadowColor(VertexOut pin) {
 	float4 lightSpacePos[] = {
 		pin.lightSpacePos0,
@@ -74,10 +76,13 @@ float4 getShadowColor(VertexOut pin) {
 		float4(1.0, 1.0, 1.0, 1.0),
 	};
 
+	uint width, height, planeSlice;
+	gShadowMapArray.GetDimensions(width, height, planeSlice);
+	float dx = 1.0 / (float)width;
+
 	for (int i = 0; i < 4; ++i) {
-		float4 pos = lightSpacePos[i];
-		pos.xyz /= pos.w;
-		if (pos.x >= 0.01 && pos.x <= 0.99 && pos.y >= 0.01 && pos.y <= 0.99)
+		float3 pos = lightSpacePos[i].xyz / lightSpacePos[i].w;
+		if (pos.x >= dx && pos.x <= (1.f-dx) && pos.y >= dx && pos.y <= (1.f-dx))
 			return colorList[i];
 	}
 	return float4(0.3, 0.3, 0.3, 1.0);
@@ -86,7 +91,6 @@ float4 getShadowColor(VertexOut pin) {
 
 
 Texture2D gAlbedoMap		   : register(t0);
-Texture2DArray gShadowMapArray : register(t1);
 float getShadow(VertexOut pin) {
 		float4 lightSpacePos[] = {
 		pin.lightSpacePos0,
@@ -95,18 +99,25 @@ float getShadow(VertexOut pin) {
 		pin.lightSpacePos3
 	};
 
-	int index;
-	float4 pos;
-	for (index = 0; index < 4; ++index) {
-		pos = lightSpacePos[index];
-		pos.xyz /= pos.w;
-		if (pos.x >= 0.01 && pos.x <= 0.99 && pos.y >= 0.01 && pos.y <= 0.99)
-			break;
-	}
-
 	uint width, height, planeSlice;
 	gShadowMapArray.GetDimensions(width, height, planeSlice);
 	float dx = 1.0 / (float)width;
+
+	float validBegin = dx;
+	float validEnd = 1.f - dx;
+
+	float3 pos = 0;
+	int index = 0;
+	while (index < 4) {
+		pos = lightSpacePos[index].xyz / lightSpacePos[index].w;
+		if (pos.x >= validBegin && pos.x <= validEnd && pos.y >= validBegin && pos.y <= validEnd)
+			break;
+		++index;
+	}
+
+#if 0
+	return pos.z <= gShadowMapArray.SampleLevel(gSamPointClamp, float3(pos.xy, index), 0).r;
+#endif
 
 	const float2 offsets[9] = {
 		float2(-dx, -dx), float2(0.0, -dx), float2(+dx, -dx),
@@ -114,16 +125,14 @@ float getShadow(VertexOut pin) {
 		float2(-dx, +dx), float2(0.0, +dx), float2(+dx, +dx),
 	};
 
-
 	float depth = pos.z;
 	float percentLit = 0.0;
-	[unroll]
 	for (int i = 0; i < 9; ++i) {
 		float3 samplePos = float3(pos.xy, index);
 		samplePos.xy += offsets[i];
 		percentLit += gShadowMapArray.SampleCmpLevelZero(gSamShadowCompare, samplePos, depth).r;
 	}
-
+	percentLit /= 9.0;
 	return percentLit;
 }
 
@@ -142,7 +151,10 @@ float4 PS(VertexOut pin) : SV_Target{
 	float3 result = 0.0;
 	float3 V = normalize(viewDir);
 	float3 N = normalize(pin.normal);
-	result += ComputeDirectionLight(gLight.lights[0], materialData, N, V);
+
+	float shadow = getShadow(pin);
+
+	result += ComputeDirectionLight(gLight.lights[0], materialData, N, V) * shadow;
 	result += ComputeDirectionLight(gLight.lights[1], materialData, N, V);
 	result += ComputeDirectionLight(gLight.lights[2], materialData, N, V);
 	result += (gLight.ambientLight * textureAlbedo).rgb;

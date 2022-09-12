@@ -46,8 +46,8 @@ void ShadowApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 	_pLightCb = pDirectCtx->createConstantBuffer<d3d::CBLightType>();
 
 	auto lightVisitor = _pLightCb->visit<d3d::CBLightType>();
-	lightVisitor->ambientLight = float4(0.3f, 0.3f, 0.3f, 1.f);
-	lightVisitor->lights[0].initAsDirectionLight(float3(-3, 6, -3), float3(0.8f));
+	lightVisitor->ambientLight = float4(0.2f, 0.2f, 0.2f, 1.f);
+	lightVisitor->lights[0].initAsDirectionLight(float3(-3, 6, -3), float3(3.f));
 	lightVisitor->lights[1].initAsDirectionLight(float3(-3, +6, -3), float3(0.1f));
 	lightVisitor->lights[2].initAsDirectionLight(float3(-3, -6, -3), float3(0.1f));
 
@@ -57,6 +57,7 @@ void ShadowApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 		_pRenderGraph->getRenderQueuePass(ShadowRgph::ShadowPass)
 	);
 	assert(_pCSMShadowPass != nullptr);
+	_pCSMShadowPass->setZMulti(10.f);
 
 	ShadowMaterial::init(this);
 

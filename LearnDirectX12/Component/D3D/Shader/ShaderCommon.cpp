@@ -103,13 +103,13 @@ CD3DX12_STATIC_SAMPLER_DESC getAnisotropicClampStaticSampler(UINT shaderRegister
 
 CD3DX12_STATIC_SAMPLER_DESC getShadowCompareStaticSampler(UINT shaderRegister) {
 	return CD3DX12_STATIC_SAMPLER_DESC(
-		shaderRegister,
-		D3D12_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT,
-		D3D12_TEXTURE_ADDRESS_MODE_BORDER,
-		D3D12_TEXTURE_ADDRESS_MODE_BORDER,
-		D3D12_TEXTURE_ADDRESS_MODE_BORDER,
-		0.f,
-		16,
+		shaderRegister, // shaderRegister
+		D3D12_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT, // filter
+		D3D12_TEXTURE_ADDRESS_MODE_BORDER,  // addressU
+		D3D12_TEXTURE_ADDRESS_MODE_BORDER,  // addressV
+		D3D12_TEXTURE_ADDRESS_MODE_BORDER,  // addressW
+		0.0f,                               // mipLODBias
+		16,                                 // maxAnisotropy
 		D3D12_COMPARISON_FUNC_LESS_EQUAL,
 		D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE
 	);
