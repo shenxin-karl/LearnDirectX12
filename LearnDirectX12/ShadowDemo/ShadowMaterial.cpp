@@ -116,7 +116,7 @@ void ShadowMaterial::init(ShadowApp *pApp) {
 		pShadowPso->setInputLayout({ d3d::PositionSemantic });
 
 		CD3DX12_RASTERIZER_DESC rasterizerDesc(D3D12_DEFAULT);
-		rasterizerDesc.DepthBias = 10;
+		rasterizerDesc.DepthBias = 100;
 		rasterizerDesc.DepthBiasClamp = 0.f;
 		rasterizerDesc.SlopeScaledDepthBias = 1.f;
 

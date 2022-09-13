@@ -57,6 +57,10 @@ VertexOut VS(VertexIn vin) {
 	return vout;
 }
 
+static const float kShadowSampleKernel = 3;
+static const float kBlockerSearchWidth = 5;
+static const float kMaxSampleKernel = max(kShadowSampleKernel, kBlockerSearchWidth);
+
 Texture2DArray gShadowMapArray : register(t1);
 float4 getShadowColor(VertexOut pin) {
 	float4 lightSpacePos[] = {
@@ -115,6 +119,30 @@ float random(float3 seed, int i){
 	return frac(sin(dot_product) * 43758.5453);
 }
 
+float2 AverageBlockerDepth(float3 lightSpacePos, int csmIndex, float searchWidth) {
+	uint width, height, planeSlice;
+	gShadowMapArray.GetDimensions(width, height, planeSlice);
+	float dx = 1.0 / (float)width;
+
+	float step = (int)(kBlockerSearchWidth / 2);
+	float average = 0.0;
+	float count = 0.0005;							// ·ÀÖ¹³ý 0
+	float range = step / searchWidth * dx;
+	float3 basePos = float3(lightSpacePos.xy, csmIndex);
+	for (float i = -step; i <= step; i += 1.0) {
+		for (float j = -step; j <= step; j += 1.0) {
+			float2 offset = float2(i, j) * range;
+			float3 samplePos = basePos;
+			samplePos.xy += offset;
+			float texDepth = gShadowMapArray.SampleLevel(gSamPointClamp, samplePos, 0).r;
+			if (texDepth < lightSpacePos.z) {
+				count += 1.0;
+				average += texDepth;
+			}
+		}
+	}
+	return float2(average / count, count);
+}
 
 Texture2D gAlbedoMap		   : register(t0);
 float getShadow(VertexOut pin) {
@@ -128,8 +156,7 @@ float getShadow(VertexOut pin) {
 	uint width, height, planeSlice;
 	gShadowMapArray.GetDimensions(width, height, planeSlice);
 	float dx = 1.0 / (float)width;
-	float kPcfKernel = 4;
-	float validBegin = dx * kPcfKernel;
+	float validBegin = dx * kMaxSampleKernel;
 	float validEnd = 1.f - validBegin;
 
 	float3 pos = 0;
@@ -140,6 +167,9 @@ float getShadow(VertexOut pin) {
 			break;
 		++index;
 	}
+
+	float2 ret =  AverageBlockerDepth(pos, index, 7.0);
+	return 1.0 - (ret.y / (kBlockerSearchWidth * 2 + 1));
 
 #if 0
 	return pos.z <= gShadowMapArray.SampleLevel(gSamPointClamp, float3(pos.xy, index), 0).r;
@@ -153,12 +183,12 @@ float getShadow(VertexOut pin) {
 
 	float depth = pos.z;
 	float percentLit = 0.0;
-	float range = kPcfKernel * dx;
+	float range = kShadowSampleKernel * dx;
 	[unroll]
 	for (int i = 0; i < 16; ++i) {
 		float3 samplePos = float3(pos.xy, index);
 		int diskIndex = int(16.0  * random(floor(pin.position.xyz * 1000.0), i)) % 16;
-		samplePos.xy += poissonDisk[diskIndex] * range;
+		samplePos.xy += poissonDisk[i] * range;
 		percentLit += gShadowMapArray.SampleCmpLevelZero(gSamLinearShadowCompare, samplePos, depth).r;
 	}
 	percentLit /= 16.0;
@@ -182,6 +212,7 @@ float4 PS(VertexOut pin) : SV_Target{
 	float3 N = normalize(pin.normal);
 
 	float shadow = getShadow(pin);
+	return shadow;
 
 	result += ComputeDirectionLight(gLight.lights[0], materialData, N, V) * shadow;
 	result += ComputeDirectionLight(gLight.lights[1], materialData, N, V);
