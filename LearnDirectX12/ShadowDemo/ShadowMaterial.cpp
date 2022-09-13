@@ -57,7 +57,7 @@ void ShadowMaterial::init(ShadowApp *pApp) {
 
 	/// ShadowMaterial::pOpaquePso
 	{
-		auto pRootSignature = pSharedDevice->createRootSignature(2, 7);
+		auto pRootSignature = pSharedDevice->createRootSignature(2, 8);
 		pRootSignature->at(0).initAsDescriptorTable({
 			{ dx12lib::RegisterSlot::CBV0, 1 }, // cbTransform
 			{ dx12lib::RegisterSlot::CBV1, 1 }, // cbObject

@@ -89,6 +89,32 @@ float4 getShadowColor(VertexOut pin) {
 }
 
 
+static float2 poissonDisk[16] = { 
+   float2( -0.94201624, -0.39906216 ), 
+   float2( 0.94558609, -0.76890725 ), 
+   float2( -0.094184101, -0.92938870 ), 
+   float2( 0.34495938, 0.29387760 ), 
+   float2( -0.91588581, 0.45771432 ), 
+   float2( -0.81544232, -0.87912464 ), 
+   float2( -0.38277543, 0.27676845 ), 
+   float2( 0.97484398, 0.75648379 ), 
+   float2( 0.44323325, -0.97511554 ), 
+   float2( 0.53742981, -0.47373420 ), 
+   float2( -0.26496911, -0.41893023 ), 
+   float2( 0.79197514, 0.19090188 ), 
+   float2( -0.24188840, 0.99706507 ), 
+   float2( -0.81409955, 0.91437590 ), 
+   float2( 0.19984126, 0.78641367 ), 
+   float2( 0.14383161, -0.14100790 ) 
+};
+
+// Returns a random number based on a float3 and an int.
+float random(float3 seed, int i){
+	float4 seed4 = float4(seed, i);
+	float dot_product = dot(seed4, float4(12.9898,78.233,45.164,94.673));
+	return frac(sin(dot_product) * 43758.5453);
+}
+
 
 Texture2D gAlbedoMap		   : register(t0);
 float getShadow(VertexOut pin) {
@@ -102,15 +128,15 @@ float getShadow(VertexOut pin) {
 	uint width, height, planeSlice;
 	gShadowMapArray.GetDimensions(width, height, planeSlice);
 	float dx = 1.0 / (float)width;
-
-	float validBegin = dx;
-	float validEnd = 1.f - dx;
+	float kPcfKernel = 4;
+	float validBegin = dx * kPcfKernel;
+	float validEnd = 1.f - validBegin;
 
 	float3 pos = 0;
 	int index = 0;
 	while (index < 4) {
 		pos = lightSpacePos[index].xyz / lightSpacePos[index].w;
-		if (pos.x >= validBegin && pos.x <= validEnd && pos.y >= validBegin && pos.y <= validEnd)
+		if (pos.x > validBegin && pos.x < validEnd && pos.y > validBegin && pos.y < validEnd)
 			break;
 		++index;
 	}
@@ -127,12 +153,15 @@ float getShadow(VertexOut pin) {
 
 	float depth = pos.z;
 	float percentLit = 0.0;
-	for (int i = 0; i < 9; ++i) {
+	float range = kPcfKernel * dx;
+	[unroll]
+	for (int i = 0; i < 16; ++i) {
 		float3 samplePos = float3(pos.xy, index);
-		samplePos.xy += offsets[i];
-		percentLit += gShadowMapArray.SampleCmpLevelZero(gSamShadowCompare, samplePos, depth).r;
+		int diskIndex = int(16.0  * random(floor(pin.position.xyz * 1000.0), i)) % 16;
+		samplePos.xy += poissonDisk[diskIndex] * range;
+		percentLit += gShadowMapArray.SampleCmpLevelZero(gSamLinearShadowCompare, samplePos, depth).r;
 	}
-	percentLit /= 9.0;
+	percentLit /= 16.0;
 	return percentLit;
 }
 

@@ -101,7 +101,7 @@ CD3DX12_STATIC_SAMPLER_DESC getAnisotropicClampStaticSampler(UINT shaderRegister
 	);
 }
 
-CD3DX12_STATIC_SAMPLER_DESC getShadowCompareStaticSampler(UINT shaderRegister) {
+CD3DX12_STATIC_SAMPLER_DESC getLinearShadowCompareStaticSampler(UINT shaderRegister) {
 	return CD3DX12_STATIC_SAMPLER_DESC(
 		shaderRegister, // shaderRegister
 		D3D12_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT, // filter
@@ -115,15 +115,30 @@ CD3DX12_STATIC_SAMPLER_DESC getShadowCompareStaticSampler(UINT shaderRegister) {
 	);
 }
 
-const std::array<CD3DX12_STATIC_SAMPLER_DESC, 7> &getStaticSamplers() {
-	static std::array<CD3DX12_STATIC_SAMPLER_DESC, 7> samplers = {
+CD3DX12_STATIC_SAMPLER_DESC getPointShadowCompareStaticSampler(UINT shaderRegister) {
+	return CD3DX12_STATIC_SAMPLER_DESC(
+		shaderRegister, // shaderRegister
+		D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT, // filter
+		D3D12_TEXTURE_ADDRESS_MODE_BORDER,  // addressU
+		D3D12_TEXTURE_ADDRESS_MODE_BORDER,  // addressV
+		D3D12_TEXTURE_ADDRESS_MODE_BORDER,  // addressW
+		0.0f,                               // mipLODBias
+		16,                                 // maxAnisotropy
+		D3D12_COMPARISON_FUNC_LESS_EQUAL,
+		D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE
+	);
+}
+
+const std::array<CD3DX12_STATIC_SAMPLER_DESC, 8> &getStaticSamplers() {
+	static std::array<CD3DX12_STATIC_SAMPLER_DESC, 8> samplers = {
 		getPointWrapStaticSampler(0),
 		getPointClampStaticSampler(1),
 		getLinearWrapStaticSampler(2),
 		getLinearClampStaticSampler(3),
 		getAnisotropicWrapStaticSampler(4),
 		getAnisotropicClampStaticSampler(5),
-		getShadowCompareStaticSampler(6),
+		getLinearShadowCompareStaticSampler(6),
+		getPointShadowCompareStaticSampler(7)
 	};
 	return samplers;
 }

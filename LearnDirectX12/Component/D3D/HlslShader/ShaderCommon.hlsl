@@ -68,13 +68,14 @@ struct CBLightType {
 };
 
 #ifndef	DISABLE_DEFAULT_SAMPLER
-SamplerState gSamPointWrap					: register(s0);
-SamplerState gSamPointClamp					: register(s1);
-SamplerState gSamLinearWrap					: register(s2);
-SamplerState gSamLinearClamp				: register(s3);
-SamplerState gSamAnisotropicWrap			: register(s4);
-SamplerState gSamAnisotropicClamp			: register(s5);
-SamplerComparisonState gSamShadowCompare    : register(s6);
+SamplerState gSamPointWrap					   : register(s0);
+SamplerState gSamPointClamp					   : register(s1);
+SamplerState gSamLinearWrap					   : register(s2);
+SamplerState gSamLinearClamp				   : register(s3);
+SamplerState gSamAnisotropicWrap			   : register(s4);
+SamplerState gSamAnisotropicClamp			   : register(s5);
+SamplerComparisonState gSamLinearShadowCompare : register(s6);
+SamplerComparisonState gSamPointShadowCompare  : register(s7);
 #endif // !DISABLE_DEFAULT_SAMPLER
 
 #endif // !_COMMON_H_

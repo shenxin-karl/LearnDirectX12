@@ -204,6 +204,7 @@ BoundingBox CSMShadowPass::update(const CameraBase *pCameraBase, std::shared_ptr
 		auto corners = cameraSubViewSpaceFrustum.getCorners();
 		for (auto &c : corners)
 			center += Vector3(c);
+		center /= 8.f;
 
 		///     Near    Far
 		///    0----1  4----5
@@ -214,7 +215,6 @@ BoundingBox CSMShadowPass::update(const CameraBase *pCameraBase, std::shared_ptr
 		float dis2 = length(Vector3(corners[7]) - Vector3(corners[0]));
 		float maxDis = std::max(dis1, dis2);
 		float disPerPix = maxDis / static_cast<float>(_shadowMapSize);
-		center /= 8.f;
 
 		center = worldToLightSpace * Vector4(center, 1.f);
 		center = floor(center / disPerPix) * disPerPix;
