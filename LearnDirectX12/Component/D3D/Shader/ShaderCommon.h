@@ -65,6 +65,16 @@ struct CBLightType {
 	LightData    lights[kMaxLightCount];
 };
 
+constexpr inline std::size_t kMaxShadowCascaded = 7;
+struct CBShadowType {
+	Math::float4x4 worldToLightMatrix[kMaxShadowCascaded];
+	Math::float4   subFrustumParam[kMaxShadowCascaded];		// .x near .y far
+	float		   lightSize;
+	float		   padding0;
+	float		   padding1;
+	float		   padding2;
+};
+
 CD3DX12_STATIC_SAMPLER_DESC getPointWrapStaticSampler(UINT shaderRegister);
 CD3DX12_STATIC_SAMPLER_DESC getPointClampStaticSampler(UINT shaderRegister);
 CD3DX12_STATIC_SAMPLER_DESC getLinearWrapStaticSampler(UINT shaderRegister);

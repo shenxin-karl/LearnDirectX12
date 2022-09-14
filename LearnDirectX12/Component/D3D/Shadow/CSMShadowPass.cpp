@@ -88,6 +88,10 @@ void CSMShadowPass::setZMulti(float zMulti) {
 	_zMulti = zMulti;
 }
 
+void CSMShadowPass::setLightSize(float lightSize) {
+	_lightSize = lightSize;
+}
+
 auto CSMShadowPass::getShadowMapArray() const -> std::shared_ptr<dx12lib::IDepthStencil2DArray> {
 	return _pShadowMapArray;
 }
@@ -157,17 +161,15 @@ static BoundingBox calcLightFrustum(const CameraBase *pCameraBase, Vector3 light
 }
 
 BoundingBox CSMShadowPass::update(const CameraBase *pCameraBase, std::shared_ptr<com::GameTimer> pGameTimer, Vector3 lightDir) {
-	_lightDir = lightDir.xyz;
-
 	float zNear = pCameraBase->_nearClip;
 	float zFar = pCameraBase->_farClip;
 	float ratio = zFar / zNear;
 	_subFrustumItems.resize(_numCascaded);
 	for (size_t i = 1; i < _numCascaded; ++i) {
 		float si = static_cast<float>(i) / static_cast<float>(_numCascaded);
-		float z0 = (zNear * pow(ratio, si));
-		float z1 = (zNear + (zFar - zNear) * si);
-		float tNear = (1.f - _lambda) * z0 + _lambda * z1;
+		float cLog = (zNear * pow(ratio, si));
+		float cUni = (zNear + (zFar - zNear) * si);
+		float tNear = _lambda * cLog + (1.f - _lambda) * cUni;
 		float tFar = tNear * 1.005f;
 		_subFrustumItems[i].zNear = tNear;
 		_subFrustumItems[i-1].zFar = tFar;
@@ -183,6 +185,7 @@ BoundingBox CSMShadowPass::update(const CameraBase *pCameraBase, std::shared_ptr
 
 	auto pLightSpaceMatrixVisitor = _pLightSpaceMatrix->visit();
 	std::memset(pLightSpaceMatrixVisitor.ptr(), 0, sizeof(*pLightSpaceMatrixVisitor));
+	pLightSpaceMatrixVisitor->lightSize = _lightSize;
 
 	float invShadowMapSize = 1.f / static_cast<float>(_shadowMapSize);
 	float invZMulti = 1.f / _zMulti;
@@ -194,6 +197,7 @@ BoundingBox CSMShadowPass::update(const CameraBase *pCameraBase, std::shared_ptr
 		Vector3(0.f, 1.f, 0.f)
 	);
 	Matrix4 lightToWorldSpace = inverse(worldToLightSpace);
+
 
 	for (size_t i = 0; i < _numCascaded; ++i) {
 		FrustumItem &item = _subFrustumItems[i];
@@ -235,7 +239,7 @@ BoundingBox CSMShadowPass::update(const CameraBase *pCameraBase, std::shared_ptr
 		}
 
 		orthoNear *= (orthoNear > 0.f) ? invZMulti : zMulti;
-		orthoFar  = std::max(+zFar * 2.f, orthoFar);
+		orthoFar  = std::max(zFar, orthoFar);
 		float extentDis = maxDis + static_cast<float>(_pcfKernelSize) * invShadowMapSize * 2.f;
 		Matrix4 lightProj = DX::XMMatrixOrthographicLH(
 			extentDis, extentDis,
@@ -270,7 +274,9 @@ BoundingBox CSMShadowPass::update(const CameraBase *pCameraBase, std::shared_ptr
 		cbVisitor->farZ = orthoFar;
 		cbVisitor->totalTime = pGameTimer->getTotalTime();
 		cbVisitor->deltaTime = pGameTimer->getDeltaTime();
-		pLightSpaceMatrixVisitor->worldToShadowMatrix[i] = float4x4(worldToShadowTexcoord);
+		pLightSpaceMatrixVisitor->worldToLightMatrix[i] = float4x4(worldToShadowTexcoord);
+		pLightSpaceMatrixVisitor->subFrustumParam[i].x = orthoNear;
+		pLightSpaceMatrixVisitor->subFrustumParam[i].y = orthoFar;
 	}
 
 	return calcLightFrustum(pCameraBase, lightDir);

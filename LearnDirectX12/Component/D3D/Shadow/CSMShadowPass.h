@@ -22,9 +22,6 @@ public:
 class CSMShadowPass : public rgph::RenderQueuePass {
 public:
 	constexpr static size_t kMaxNumCascaded = 7;
-	struct CBShadowType {
-		Math::float4x4 worldToShadowMatrix[kMaxNumCascaded];
-	};
 	struct FrustumItem {
 		float zNear;
 		float zFar;
@@ -36,6 +33,7 @@ public:
 	void setNumCascaded(size_t n);
 	void setSplitLambda(float lambda);
 	void setZMulti(float zMulti);
+	void setLightSize(float lightSize);
 	auto getShadowMapArray() const -> std::shared_ptr<dx12lib::IDepthStencil2DArray>;
 	auto getShadowTypeCBuffer() const -> FRConstantBufferPtr<CBShadowType>;
 	auto getShadowMapFormat() const -> DXGI_FORMAT;
@@ -45,12 +43,12 @@ public:
 	rgph::PassResourcePtr<dx12lib::IDepthStencil2DArray> pShadowMapArray;
 private:
 	bool _finalized = false;
-	float _lambda = 0.3f;
+	float _lambda = 0.5f;
 	float _zMulti = 1.f;
+	float _lightSize = 3.f;
 	size_t _pcfKernelSize = 3;
 	size_t _numCascaded = 4;
 	size_t _shadowMapSize = 512;
-	mutable Math::float3 _lightDir = Math::float3::zero();
 	DXGI_FORMAT _shadowMapFormat = DXGI_FORMAT_D16_UNORM;
 	std::vector<FrustumItem> _subFrustumItems;
 	FRConstantBufferPtr<CBShadowType> _pLightSpaceMatrix;

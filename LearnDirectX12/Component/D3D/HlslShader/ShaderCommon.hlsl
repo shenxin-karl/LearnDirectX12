@@ -67,6 +67,12 @@ struct CBLightType {
 	LightData lights[kMaxLightCount];
 };
 
+struct cbShadowType {
+	float4x4 worldToLightMatrix[7];
+	float4   subFrustumParam[7];		// .x near .y far
+	float	 lightSize;				// 面光源的大小
+};
+
 #ifndef	DISABLE_DEFAULT_SAMPLER
 SamplerState gSamPointWrap					   : register(s0);
 SamplerState gSamPointClamp					   : register(s1);

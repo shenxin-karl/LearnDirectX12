@@ -21,7 +21,7 @@ cbuffer CbLight : register(b3) {
 };
 
 cbuffer cbShadow : register(b4) {
-	float4x4 gWorldToShadowMatrix[7];
+	cbShadowType gShadow;
 };
 
 struct VertexIn {
@@ -49,16 +49,17 @@ VertexOut VS(VertexIn vin) {
 	vout.texcoord = mul(gMatTexCoord, float4(vin.texcoord, 0.0, 1.0)).xy;
 	vout.normal = mul((float3x3)gMatNormal, vin.normal);
 
-	vout.lightSpacePos0 = mul(gWorldToShadowMatrix[0], worldPosition);
-	vout.lightSpacePos1 = mul(gWorldToShadowMatrix[1], worldPosition);
-	vout.lightSpacePos2 = mul(gWorldToShadowMatrix[2], worldPosition);
-	vout.lightSpacePos3 = mul(gWorldToShadowMatrix[3], worldPosition);
+	vout.lightSpacePos0 = mul(gShadow.worldToLightMatrix[0], worldPosition);
+	vout.lightSpacePos1 = mul(gShadow.worldToLightMatrix[1], worldPosition);
+	vout.lightSpacePos2 = mul(gShadow.worldToLightMatrix[2], worldPosition);
+	vout.lightSpacePos3 = mul(gShadow.worldToLightMatrix[3], worldPosition);
 
 	return vout;
 }
 
 static const float kShadowSampleKernel = 3;
 static const float kBlockerSearchWidth = 5;
+static const uint  kPCFSampleCount     = 16;
 static const float kMaxSampleKernel = max(kShadowSampleKernel, kBlockerSearchWidth);
 
 Texture2DArray gShadowMapArray : register(t1);
@@ -92,33 +93,6 @@ float4 getShadowColor(VertexOut pin) {
 	return float4(0.3, 0.3, 0.3, 1.0);
 }
 
-
-static float2 poissonDisk[16] = { 
-   float2( -0.94201624, -0.39906216 ), 
-   float2( 0.94558609, -0.76890725 ), 
-   float2( -0.094184101, -0.92938870 ), 
-   float2( 0.34495938, 0.29387760 ), 
-   float2( -0.91588581, 0.45771432 ), 
-   float2( -0.81544232, -0.87912464 ), 
-   float2( -0.38277543, 0.27676845 ), 
-   float2( 0.97484398, 0.75648379 ), 
-   float2( 0.44323325, -0.97511554 ), 
-   float2( 0.53742981, -0.47373420 ), 
-   float2( -0.26496911, -0.41893023 ), 
-   float2( 0.79197514, 0.19090188 ), 
-   float2( -0.24188840, 0.99706507 ), 
-   float2( -0.81409955, 0.91437590 ), 
-   float2( 0.19984126, 0.78641367 ), 
-   float2( 0.14383161, -0.14100790 ) 
-};
-
-// Returns a random number based on a float3 and an int.
-float random(float3 seed, int i){
-	float4 seed4 = float4(seed, i);
-	float dot_product = dot(seed4, float4(12.9898,78.233,45.164,94.673));
-	return frac(sin(dot_product) * 43758.5453);
-}
-
 float2 AverageBlockerDepth(float3 lightSpacePos, int csmIndex, float searchWidth) {
 	uint width, height, planeSlice;
 	gShadowMapArray.GetDimensions(width, height, planeSlice);
@@ -144,6 +118,19 @@ float2 AverageBlockerDepth(float3 lightSpacePos, int csmIndex, float searchWidth
 	return float2(average / count, count);
 }
 
+float RadicalInverse_VdC(uint bits) {
+	bits = (bits << 16u) | (bits >> 16u);
+	bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
+	bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);
+	bits = ((bits & 0x0F0F0F0Fu) << 4u) | ((bits & 0xF0F0F0F0u) >> 4u);
+	bits = ((bits & 0x00FF00FFu) << 8u) | ((bits & 0xFF00FF00u) >> 8u);
+	return float(bits) * 2.3283064365386963e-10; // / 0x100000000
+}
+
+float2 Hammersley(uint i, uint N) {
+	return float2(float(i) / float(N), RadicalInverse_VdC(i));
+}
+
 Texture2D gAlbedoMap		   : register(t0);
 float getShadow(VertexOut pin) {
 		float4 lightSpacePos[] = {
@@ -162,36 +149,42 @@ float getShadow(VertexOut pin) {
 	float3 pos = 0;
 	int index = 0;
 	while (index < 4) {
-		pos = lightSpacePos[index].xyz / lightSpacePos[index].w;
+		pos = lightSpacePos[index].xyz;
 		if (pos.x > validBegin && pos.x < validEnd && pos.y > validBegin && pos.y < validEnd)
 			break;
 		++index;
 	}
 
-	float2 ret =  AverageBlockerDepth(pos, index, 7.0);
-	return 1.0 - (ret.y / (kBlockerSearchWidth * 2 + 1));
-
 #if 0
 	return pos.z <= gShadowMapArray.SampleLevel(gSamPointClamp, float3(pos.xy, index), 0).r;
 #endif
 
-	const float2 offsets[9] = {
-		float2(-dx, -dx), float2(0.0, -dx), float2(+dx, -dx),
-		float2(-dx, 0.0), float2(0.0, 0.0), float2(+dx, 0.0),
-		float2(-dx, +dx), float2(0.0, +dx), float2(+dx, +dx),
-	};
+#if 1
+	float near = gShadow.subFrustumParam[index].x;
+	float far = gShadow.subFrustumParam[index].y;
+	float2 blockerSearchRes = AverageBlockerDepth(pos, index, 3.0);
+	return blockerSearchRes.r;
+	//if (blockerSearchRes.y <= 0.1)		// 没有遮挡物, 不会产生阴影
+		//return 1.0;
+		
+	float blockerDistance = lerp(near, far, blockerSearchRes.x);
+	float receiverDistance = lerp(near, far, pos.z);
+	float penumbraWidth = gShadow.lightSize * (receiverDistance - blockerDistance) / blockerDistance;
+	return penumbraWidth / gShadow.lightSize;
+
+	penumbraWidth = min(penumbraWidth, 3) * dx;
+#else
+	float penumbraWidth = 2 * dx;
+#endif
 
 	float depth = pos.z;
 	float percentLit = 0.0;
-	float range = kShadowSampleKernel * dx;
-	[unroll]
-	for (int i = 0; i < 16; ++i) {
-		float3 samplePos = float3(pos.xy, index);
-		int diskIndex = int(16.0  * random(floor(pin.position.xyz * 1000.0), i)) % 16;
-		samplePos.xy += poissonDisk[i] * range;
+	for (int i = 0; i < kPCFSampleCount; ++i) {
+		float2 offset = (Hammersley(i, kPCFSampleCount) * 2.0 - 1.0) * penumbraWidth;
+		float3 samplePos = float3(pos.xy + offset, index);
 		percentLit += gShadowMapArray.SampleCmpLevelZero(gSamLinearShadowCompare, samplePos, depth).r;
 	}
-	percentLit /= 16.0;
+	percentLit /= (float)kPCFSampleCount;
 	return percentLit;
 }
 
@@ -213,6 +206,7 @@ float4 PS(VertexOut pin) : SV_Target{
 
 	float shadow = getShadow(pin);
 	return shadow;
+
 
 	result += ComputeDirectionLight(gLight.lights[0], materialData, N, V) * shadow;
 	result += ComputeDirectionLight(gLight.lights[1], materialData, N, V);
