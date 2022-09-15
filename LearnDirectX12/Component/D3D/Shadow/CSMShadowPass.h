@@ -34,6 +34,7 @@ public:
 	void setSplitLambda(float lambda);
 	void setZMulti(float zMulti);
 	void setLightSize(float lightSize);
+	void setLightPlane(float lightPlane);
 	auto getShadowMapArray() const -> std::shared_ptr<dx12lib::IDepthStencil2DArray>;
 	auto getShadowTypeCBuffer() const -> FRConstantBufferPtr<CBShadowType>;
 	auto getShadowMapFormat() const -> DXGI_FORMAT;
@@ -43,12 +44,13 @@ public:
 	rgph::PassResourcePtr<dx12lib::IDepthStencil2DArray> pShadowMapArray;
 private:
 	bool _finalized = false;
-	float _lambda = 0.5f;
+	float _lambda = 0.7f;
 	float _zMulti = 1.f;
 	float _lightSize = 3.f;
+	float _lightPlane = 500.f;
 	size_t _pcfKernelSize = 3;
 	size_t _numCascaded = 4;
-	size_t _shadowMapSize = 512;
+	size_t _shadowMapSize = 1024;
 	DXGI_FORMAT _shadowMapFormat = DXGI_FORMAT_D16_UNORM;
 	std::vector<FrustumItem> _subFrustumItems;
 	FRConstantBufferPtr<CBShadowType> _pLightSpaceMatrix;

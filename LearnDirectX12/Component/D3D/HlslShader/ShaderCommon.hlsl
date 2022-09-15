@@ -77,7 +77,7 @@ struct CSMSubFrustum {
 	float	 lightPlane;			// 光源平面, PCSS 使用
 };
 
-const static uint kMaxShadowCascaded = 7;
+const static uint kMaxShadowCascaded = 4;
 struct cbShadowType {
 	float3		  lightDir;			// 光源方向
 	float		  lightSize;		// 面光源大小, PCSS 使用

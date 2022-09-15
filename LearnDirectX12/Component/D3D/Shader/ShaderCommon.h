@@ -75,7 +75,7 @@ struct CSMSubFrustum {
 	float		   lightPlane;
 };
 
-constexpr inline std::size_t kMaxShadowCascaded = 7;
+constexpr inline std::size_t kMaxShadowCascaded = 4;
 struct CBShadowType {
 	Math::float3  lightDir;
 	float		  lightSize;

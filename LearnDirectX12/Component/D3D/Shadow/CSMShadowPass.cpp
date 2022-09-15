@@ -92,6 +92,10 @@ void CSMShadowPass::setLightSize(float lightSize) {
 	_lightSize = lightSize;
 }
 
+void CSMShadowPass::setLightPlane(float lightPlane) {
+	_lightPlane = lightPlane;
+}
+
 auto CSMShadowPass::getShadowMapArray() const -> std::shared_ptr<dx12lib::IDepthStencil2DArray> {
 	return _pShadowMapArray;
 }
@@ -283,7 +287,7 @@ BoundingBox CSMShadowPass::update(const CameraBase *pCameraBase, std::shared_ptr
 		pLightSpaceMatrixVisitor->subFrustum[i].zFar = orthoFar;
 		pLightSpaceMatrixVisitor->subFrustum[i].center = center.xyz;
 		Vector3 lightPlanePos = center + (orthoNear) * lightDir;
-		pLightSpaceMatrixVisitor->subFrustum[i].lightPlane = 500.f;
+		pLightSpaceMatrixVisitor->subFrustum[i].lightPlane = _lightPlane;
 	}
 
 	return calcLightFrustum(pCameraBase, lightDir);
