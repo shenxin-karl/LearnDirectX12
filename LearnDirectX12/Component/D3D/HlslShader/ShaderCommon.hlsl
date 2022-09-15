@@ -67,10 +67,21 @@ struct CBLightType {
 	LightData lights[kMaxLightCount];
 };
 
+struct CSMSubFrustum {
+	float    width;					// 正交投影宽
+	float    height;				// 正交投影高	
+	float    zNear;					// 正交投影近
+	float    zFar;					// 正交投影远
+	float4x4 worldToLightMatrix;	// 光空间矩阵
+	float3   center;				// view 光源中心
+	float	 lightPlane;			// 光源平面, PCSS 使用
+};
+
+const static uint kMaxShadowCascaded = 7;
 struct cbShadowType {
-	float4x4 worldToLightMatrix[7];
-	float4   subFrustumParam[7];		// .x near .y far
-	float	 lightSize;				// 面光源的大小
+	float3		  lightDir;			// 光源方向
+	float		  lightSize;		// 面光源大小, PCSS 使用
+	CSMSubFrustum subFrustum[kMaxShadowCascaded];		
 };
 
 #ifndef	DISABLE_DEFAULT_SAMPLER

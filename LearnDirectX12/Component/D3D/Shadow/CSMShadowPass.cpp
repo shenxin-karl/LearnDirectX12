@@ -186,6 +186,7 @@ BoundingBox CSMShadowPass::update(const CameraBase *pCameraBase, std::shared_ptr
 	auto pLightSpaceMatrixVisitor = _pLightSpaceMatrix->visit();
 	std::memset(pLightSpaceMatrixVisitor.ptr(), 0, sizeof(*pLightSpaceMatrixVisitor));
 	pLightSpaceMatrixVisitor->lightSize = _lightSize;
+	pLightSpaceMatrixVisitor->lightDir = lightDir.xyz;
 
 	float invShadowMapSize = 1.f / static_cast<float>(_shadowMapSize);
 	float invZMulti = 1.f / _zMulti;
@@ -274,9 +275,15 @@ BoundingBox CSMShadowPass::update(const CameraBase *pCameraBase, std::shared_ptr
 		cbVisitor->farZ = orthoFar;
 		cbVisitor->totalTime = pGameTimer->getTotalTime();
 		cbVisitor->deltaTime = pGameTimer->getDeltaTime();
-		pLightSpaceMatrixVisitor->worldToLightMatrix[i] = float4x4(worldToShadowTexcoord);
-		pLightSpaceMatrixVisitor->subFrustumParam[i].x = orthoNear;
-		pLightSpaceMatrixVisitor->subFrustumParam[i].y = orthoFar;
+
+		pLightSpaceMatrixVisitor->subFrustum[i].worldToLightMatrix = float4x4(worldToShadowTexcoord);
+		pLightSpaceMatrixVisitor->subFrustum[i].width = extentDis;
+		pLightSpaceMatrixVisitor->subFrustum[i].height = extentDis;
+		pLightSpaceMatrixVisitor->subFrustum[i].zNear = orthoNear;
+		pLightSpaceMatrixVisitor->subFrustum[i].zFar = orthoFar;
+		pLightSpaceMatrixVisitor->subFrustum[i].center = center.xyz;
+		Vector3 lightPlanePos = center + (orthoNear) * lightDir;
+		pLightSpaceMatrixVisitor->subFrustum[i].lightPlane = 500.f;
 	}
 
 	return calcLightFrustum(pCameraBase, lightDir);

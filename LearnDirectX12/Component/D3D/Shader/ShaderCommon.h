@@ -65,14 +65,21 @@ struct CBLightType {
 	LightData    lights[kMaxLightCount];
 };
 
+struct CSMSubFrustum {
+	float width;
+	float height;
+	float zNear;
+	float zFar;
+	Math::float4x4 worldToLightMatrix;
+	Math::float3   center;
+	float		   lightPlane;
+};
+
 constexpr inline std::size_t kMaxShadowCascaded = 7;
 struct CBShadowType {
-	Math::float4x4 worldToLightMatrix[kMaxShadowCascaded];
-	Math::float4   subFrustumParam[kMaxShadowCascaded];		// .x near .y far
-	float		   lightSize;
-	float		   padding0;
-	float		   padding1;
-	float		   padding2;
+	Math::float3  lightDir;
+	float		  lightSize;
+	CSMSubFrustum subFrustum[kMaxShadowCascaded];
 };
 
 CD3DX12_STATIC_SAMPLER_DESC getPointWrapStaticSampler(UINT shaderRegister);
