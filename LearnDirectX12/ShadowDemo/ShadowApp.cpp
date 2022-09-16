@@ -58,7 +58,8 @@ void ShadowApp::onInitialize(dx12lib::DirectContextProxy pDirectCtx) {
 	);
 	assert(_pCSMShadowPass != nullptr);
 	_pCSMShadowPass->setZMulti(10.f);
-	_pCSMShadowPass->setLightPlane(150.f);
+	_pCSMShadowPass->setLightSize(10.f);
+	_pCSMShadowPass->setLightPlane(300.f);
 
 	ShadowMaterial::init(this);
 

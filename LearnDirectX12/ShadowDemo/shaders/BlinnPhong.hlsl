@@ -56,8 +56,8 @@ VertexOut VS(VertexIn vin) {
 	return vout;
 }
 
-#define kShadowSampleKernel 7
-#define kBlockerSearchWidth 5
+#define kShadowSampleKernel 3
+#define kBlockerSearchWidth 3
 #define kMinSampleCount     4
 #define kMaxSampleCount		32
 
@@ -128,9 +128,38 @@ float2 Hammersley(uint i, uint N) {
 	return float2(float(i) / float(N), RadicalInverse_VdC(i));
 }
 
+static const float2 Poisson32[32] = {
+    float2(-0.975402, -0.0711386),    float2(0.0116886, 0.326395),
+    float2(-0.920347, -0.41142),      float2(0.0380566, 0.625477),
+    float2(-0.883908, 0.217872),      float2(0.0625935, -0.50853),
+    float2(-0.884518, 0.568041),      float2(0.125584, 0.0469069),
+    float2(-0.811945, 0.90521),       float2(0.169469, -0.997253),
+    float2(-0.792474, -0.779962),     float2(0.320597, 0.291055),
+    float2(-0.614856, 0.386578),      float2(0.359172, -0.633717),
+    float2(-0.580859, -0.208777),     float2(0.435713, -0.250832),
+    float2(-0.53795, 0.716666),       float2(0.507797, -0.916562),
+    float2(-0.515427, 0.0899991),     float2(0.545763, 0.730216),
+    float2(-0.454634, -0.707938),     float2(0.56859, 0.11655),
+    float2(-0.420942, 0.991272),      float2(0.743156, -0.505173),
+    float2(-0.261147, 0.588488),      float2(0.736442, -0.189734),
+    float2(-0.211219, 0.114841),      float2(0.843562, 0.357036),
+    float2(-0.146336, -0.259194),     float2(0.865413, 0.763726),
+    float2(-0.139439, -0.888668),     float2(0.872005, -0.927)
+};
 
-float PCSS(float3 lightSpacePos, int csmIndex, float dx) {
-	float2 blockerSearchRes = AverageBlockerDepth(lightSpacePos, csmIndex, 3.0);
+// Returns a random number based on a vec3 and an int.
+float random(float3 seed, int i){
+	float4 seed4 = float4(seed,i);
+	float dot_product = dot(seed4, float4(12.9898,78.233,45.164,94.673));
+	return frac(sin(dot_product) * 43758.5453);
+}
+
+float HardShadow(float3 lightSpacePos, int csmIndex) {
+	return gShadowMapArray.SampleCmpLevelZero(gSamLinearShadowCompare, float3(lightSpacePos.xy, csmIndex), lightSpacePos.z).r;
+}
+
+float PCSS(float3 worldPosition, float3 lightSpacePos, int csmIndex, float dx) {
+	float2 blockerSearchRes = AverageBlockerDepth(lightSpacePos, csmIndex, kBlockerSearchWidth);
 	if (blockerSearchRes.y <= 0.1)		// 没有遮挡物, 不会产生阴影
 		return 1.0;
 
@@ -156,9 +185,16 @@ float PCSS(float3 lightSpacePos, int csmIndex, float dx) {
 
 	float depth = lightSpacePos.z;
 	float percentLit = 0.0;
+	float3 floorWorldPosition = floor(worldPosition * 100.0);
 	for (int i = 0; i < sampleCount; ++i) {
-		float2 offset = (Hammersley(i, sampleCount) * 2.0 - 1.0) * pcfKernel;
+		#if defined(SHADOW_PCSS_POISSON)
+			int index = int(32.0 * random(floorWorldPosition, i)) % 32;
+			float2 offset = Poisson32[index] * pcfKernel;
+		#else
+			float2 offset = (Hammersley(i, sampleCount) * 2.0 - 1.0) * pcfKernel;
+		#endif
 		float3 samplePos = float3(lightSpacePos.xy + offset, csmIndex);
+
 		percentLit += gShadowMapArray.SampleCmpLevelZero(gSamPointShadowCompare, samplePos, depth).r;
 	}
 	percentLit /= sampleCount;
@@ -183,10 +219,8 @@ float PCF(float3 lightSpacePos, int csmIndex, float dx) {
 	return percentLit;
 }
 
-float HardShadow(float3 lightSpacePos, int csmIndex) {
-	return gShadowMapArray.SampleCmpLevelZero(gSamLinearShadowCompare, float3(lightSpacePos.xy, csmIndex), lightSpacePos.z).r;
-}
-#define  SHADOW_PCSS
+
+#define SHADOW_PCSS
 float getShadow(VertexOut pin) {
 	float4 lightSpacePos[] = {
 		pin.lightSpacePos0,
@@ -214,9 +248,9 @@ float getShadow(VertexOut pin) {
 			break;
 		++index;
 	}
-
+	
 	#if defined(SHADOW_PCSS)
-		return PCSS(pos, index, dx);
+		return PCSS(pin.position, pos, index, dx);
 	#elif defined(SHADOW_PCF)
 		return PCF(pos, index, dx);
 	#else
@@ -228,7 +262,7 @@ float getShadow(VertexOut pin) {
 Texture2D gAlbedoMap : register(t0);
 float4 PS(VertexOut pin) : SV_Target{
 	float4 textureAlbedo = gAlbedoMap.Sample(gSamLinearWrap, pin.texcoord);
-	// textureAlbedo *= getShadowColor(pin);
+	//textureAlbedo *= getShadowColor(pin);
 	MaterialData materialData = {
 		gMaterialData.diffuseAlbedo * textureAlbedo,
 		gMaterialData.roughness,
