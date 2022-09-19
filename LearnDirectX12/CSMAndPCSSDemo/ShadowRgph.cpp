@@ -6,6 +6,7 @@
 #include "Dx12lib/Device/SwapChain.h"
 #include "RenderGraph/Pass/ClearPass.hpp"
 #include "RenderGraph/Pass/PresentPass.hpp"
+#include "Dx12lib/Resource/IResource.h"
 
 ShadowPass::ShadowPass(const std::string &passName) : RenderQueuePass(passName, false, true) {
 }

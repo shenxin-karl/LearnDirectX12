@@ -31,3 +31,7 @@ void TBDRApp::onResize(dx12lib::DirectContextProxy pDirectCtx, int width, int he
 	float aspect = static_cast<float>(width) / static_cast<float>(height);
 	_pCamera->setAspect(aspect);
 }
+
+auto TBDRApp::getSwapChain() const -> std::shared_ptr<dx12lib::SwapChain> {
+	return _pSwapChain;
+}

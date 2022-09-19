@@ -96,7 +96,7 @@ void CSMShadowPass::setLightPlane(float lightPlane) {
 	_lightPlane = lightPlane;
 }
 
-auto CSMShadowPass::getShadowMapArray() const -> std::shared_ptr<dx12lib::IDepthStencil2DArray> {
+auto CSMShadowPass::getShadowMapArray() const -> const std::shared_ptr<dx12lib::IDepthStencil2DArray> & {
 	return _pShadowMapArray;
 }
 

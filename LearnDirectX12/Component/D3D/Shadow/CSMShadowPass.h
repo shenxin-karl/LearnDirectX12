@@ -35,7 +35,7 @@ public:
 	void setZMulti(float zMulti);
 	void setLightSize(float lightSize);
 	void setLightPlane(float lightPlane);
-	auto getShadowMapArray() const -> std::shared_ptr<dx12lib::IDepthStencil2DArray>;
+	auto getShadowMapArray() const -> const std::shared_ptr<dx12lib::IDepthStencil2DArray> &;
 	auto getShadowTypeCBuffer() const -> FRConstantBufferPtr<CBShadowType>;
 	auto getShadowMapFormat() const -> DXGI_FORMAT;
 	void finalize(dx12lib::DirectContextProxy pDirectCtx);

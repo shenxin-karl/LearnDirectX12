@@ -2,6 +2,8 @@
 #include <RenderGraph/Pass/GraphicsPass.h>
 #include <RenderGraph/Technique/TechniqueType.hpp>
 #include <RenderGraph/Pass/ComputablePass.h>
+
+#include "RenderGraph/Pass/FullScreenPass.h"
 #include "RenderGraph/Pass/RenderQueuePass.h"
 
 class TBDRApp;
@@ -9,11 +11,15 @@ class TBDRApp;
 namespace TBDRRgph {
 
 constexpr rgph::TechniqueType kGBuffer{ 1 };
-inline std::string ClearGBuffer  = "ClearGBuffer";
-inline std::string GBuffer		 = "GBuffer";
-inline std::string Lighting		 = "Lighting";
-inline std::string SkyBox		 = "SkyBox";
-inline std::string ColorGradingAndGammaCorrection = "ColorGradingAndGammaCorrection";
+inline std::string ClearDsPass						= "ClearDsPass";
+inline std::string ClearGBuffer						= "ClearGBuffer";
+inline std::string GBuffer							= "GBuffer";
+inline std::string Lighting							= "Lighting";
+inline std::string LightingCopyToMainRt				= "LightingCopyToMainRt";
+inline std::string SkyBox							= "SkyBox";
+inline std::string ColorGradingAndGammaCorrection	= "ColorGradingAndGammaCorrection";
+inline std::string MainRtCopyToBackRt				= "MainRtCopyToBackRt";
+inline std::string Present							= "Present";
 
 
 class ClearGBufferPass : public rgph::ExecutablePass {
@@ -48,7 +54,8 @@ public:
 
 class PostPass : public rgph::FullScreenPass {
 public:
-	
+	using rgph::FullScreenPass::FullScreenPass;
+	rgph::PassResourcePtr<dx12lib::IRenderTarget2D> pBackBuffer;
 };
 
 std::shared_ptr<rgph::RenderGraph> createTBDRRenderGraph(TBDRApp *pApp);
