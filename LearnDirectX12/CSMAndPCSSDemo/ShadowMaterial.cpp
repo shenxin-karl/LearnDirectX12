@@ -12,14 +12,15 @@
 #include "Dx12lib/Pipeline/RootSignature.h"
 #include "RenderGraph/Pass/SubPass.h"
 #include "D3D/Shadow/CSMShadowPass.h"
+#include "Dx12lib/Texture/Texture.h"
 
 
-ShadowMaterial::ShadowMaterial(dx12lib::IDirectContext &directCtx, std::shared_ptr<dx12lib::ITextureResource2D> pDiffuseTex)
+ShadowMaterial::ShadowMaterial(dx12lib::IDirectContext &directCtx, std::shared_ptr<dx12lib::Texture> pDiffuseTex)
 	: rgph::Material("ShadowMaterial")
 {
 	_vertexInputSlots = pOpaqueSubPass->getVertexDataInputSlots() | pShadowSubPass->getVertexDataInputSlots();
 	_pCbObject = directCtx.createFRConstantBuffer<CbObject>(CbObject{});
-	auto pAlbedoBindable = rgph::SamplerTextureBindable::make(
+	auto pAlbedoBindable = rgph::SamplerTextureBindable::make2D(
 		dx12lib::RegisterSlot::SRV0, pDiffuseTex
 	);
 
@@ -193,11 +194,8 @@ d3d::MeshModel::MaterialCreator ShadowMaterial::getShadowMaterialCreator(dx12lib
 			d3d::TextureManager::instance()->set(diffuseMap.path, pTex);
 		}
 
-		auto pTex2D = std::dynamic_pointer_cast<dx12lib::ITextureResource2D>(pTex);
-		if (pTex2D == nullptr) {
-			assert(false && "load diffuse Map Error");
-		}
-		return std::make_shared<ShadowMaterial>(*pDirectCtx, pTex2D);
+		assert(pTex->getDimension() == dx12lib::TextureDimension::TEXTURE_2D && pTex->getDepthOrArraySize() == 1);
+		return std::make_shared<ShadowMaterial>(*pDirectCtx, pTex);
 	};
 }
 

@@ -17,7 +17,7 @@ struct CbObject {
 
 class ShadowMaterial : public rgph::Material {
 public:
-	explicit ShadowMaterial(dx12lib::IDirectContext &directCtx, std::shared_ptr<dx12lib::ITextureResource2D> pDiffuseTex);
+	explicit ShadowMaterial(dx12lib::IDirectContext &directCtx, std::shared_ptr<dx12lib::Texture> pDiffuseTex);
 	FRConstantBufferPtr<CbObject> _pCbObject;
 public:
 	static void init(ShadowApp *pApp);

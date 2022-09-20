@@ -33,6 +33,7 @@ public:
 };
 
 class GBufferPass : public rgph::RenderQueuePass {
+public:
 	GBufferPass(const std::string &passName);
 	void execute(dx12lib::DirectContextProxy pDirectCtx) override;
 public:
@@ -54,7 +55,7 @@ public:
 
 class PostPass : public rgph::FullScreenPass {
 public:
-	using rgph::FullScreenPass::FullScreenPass;
+	explicit PostPass(const std::string &passName);
 	rgph::PassResourcePtr<dx12lib::IRenderTarget2D> pBackBuffer;
 };
 

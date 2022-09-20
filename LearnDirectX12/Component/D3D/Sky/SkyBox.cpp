@@ -6,6 +6,8 @@
 #include <dx12lib/Texture/SamplerTexture.h>
 #include <dx12lib/Buffer/VertexBuffer.h>
 
+#include "Dx12lib/Texture/Texture.h"
+
 namespace d3d {
 using namespace Math;
 
@@ -17,8 +19,7 @@ SkyBox::SkyBox(const SkyBoxDesc &desc) : _pCubeMap(desc.pCubeMap) {
 
 	_pViewProj = pGraphicsCtx->createFRConstantBuffer<float4x4>();
 	if (_pCubeMap == nullptr)
-		_pCubeMap = pGraphicsCtx->createDDSTextureCubeFromFile(desc.filename);
-
+		_pCubeMap = pGraphicsCtx->createTextureFromFile(desc.filename);
 
 	// build Root Signature
 	auto pRootSignature = pSharedDevice->createRootSignature(1, 1);
@@ -96,17 +97,17 @@ void SkyBox::render(dx12lib::GraphicsContextProxy pGraphicsCtx, std::shared_ptr<
 
 	pGraphicsCtx->setGraphicsPSO(_pSkyBoxPSO);
 	pGraphicsCtx->setConstantBuffer(dx12lib::RegisterSlot::CBV0, _pViewProj);
-	pGraphicsCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV0, _pCubeMap->getSRV(0));
+	pGraphicsCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV0, _pCubeMap->getCubeSRV());
 	pGraphicsCtx->setPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	pGraphicsCtx->setVertexBuffer(_pCubeVertexBuffer);
 	pGraphicsCtx->drawInstanced(_pCubeVertexBuffer->getVertexCount(), 1, 0);
 }
 
-std::shared_ptr<dx12lib::ITextureResourceCube> SkyBox::getEnvironmentMap() const {
+std::shared_ptr<dx12lib::Texture> SkyBox::getEnvironmentMap() const {
 	return _pCubeMap;
 }
 
-void SkyBox::setEnvironmentMap(std::shared_ptr<dx12lib::ITextureResourceCube> pCubeMap) {
+void SkyBox::setEnvironmentMap(std::shared_ptr<dx12lib::Texture> pCubeMap) {
 	assert(pCubeMap != nullptr);
 	_pCubeMap = pCubeMap;
 }

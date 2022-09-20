@@ -45,6 +45,12 @@ LightingPass::LightingPass(const std::string &passName)
 {
 }
 
+PostPass::PostPass(const std::string &passName)
+: FullScreenPass(passName)
+, pBackBuffer(this, "BackBuffer")
+{
+}
+
 std::shared_ptr<rgph::RenderGraph> createTBDRRenderGraph(TBDRApp *pApp) {
 	std::shared_ptr<rgph::RenderGraph> pRenderGraph;
 
@@ -127,6 +133,7 @@ std::shared_ptr<rgph::RenderGraph> createTBDRRenderGraph(TBDRApp *pApp) {
 		pSkyBox->pRenderTarget >> pPostPass->pBackBuffer;
 
 	}
+	return pRenderGraph;
 }
 
 }

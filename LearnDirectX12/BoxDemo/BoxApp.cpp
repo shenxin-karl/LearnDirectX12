@@ -16,6 +16,7 @@
 #include "D3D/Sky/SkyBox.h"
 #include "InputSystem/Window.h"
 #include "D3D/Tool/CoronaCamera.h"
+#include "Dx12lib/Texture/Texture.h"
 
 using namespace Math;
 
@@ -167,10 +168,10 @@ void BoxApp::renderBoxPass(dx12lib::DirectContextProxy pDirectContext) const {
 
 	// set pass state
 	pDirectContext->setConstantBuffer(dx12lib::RegisterSlot::CBV1, _pCBPass);
-	pDirectContext->setShaderResourceView(dx12lib::RegisterSlot::SRV0, _pIBL->getEnvMap()->getSRV());
-	pDirectContext->setShaderResourceView(dx12lib::RegisterSlot::SRV1, _pIBL->getPerFilterEnvMap()->getSRV());
+	pDirectContext->setShaderResourceView(dx12lib::RegisterSlot::SRV0, _pIBL->getEnvMap()->getCubeSRV());
+	pDirectContext->setShaderResourceView(dx12lib::RegisterSlot::SRV1, _pIBL->getPerFilterEnvMap()->getCubeSRV());
 	//pDirectContext->setShaderResourceView(dx12lib::RegisterSlot::SRV1, _pIBL->getEnvMap()->getSRV());
-	pDirectContext->setShaderResourceView(dx12lib::RegisterSlot::SRV2, _pIBL->getBRDFLutMap()->getSRV());
+	pDirectContext->setShaderResourceView(dx12lib::RegisterSlot::SRV2, _pIBL->getBRDFLutMap()->get2dSRV());
 
 	// set object state
 	pDirectContext->setConstantBuffer(dx12lib::RegisterSlot::CBV0, _pCBObject);

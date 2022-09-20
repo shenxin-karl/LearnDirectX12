@@ -1,6 +1,7 @@
 #line 2 "PerFilterEnvMapCS.hlsl"
 cbuffer CBSettgings : register(b0) {
 	float fSize;
+    uint  gIndex;
 }
 
 struct ComputeIn {
@@ -20,7 +21,7 @@ const static float3x3 gRotateCubeFace[6] = {
 };
 
 float3 CalcDirection(ComputeIn cin) {
-	uint index = cin.DispatchThreadID.z;
+	uint index = gIndex;
     float x = (cin.DispatchThreadID.x / fSize)  - 0.5;
     float y = (cin.DispatchThreadID.y / fSize) - 0.5;
     float3 direction = normalize(mul(gRotateCubeFace[index], float3(x, y, 0.5)));       // w

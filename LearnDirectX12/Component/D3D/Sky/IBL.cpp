@@ -12,6 +12,7 @@
 
 #include "D3D/d3dutil.h"
 #include "D3D/Shader/ShaderCommon.h"
+#include "Dx12lib/Texture/Texture.h"
 #include "Geometry/GeometryGenerator.h"
 
 using namespace Math;
@@ -41,20 +42,20 @@ IBL::IBL(dx12lib::DirectContextProxy pComputeCtx, const std::string &fileName) {
 	buildPerFilterEnvMap(pComputeCtx);
 
 	cmrc::file brdfLutFile = getD3DResource("resources/BRDF_LUT.dds");
-	_pBRDFLutMap = pComputeCtx->createDDSTexture2DFromMemory(brdfLutFile.begin(), brdfLutFile.size());
+	_pBRDFLutMap = pComputeCtx->createTextureFromMemory("dds", brdfLutFile.begin(), brdfLutFile.size());
 
 	pComputeCtx->trackResource(std::move(pPannoEnvMap));
 }
 
-std::shared_ptr<dx12lib::UnorderedAccessCube> IBL::getEnvMap() const {
+std::shared_ptr<dx12lib::Texture> IBL::getEnvMap() const {
 	return _pEnvMap;
 }
 
-std::shared_ptr<dx12lib::UnorderedAccessCube> IBL::getPerFilterEnvMap() const {
+std::shared_ptr<dx12lib::Texture> IBL::getPerFilterEnvMap() const {
 	return _pPerFilterEnvMap;
 }
 
-std::shared_ptr<dx12lib::SamplerTexture2D> IBL::getBRDFLutMap() const {
+std::shared_ptr<dx12lib::Texture> IBL::getBRDFLutMap() const {
 	return _pBRDFLutMap;
 }
 
@@ -94,7 +95,7 @@ void IBL::buildConvolutionIrradiancePSO(std::weak_ptr<dx12lib::Device> pDevice) 
 	pRootSignature->at(0).initAsConstants(dx12lib::RegisterSlot::CBV0, 3);
 	pRootSignature->at(1).initAsDescriptorTable({
 		{ dx12lib::RegisterSlot::SRV0, 1 },
-		{ dx12lib::RegisterSlot::UAV0, 2 },
+		{ dx12lib::RegisterSlot::UAV0, 1 },
 	});
 	pRootSignature->finalize();
 
@@ -121,12 +122,20 @@ void IBL::buildEnvMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<
 	float fWidth = static_cast<float>(width);
 	float fHeight = static_cast<float>(height);
 	float fSize = static_cast<float>(size);
-	_pEnvMap = pComputeCtx->createUnorderedAccessCube(size, size, 1, DXGI_FORMAT_R16G16B16A16_FLOAT);
+
+	_pEnvMap = pComputeCtx->createTexture(dx12lib::Texture::makeArray(
+		DXGI_FORMAT_R16G16B16A16_FLOAT,
+		size,
+		size,
+		5,
+		D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
+	));
+
 	pComputeCtx->setComputePSO(_pPanoToCubeMapPSO);
 	pComputeCtx->setCompute32BitConstants(dx12lib::RegisterSlot::CBV0, 1, &fSize, 0);
 	pComputeCtx->setCompute32BitConstants(dx12lib::RegisterSlot::CBV0, 1, &fSize, 1);
 	pComputeCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV0, pPannoEnvMap->getSRV());
-	pComputeCtx->setUnorderedAccessView(dx12lib::RegisterSlot::UAV0, _pEnvMap->get2DArrayUAV());
+	pComputeCtx->setUnorderedAccessView(dx12lib::RegisterSlot::UAV0, _pEnvMap->getArrayUAV());
 	size_t groupX = static_cast<size_t>(std::ceil(static_cast<float>(size) / kThreadCount));
 	size_t groupY = static_cast<size_t>(std::ceil(static_cast<float>(size) / kThreadCount));
 	pComputeCtx->dispatch(groupX, groupY, 6);
@@ -144,9 +153,8 @@ void IBL::buildConvolutionIrradianceMap(dx12lib::ComputeContextProxy pComputeCtx
 	size_t height = pPannoEnvMap->getHeight();
 	size_t size = 128;
 	float fSize = static_cast<float>(size);
-	float fStep = 0.075f;
+	float fStep = 0.75f;
 
-	_pTest = pComputeCtx->createUnorderedAccessCube(size, size, 1);
 	size_t groupX = static_cast<size_t>(std::ceil(static_cast<float>(size) / 8));
 	size_t groupY = static_cast<size_t>(std::ceil(static_cast<float>(size) / 8));
 	size_t outputSize = (groupY * groupX) * 6;
@@ -157,9 +165,8 @@ void IBL::buildConvolutionIrradianceMap(dx12lib::ComputeContextProxy pComputeCtx
 	pComputeCtx->setCompute32BitConstants(dx12lib::RegisterSlot::CBV0, 1, &fSize, 0);
 	pComputeCtx->setCompute32BitConstants(dx12lib::RegisterSlot::CBV0, 1, &fSize, 1);
 	pComputeCtx->setCompute32BitConstants(dx12lib::RegisterSlot::CBV0, 1, &fStep, 2);
-	pComputeCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV0, _pEnvMap->getSRV());
+	pComputeCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV0, _pEnvMap->get2dSRV());
 	pComputeCtx->setUnorderedAccessView(dx12lib::RegisterSlot::UAV0, pCSOutput->getUAV());
-	pComputeCtx->setUnorderedAccessView(dx12lib::RegisterSlot::UAV1, _pTest->get2DArrayUAV());
 	pComputeCtx->dispatch(groupX, groupY, 6);
 
 	pComputeCtx->copyResource(pReadBack, pCSOutput);
@@ -180,7 +187,6 @@ void IBL::buildConvolutionIrradianceMap(dx12lib::ComputeContextProxy pComputeCtx
 			_irradianceMapSH3._m[j] = float4(coeffs[j]);
 	});
 
-	pComputeCtx->transitionBarrier(_pTest, D3D12_RESOURCE_STATE_GENERIC_READ);
 
 	pComputeCtx->trackResource(std::move(pCSOutput));
 	pComputeCtx->trackResource(std::move(pReadBack));
@@ -190,7 +196,7 @@ void IBL::buildPerFilterEnvPSO(std::weak_ptr<dx12lib::Device> pDevice) {
 	auto pSharedDevice = pDevice.lock();
 	auto pRootSignature = pSharedDevice->createRootSignature(2, 1);
 	pRootSignature->initStaticSampler(0, getLinearWrapStaticSampler(0));
-	pRootSignature->at(0).initAsConstants(dx12lib::RegisterSlot::CBV0, 1);
+	pRootSignature->at(0).initAsConstants(dx12lib::RegisterSlot::CBV0, 2);
 	pRootSignature->at(1).initAsDescriptorTable({
 		{ dx12lib::RegisterSlot::SRV0, 1 },
 		{ dx12lib::RegisterSlot::UAV0, 5 },
@@ -216,16 +222,26 @@ void IBL::buildPerFilterEnvMap(dx12lib::ComputeContextProxy pComputeCtx) {
 	constexpr size_t kGroupCount = kMapSize / kThreadCount;
 	constexpr float fSize = static_cast<float>(kMapSize);
 
-	_pPerFilterEnvMap = pComputeCtx->createUnorderedAccessCube(kMapSize, kMapSize, 5, DXGI_FORMAT_R16G16B16A16_FLOAT);
+	_pPerFilterEnvMap = pComputeCtx->createTexture(dx12lib::Texture::make2D(
+		DXGI_FORMAT_R16G16B16A16_FLOAT,
+		kMapSize, kMapSize,
+		D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
+		5
+	));
+
 	pComputeCtx->setComputePSO(_pPerFilterEnvPSO);
 	pComputeCtx->setCompute32BitConstants(dx12lib::RegisterSlot::CBV0, 1, &fSize);
-	pComputeCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV0, _pEnvMap->getSRV());
+	pComputeCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV0, _pEnvMap->getCubeSRV());
 	dx12lib::ShaderRegister baseRegister = dx12lib::RegisterSlot::UAV0;
 	for (size_t i = 0; i < 5; ++i) {
 		auto shaderRegister = baseRegister + i;
-		pComputeCtx->setUnorderedAccessView(shaderRegister, _pPerFilterEnvMap->get2DArrayUAV(i));
+		pComputeCtx->setUnorderedAccessView(shaderRegister, _pPerFilterEnvMap->getArrayUAV(i));
 	}
-	pComputeCtx->dispatch(kGroupCount, kGroupCount, 6);
+
+	for (size_t i = 0; i < 6; ++i) {
+		pComputeCtx->setCompute32BitConstants(dx12lib::RegisterSlot::CBV0, 1, &fSize, 1);
+		pComputeCtx->dispatch(kGroupCount, kGroupCount, 1);
+	}
 	pComputeCtx->transitionBarrier(_pPerFilterEnvMap, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 }
 

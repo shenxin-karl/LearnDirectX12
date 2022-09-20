@@ -18,7 +18,6 @@ struct SHCoeffs {
 
 TextureCube<float4> gEnvMap           : register(t0);
 RWStructuredBuffer<SHCoeffs> gOutput  : register(u0);
-RWTexture2DArray<float4> gTestOutput  : register(u1);
 SamplerState gSamLinearWrap           : register(s0);
 
 const static float3x3 gRotateCubeFace[6] = {
@@ -151,7 +150,6 @@ void StroeSHCoeffs(ComputeIn cin, SHCoeffs sh3) {
 void CS(ComputeIn cin) {
 	float3 direction = CalcDirection(cin);
     float3 irradiance = CalcIrradiance(direction);
-    gTestOutput[cin.DispatchThreadID.xyz] = float4(irradiance, 1.0);
     SHCoeffs sh3 = CalcSphericalHarmonicsCoeff(cin, direction, irradiance);
     StroeSHCoeffs(cin, sh3);
 }
