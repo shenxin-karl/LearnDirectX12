@@ -13,7 +13,6 @@ public:
 	std::shared_ptr<dx12lib::Texture> getBRDFLutMap() const;
 	const SH3 &getIrradianceMapSH3() const;
 private:
-	void buildSphericalHarmonics3(const std::string &fileName);
 	void buildPanoToCubeMapPSO(std::weak_ptr<dx12lib::Device> pDevice);
 	void buildConvolutionIrradiancePSO(std::weak_ptr<dx12lib::Device> pDevice);
 	void buildEnvMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<dx12lib::ITextureResource2D> pPannoEnvMap);

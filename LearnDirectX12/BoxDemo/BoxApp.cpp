@@ -170,7 +170,6 @@ void BoxApp::renderBoxPass(dx12lib::DirectContextProxy pDirectContext) const {
 	pDirectContext->setConstantBuffer(dx12lib::RegisterSlot::CBV1, _pCBPass);
 	pDirectContext->setShaderResourceView(dx12lib::RegisterSlot::SRV0, _pIBL->getEnvMap()->getCubeSRV());
 	pDirectContext->setShaderResourceView(dx12lib::RegisterSlot::SRV1, _pIBL->getPerFilterEnvMap()->getCubeSRV());
-	//pDirectContext->setShaderResourceView(dx12lib::RegisterSlot::SRV1, _pIBL->getEnvMap()->getSRV());
 	pDirectContext->setShaderResourceView(dx12lib::RegisterSlot::SRV2, _pIBL->getBRDFLutMap()->get2dSRV());
 
 	// set object state

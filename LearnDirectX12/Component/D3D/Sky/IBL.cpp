@@ -68,7 +68,7 @@ void IBL::buildPanoToCubeMapPSO(std::weak_ptr<dx12lib::Device> pDevice) {
 
 	auto pRootSignature = pSharedDevice->createRootSignature(2, 1);
 	pRootSignature->initStaticSampler(0, getLinearClampStaticSampler(0));
-	pRootSignature->at(1).initAsConstants(dx12lib::RegisterSlot::CBV0, 2);
+	pRootSignature->at(1).initAsConstants(dx12lib::RegisterSlot::CBV0, 3);
 	pRootSignature->at(0).initAsDescriptorTable({
 		{ dx12lib::RegisterSlot::SRV0, 1 },
 		{ dx12lib::RegisterSlot::UAV0, 1 },
@@ -119,15 +119,11 @@ void IBL::buildEnvMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<
 	size_t height = pPannoEnvMap->getHeight();
 	size_t size = std::max(width, height) / 3;
 
-	float fWidth = static_cast<float>(width);
-	float fHeight = static_cast<float>(height);
 	float fSize = static_cast<float>(size);
-
-	_pEnvMap = pComputeCtx->createTexture(dx12lib::Texture::makeArray(
+	_pEnvMap = pComputeCtx->createTexture(dx12lib::Texture::makeCube(
 		DXGI_FORMAT_R16G16B16A16_FLOAT,
 		size,
 		size,
-		5,
 		D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
 	));
 
@@ -149,8 +145,6 @@ struct SH3Coeff {
 };
 
 void IBL::buildConvolutionIrradianceMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<dx12lib::ITextureResource2D> pPannoEnvMap) {
-	size_t width = pPannoEnvMap->getWidth();
-	size_t height = pPannoEnvMap->getHeight();
 	size_t size = 128;
 	float fSize = static_cast<float>(size);
 	float fStep = 0.75f;
@@ -165,7 +159,7 @@ void IBL::buildConvolutionIrradianceMap(dx12lib::ComputeContextProxy pComputeCtx
 	pComputeCtx->setCompute32BitConstants(dx12lib::RegisterSlot::CBV0, 1, &fSize, 0);
 	pComputeCtx->setCompute32BitConstants(dx12lib::RegisterSlot::CBV0, 1, &fSize, 1);
 	pComputeCtx->setCompute32BitConstants(dx12lib::RegisterSlot::CBV0, 1, &fStep, 2);
-	pComputeCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV0, _pEnvMap->get2dSRV());
+	pComputeCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV0, _pEnvMap->getCubeSRV());
 	pComputeCtx->setUnorderedAccessView(dx12lib::RegisterSlot::UAV0, pCSOutput->getUAV());
 	pComputeCtx->dispatch(groupX, groupY, 6);
 
@@ -196,10 +190,10 @@ void IBL::buildPerFilterEnvPSO(std::weak_ptr<dx12lib::Device> pDevice) {
 	auto pSharedDevice = pDevice.lock();
 	auto pRootSignature = pSharedDevice->createRootSignature(2, 1);
 	pRootSignature->initStaticSampler(0, getLinearWrapStaticSampler(0));
-	pRootSignature->at(0).initAsConstants(dx12lib::RegisterSlot::CBV0, 2);
+	pRootSignature->at(0).initAsConstants(dx12lib::RegisterSlot::CBV0, 3);
 	pRootSignature->at(1).initAsDescriptorTable({
 		{ dx12lib::RegisterSlot::SRV0, 1 },
-		{ dx12lib::RegisterSlot::UAV0, 5 },
+		{ dx12lib::RegisterSlot::UAV0, 1 },
 	});
 	pRootSignature->finalize();
 
@@ -219,28 +213,32 @@ void IBL::buildPerFilterEnvPSO(std::weak_ptr<dx12lib::Device> pDevice) {
 void IBL::buildPerFilterEnvMap(dx12lib::ComputeContextProxy pComputeCtx) {
 	constexpr size_t kThreadCount = 8;
 	constexpr size_t kMapSize = 256;
-	constexpr size_t kGroupCount = kMapSize / kThreadCount;
-	constexpr float fSize = static_cast<float>(kMapSize);
 
-	_pPerFilterEnvMap = pComputeCtx->createTexture(dx12lib::Texture::make2D(
+	_pPerFilterEnvMap = pComputeCtx->createTexture(dx12lib::Texture::makeCube(
 		DXGI_FORMAT_R16G16B16A16_FLOAT,
 		kMapSize, kMapSize,
 		D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
 		5
 	));
 
-	pComputeCtx->setComputePSO(_pPerFilterEnvPSO);
-	pComputeCtx->setCompute32BitConstants(dx12lib::RegisterSlot::CBV0, 1, &fSize);
-	pComputeCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV0, _pEnvMap->getCubeSRV());
-	dx12lib::ShaderRegister baseRegister = dx12lib::RegisterSlot::UAV0;
-	for (size_t i = 0; i < 5; ++i) {
-		auto shaderRegister = baseRegister + i;
-		pComputeCtx->setUnorderedAccessView(shaderRegister, _pPerFilterEnvMap->getArrayUAV(i));
-	}
 
-	for (size_t i = 0; i < 6; ++i) {
-		pComputeCtx->setCompute32BitConstants(dx12lib::RegisterSlot::CBV0, 1, &fSize, 1);
-		pComputeCtx->dispatch(kGroupCount, kGroupCount, 1);
+	pComputeCtx->setComputePSO(_pPerFilterEnvPSO);
+	pComputeCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV0, _pEnvMap->getCubeSRV());
+
+	for (size_t face = 0; face < 6; ++face) {
+		unsigned int index = face;
+		float fSize = static_cast<float>(kMapSize);
+		size_t groupCount = kMapSize / kThreadCount;
+		pComputeCtx->setCompute32BitConstants(dx12lib::RegisterSlot::CBV0, 1, &index, 2);
+		for (size_t mip = 0; mip < _pPerFilterEnvMap->getMipLevels(); ++mip) {
+			float roughness = static_cast<float>(mip) / _pPerFilterEnvMap->getMipLevels();
+			pComputeCtx->setCompute32BitConstants(dx12lib::RegisterSlot::CBV0, 1, &fSize);
+			pComputeCtx->setCompute32BitConstants(dx12lib::RegisterSlot::CBV0, 1, &roughness, 1);
+			pComputeCtx->setUnorderedAccessView(dx12lib::RegisterSlot::UAV0, _pPerFilterEnvMap->getArrayUAV(mip));
+			pComputeCtx->dispatch(groupCount, groupCount);
+			groupCount /= 2;
+			fSize /= 2.f;
+		}
 	}
 	pComputeCtx->transitionBarrier(_pPerFilterEnvMap, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 }
