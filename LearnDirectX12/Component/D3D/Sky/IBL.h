@@ -15,14 +15,16 @@ public:
 private:
 	void buildPanoToCubeMapPSO(std::weak_ptr<dx12lib::Device> pDevice);
 	void buildConvolutionIrradiancePSO(std::weak_ptr<dx12lib::Device> pDevice);
-	void buildEnvMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<dx12lib::ITextureResource2D> pPannoEnvMap);
-	void buildConvolutionIrradianceMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<dx12lib::ITextureResource2D> pPannoEnvMap);
+	void buildEnvMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<dx12lib::Texture> pPannoEnvMap);
+	void buildConvolutionIrradianceMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<dx12lib::Texture> pPannoEnvMap);
 	void buildPerFilterEnvPSO(std::weak_ptr<dx12lib::Device> pDevice);
 	void buildPerFilterEnvMap(dx12lib::ComputeContextProxy pComputeCtx);
+	static std::shared_ptr<dx12lib::VertexBuffer> createCubeVertexBuffer(dx12lib::DirectContextProxy pComputeCtx);
+	
 private:
 	SH3 _irradianceMapSH3;
 	std::shared_ptr<dx12lib::ComputePSO>  _pPanoToCubeMapPSO;
-	std::shared_ptr<dx12lib::ComputePSO>  _pConvolutionIrradiancePSO;
+	std::shared_ptr<dx12lib::GraphicsPSO> _pConvolutionIrradiancePSO;
 	std::shared_ptr<dx12lib::ComputePSO>  _pPerFilterEnvPSO;
 	std::shared_ptr<dx12lib::Texture>	  _pBRDFLutMap;
 	std::shared_ptr<dx12lib::Texture>     _pEnvMap;

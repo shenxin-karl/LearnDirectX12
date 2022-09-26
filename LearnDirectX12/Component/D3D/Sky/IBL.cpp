@@ -11,6 +11,7 @@
 #include <dx12lib/Buffer/BufferStd.h>
 
 #include "D3D/d3dutil.h"
+#include "D3D/Model/RenderItem/VertexDataSemantic.h"
 #include "D3D/Shader/ShaderCommon.h"
 #include "Dx12lib/Texture/Texture.h"
 #include "Geometry/GeometryGenerator.h"
@@ -30,7 +31,7 @@ IBL::IBL(dx12lib::DirectContextProxy pComputeCtx, const std::string &fileName) {
 		assert(false);
 	}
 	
-	auto pPannoEnvMap = pComputeCtx->createDDSTexture2DFromFile(wcharFileName);
+	auto pPannoEnvMap = pComputeCtx->createTextureFromFile(wcharFileName, true);
 	buildPanoToCubeMapPSO(pComputeCtx->getDevice());
 	buildEnvMap(pComputeCtx, pPannoEnvMap);
 
@@ -92,27 +93,37 @@ void IBL::buildConvolutionIrradiancePSO(std::weak_ptr<dx12lib::Device> pDevice) 
 	auto pSharedDevice = pDevice.lock();
 	auto pRootSignature = pSharedDevice->createRootSignature(2, 1);
 	pRootSignature->initStaticSampler(0, getLinearWrapStaticSampler(0));
-	pRootSignature->at(0).initAsConstants(dx12lib::RegisterSlot::CBV0, 3);
+	pRootSignature->at(0).initAsConstants(dx12lib::RegisterSlot::CBV0, 17);
 	pRootSignature->at(1).initAsDescriptorTable({
 		{ dx12lib::RegisterSlot::SRV0, 1 },
-		{ dx12lib::RegisterSlot::UAV0, 1 },
 	});
 	pRootSignature->finalize();
 
-	cmrc::file shaderContent = d3d::getD3DResource("HlslShader/ConvolutionIrradianceMapCS.hlsl");
-	_pConvolutionIrradiancePSO = pSharedDevice->createComputePSO("ConvolutionIrradiancePSO");
+
+	cmrc::file shaderContent = d3d::getD3DResource("HlslShader/CubeMapToIrradianceMap.hlsl");
+	_pConvolutionIrradiancePSO = pSharedDevice->createGraphicsPSO("CubeMapToIrradianceMapPSO");
 	_pConvolutionIrradiancePSO->setRootSignature(pRootSignature);
-	_pConvolutionIrradiancePSO->setComputeShader(d3d::compileShader(
+	_pConvolutionIrradiancePSO->setInputLayout({
+		D3D12_INPUT_ELEMENT_DESC{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, },
+	});
+	_pConvolutionIrradiancePSO->setVertexShader(d3d::compileShader(
 		shaderContent.begin(),
 		shaderContent.size(),
 		nullptr,
-		"CS",
-		"cs_5_0")
-	);
+		"VS",
+		"vs_5_0"
+	));
+	_pConvolutionIrradiancePSO->setPixelShader(d3d::compileShader(
+		shaderContent.begin(),
+		shaderContent.size(),
+		nullptr,
+		"PS",
+		"ps_5_0"
+	));
 	_pConvolutionIrradiancePSO->finalize();
 }
 
-void IBL::buildEnvMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<dx12lib::ITextureResource2D> pPannoEnvMap) {
+void IBL::buildEnvMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<dx12lib::Texture> pPannoEnvMap) {
 	constexpr size_t kThreadCount = 32;
 
 	size_t width = pPannoEnvMap->getWidth();
@@ -124,13 +135,13 @@ void IBL::buildEnvMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<
 		DXGI_FORMAT_R16G16B16A16_FLOAT,
 		size,
 		size,
-		D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
+		D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
 	));
 
 	pComputeCtx->setComputePSO(_pPanoToCubeMapPSO);
 	pComputeCtx->setCompute32BitConstants(dx12lib::RegisterSlot::CBV0, 1, &fSize, 0);
 	pComputeCtx->setCompute32BitConstants(dx12lib::RegisterSlot::CBV0, 1, &fSize, 1);
-	pComputeCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV0, pPannoEnvMap->getSRV());
+	pComputeCtx->setShaderResourceView(dx12lib::RegisterSlot::SRV0, pPannoEnvMap->getCubeSRV());
 	pComputeCtx->setUnorderedAccessView(dx12lib::RegisterSlot::UAV0, _pEnvMap->getArrayUAV());
 	size_t groupX = static_cast<size_t>(std::ceil(static_cast<float>(size) / kThreadCount));
 	size_t groupY = static_cast<size_t>(std::ceil(static_cast<float>(size) / kThreadCount));
@@ -144,7 +155,7 @@ struct SH3Coeff {
 	float3 m[9];
 };
 
-void IBL::buildConvolutionIrradianceMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<dx12lib::ITextureResource2D> pPannoEnvMap) {
+void IBL::buildConvolutionIrradianceMap(dx12lib::ComputeContextProxy pComputeCtx, std::shared_ptr<dx12lib::Texture> pPannoEnvMap) {
 	size_t size = 128;
 	float fSize = static_cast<float>(size);
 	float fStep = 0.75f;
@@ -155,7 +166,7 @@ void IBL::buildConvolutionIrradianceMap(dx12lib::ComputeContextProxy pComputeCtx
 	auto pCSOutput = pComputeCtx->createUAStructuredBuffer(nullptr, outputSize, sizeof(SH3Coeff));
 	auto pReadBack = pComputeCtx->createReadBackBuffer(outputSize, sizeof(SH3Coeff));
 
-	pComputeCtx->setComputePSO(_pConvolutionIrradiancePSO);
+	//pComputeCtx->setComputePSO(_pConvolutionIrradiancePSO);
 	pComputeCtx->setCompute32BitConstants(dx12lib::RegisterSlot::CBV0, 1, &fSize, 0);
 	pComputeCtx->setCompute32BitConstants(dx12lib::RegisterSlot::CBV0, 1, &fSize, 1);
 	pComputeCtx->setCompute32BitConstants(dx12lib::RegisterSlot::CBV0, 1, &fStep, 2);
@@ -241,6 +252,54 @@ void IBL::buildPerFilterEnvMap(dx12lib::ComputeContextProxy pComputeCtx) {
 		}
 	}
 	pComputeCtx->transitionBarrier(_pPerFilterEnvMap, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+}
+
+std::shared_ptr<dx12lib::VertexBuffer> IBL::createCubeVertexBuffer(dx12lib::DirectContextProxy pComputeCtx) {
+	float vertices[] = {
+		// back face
+		-1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f,  1.0f, -1.0f,
+		 1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f, -1.0f, -1.0f,
+		// front face
+		-1.0f, -1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f, -1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+		-1.0f,  1.0f,  1.0f,
+		// left face
+		-1.0f,  1.0f,  1.0f,
+		-1.0f, -1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f, -1.0f, -1.0f,
+		-1.0f,  1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+		// right face
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 // bottom face
+		 -1.0f, -1.0f, -1.0f, 
+		  1.0f, -1.0f,  1.0f, 
+		  1.0f, -1.0f, -1.0f, 
+		  1.0f, -1.0f,  1.0f, 
+		 -1.0f, -1.0f, -1.0f, 
+		 -1.0f, -1.0f,  1.0f, 
+		 // top face
+		 -1.0f,  1.0f, -1.0f, 
+		  1.0f,  1.0f , 1.0f, 
+		  1.0f,  1.0f, -1.0f, 
+		  1.0f,  1.0f,  1.0f, 
+		 -1.0f,  1.0f, -1.0f, 
+		 -1.0f,  1.0f,  1.0f, 
+	};
+	return pComputeCtx->createVertexBuffer(vertices, std::size(vertices) / 3, sizeof(float) * 3);
 }
 
 }

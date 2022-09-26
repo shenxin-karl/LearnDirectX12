@@ -8,6 +8,4 @@ This is my personal learning DX12 implementation demo
 
 Cascaded Shadow Map
 
-
-
-![CascadedShadowMap](CascadedShadowMap.png)
+![CascadedShadowMap](./ReadmeResource/CascadedShadowMap.png)

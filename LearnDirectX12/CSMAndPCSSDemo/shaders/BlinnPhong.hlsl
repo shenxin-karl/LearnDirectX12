@@ -56,10 +56,14 @@ VertexOut VS(VertexIn vin) {
 	return vout;
 }
 
-#define kShadowSampleKernel 3
-#define kBlockerSearchWidth 3
-#define kMinSampleCount     4
+#define kShadowSampleKernel 5
+#define kBlockerSearchWidth 5
+#define kMinSampleCount     8
 #define kMaxSampleCount		32
+
+
+#define SHADOW_PCSS
+#define SHADOW_PCSS_POISSON
 
 Texture2DArray gShadowMapArray : register(t1);
 float4 getShadowColor(VertexOut pin) {
@@ -220,7 +224,6 @@ float PCF(float3 lightSpacePos, int csmIndex, float dx) {
 }
 
 
-#define SHADOW_PCSS
 float getShadow(VertexOut pin) {
 	float4 lightSpacePos[] = {
 		pin.lightSpacePos0,

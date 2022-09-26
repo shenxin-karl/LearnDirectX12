@@ -66,6 +66,8 @@ cmrc_add_resource_library(D3D-resources ALIAS D3D::rc
 	"resources/DefaultNormalMap.dds"
 	"resources/DefaultRoughnessMap.dds"
 	"config/ShaderDefine.lua"
+	"HlslShader/CubeMapToIrradianceMap.hlsl"
+	"HlslShader/PerFilterEnvMap.hlsl"
 )
 
 set_target_properties(D3D-resources PROPERTIES FOLDER "CmrcResource")
